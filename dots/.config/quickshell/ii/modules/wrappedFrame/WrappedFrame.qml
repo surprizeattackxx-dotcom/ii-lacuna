@@ -12,7 +12,7 @@ import Quickshell.Hyprland
 Item {
     id: wrappedFrame
 
-    property int frameThickness: Config.options.appearance.wrappedFrame.thickness
+    property int frameThickness: Config.options.appearance.wrappedFrameThickness
     property bool barVertical: Config.options.bar.vertical
     property bool barBottom: Config.options.bar.bottom
 
@@ -65,7 +65,7 @@ Item {
             }
 
             implicitSize: Appearance.rounding.screenRounding
-            color: Appearance.colors.colLayer0 // add option for showbarbackground
+            color: Appearance.colors.colLayer0 // // add option for showbarbackground
 
             corner: screenCornerWindow.left ? 
                 (screenCornerWindow.bottom ? RoundCorner.CornerEnum.BottomLeft : RoundCorner.CornerEnum.TopLeft) :
@@ -74,7 +74,7 @@ Item {
     }
 
     Loader {
-        active: Config.options.appearance.wrappedFrame.enable
+        active: Config.options.appearance.fakeScreenRounding == 3
         sourceComponent: Variants {
             model: Quickshell.screens
 
@@ -91,7 +91,7 @@ Item {
                     }
                 }
                 Loader {
-                    active: !(!barBottom && !barVertical) && !(barVertical && !barBottom)
+                    active: barBottom
                     sourceComponent: ScreenCorner {
                         left: true
                         bottom: false
@@ -105,7 +105,7 @@ Item {
                     }
                 }
                 Loader {
-                    active:  !(barBottom && !barVertical) && !(barVertical && barBottom)
+                    active:  !barBottom
                     sourceComponent: ScreenCorner {
                         left: false
                         bottom: true

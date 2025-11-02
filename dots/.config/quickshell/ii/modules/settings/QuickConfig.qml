@@ -236,28 +236,7 @@ ContentPage {
         icon: "screenshot_monitor"
         title: Translation.tr("Bar & screen")
 
-        ConfigSwitch {
-            buttonIcon: "capture"
-            text: Translation.tr("Wrapped frame")
-            checked: Config.options.appearance.wrappedFrame.enable
-            onCheckedChanged: {
-                Config.options.appearance.wrappedFrame.enable = checked;
-            }
-            StyledToolTip {
-                text: Translation.tr("Wraps around the screen | Using with 'Hug' bar style is recommended.")
-            }
-        }
-        ConfigSpinBox {
-            icon: "line_weight"
-            text: Translation.tr("Wrapped frame thickness")
-            value: Config.options.appearance.wrappedFrame.thickness
-            from: 5
-            to: 25
-            stepSize: 1
-            onValueChanged: {
-                Config.options.appearance.wrappedFrame.thickness = value;
-            }
-        }
+        
 
         ConfigRow {
             ContentSubsection {
@@ -345,11 +324,29 @@ ContentPage {
                             displayName: Translation.tr("When not fullscreen"),
                             icon: "fullscreen_exit",
                             value: 2
+                        },
+                        {
+                            displayName: Translation.tr("Wrapped"),
+                            icon: "capture",
+                            value: 3
                         }
                     ]
                 }
             }
             
+        }
+
+        ConfigSpinBox {
+            visible: Config.options.appearance.fakeScreenRounding === 3
+            icon: "line_weight"
+            text: Translation.tr("Wrapped frame thickness")
+            value: Config.options.appearance.wrappedFrameThickness
+            from: 5
+            to: 25
+            stepSize: 1
+            onValueChanged: {
+                Config.options.appearance.wrappedFrameThickness = value;
+            }
         }
     }
 
