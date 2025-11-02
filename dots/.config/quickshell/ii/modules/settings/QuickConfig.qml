@@ -229,11 +229,35 @@ ContentPage {
                 text: Translation.tr("Might look ass. Unsupported.")
             }
         }
+        
     }
 
     ContentSection {
         icon: "screenshot_monitor"
         title: Translation.tr("Bar & screen")
+
+        ConfigSwitch {
+            buttonIcon: "capture"
+            text: Translation.tr("Wrapped frame")
+            checked: Config.options.appearance.wrappedFrame.enable
+            onCheckedChanged: {
+                Config.options.appearance.wrappedFrame.enable = checked;
+            }
+            StyledToolTip {
+                text: Translation.tr("Wraps around the screen | Using with 'Hug' bar style is recommended.")
+            }
+        }
+        ConfigSpinBox {
+            icon: "line_weight"
+            text: Translation.tr("Wrapped frame thickness")
+            value: Config.options.appearance.wrappedFrame.thickness
+            from: 5
+            to: 25
+            stepSize: 1
+            onValueChanged: {
+                Config.options.appearance.wrappedFrame.thickness = value;
+            }
+        }
 
         ConfigRow {
             ContentSubsection {
