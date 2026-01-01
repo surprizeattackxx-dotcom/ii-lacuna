@@ -16,9 +16,9 @@ ColumnLayout {
     spacing: 6
 
     Component.onCompleted: {
-        if (page.register == false) return
+        if (page?.register == false) return
         SearchRegistry.registerSection({
-            pageIndex: page.index,
+            pageIndex: page?.index,
             title: root.title,
             keywords: root.keywords,
             yPos: root.y

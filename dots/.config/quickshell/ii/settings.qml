@@ -77,22 +77,32 @@ ApplicationWindow {
     onClosing: Qt.quit()
     title: "illogical-impulse Settings"
 
+    property bool allowHeavyLoad: false
+
     Repeater {
         model: root.pages
         delegate: Loader {
             required property var modelData
             id: testLoader
-            active: true
+            active: allowHeavyLoad
             source: modelData.component
             property bool register: true
             onLoaded: {
                 active = false
-            } 
+            }
         }
     }
     
+    Timer {
+        id: registerTimer
+        interval: 100
+        running: true
+        onTriggered: {
+            allowHeavyLoad = true
+            console.log("[Settings] Registering")
+        }
+    }
     
-
     Component.onCompleted: {
         MaterialThemeLoader.reapplyTheme()
         Config.readWriteDelay = 0 // Settings app always only sets one var at a time so delay isn't needed
