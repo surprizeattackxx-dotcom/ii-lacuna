@@ -412,6 +412,15 @@ ContentPage {
             }
         }
 
+        ConfigSwitch {
+            buttonIcon: "gradient"
+            text: Translation.tr("Use gradient masking")
+            checked: Config.options.overlay.media.useGradientMask
+            onCheckedChanged: {
+                Config.options.overlay.media.useGradientMask = checked;
+            }
+        }
+
     }
 
     ContentSection {

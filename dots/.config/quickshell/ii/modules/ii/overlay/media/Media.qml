@@ -224,16 +224,6 @@ StyledOverlayWidget {
         }
     }
 
-    /*
-     * TODO list in case I forget:
-     * - Make gradient masking actually work
-     * - Fix the problem with caching (on oncompleted of fetching or smthing)
-     * - Fix the resolution of the texts (use pixelSize instead of scale ig?)
-     * - Make the background transparent, or add dim option and level config
-     * - Lyrics desync 
-     * - Fix the visuals (it looks bad af rn)
-    */
-
     component LyricScroller: Item {
         id: lyricScroller
         anchors.fill: parent
@@ -337,7 +327,7 @@ StyledOverlayWidget {
         property bool highlight: false
         property bool useGradient: false
         property string gradientDirection: "top" // "top" or "bottom"
-        property bool reallyUseGradient: false //FIXME
+        property bool reallyUseGradient: Config.options.overlay.media.useGradientMask && useGradient
 
         width: parent.width
         height: lyricScroller.rowHeight
