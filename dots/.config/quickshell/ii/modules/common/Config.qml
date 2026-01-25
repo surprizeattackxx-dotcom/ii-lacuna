@@ -507,6 +507,9 @@ Singleton {
                     property bool showTabs: true
                     property bool allowEditingIcon: true
                 }
+                property JsonObject media: JsonObject {
+                    property int backgroundOpacityPercentage: 100
+                }
             }
 
             property JsonObject overview: JsonObject {

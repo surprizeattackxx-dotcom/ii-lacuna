@@ -9,6 +9,7 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.utils
 import qs.modules.common.widgets
+import qs.modules.common.functions
 
 import qs.modules.ii.mediaControls
 import qs.modules.ii.overlay
@@ -21,6 +22,7 @@ StyledOverlayWidget {
     minimumHeight: 150
     
     readonly property MprisPlayer currentPlayer: MprisController.activePlayer
+    fancyBorders: false
     
     property bool downloaded: false
     property string displayedArtFilePath: root.downloaded ? Qt.resolvedUrl(artFilePath) : ""
@@ -60,16 +62,19 @@ StyledOverlayWidget {
     }
 
     Timer {
-        running: root.currentPlayer?.playbackState == MprisPlaybackState.Playing
-        interval: lyricScroller.hasSyncedLines ? 250 : Config.options.resources.updateInterval
+        running: root.currentPlayer?.playbackState == MprisPlaybackState.Playing && lyricScroller.hasSyncedLines
+        interval: 250
         repeat: true
         onTriggered: root.currentPlayer.positionChanged()
     }
+
+    
 
     contentItem: OverlayBackground {
         id: contentItem
         radius: root.contentRadius
         property real padding: 8
+        color: ColorUtils.transparentize(Appearance.m3colors.m3surfaceContainer, 1 - Config.options.overlay.media.backgroundOpacityPercentage / 100)
 
         ColumnLayout {
             anchors.fill: parent
@@ -77,6 +82,7 @@ StyledOverlayWidget {
 
             // Top region for lyricss
             Item {
+                id: lyricsItem
                 Layout.fillWidth: true
                 Layout.preferredHeight: parent.height - mediaControlsRow.height - contentItem.padding * 2 - 20
 

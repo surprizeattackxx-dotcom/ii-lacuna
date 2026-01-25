@@ -373,6 +373,7 @@ ContentPage {
 
         ConfigRow {
             uniform: true
+
             ConfigSwitch {
                 buttonIcon: "tab"
                 text: Translation.tr("Show tabs")
@@ -393,7 +394,23 @@ ContentPage {
             }
             
         }
-        
+    }
+
+    ContentSection {
+        icon: "music_note"
+        title: Translation.tr("Overlay: Media")
+    
+        ConfigSpinBox {
+            icon: "opacity"
+            text: Translation.tr("Background opacity (%)")
+            value: Config.options.overlay.media.backgroundOpacityPercentage
+            from: 0
+            to: 100
+            stepSize: 10
+            onValueChanged: {
+                Config.options.overlay.media.backgroundOpacityPercentage = value;
+            }
+        }
 
     }
 
