@@ -35,50 +35,56 @@ MouseArea {
         tooltip.text = TrayService.getTooltipForItem(root.item);
     }
 
-    Loader {
+Loader {
         id: menu
-        function open() {
-            menu.active = true;
-        }
+        function open() { menu.active = true; }
         active: false
+
         sourceComponent: SysTrayMenu {
             Component.onCompleted: this.open();
             trayItemMenuHandle: root.item.menu
+            
             anchor {
                 window: root.QsWindow.window
-                rect.x: {
-                    var globalPos = root.mapToGlobal(0, 0);
-                    return globalPos.x + (Config.options.bar.vertical ? 0 : root.width / 2);
-                }
-                rect.y: {
-                    var globalPos = root.mapToGlobal(0, 0);
-                    return globalPos.y + (Config.options.bar.vertical ? root.height / 2 : 0);
-                }
-                rect.height: root.height
-                rect.width: root.width
-                edges: {
+                
+                rect: {
+                    var gap = Appearance.sizes.elevationMargin; // SysTrayItem menu gap
+                    var pos = root.mapToItem(null, 0, 0); 
+                    
                     if (Config.options.bar.vertical) {
-                        return Config.options.bar.bottom ? 
-                            (Edges.Middle | Edges.Right) :  // right bar - vertical center
-                            (Edges.Middle | Edges.Left);    // left bar - vertical center
+                        return Qt.rect(
+                            Config.options.bar.bottom ? pos.x - gap : pos.x + gap, 
+                            pos.y, 
+                            root.width, 
+                            root.height
+                        );
                     } else {
-                        return Config.options.bar.bottom ? 
-                            (Edges.Top | Edges.Center) :    // bottom bar - horizontal center
-                            (Edges.Bottom | Edges.Center);  // top bar - horizontal center
+                        return Qt.rect(
+                            pos.x, 
+                            Config.options.bar.bottom ? pos.y - gap : pos.y + gap, 
+                            root.width, 
+                            root.height
+                        );
                     }
                 }
+
+                edges: {
+                    if (Config.options.bar.vertical) {
+                        return Config.options.bar.bottom ? (Edges.Left | Edges.Middle) : (Edges.Right | Edges.Middle);
+                    } else {
+                        return Config.options.bar.bottom ? (Edges.Top | Edges.Center) : (Edges.Bottom | Edges.Center);
+                    }
+                }
+                
                 gravity: {
                     if (Config.options.bar.vertical) {
-                        return Config.options.bar.bottom ? 
-                            (Edges.Middle | Edges.Right) : 
-                            (Edges.Middle | Edges.Left);
+                        return Config.options.bar.bottom ? Edges.Left : Edges.Right;
                     } else {
-                        return Config.options.bar.bottom ? 
-                            (Edges.Top | Edges.Center) : 
-                            (Edges.Bottom | Edges.Center);
+                        return Config.options.bar.bottom ? Edges.Top : Edges.Bottom;
                     }
                 }
             }
+
             onMenuOpened: (window) => root.menuOpened(window);
             onMenuClosed: {
                 root.menuClosed();
