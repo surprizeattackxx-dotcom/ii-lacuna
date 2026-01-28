@@ -34,6 +34,8 @@ StyledOverlayWidget {
 
     onArtFilePathChanged: updateArt()
 
+    readonly property bool showSlider: Config.options.overlay.media.showSlider
+
     function updateArt() {
         coverArtDownloader.targetFile = root.artUrl 
         coverArtDownloader.artFilePath = root.artFilePath
@@ -79,6 +81,7 @@ StyledOverlayWidget {
         ColumnLayout {
             anchors.fill: parent
             anchors.margins: 8
+            spacing: 0
 
             // Top region for lyricss
             Item {
@@ -90,6 +93,27 @@ StyledOverlayWidget {
                     id: lyricScroller
                 }
             }
+
+            Loader {
+                Layout.bottomMargin: -6
+                Layout.fillWidth: true
+
+                active: root.showSlider
+                visible: active
+                sourceComponent: StyledSlider { 
+                    anchors.fill: parent
+
+                    configuration: StyledSlider.Configuration.X0
+                    highlightColor: Appearance.colors.colPrimary
+                    trackColor: Appearance.colors.colSecondaryContainer
+                    handleColor: Appearance.colors.colPrimary
+                    value: root.currentPlayer?.position / root.currentPlayer?.length
+                    onMoved: {
+                        root.currentPlayer.position = value * root.currentPlayer.length;
+                    }
+                }
+            }
+            
 
             RowLayout {
                 id: mediaControlsRow

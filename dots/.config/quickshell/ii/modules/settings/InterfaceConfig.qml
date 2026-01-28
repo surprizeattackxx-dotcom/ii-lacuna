@@ -400,6 +400,15 @@ ContentPage {
         icon: "music_note"
         title: Translation.tr("Overlay: Media")
     
+        ConfigSwitch {
+            buttonIcon: "sliders"
+            text: Translation.tr("Show slider")
+            checked: Config.options.overlay.media.showSlider
+            onCheckedChanged: {
+                Config.options.overlay.media.showSlider = checked;
+            }
+        }
+
         ConfigSpinBox {
             icon: "opacity"
             text: Translation.tr("Background opacity (%)")
@@ -412,24 +421,28 @@ ContentPage {
             }
         }
 
-        ConfigSwitch {
-            buttonIcon: "gradient"
-            text: Translation.tr("Use gradient masking")
-            checked: Config.options.overlay.media.useGradientMask
-            onCheckedChanged: {
-                Config.options.overlay.media.useGradientMask = checked;
-            }
-        }
+        ContentSubsection {
+            title: Translation.tr("Lyrics")
 
-        ConfigSpinBox {
-            icon: "format_size"
-            text: Translation.tr("Lyrics font size (px)")
-            value: Config.options.overlay.media.lyricSize
-            from: 10
-            to: 30
-            stepSize: 1
-            onValueChanged: {
-                Config.options.overlay.media.lyricSize = value;
+            ConfigSwitch {
+                buttonIcon: "gradient"
+                text: Translation.tr("Use gradient masking")
+                checked: Config.options.overlay.media.useGradientMask
+                onCheckedChanged: {
+                    Config.options.overlay.media.useGradientMask = checked;
+                }
+            }
+
+            ConfigSpinBox {
+                icon: "format_size"
+                text: Translation.tr("Lyrics font size (px)")
+                value: Config.options.overlay.media.lyricSize
+                from: 10
+                to: 30
+                stepSize: 1
+                onValueChanged: {
+                    Config.options.overlay.media.lyricSize = value;
+                }
             }
         }
 
