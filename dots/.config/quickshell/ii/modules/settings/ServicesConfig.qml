@@ -43,6 +43,18 @@ ContentPage {
             }
         }
 
+        ConfigSwitch {
+            buttonIcon: "filter_list"
+            text: Translation.tr("Filter duplicate players")
+            checked: Config.options.media.filterDuplicatePlayers
+            onCheckedChanged: {
+                Config.options.media.filterDuplicatePlayers = checked;
+            }
+            StyledToolTip {
+                text: Translation.tr("Attempt to remove dupes (the aggregator playerctl one and browsers' native ones when there's plasma browser integration)")
+            }
+        }
+
     }
 
     ContentSection {
@@ -134,17 +146,6 @@ ContentPage {
     ContentSection {
         icon: "search"
         title: Translation.tr("Search")
-
-        ConfigSwitch {
-            text: Translation.tr("Use Levenshtein distance-based algorithm instead of fuzzy")
-            checked: Config.options.search.sloppy
-            onCheckedChanged: {
-                Config.options.search.sloppy = checked;
-            }
-            StyledToolTip {
-                text: Translation.tr("Could be better if you make a ton of typos,\nbut results can be weird and might not work with acronyms\n(e.g. \"GIMP\" might not give you the paint program)")
-            }
-        }
 
         ContentSubsection {
             title: Translation.tr("Prefixes")
