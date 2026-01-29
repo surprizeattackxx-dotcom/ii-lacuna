@@ -484,6 +484,9 @@ Item {
         { name: "clear", description: Translation.tr("Clear the current list of images"), execute: () => {  
             WallpaperBrowser.clearResponses();  
         } },  
+        { name: "help", description: Translation.tr("Shows a list of available commands"), execute: () => {  
+            WallpaperBrowser.addSystemMessage(Translation.tr("Available commands are:\n- %1api API_KEY: Set API key for current service\n- %1service SERVICE: Change wallpaper service\n- %1similar IMAGE_ID: Find similar images, you must enter wallhaven image id thats located in the file name (e.g. wallhaven-lyz3d2.png's id is lyz3d2)\n- %1anime SHOW/HIDE: Toggle anime results (only for wallhaven service)\n- %1sort SORT_OPTION: Sort results\n- %1clear: Clear the current list of images\n- %1next: Load next page").arg(root.commandPrefix));
+        } },
         { name: "next", description: Translation.tr("Load next page"), execute: () => {  
             console.log("[Wallpapers] Next page")
             if (root.responses.length > 0) {  
