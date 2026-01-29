@@ -1,14 +1,13 @@
 #!/bin/bash
 
-# Renkli çıktılar için
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
 CYAN='\033[1;36m'
-NC='\033[0m' # No Color
+NC='\033[0m' # white
 
-# Flag kontrolü
+
 DO_PULL=true
 VERBOSE=false
 FORCE_INSTALL=false
@@ -42,14 +41,12 @@ for arg in "$@"; do
     esac
 done
 
-# Verbose log fonksiyonu
 log_verbose() {
     if [ "$VERBOSE" = true ]; then
         echo -e "${BLUE}[VERBOSE] $1${NC}"
     fi
 }
 
-# Kullanıcı onayı
 echo ""
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo -e "${CYAN}        ii-vynx installer     ${NC}"
@@ -61,7 +58,6 @@ log_verbose "DO_PULL=$DO_PULL"
 log_verbose "FORCE_INSTALL=$FORCE_INSTALL"
 log_verbose "BACKUP=$FORCE_INSTALL"
 
-# Git pull uyarısını sadece --no-pull yoksa göster
 if [ "$DO_PULL" = true ]; then
     echo -e "${YELLOW}This operation will pull the latest changes from the repository,${NC}"
     echo -e "${YELLOW}You can run this script with --no-pull flag to skip this step.${NC}"
@@ -84,7 +80,6 @@ fi
 
 echo ""
 
-# Değişkenler
 CONFIG_DIR="$HOME/.config"
 CHECK_DIR="$CONFIG_DIR/illogical-impulse"
 TARGET_DIR="$CONFIG_DIR/quickshell/ii"
@@ -97,7 +92,6 @@ log_verbose "TARGET_DIR=$TARGET_DIR"
 log_verbose "SCRIPT_DIR=$SCRIPT_DIR"
 log_verbose "SOURCE_DIR=$SOURCE_DIR"
 
-# Git pull işlemi
 if [ "$DO_PULL" = true ]; then
     echo -e "${NC}• Checking for updates...${NC}"
     
@@ -121,7 +115,6 @@ else
     echo ""
 fi
 
-# illogical-impulse kontrolü (force-install ile atlanabilir)
 if [ "$FORCE_INSTALL" = false ]; then
     log_verbose "Checking for illogical-impulse directory"
     if [ ! -d "$CHECK_DIR" ]; then
@@ -146,7 +139,6 @@ else
     log_verbose "Force install mode: skipping illogical-impulse check"
 fi
 
-# Kaynak klasör kontrolü
 log_verbose "Checking source directory"
 if [ ! -d "$SOURCE_DIR" ]; then
     echo -e "${RED}ERROR: Source directory not found, please run git pull manually or clone the repository again: $SOURCE_DIR${NC}"
@@ -154,11 +146,9 @@ if [ ! -d "$SOURCE_DIR" ]; then
 fi
 log_verbose "Source directory found"
 
-# Hedef dizinin parent klasörünü oluştur
 log_verbose "Creating parent directory: $(dirname "$TARGET_DIR")"
 mkdir -p "$(dirname "$TARGET_DIR")"
 
-# Eski klasör varsa backup al
 if [ "$BACKUP" = true ]; then
     log_verbose "Checking for existing directory"
     if [ -d "$TARGET_DIR" ]; then
@@ -176,7 +166,6 @@ else
     echo -e "${RED}Skipping the backup process...${NC}"
 fi
 
-# Yeni klasörü kopyala
 echo ""
 echo -e "${NC}• Copying...${NC}"
 log_verbose "Copying from $SOURCE_DIR to $TARGET_DIR"
@@ -189,7 +178,6 @@ else
     exit 1
 fi
 
-# Quickshell'i yeniden başlat
 echo ""
 echo -e "${NC}• Restarting Hyprland & Quickshell...${NC}"
 sleep 0.5
@@ -200,10 +188,8 @@ pkill -x qs
 log_verbose "Reloading Hyprland"
 hyprctl reload
 
-# Biraz bekle ki process tam kapansın
 sleep 1.0
 
-# Quickshell'i başlat
 log_verbose "Starting Quickshell with config: ii"
 nohup qs -c ii > /dev/null 2>&1 &
 
