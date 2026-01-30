@@ -175,7 +175,7 @@ else
     echo ""
 fi
 
-if [ "$FORCE_INSTALL" = false ]; then
+if [ "$FORCE_INSTALL" = false ] && [ "$FULL_INSTALL" = false ]; then
     log_verbose "Checking for illogical-impulse directory"
     if [ ! -d "$CHECK_DIR" ]; then
         echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
@@ -187,12 +187,7 @@ if [ "$FORCE_INSTALL" = false ]; then
     fi
     log_verbose "illogical-impulse directory found"
 else
-    echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${RED}  ⚠ Force install mode enabled${NC}"
-    echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${RED}Skipping illogical-impulse check...${NC}"
-    echo ""
-    log_verbose "Force install mode: skipping illogical-impulse check"
+    log_verbose "Skipping illogical-impulse check (--force-install or --full-install used)"
 fi
 
 log_verbose "Checking source directory"
