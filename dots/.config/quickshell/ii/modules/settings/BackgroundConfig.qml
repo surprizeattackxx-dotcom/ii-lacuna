@@ -287,17 +287,42 @@ ContentPage {
             visible: settingsClock.cookiePresent
             title: Translation.tr("Cookie clock settings")
 
-            ConfigSwitch {
-                buttonIcon: "wand_stars"
-                text: Translation.tr("Auto styling with Gemini")
-                checked: Config.options.background.widgets.clock.cookie.aiStyling
-                onCheckedChanged: {
-                    Config.options.background.widgets.clock.cookie.aiStyling = checked;
+            ConfigRow {
+                
+                ConfigSwitch {
+                    Layout.fillWidth: true
+                    buttonIcon: "wand_stars"
+                    text: Translation.tr("Auto styling with Gemini")
+                    checked: Config.options.background.widgets.clock.cookie.aiStyling
+                    onCheckedChanged: {
+                        Config.options.background.widgets.clock.cookie.aiStyling = checked;
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Uses the preferred AI to categorize the wallpaper then picks a preset based on it.\nYou'll need to set API key on the left sidebar first.\nImages are downscaled for performance, but just to be safe,\ndo not select wallpapers with sensitive information.")
+                    }
                 }
-                StyledToolTip {
-                    text: Translation.tr("Uses Gemini to categorize the wallpaper then picks a preset based on it.\nYou'll need to set Gemini API key on the left sidebar first.\nImages are downscaled for performance, but just to be safe,\ndo not select wallpapers with sensitive information.")
+
+                ConfigSelectionArray {
+                    Layout.fillWidth: false
+                    currentValue: Config.options.background.widgets.clock.cookie.aiStylingModel
+                    onSelected: newValue => {
+                        Config.options.background.widgets.clock.cookie.aiStylingModel = newValue;
+                    }
+                    options: [
+                        {
+                            displayName: "Gemini",
+                            icon: "robot",
+                            value: "gemini"
+                        },
+                        {
+                            displayName: "OpenRouter",
+                            icon: "robot_2",
+                            value: "openrouter"
+                        }
+                    ]
                 }
             }
+            
 
             ConfigSpinBox {
                 enabled: Config.options.background.widgets.clock.cookie.backgroundStyle !== "shape"
