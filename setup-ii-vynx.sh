@@ -142,15 +142,17 @@ Subcommands:
 
     exp-update     (Experimental) Update illogical-impulse without fully reinstall.
     exp-merge      (Experimental) Merge upstream changes with local configs using git rebase.
-
-    virtmon        (For dev only) Create virtual monitors for testing multi-monitors.
-    checkdeps      (For dev only) Check whether pkgs exist in AUR or repos of Arch.
-
-    help           Show this help message.
 ${NC}"
                 echo ""
                 echo -e "${RED}Enter the subcommand: ${NC}"
                 read -r setup_subcommand
+                
+                if [ "$setup_subcommand" = "help" ] || [ "$setup_subcommand" = "virtmon" ] || [ "$setup_subcommand" = "checkdeps" ]; then
+                    echo ""
+                    echo -e "${RED}Setup cancelled, please don't use dev-only subcommands.${NC}"
+                    exit 1
+                fi
+
                 bash "$SCRIPT_DIR/setup" "$setup_subcommand"
                 
                 if [ $? -eq 0 ]; then
