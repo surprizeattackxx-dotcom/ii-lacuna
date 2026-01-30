@@ -181,7 +181,7 @@ Item {
 
         property real visualInset: {
             if (!root.showIcons)
-                return indicatorInsetEmpty
+                return indicatorInsetEmpty - 0.5
             if (isEmptyWorkspace)
                 return indicatorInsetEmpty
             if (isOneWindow)
