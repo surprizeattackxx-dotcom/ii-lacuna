@@ -31,8 +31,8 @@ Item {
     property int workspaceIndexInGroup: (monitor?.activeWorkspace?.id - root.workspaceOffset - 1) % root.workspacesShown    
     property var monitorWindows
 
-    property int individualIconBoxHeight: 24
-    property int iconBoxWrapperSize: 28
+    property int individualIconBoxHeight: 22 // actually the length but nwm...
+    property int iconBoxWrapperSize: 26
     property int workspaceDotSize: 4
     property real iconRatio: 0.8
     property bool showIcons: Config.options.bar.workspaces.showAppIcons
@@ -175,7 +175,7 @@ Item {
 
         // insets to create perfect round circles
         property real indicatorInsetEmpty: root.iconBoxWrapperSize * 0.07
-        property real indicatorInsetOneWindow: root.iconBoxWrapperSize * 0.1
+        property real indicatorInsetOneWindow: root.iconBoxWrapperSize * 0.14
         property real indicatorInset: root.iconBoxWrapperSize * 0.1
 
         property real visualInset: {
