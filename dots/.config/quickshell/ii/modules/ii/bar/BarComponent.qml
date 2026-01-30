@@ -85,7 +85,7 @@ Item {
         
         startRadius: rootItem.startRadius
         endRadius: rootItem.endRadius
-        colBackground: itemLoader.item.backgroundColor ?? Appearance.colors.colLayer2
+        colBackground: itemLoader.item.backgroundColor ?? Appearance.m3colors.m3surfaceContainerLow
 
         items: Loader {
             id: itemLoader
