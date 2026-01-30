@@ -239,7 +239,7 @@ fi
 echo ""
 echo -e "${NC}• Copying...${NC}"
 log_verbose "Copying from $SOURCE_DIR to $TARGET_DIR"
-cp -r "$SOURCE_DIR" "$TARGET_DIR"
+cp -r "$SOURCE_DIR/." "$TARGET_DIR/"
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✓ Successfully copied: $TARGET_DIR${NC}"
