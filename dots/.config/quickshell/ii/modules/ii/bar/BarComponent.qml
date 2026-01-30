@@ -46,7 +46,8 @@ Item {
         "right_sidebar_button": [rightSidebarButtonComp, rightSidebarButtonCompVert]
     })
 
-    
+    property list<string> primaryBackgroundComps: ["timer", "record_indicator", "screen_share_indicator"] // components that are mostly indicators
+
     property real startRadius: {
         if (barSection === 0) {
             if (originalIndex == 0) return Appearance.rounding.full
@@ -85,9 +86,9 @@ Item {
         
         startRadius: rootItem.startRadius
         endRadius: rootItem.endRadius
-        colBackground: itemLoader.item.backgroundColor ?? Appearance.m3colors.m3surfaceContainerLow
+        colBackground: primaryBackgroundComps.includes(modelData.id) ? Appearance.m3colors.m3primary : Appearance.m3colors.m3surfaceContainerLow
 
-        items: Loader {
+        Loader {
             id: itemLoader
             active: true
             sourceComponent: compMap[modelData.id][vertical ? 1 : 0]
