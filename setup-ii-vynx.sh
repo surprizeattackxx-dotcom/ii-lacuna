@@ -49,7 +49,7 @@ log_verbose() {
 
 echo ""
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${CYAN}        ii-vynx installer     ${NC}"
+echo -e "${CYAN}          ii-vynx setup     ${NC}"
 echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 
@@ -57,6 +57,9 @@ log_verbose "Verbose mode enabled"
 log_verbose "DO_PULL=$DO_PULL"
 log_verbose "FORCE_INSTALL=$FORCE_INSTALL"
 log_verbose "BACKUP=$FORCE_INSTALL"
+
+echo -e "${YELLOW}Tip: You can use this script to both install and update your dots!${NC}"
+echo ""
 
 if [ "$DO_PULL" = true ]; then
     echo -e "${YELLOW}This operation will pull the latest changes from the repository,${NC}"
@@ -201,7 +204,8 @@ if [ $? -eq 0 ]; then
     echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo ""
     log_verbose "Script completed successfully"
-    echo -e "${BLUE}Report issues: ${NC}https://github.com/vaguesyntax/ii-vynx"
+    echo -e "${BLUE}Please star this project on GitHub: ${NC}https://github.com/vaguesyntax/ii-vynx"
+    echo -e "${BLUE}And report any issues: ${NC}https://github.com/vaguesyntax/ii-vynx/issues"
     echo ""
 else
     echo -e "${RED}✗ An error occurred while starting Quickshell!${NC}"
