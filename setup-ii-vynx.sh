@@ -7,11 +7,13 @@ BLUE='\033[0;34m'
 CYAN='\033[1;36m'
 NC='\033[0m' # white
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
 DO_PULL=true
 VERBOSE=false
 FORCE_INSTALL=false
 BACKUP=true
+FULL_INSTALL=false
 
 for arg in "$@"; do
     case $arg in
@@ -27,6 +29,9 @@ for arg in "$@"; do
         --force-install)
             FORCE_INSTALL=true
             ;;
+        --full-install)
+            FULL_INSTALL=true
+            ;;
         *)
             echo -e "${RED}Unknown flag: $arg${NC}"
             echo "Usage: $0 [OPTIONS]"
@@ -35,6 +40,7 @@ for arg in "$@"; do
             echo "  --no-pull          Skip git pull operation"
             echo "  --no-backup        Skip backup of existing config"
             echo "  --force-install    Skip illogical-impulse check"
+            echo "  --full-install     Install original dots first, then ii-vynx"
             echo "  -v, --verbose      Enable verbose output"
             exit 1
             ;;
@@ -44,6 +50,49 @@ done
 log_verbose() {
     if [ "$VERBOSE" = true ]; then
         echo -e "${BLUE}[VERBOSE] $1${NC}"
+    fi
+}
+
+install_original_dots() {
+    echo -e "${RED}Original dots are not installed! Do you want to install them? (y/n): ${NC}"
+    read -r setup_response
+    
+    if [[ ! "$setup_response" =~ ^[Yy]$ ]]; then
+        echo -e "${RED}✗ Setup cancelled. Try installing the dots manually.${NC}"
+        exit 1
+    fi
+
+    printf "${GREEN}
+Subcommands:
+    install        (Re)Install/Update illogical-impulse.
+                    Note: To update to the latest, manually run \"git stash && git pull\" first.
+    install-deps   Run the install step \"1. Install dependencies\"
+    install-setups Run the install step \"2. Setup for permissions/services etc\"
+    install-files  Run the install step \"3. Copying config files\"
+
+    exp-update     (Experimental) Update illogical-impulse without fully reinstall.
+    exp-merge      (Experimental) Merge upstream changes with local configs using git rebase.
+${NC}"
+    echo ""
+    echo -e "${RED}Enter the subcommand: ${NC}"
+    read -r setup_subcommand
+    
+    if [[ "$setup_subcommand" == "help" || "$setup_subcommand" == "virtmon" || "$setup_subcommand" == "checkdeps" || "$setup_subcommand" == "uninstall" || "$setup_subcommand" == "resetfirstrun" ]]; then
+        echo ""
+        echo -e "${RED}✗ Setup cancelled, please don't use dev-only subcommands. Or use it with the original script.${NC}"
+        exit 1
+    fi
+
+    bash "$SCRIPT_DIR/setup" "$setup_subcommand"
+    
+    if [ $? -eq 0 ]; then
+        echo ""
+        echo -e "${GREEN}✓ Setup completed successfully!${NC}"
+        echo -e "${BLUE}Continuing with ii-vynx installation...${NC}"
+        echo ""
+    else
+        echo -e "${RED}✗ Setup failed! Try installing the dots manually.${NC}"
+        exit 1
     fi
 }
 
@@ -60,7 +109,18 @@ echo ""
 log_verbose "Verbose mode enabled"
 log_verbose "DO_PULL=$DO_PULL"
 log_verbose "FORCE_INSTALL=$FORCE_INSTALL"
-log_verbose "BACKUP=$FORCE_INSTALL"
+log_verbose "BACKUP=$BACKUP"
+log_verbose "FULL_INSTALL=$FULL_INSTALL"
+
+if [ "$FULL_INSTALL" = true ]; then
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${CYAN}  Full installation mode enabled${NC}"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    echo -e "${BLUE}Installing original dots first...${NC}"
+    
+    install_original_dots
+fi
 
 if [ "$DO_PULL" = false ]; then
     echo -e "${YELLOW}--no-pull flag used, skipping git pull.${NC}"
@@ -84,7 +144,6 @@ echo ""
 CONFIG_DIR="$HOME/.config"
 CHECK_DIR="$CONFIG_DIR/illogical-impulse"
 TARGET_DIR="$CONFIG_DIR/quickshell/ii"
-SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 SOURCE_DIR="$SCRIPT_DIR/dots/.config/quickshell/ii"
 
 log_verbose "CONFIG_DIR=$CONFIG_DIR"
@@ -123,59 +182,8 @@ if [ "$FORCE_INSTALL" = false ]; then
         echo -e "${RED}  ERROR: Couldn't find illogical-impulse!${NC}"
         echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
         echo ""
-
-        if [ -f "$SCRIPT_DIR/setup" ]; then
-            echo -e "${NC}You may want to install the original dots seperately before installing ii-vynx.${NC}"
-            echo -e "${RED}Original dots are not installed! Do you want to install them? (y/n): ${NC}"
-            read -r setup_response
-            
-            if [[ "$setup_response" =~ ^[Yy]$ ]]; then
-                printf "${GREEN}
-Subcommands:
-    install        (Re)Install/Update illogical-impulse.
-                    Note: To update to the latest, manually run \"git stash && git pull\" first.
-    install-deps   Run the install step \"1. Install dependencies\"
-    install-setups Run the install step \"2. Setup for permissions/services etc\"
-    install-files  Run the install step \"3. Copying config files\"
-    resetfirstrun  Reset firstrun state.
-    uninstall      Uninstall illogical-impulse.
-
-    exp-update     (Experimental) Update illogical-impulse without fully reinstall.
-    exp-merge      (Experimental) Merge upstream changes with local configs using git rebase.
-${NC}"
-                echo ""
-                echo -e "${RED}Enter the subcommand: ${NC}"
-                read -r setup_subcommand
-                
-                if [ "$setup_subcommand" = "help" ] || [ "$setup_subcommand" = "virtmon" ] || [ "$setup_subcommand" = "checkdeps" ]; then
-                    echo ""
-                    echo -e "${RED}Setup cancelled, please don't use dev-only subcommands.${NC}"
-                    exit 1
-                fi
-
-                bash "$SCRIPT_DIR/setup" "$setup_subcommand"
-                
-                if [ $? -eq 0 ]; then
-                    echo ""
-                    echo -e "${GREEN}✓ Setup completed successfully!${NC}"
-                    echo -e "${BLUE}Continuing with ii-vynx installation...${NC}"
-                    echo ""
-                else
-                    echo -e "${RED}✗ Setup failed! Try installing the dots manually.${NC}"
-                    exit 1
-                fi
-            else
-                echo -e "${RED}✗ Setup cancelled. Try installing the dots manually.${NC}"
-                exit 1
-            fi
-        else
-            echo -e "${YELLOW}Please run ./setup.sh first to install the original dots.${NC}"
-            echo -e "${BLUE}Use --force-install flag to skip this check.${NC}"
-            echo ""
-            exit 1
-        fi
-
-
+        
+        install_original_dots
     fi
     log_verbose "illogical-impulse directory found"
 else
