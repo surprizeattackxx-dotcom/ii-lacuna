@@ -39,7 +39,7 @@ git clone https://github.com/vaguesyntax/ii-vynx.git --recurse-submodules
 2. Run the installation script and follow the instructions:
 
 ```
-./install-ii-vynx.sh
+./setup-ii-vynx.sh
 ```
 
 <div align="center">
@@ -49,7 +49,7 @@ git clone https://github.com/vaguesyntax/ii-vynx.git --recurse-submodules
 Run the installation script:
 
 ```
-./install-ii-vynx.sh
+./setup-ii-vynx.sh
 ```
 
 <div align="center">
