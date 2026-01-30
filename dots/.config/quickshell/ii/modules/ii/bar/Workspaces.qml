@@ -313,13 +313,13 @@ Item {
                                 implicitSize: (root.individualIconBoxHeight * root.iconRatio) * (root.showNumbersByMs ? 1 / 1.5 : 1)
 
                                 Behavior on anchors.leftMargin {
-                                    animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+                                    animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
                                 }
                                 Behavior on anchors.topMargin {
-                                    animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+                                    animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
                                 }
                                 Behavior on implicitSize {
-                                    animation: Appearance.animation.elementResize.numberAnimation.createObject(this)
+                                    animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
                                 }
                             }
                             Loader {
