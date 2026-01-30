@@ -126,7 +126,7 @@ if [ "$FORCE_INSTALL" = false ]; then
 
         if [ -f "$SCRIPT_DIR/setup" ]; then
             echo -e "${NC}You may want to install the original dots seperately before installing ii-vynx.${NC}"
-            echo -e "${RED}[EXPERIMENTAL] Original dots are not installed! Do you want to install them? (y/n): ${NC}"
+            echo -e "${RED}Original dots are not installed! Do you want to install them? (y/n): ${NC}"
             read -r setup_response
             
             if [[ "$setup_response" =~ ^[Yy]$ ]]; then
