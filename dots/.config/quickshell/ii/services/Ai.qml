@@ -255,6 +255,24 @@ Singleton {
     // - api_format: The API format of the model. Can be "openai" or "gemini". Default is "openai".
     // - extraParams: Extra parameters to be passed to the model. This is a JSON object.
     property var models: Config.options.policies.ai === 2 ? {} : {
+        "openrouter-gemini-2.5-flash-lite": aiModelComponent.createObject(this, {
+            name: "OpenRouter Gemini 2.5 Flash-Lite",
+            icon: "google-gemini-symbolic",
+            description: Translation.tr("Online via %1 | %2's model")
+                .arg("OpenRouter")
+                .arg("Google"),
+            homepage: "https://openrouter.ai/google/gemini-2.5-flash-lite",
+            endpoint: "https://openrouter.ai/api/v1/chat/completions",
+            model: "google/gemini-2.5-flash-lite",
+            requires_key: true,
+            key_id: "openrouter",
+            key_get_link: "https://openrouter.ai/settings/keys",
+            key_get_description: Translation.tr(
+                "**Pricing**: Pay-as-you-go (token based).\n\n" +
+                "**Instructions**: Log into your OpenRouter account, " +
+                "go to Keys in the top-right menu, and create an API key."
+            ),
+        }),
         "gemini-2.5-flash": aiModelComponent.createObject(this, {
             "name": "Gemini 2.5 Flash",
             "icon": "google-gemini-symbolic",

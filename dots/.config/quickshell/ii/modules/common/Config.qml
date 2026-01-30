@@ -178,6 +178,7 @@ Singleton {
                         property string styleLocked: "cookie"  // Options: "cookie", "digital"
                         property JsonObject cookie: JsonObject {
                             property bool aiStyling: false
+                            property string aiStylingModel: "gemini" // Options "gemini", "openrouter"
                             property int sides: 14
                             property string backgroundStyle: "cookie"     // Options: "cookie", "sine", "shape" 
                             property string backgroundShape: "Arch"  // Options: MaterialShape.Shape enum values as string
