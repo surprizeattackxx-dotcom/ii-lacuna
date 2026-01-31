@@ -567,6 +567,41 @@ ContentPage {
             }
         }
 
+        ConfigRow {
+            ContentSubsection {
+                title: Translation.tr("Sidebars position")
+
+                ConfigSelectionArray {
+                    currentValue: Config.options.sidebar.position
+                    onSelected: newValue => {
+                        Config.options.sidebar.position = newValue;
+                    }
+                    options: [
+                        {
+                            displayName: Translation.tr("Default"),
+                            icon: "side_navigation",
+                            value: 0
+                        },
+                        {
+                            displayName: Translation.tr("Inverted"),
+                            icon: "swap_horiz",
+                            value: 1
+                        },
+                        {
+                            displayName: Translation.tr("Left"),
+                            icon: "align_horizontal_left",
+                            value: 2
+                        },
+                        {
+                            displayName: Translation.tr("Right"),
+                            icon: "align_horizontal_right",
+                            value: 3
+                        }
+                    ]
+                }
+            }
+        }
+
         ContentSubsection {
             title: Translation.tr("Quick toggles")
             
