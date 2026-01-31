@@ -85,130 +85,131 @@ Scope { // Scope
     }
 
     Loader {
-    id: sidebarLoader
-    active: true
-    
-    sourceComponent: PanelWindow {
-        id: panelWindow
-        visible: GlobalStates.sidebarLeftOpen
+        id: sidebarLoader
+        active: true
         
-        property bool extend: false
-        readonly property real sidebarWidth: {
-            const p = Config.options.policies;
-            const allFeatures = p.ai !== 0 && p.weeb == 1 && p.wallpapers !== 0 && p.translator !== 0;
-
-            if (panelWindow.extend) return Appearance.sizes.sidebarWidthExtended;
-            return allFeatures ? Appearance.sizes.sidebarWidthExpanded : Appearance.sizes.sidebarWidth;
-        }
-        
-        property var contentParent: sidebarLeftBackground
-
-        function hide() {
-            GlobalStates.sidebarLeftOpen = false
-        }
-
-        exclusionMode: ExclusionMode.Normal
-        exclusiveZone: root.pin ? sidebarWidth : 0
-        implicitWidth: Appearance.sizes.sidebarWidthExtended + Appearance.sizes.elevationMargin
-        WlrLayershell.namespace: root.isOnLeft ? "quickshell:sidebarLeft" : "quickshell:sidebarRight"
-        // Hyprland 0.49: OnDemand is Exclusive, Exclusive just breaks click-outside-to-close
-        WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
-        color: "transparent"
-
-        anchors {
-            top: true
-            left: root.isOnLeft
-            right: !root.isOnLeft
-            bottom: true
-        }
-
-        mask: Region {
-            item: sidebarLeftBackground
-        }
-
-        onVisibleChanged: {
-            if (visible) {
-                GlobalFocusGrab.addDismissable(panelWindow);
-            } else {
-                GlobalFocusGrab.removeDismissable(panelWindow);
-            }
-        }
-        
-        Connections {
-            target: GlobalFocusGrab
-            function onDismissed() {
-                panelWindow.hide();
-            }
-        }
-
-        StyledRectangularShadow {
-            target: sidebarLeftBackground
-            radius: sidebarLeftBackground.radius
-        }
-
-        Rectangle {
-            id: sidebarLeftBackground
-            color: Appearance.colors.colLayer0
-            border.width: 1
-            border.color: Appearance.colors.colLayer0Border
-            radius: Appearance.rounding.screenRounding - Appearance.sizes.hyprlandGapsOut + 1
+        sourceComponent: PanelWindow {
+            id: panelWindow
+            visible: GlobalStates.sidebarLeftOpen
             
-            height: parent.height - (Appearance.sizes.hyprlandGapsOut * 2)
-            y: Appearance.sizes.hyprlandGapsOut
-            width: panelWindow.sidebarWidth - Appearance.sizes.hyprlandGapsOut - Appearance.sizes.elevationMargin
+            property bool extend: false
+            readonly property real sidebarWidth: {
+                const p = Config.options.policies;
+                const allFeatures = p.ai !== 0 && p.weeb == 1 && p.wallpapers !== 0 && p.translator !== 0;
 
-            Behavior on width {
-                animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+                if (panelWindow.extend) return Appearance.sizes.sidebarWidthExtended;
+                return allFeatures ? Appearance.sizes.sidebarWidthExpanded : Appearance.sizes.sidebarWidth;
+            }
+            
+            property var contentParent: sidebarLeftBackground
+
+            function hide() {
+                GlobalStates.sidebarLeftOpen = false
             }
 
-            state: root.isOnLeft ? "left" : "right"
-            states: [
-                State {
-                    name: "left"
-                    AnchorChanges { 
-                        target: sidebarLeftBackground
-                        anchors.left: parent.left
-                        anchors.right: undefined 
-                    }
-                    PropertyChanges {
-                        target: sidebarLeftBackground
-                        anchors.leftMargin: Appearance.sizes.hyprlandGapsOut
-                        anchors.rightMargin: 0
-                    }
-                },
-                State {
-                    name: "right"
-                    AnchorChanges { 
-                        target: sidebarLeftBackground
-                        anchors.left: undefined
-                        anchors.right: parent.right 
-                    }
-                    PropertyChanges {
-                        target: sidebarLeftBackground
-                        anchors.rightMargin: Appearance.sizes.hyprlandGapsOut
-                        anchors.leftMargin: 0
-                    }
-                }
-            ]
+            exclusionMode: ExclusionMode.Normal
+            exclusiveZone: root.pin ? sidebarWidth : 0
+            implicitWidth: Appearance.sizes.sidebarWidthExtended + Appearance.sizes.elevationMargin
+            WlrLayershell.namespace: root.isOnLeft ? "quickshell:sidebarLeft" : "quickshell:sidebarRight"
+            // Hyprland 0.49: OnDemand is Exclusive, Exclusive just breaks click-outside-to-close
+            WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
+            color: "transparent"
 
-            Keys.onPressed: (event) => {
-                if (event.key === Qt.Key_Escape) {
+            anchors {
+                top: true
+                left: root.isOnLeft
+                right: !root.isOnLeft
+                bottom: true
+            }
+
+            mask: Region {
+                item: sidebarLeftBackground
+            }
+
+            onVisibleChanged: {
+                if (visible) {
+                    GlobalFocusGrab.addDismissable(panelWindow);
+                } else {
+                    GlobalFocusGrab.removeDismissable(panelWindow);
+                }
+            }
+            
+            Connections {
+                target: GlobalFocusGrab
+                function onDismissed() {
                     panelWindow.hide();
                 }
-                if (event.modifiers === Qt.ControlModifier) {
-                    if (event.key === Qt.Key_O) {
-                        panelWindow.extend = !panelWindow.extend;
-                    } else if (event.key === Qt.Key_D) {
-                        root.toggleDetach();
-                    } else if (event.key === Qt.Key_P) {
-                        root.togglePin();
+            }
+
+            StyledRectangularShadow {
+                target: sidebarLeftBackground
+                radius: sidebarLeftBackground.radius
+            }
+
+            Rectangle {
+                id: sidebarLeftBackground
+                color: Appearance.colors.colLayer0
+                border.width: 1
+                border.color: Appearance.colors.colLayer0Border
+                radius: Appearance.rounding.screenRounding - Appearance.sizes.hyprlandGapsOut + 1
+                
+                height: parent.height - (Appearance.sizes.hyprlandGapsOut * 2)
+                y: Appearance.sizes.hyprlandGapsOut
+                width: panelWindow.sidebarWidth - Appearance.sizes.hyprlandGapsOut - Appearance.sizes.elevationMargin
+
+                Behavior on width {
+                    animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+                }
+
+                state: root.isOnLeft ? "left" : "right"
+                states: [
+                    State {
+                        name: "left"
+                        AnchorChanges { 
+                            target: sidebarLeftBackground
+                            anchors.left: parent.left
+                            anchors.right: undefined 
+                        }
+                        PropertyChanges {
+                            target: sidebarLeftBackground
+                            anchors.leftMargin: Appearance.sizes.hyprlandGapsOut
+                            anchors.rightMargin: 0
+                        }
+                    },
+                    State {
+                        name: "right"
+                        AnchorChanges { 
+                            target: sidebarLeftBackground
+                            anchors.left: undefined
+                            anchors.right: parent.right 
+                        }
+                        PropertyChanges {
+                            target: sidebarLeftBackground
+                            anchors.rightMargin: Appearance.sizes.hyprlandGapsOut
+                            anchors.leftMargin: 0
+                        }
                     }
-                    event.accepted = true;
+                ]
+
+                Keys.onPressed: (event) => {
+                    if (event.key === Qt.Key_Escape) {
+                        panelWindow.hide();
+                    }
+                    if (event.modifiers === Qt.ControlModifier) {
+                        if (event.key === Qt.Key_O) {
+                            panelWindow.extend = !panelWindow.extend;
+                        } else if (event.key === Qt.Key_D) {
+                            root.toggleDetach();
+                        } else if (event.key === Qt.Key_P) {
+                            root.togglePin();
+                        }
+                        event.accepted = true;
+                    }
                 }
             }
         }
     }
-}
+    
     Loader {
         id: detachedSidebarLoader
         active: false
