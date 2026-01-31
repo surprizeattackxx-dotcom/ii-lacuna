@@ -580,22 +580,22 @@ ContentPage {
                         {
                             displayName: Translation.tr("Default"),
                             icon: "side_navigation",
-                            value: 0
+                            value: "default"
                         },
                         {
                             displayName: Translation.tr("Inverted"),
                             icon: "swap_horiz",
-                            value: 1
+                            value: "inverted"
                         },
                         {
                             displayName: Translation.tr("Left"),
                             icon: "align_horizontal_left",
-                            value: 2
+                            value: "left"
                         },
                         {
                             displayName: Translation.tr("Right"),
                             icon: "align_horizontal_right",
-                            value: 3
+                            value: "right"
                         }
                     ]
                 }

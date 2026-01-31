@@ -17,7 +17,7 @@ Scope { // Scope
 
     readonly property bool isOnLeft: {
         const pos = Config.options.sidebar.position;
-        return pos === 0 || pos === 2; // Default or Left
+        return pos === "default" || pos === "left"; 
     }
 
     function toggleDetach() {

@@ -13,7 +13,7 @@ Scope {
 
     readonly property bool isOnRight: {
         const pos = Config.options.sidebar.position;
-        return pos === 0 || pos === 3; // Default or Right
+        return pos === "default" || pos === "right"; 
     }
 
     PanelWindow {
