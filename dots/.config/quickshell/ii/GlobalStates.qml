@@ -10,7 +10,7 @@ pragma ComponentBehavior: Bound
 Singleton {
     id: root
 
-    property alias sidebarLeftOpen: root.notificationsPanelOpen // Until all sidebars naming is fixed
+    property alias sidebarLeftOpen: root.dashboardPanelOpen // Until all sidebars naming is fixed
     property alias sidebarRightOpen: root.policiesPanelOpen // Until all sidebars naming is fixed
 
     property bool barOpen: true
@@ -31,24 +31,24 @@ Singleton {
     property bool superReleaseMightTrigger: true
     property bool wallpaperSelectorOpen: false
     property bool workspaceShowNumbers: false
-    property bool notificationsPanelOpen: false
+    property bool dashboardPanelOpen: false
     property bool policiesPanelOpen: false
 
     readonly property bool effectiveLeftOpen: {
         switch (Config.options.sidebar.position) {
-            case "default": return notificationsPanelOpen;
+            case "default": return dashboardPanelOpen;
             case "inverted": return policiesPanelOpen;
-            case "left": return notificationsPanelOpen || policiesPanelOpen;
+            case "left": return dashboardPanelOpen || policiesPanelOpen;
             case "right": return false;
-            default: return notificationsPanelOpen;
+            default: return dashboardPanelOpen;
         }
     }
     readonly property bool effectiveRightOpen: {
         switch (Config.options.sidebar.position) {
             case "default": return policiesPanelOpen;
-            case "inverted": return notificationsPanelOpen;
+            case "inverted": return dashboardPanelOpen;
             case "left": return false;
-            case "right": return notificationsPanelOpen || policiesPanelOpen;
+            case "right": return dashboardPanelOpen || policiesPanelOpen;
             default: return policiesPanelOpen;
         }
     }
