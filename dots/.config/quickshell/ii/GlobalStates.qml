@@ -58,7 +58,20 @@ Singleton {
         if (policiesPanelOpen) {
             Notifications.timeoutAll();
             Notifications.markAllRead();
+            if (Config.options.sidebar.position == "right" || Config.options.sidebar.position == "left") {
+                GlobalStates.dashboardPanelOpen = false
+            }
         }
+        
+    }
+
+    onDashboardPanelOpenChanged: {
+        if (dashboardPanelOpen) {
+            if (Config.options.sidebar.position == "right" || Config.options.sidebar.position == "left") {
+                GlobalStates.policiesPanelOpen = false
+            }
+        }
+        
     }
 
     GlobalShortcut {
