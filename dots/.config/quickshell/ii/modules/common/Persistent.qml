@@ -59,7 +59,8 @@ Singleton {
             property string hyprlandInstanceSignature: ""
 
             property JsonObject ai: JsonObject {
-                property string model: "gemini-2.5-flash"
+                property string provider: "gemini" // AI providers such as gemini, open router, mistral
+                property string model: "gemini-2.5-flash" // The model of the ai such as 2.5-flash
                 property real temperature: 0.5
             }
 

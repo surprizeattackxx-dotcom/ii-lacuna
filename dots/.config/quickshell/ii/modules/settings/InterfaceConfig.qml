@@ -30,6 +30,19 @@ ContentPage {
         } 
     }
 
+    ContentSection {
+        icon: "keyboard"
+        title: Translation.tr("AI")
+
+        ConfigSwitch {
+            buttonIcon: "box"
+            text: Translation.tr("Show provider and model buttons")
+            checked: Config.options.sidebar.ai.showProviderAndModelButtons
+            onCheckedChanged: {
+                Config.options.sidebar.ai.showProviderAndModelButtons = checked;
+            }
+        }
+    }
 
     ContentSection {
         icon: "keyboard"

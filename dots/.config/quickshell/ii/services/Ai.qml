@@ -329,6 +329,20 @@ Singleton {
     property var modelList: Object.keys(root.models)
     property var currentModelId: Persistent.states?.ai?.model || modelList[0]
 
+    property var modelsOfProviders: {
+        "openrouter": [
+            {title: "Gemini 2.5 Flash-Lite", value: "openrouter-gemini-2.5-flash-lite"},
+        ],
+        "gemini": [
+            { title: "Gemini 3 Flash", value: "gemini-3-flash" },
+            { title: "Gemini 2.5 Flash", value: "gemini-2.5-flash" },
+            { title: "Gemini 2.5 Flash-Lite", value: "gemini-2.5-flash-lite" },
+        ],
+        "mistral": [
+            { title: "Mistral Medium 3", value: "mistral-medium-3" }
+        ],
+    }
+
     property var apiStrategies: {
         "openai": openaiApiStrategy.createObject(this),
         "gemini": geminiApiStrategy.createObject(this),

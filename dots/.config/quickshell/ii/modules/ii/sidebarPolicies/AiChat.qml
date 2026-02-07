@@ -413,6 +413,66 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
             showArrows: root.suggestionList.length > 1
         }
 
+        Item {
+            Layout.fillWidth: true
+            implicitHeight: contentLayout.implicitHeight
+            visible: Config.options.sidebar.ai.showProviderAndModelButtons // FIXME: loader plss
+
+            ColumnLayout {
+                id: contentLayout
+                Layout.fillWidth: true
+                anchors.horizontalCenter: parent.horizontalCenter
+
+                ConfigSelectionArray {
+                    id: providerSelector
+                    Layout.alignment: Qt.AlignHCenter
+
+                    colBackground: Appearance.colors.colLayer1
+                    colBackgroundHover: Appearance.colors.colLayer1Hover
+                    colBackgroundActive: Appearance.colors.colLayer1Active
+
+                    currentValue: Persistent.states.ai.provider
+                    onSelected: newValue => {
+                        Persistent.states.ai.provider = newValue;
+                    }
+                    options: [
+                        {
+                            displayName: "Gemini",
+                            icon: "star",
+                            value: "gemini"
+                        },
+                        {
+                            displayName: "OpenRouter",
+                            icon: "alt_route",
+                            value: "openrouter"
+                        },
+                        {
+                            displayName: "Mistral",
+                            icon: "metro",
+                            value: "mistral"
+                        }
+                    ]
+                }
+
+                StyledComboBox {
+                    id: componentSelector
+
+                    buttonIcon: "box"
+                    textRole: "title"
+                    model: Ai.modelsOfProviders[providerSelector.currentValue]
+                    enabled: true
+
+                    onModelChanged: {
+                        Persistent.states.ai.model = Ai.modelsOfProviders[providerSelector.currentValue][0].value;
+                    }
+                    onActivated: index => {
+                        Persistent.states.ai.model = Ai.modelsOfProviders[providerSelector.currentValue][index].value;    
+                    }
+                }
+            }
+        }
+        
+
         FlowButtonGroup { // Suggestions
             id: suggestions
             visible: root.suggestionList.length > 0 && messageInputField.text.length > 0
