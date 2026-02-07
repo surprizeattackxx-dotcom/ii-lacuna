@@ -355,7 +355,7 @@ ContentPage {
                 
                 ConfigSwitch {
                     buttonIcon: "wand_stars"
-                    text: Translation.tr("Auto style")
+                    text: Translation.tr("Auto style the cookie clock preset")
                     checked: Config.options.background.widgets.clock.cookie.aiStyling
                     onCheckedChanged: {
                         Config.options.background.widgets.clock.cookie.aiStyling = checked;
