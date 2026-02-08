@@ -413,64 +413,68 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
             showArrows: root.suggestionList.length > 1
         }
 
-        Item {
+        Loader {
+            id: modelAndProviderLoader
             Layout.fillWidth: true
-            implicitHeight: contentLayout.implicitHeight
-            visible: Config.options.sidebar.ai.showProviderAndModelButtons // FIXME: loader plss
+            height: item?.implicitHeight
 
-            ColumnLayout {
-                id: contentLayout
+            active: Config.options.sidebar.ai.showProviderAndModelButtons && Ai.messageIDs.length === 0
+
+            sourceComponent: Item {
                 Layout.fillWidth: true
-                anchors.horizontalCenter: parent.horizontalCenter
+                implicitHeight: contentLayout.implicitHeight
 
-                ConfigSelectionArray {
-                    id: providerSelector
-                    Layout.alignment: Qt.AlignHCenter
+                ColumnLayout {
+                    id: contentLayout
+                    Layout.fillWidth: true
+                    anchors.horizontalCenter: parent.horizontalCenter
 
-                    colBackground: Appearance.colors.colLayer1
-                    colBackgroundHover: Appearance.colors.colLayer1Hover
-                    colBackgroundActive: Appearance.colors.colLayer1Active
+                    ConfigSelectionArray {
+                        id: providerSelector
+                        Layout.alignment: Qt.AlignHCenter
 
-                    currentValue: Persistent.states.ai.provider
-                    onSelected: newValue => {
-                        Persistent.states.ai.provider = newValue;
-                    }
-                    options: [
-                        {
-                            displayName: "Gemini",
-                            icon: "star",
-                            value: "gemini"
-                        },
-                        {
-                            displayName: "OpenRouter",
-                            icon: "alt_route",
-                            value: "openrouter"
-                        },
-                        {
-                            displayName: "Mistral",
-                            icon: "metro",
-                            value: "mistral"
+                        currentValue: Persistent.states.ai.provider
+                        onSelected: newValue => {
+                            Persistent.states.ai.provider = newValue;
                         }
-                    ]
-                }
-
-                StyledComboBox {
-                    id: componentSelector
-
-                    buttonIcon: "box"
-                    textRole: "title"
-                    model: Ai.modelsOfProviders[providerSelector.currentValue]
-                    enabled: true
-
-                    onModelChanged: {
-                        Persistent.states.ai.model = Ai.modelsOfProviders[providerSelector.currentValue][0].value;
+                        options: [
+                            {
+                                displayName: "Gemini",
+                                icon: "star",
+                                value: "gemini"
+                            },
+                            {
+                                displayName: "OpenRouter",
+                                icon: "alt_route",
+                                value: "openrouter"
+                            },
+                            {
+                                displayName: "Mistral",
+                                icon: "metro",
+                                value: "mistral"
+                            }
+                        ]
                     }
-                    onActivated: index => {
-                        Persistent.states.ai.model = Ai.modelsOfProviders[providerSelector.currentValue][index].value;    
+
+                    StyledComboBox {
+                        id: componentSelector
+
+                        buttonIcon: "box"
+                        textRole: "title"
+                        model: Ai.modelsOfProviders[providerSelector.currentValue]
+                        enabled: true
+
+                        onModelChanged: {
+                            Persistent.states.ai.model = Ai.modelsOfProviders[providerSelector.currentValue][0].value;
+                        }
+                        onActivated: index => {
+                            Persistent.states.ai.model = Ai.modelsOfProviders[providerSelector.currentValue][index].value;    
+                        }
                     }
                 }
             }
         }
+        
         
 
         FlowButtonGroup { // Suggestions
