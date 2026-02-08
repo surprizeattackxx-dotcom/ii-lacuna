@@ -242,6 +242,7 @@ Singleton {
         "none": Translation.tr("Disable tools")
     }
 
+    readonly property string currentModel: Persistent.states.ai.model
     // Model properties:
     // - name: Name of the model
     // - icon: Icon name of the model
@@ -255,15 +256,15 @@ Singleton {
     // - api_format: The API format of the model. Can be "openai" or "gemini". Default is "openai".
     // - extraParams: Extra parameters to be passed to the model. This is a JSON object.
     property var models: Config.options.policies.ai === 2 ? {} : {
-        "openrouter-gemini-2.5-flash-lite": aiModelComponent.createObject(this, {
-            name: "OpenRouter Gemini 2.5 Flash-Lite",
+        "openrouter": aiModelComponent.createObject(this, {
+            name: `OpenRouter - ${currentModel}`,
             icon: "google-gemini-symbolic",
             description: Translation.tr("Online via %1 | %2's model")
                 .arg("OpenRouter")
                 .arg("Google"),
-            homepage: "https://openrouter.ai/google/gemini-2.5-flash-lite",
+            homepage: `https://openrouter.ai/google/${currentModel}`, 
             endpoint: "https://openrouter.ai/api/v1/chat/completions",
-            model: "google/gemini-2.5-flash-lite",
+            model: `google/${currentModel}`,
             requires_key: true,
             key_id: "openrouter",
             key_get_link: "https://openrouter.ai/settings/keys",
@@ -273,47 +274,21 @@ Singleton {
                 "go to Keys in the top-right menu, and create an API key."
             ),
         }),
-        "gemini-2.5-flash": aiModelComponent.createObject(this, {
-            "name": "Gemini 2.5 Flash",
+        "google": aiModelComponent.createObject(this, {
+            "name": `Google - ${currentModel}`,
             "icon": "google-gemini-symbolic",
             "description": Translation.tr("Online | Google's model\nNewer model that's slower than its predecessor but should deliver higher quality answers"),
             "homepage": "https://aistudio.google.com",
-            "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:streamGenerateContent",
-            "model": "gemini-2.5-flash",
+            "endpoint": `https://generativelanguage.googleapis.com/v1beta/models/${currentModel}:streamGenerateContent`,
+            "model": `${currentModel}`,
             "requires_key": true,
             "key_id": "gemini",
             "key_get_link": "https://aistudio.google.com/app/apikey",
             "key_get_description": Translation.tr("**Pricing**: free. Data used for training.\n\n**Instructions**: Log into Google account, allow AI Studio to create Google Cloud project or whatever it asks, go back and click Get API key"),
             "api_format": "gemini",
         }),
-        "gemini-2.5-flash-lite": aiModelComponent.createObject(this, {
-            "name": "Gemini 2.5 Flash-Lite",
-            "icon": "google-gemini-symbolic",
-            "description": Translation.tr("Online | Google's model\nUltra-fast and cost-effective version of Gemini 2.5. Best for simple API tasks and quick responses."),
-            "homepage": "https://aistudio.google.com",
-            "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:streamGenerateContent",
-            "model": "gemini-2.5-flash-lite",
-            "requires_key": true,
-            "key_id": "gemini",
-            "key_get_link": "https://aistudio.google.com/app/apikey",
-            "key_get_description": Translation.tr("**Pricing**: free/paid. Optimized for speed.\n\n**Instructions**: Log into Google AI Studio, get your API key. Note: 2.5 Flash-Lite might require v1beta endpoint."),
-            "api_format": "gemini",
-        }),
-        "gemini-3-flash": aiModelComponent.createObject(this, {
-            "name": "Gemini 3 Flash",
-            "icon": "google-gemini-symbolic",
-            "description": Translation.tr("Online | Google's model\nPro-level intelligence at the speed and pricing of Flash."),
-            "homepage": "https://aistudio.google.com",
-            "endpoint": "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:streamGenerateContent",
-            "model": "gemini-3-flash-preview",
-            "requires_key": true,
-            "key_id": "gemini",
-            "key_get_link": "https://aistudio.google.com/app/apikey",
-            "key_get_description": Translation.tr("**Pricing**: free. Data used for training.\n\n**Instructions**: Log into Google account, allow AI Studio to create Google Cloud project or whatever it asks, go back and click Get API key"),
-            "api_format": "gemini",
-        }),
-        "mistral-medium-3": aiModelComponent.createObject(this, {
-            "name": "Mistral Medium 3",
+        "mistral": aiModelComponent.createObject(this, {
+            "name": `Mistral - ${currentModel}`,
             "icon": "mistral-symbolic",
             "description": Translation.tr("Online | %1's model | Delivers fast, responsive and well-formatted answers. Disadvantages: not very eager to do stuff; might make up unknown function calls").arg("Mistral"),
             "homepage": "https://mistral.ai/news/mistral-medium-3",
@@ -327,13 +302,13 @@ Singleton {
         }),
     }
     property var modelList: Object.keys(root.models)
-    property var currentModelId: Persistent.states?.ai?.model || modelList[0]
+    property var currentModelId: Persistent.states?.ai?.provider || modelList[0]
 
     property var modelsOfProviders: {
         "openrouter": [
-            {title: "Gemini 2.5 Flash-Lite", value: "openrouter-gemini-2.5-flash-lite"},
+            {title: "Gemini 2.5 Flash-Lite", value: "gemini-2.5-flash-lite"},
         ],
-        "gemini": [
+        "google": [
             { title: "Gemini 3 Flash", value: "gemini-3-flash" },
             { title: "Gemini 2.5 Flash", value: "gemini-2.5-flash" },
             { title: "Gemini 2.5 Flash-Lite", value: "gemini-2.5-flash-lite" },

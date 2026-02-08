@@ -439,9 +439,9 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                         }
                         options: [
                             {
-                                displayName: "Gemini",
-                                icon: "star",
-                                value: "gemini"
+                                displayName: "Google",
+                                icon: "android",
+                                value: "google"
                             },
                             {
                                 displayName: "OpenRouter",
@@ -464,12 +464,12 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                         model: Ai.modelsOfProviders[providerSelector.currentValue]
                         enabled: true
 
-                        onModelChanged: {
-                            Persistent.states.ai.model = Ai.modelsOfProviders[providerSelector.currentValue][0].value;
+                        function updateModel(index = 0) {
+                            Persistent.states.ai.model = Ai.modelsOfProviders[providerSelector.currentValue][index].value
                         }
-                        onActivated: index => {
-                            Persistent.states.ai.model = Ai.modelsOfProviders[providerSelector.currentValue][index].value;    
-                        }
+
+                        onModelChanged: updateModel()
+                        onActivated: index => updateModel(index)
                     }
                 }
             }
