@@ -626,12 +626,11 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                 onExited: {
                     previewPath = ""
                 }
-
                 
                 onDropped: (drop) => {
                     if (drop.hasUrls) {
                         for (var i = 0; i < drop.urls.length; i++) {
-                            console.log("Dropped file:", drop.urls[i])
+                            console.log("[AI Chat] Dropped file:", drop.urls[i])
                             Ai.attachFile(drop.urls[i])
                         }
                         drop.accept(Qt.CopyAction)
