@@ -26,7 +26,7 @@ Flow {
             "displayName": "Option 2",
             "icon": "close",
             "shape": "Circle", // Optional (for material shape)
-            "symbol": "google-gemini-symbolic", // Optional (for custom icons)
+            "symbol": "mistral-symbolic", // Optional (for custom icons)
             "value": 2
         },
     ]
@@ -54,7 +54,7 @@ Flow {
             rightmost: index === root.options.length - 1
             buttonIcon: modelData.icon || ""
             buttonShape: modelData.shape || ""
-            buttonSymbol: modelData.symbol
+            buttonSymbol: modelData.symbol || ""
             buttonText: modelData.displayName
             toggled: root.currentValue == modelData.value
             releaseAction: modelData.releaseAction || ""
