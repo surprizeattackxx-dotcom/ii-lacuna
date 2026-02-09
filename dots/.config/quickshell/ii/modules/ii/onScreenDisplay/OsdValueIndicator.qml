@@ -50,6 +50,7 @@ Item {
                 Layout.bottomMargin: valueIndicatorVerticalPadding
 
                 MaterialShapeWrappedMaterialSymbol {
+                    rotation: root.value * 360
                     anchors {
                         centerIn: parent
                         alignWhenCentered: !root.rotateIcon
