@@ -35,7 +35,7 @@ ContentPage {
         title: Translation.tr("AI")
 
         ConfigSwitch {
-            buttonIcon: "box"
+            buttonIcon: "buttons_alt"
             text: Translation.tr("Show provider and model buttons")
             checked: Config.options.sidebar.ai.showProviderAndModelButtons
             onCheckedChanged: {
