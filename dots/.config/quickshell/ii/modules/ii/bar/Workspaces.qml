@@ -212,7 +212,6 @@ Item {
         implicitWidth: root.vertical ? individualIconBoxHeight : indicatorLength
     }
 
-    // Occupied indicators background - MaskMultiEffect ile düzgün hale getirildi
     StyledRectangle {
         id: occupiedIndicatorsBg
         anchors.fill: occupiedIndicatorsLayout
@@ -245,10 +244,8 @@ Item {
                 property bool previousOccupied: index > 0 && workspaceOccupied[index - 1] && (wsId - 1) != effectiveActiveWorkspaceId
                 property bool nextOccupied: index < workspacesShown - 1 && workspaceOccupied[index + 1] && (wsId + 1) != effectiveActiveWorkspaceId
                 
-                // Window sayısını hesapla
                 property int windowCount: root.getWindowCountForWorkspace(wsId)
                 
-                // contentLayout'taki item'ın genişliğini/yüksekliğini al
                 property real itemSize: {
                     const item = contentLayout.children[index]
                     return root.vertical ? (item?.height ?? root.iconBoxWrapperSize) : (item?.width ?? root.iconBoxWrapperSize)
@@ -257,7 +254,6 @@ Item {
                 implicitWidth: root.vertical ? root.iconBoxWrapperSize : itemSize
                 implicitHeight: root.vertical ? itemSize : root.iconBoxWrapperSize
 
-                // Pill component - over-stretch to occupied sides
                 Pill {
                     property real undirectionalWidth: root.iconBoxWrapperSize * wsBg.currentOccupied
                     property real undirectionalLength: {
@@ -270,7 +266,7 @@ Item {
                         if (wsBg.previousOccupied) {
                             const prevItem = contentLayout.children[index - 1]
                             const prevSize = root.vertical ? (prevItem?.height ?? root.iconBoxWrapperSize) : (prevItem?.width ?? root.iconBoxWrapperSize)
-                            baseLength += (prevSize - root.iconBoxWrapperSize) * 1
+                            baseLength += (prevSize - root.iconBoxWrapperSize) * 1 // not deleted bc we can change this 1 later
                         }
                         
                         // Add half of next workspace size if it's occupied
