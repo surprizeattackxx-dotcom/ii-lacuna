@@ -5,6 +5,7 @@ import qs.modules.common.models
 import qs.modules.common.widgets
 import qs.modules.common.functions
 import QtQuick
+import QtQuick.Effects
 import QtQuick.Layouts
 import QtQuick.Controls
 import Quickshell
@@ -20,21 +21,19 @@ Item {
     readonly property HyprlandMonitor monitor: Hyprland.monitorFor(root.QsWindow.window?.screen)
     readonly property Toplevel activeWindow: ToplevelManager.activeToplevel
 
-    // NOTE,TODO: Workspace ID handling is simplified with this commit: https://github.com/end-4/dots-hyprland/commit/68f0355940f374ec4dcc168be3f0e123e7635bfb
-    // I have to somehow merge the new system and our system (workspace map)
-    // This is the new way of handling active workspace id: readonly property int effectiveActiveWorkspaceId: monitor?.activeWorkspace?.id ?? 1
     readonly property bool useWorkspaceMap: Config.options.bar.workspaces.useWorkspaceMap
     readonly property list<int> workspaceMap: Config.options.bar.workspaces.workspaceMap 
     readonly property int monitorIndex: barLoader.monitorIndex
-    property int workspaceOffset: useWorkspaceMap ? workspaceMap[monitorIndex] : 0 // not sure if this works for more than 2 monitors
+    property int workspaceOffset: useWorkspaceMap ? workspaceMap[monitorIndex] : 0
 
     readonly property int workspacesShown: Config.options.bar.workspaces.shown
     readonly property int workspaceGroup: Math.floor((monitor?.activeWorkspace?.id - root.workspaceOffset - 1) / root.workspacesShown)
     property list<bool> workspaceOccupied: []
     property int workspaceIndexInGroup: (monitor?.activeWorkspace?.id - root.workspaceOffset - 1) % root.workspacesShown    
     property var monitorWindows
+    readonly property int effectiveActiveWorkspaceId: monitor?.activeWorkspace?.id ?? 1
 
-    property int individualIconBoxHeight: 22 // actually the length but nwm...
+    property int individualIconBoxHeight: 22
     property int iconBoxWrapperSize: 26
     property int workspaceDotSize: 4
     property real iconRatio: 0.8
@@ -64,35 +63,27 @@ Item {
         }
     }
 
-
     function updateWorkspaceOccupied() {
         workspaceOccupied = Array.from({ length: root.workspacesShown }, (_, i) => {
-            const workspaceId = workspaceOffset + workspaceGroup * root.workspacesShown + i + 1;
-            const workspaceExists = Hyprland.workspaces.values.some(ws => ws.id === workspaceId);
-
-            if (!workspaceExists) return false;
-            
-            // current workspace doesnot have a window -> make it not occupied
-            if (workspaceId === monitor?.activeWorkspace?.id) {
-                return hasWindowsInWorkspace(workspaceId);
-            }
-            return true;
-        });
+            const wsId = workspaceGroup * root.workspacesShown + i + 1 + root.workspaceOffset;
+            return Hyprland.workspaces.values.some(ws => ws.id === wsId);
+        })
     }
 
     function hasWindowsInWorkspace(workspaceId) {
         return HyprlandData.windowList.some(w => w.workspace.id === workspaceId);
     }
 
+    function getWindowCountForWorkspace(workspaceId) {
+        return HyprlandData.windowList.filter(w => w.workspace.id === workspaceId && !w.floating).length;
+    }
 
     // Window list updates
     Connections {
         target: HyprlandData
         function onWindowListChanged() {
             const windowsOnMonitor = HyprlandData.windowList.filter(win => win.monitor === root.monitorIndex && !win.floating)
-
             windowsOnMonitor.sort((a, b) => a.at[0] - b.at[0])
-
             root.monitorWindows = windowsOnMonitor.map(win => ({
                 icon: Quickshell.iconPath(AppSearch.guessIcon(win?.class), "image-missing"),
                 workspace: win.workspace?.id
@@ -143,7 +134,6 @@ Item {
         }
     }
 
-
     implicitWidth: root.vertical ? Appearance.sizes.verticalBarWidth : contentLayout.implicitWidth
     implicitHeight: root.vertical ? contentLayout.implicitHeight : Appearance.sizes.barHeight
 
@@ -180,12 +170,11 @@ Item {
 
         property int index: root.workspaceIndexInGroup
         property int baseHeight: root.iconBoxWrapperSize
-        property int windowCount: getWindowCount(index + root.workspaceOffset + 1)
+        property int windowCount: getWindowCount(index + root.workspaceOffset + root.workspaceGroup * root.workspacesShown + 1)
 
         property bool isEmptyWorkspace: windowCount === 0
         property bool isOneWindow: windowCount === 1
 
-        // insets to create perfect round circles // note: these are pain in the ass
         property real indicatorInsetEmpty: root.iconBoxWrapperSize * 0.07
         property real indicatorInsetOneWindow: root.iconBoxWrapperSize * 0.14
         property real indicatorInset: root.iconBoxWrapperSize * 0.1
@@ -223,9 +212,17 @@ Item {
         implicitWidth: root.vertical ? individualIconBoxHeight : indicatorLength
     }
 
-    
+    // Occupied indicators background - MaskMultiEffect ile düzgün hale getirildi
+    StyledRectangle {
+        id: occupiedIndicatorsBg
+        anchors.fill: occupiedIndicatorsLayout
+        contentLayer: StyledRectangle.ContentLayer.Group
+        color: ColorUtils.transparentize(Appearance.m3colors.m3secondaryContainer, 0.4)
+        visible: false
+    }
 
     GridLayout {
+        id: occupiedIndicatorsLayout
         anchors.centerIn: parent
         columnSpacing: 0
         rowSpacing: 0
@@ -234,42 +231,102 @@ Item {
         columns: root.vertical ? 1 : 99
         rows: root.vertical ? 99 : 1
 
+        layer.enabled: true
+        visible: false
+
         Repeater {
             model: root.workspacesShown
-            delegate: Rectangle { // background
+            delegate: Item {
+                id: wsBg
                 Layout.alignment: Qt.AlignCenter
 
-                property var previousOccupied: (workspaceOccupied[index-1] && !(!activeWindow?.activated && monitor?.activeWorkspace?.id === index))
-                property var rightOccupied: (workspaceOccupied[index+1] && !(!activeWindow?.activated && monitor?.activeWorkspace?.id === index+2))
-                property var radiusPrev: previousOccupied ? 0 : (width / 2)
-                property var radiusNext: rightOccupied ? 0 : (width / 2)
-
-                topLeftRadius: radiusPrev
-                bottomLeftRadius: root.vertical ? radiusNext : radiusPrev
-                topRightRadius: root.vertical ? radiusPrev : radiusNext
-                bottomRightRadius: radiusNext
-
-                implicitWidth: root.vertical ? root.iconBoxWrapperSize : contentLayout.children[index]?.width ?? 0
-                implicitHeight: root.vertical ? contentLayout.children[index]?.height ?? 0 : root.iconBoxWrapperSize
-
-                color: ColorUtils.transparentize(Appearance.m3colors.m3secondaryContainer, 0.4)
-                opacity: (workspaceOccupied[index] && !(!activeWindow?.activated && root.effectiveActiveWorkspaceId === index+1)) ? 1 : 0
-
-                Behavior on opacity {
-                    animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+                property int wsId: workspaceGroup * workspacesShown + index + 1 + workspaceOffset
+                property bool currentOccupied: workspaceOccupied[index] && wsId != effectiveActiveWorkspaceId
+                property bool previousOccupied: index > 0 && workspaceOccupied[index - 1] && (wsId - 1) != effectiveActiveWorkspaceId
+                property bool nextOccupied: index < workspacesShown - 1 && workspaceOccupied[index + 1] && (wsId + 1) != effectiveActiveWorkspaceId
+                
+                // Window sayısını hesapla
+                property int windowCount: root.getWindowCountForWorkspace(wsId)
+                
+                // contentLayout'taki item'ın genişliğini/yüksekliğini al
+                property real itemSize: {
+                    const item = contentLayout.children[index]
+                    return root.vertical ? (item?.height ?? root.iconBoxWrapperSize) : (item?.width ?? root.iconBoxWrapperSize)
                 }
-                Behavior on radiusPrev {
-                    animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
-                }
-                Behavior on radiusNext {
-                    animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
-                }
-                Behavior on implicitHeight {
-                    animation: Appearance.animation.elementResize.numberAnimation.createObject(this)
+
+                implicitWidth: root.vertical ? root.iconBoxWrapperSize : itemSize
+                implicitHeight: root.vertical ? itemSize : root.iconBoxWrapperSize
+
+                // Pill component - over-stretch to occupied sides
+                Pill {
+                    property real undirectionalWidth: root.iconBoxWrapperSize * wsBg.currentOccupied
+                    property real undirectionalLength: {
+                        if (!wsBg.currentOccupied) return 0
+                        
+                        // Base length: current workspace item size
+                        let baseLength = wsBg.itemSize
+                        
+                        // Add half of previous workspace size if it's occupied
+                        if (wsBg.previousOccupied) {
+                            const prevItem = contentLayout.children[index - 1]
+                            const prevSize = root.vertical ? (prevItem?.height ?? root.iconBoxWrapperSize) : (prevItem?.width ?? root.iconBoxWrapperSize)
+                            baseLength += (prevSize - root.iconBoxWrapperSize) * 1
+                        }
+                        
+                        // Add half of next workspace size if it's occupied
+                        if (wsBg.nextOccupied) {
+                            const nextItem = contentLayout.children[index + 1]
+                            const nextSize = root.vertical ? (nextItem?.height ?? root.iconBoxWrapperSize) : (nextItem?.width ?? root.iconBoxWrapperSize)
+                            baseLength += (nextSize - root.iconBoxWrapperSize) * 1
+                        }
+                        
+                        return baseLength
+                    }
+                    
+                    property real undirectionalOffset: {
+                        if (!wsBg.currentOccupied) return 1 * root.iconBoxWrapperSize
+                        
+                        // Offset based on previous workspace
+                        if (!wsBg.previousOccupied) return 0
+                        
+                        const prevItem = contentLayout.children[index - 1]
+                        const prevSize = root.vertical ? (prevItem?.height ?? root.iconBoxWrapperSize) : (prevItem?.width ?? root.iconBoxWrapperSize)
+                        return -(prevSize - root.iconBoxWrapperSize) * 1
+                    }
+
+                    anchors.verticalCenter: root.vertical ? undefined : parent.verticalCenter
+                    anchors.horizontalCenter: root.vertical ? parent.horizontalCenter : undefined
+                    x: root.vertical ? 0 : undirectionalOffset
+                    y: root.vertical ? undirectionalOffset : 0
+                    implicitWidth: root.vertical ? undirectionalWidth : undirectionalLength
+                    implicitHeight: root.vertical ? undirectionalLength : undirectionalWidth
+
+                    Behavior on undirectionalWidth {
+                        animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+                    }
+                    Behavior on undirectionalLength {
+                        animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+                    }
+                    Behavior on undirectionalOffset {
+                        animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+                    }
                 }
             }
         }
-    } 
+    }
+
+    MultiEffect {
+        id: occupiedIndicatorsMultiEffect
+        z: 1
+        anchors.centerIn: parent
+        implicitWidth: occupiedIndicatorsLayout.implicitWidth
+        implicitHeight: occupiedIndicatorsLayout.implicitHeight
+        source: occupiedIndicatorsBg
+        maskEnabled: true
+        maskSource: occupiedIndicatorsLayout
+        maskThresholdMin: 0.5
+        maskSpreadAtMin: 1.0
+    }
 
     GridLayout {
         id: contentLayout
@@ -304,7 +361,6 @@ Item {
                     rowSpacing: 0
                     columns: root.vertical ? 1 : 99
                     rows: root.vertical ? 99 : 1
-                    
                     
                     Repeater {
                         property int workspaceIndex: workspaceOffset + workspaceGroup * workspacesShown + index + 1
@@ -341,7 +397,7 @@ Item {
                                 sourceComponent: Item {
                                     Desaturate {
                                         id: desaturatedIcon
-                                        visible: false // There's already color overlay
+                                        visible: false
                                         anchors.fill: parent
                                         source: mainAppIcon
                                         desaturation: 0.8
@@ -353,7 +409,6 @@ Item {
                                     }
                                 }
                             }
-
                         }
                     }
                 }
@@ -361,7 +416,7 @@ Item {
         }
     }
 
-    component WorkspaceBackgroundIndicator: Rectangle { // dot or number
+    component WorkspaceBackgroundIndicator: Rectangle {
         property bool showNumbers: Config.options.bar.workspaces.alwaysShowNumbers || root.showNumbersByMs
         property int workspaceValue
         property bool activeWorkspace
@@ -391,5 +446,4 @@ Item {
             }
         }
     }
-
 }
