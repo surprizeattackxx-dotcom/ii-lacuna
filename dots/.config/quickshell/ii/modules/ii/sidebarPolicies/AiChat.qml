@@ -419,6 +419,7 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
             height: item?.implicitHeight
 
             active: Config.options.sidebar.ai.showProviderAndModelButtons && Ai.messageIDs.length === 0
+            visible: active
 
             sourceComponent: Item {
                 Layout.fillWidth: true
@@ -457,12 +458,22 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                     }
 
                     StyledComboBox {
-                        id: componentSelector
+                        id: modelSelector
 
-                        buttonIcon: "box"
+                        buttonIcon: "wand_stars"
                         textRole: "title"
                         model: Ai.modelsOfProviders[providerSelector.currentValue]
                         enabled: true
+                        currentIndex: getCurrentIndex()
+
+                        function getCurrentIndex() {
+                            for (var i = 0; i < Ai.modelsOfProviders[providerSelector.currentValue].length; i++) {
+                                if (Ai.modelsOfProviders[providerSelector.currentValue][i].value === Persistent.states.ai.model) {
+                                    return i
+                                }
+                            }
+                            return 0
+                        }
 
                         function updateModel(index = 0) {
                             Persistent.states.ai.model = Ai.modelsOfProviders[providerSelector.currentValue][index].value
