@@ -255,7 +255,7 @@ Item {
                                 continue
                             }
                             if (!wallhavenId) {
-                                WallpaperBrowser.addSystemMessage(Translation.tr("Please drop a valid wallhaven image named like wallhaven-######.png"));  
+                                WallpaperBrowser.addSystemMessage(Translation.tr("Please drop a valid wallhaven image named like **wallhaven-######.png**"));  
                                 continue
                             }
 
