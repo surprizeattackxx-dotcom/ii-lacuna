@@ -20,6 +20,9 @@ Item {
     property var suggestionQuery: ""
     property var suggestionList: []
 
+    property bool containsDrag: false
+    property string previewPath: ""
+
     onFocusChanged: focus => {
         if (focus) {
             root.inputField.forceActiveFocus();
@@ -551,6 +554,25 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
             }
         }
 
+        AttachedFileIndicator {
+            visible: implicitHeight > 0
+            implicitHeight: root.containsDrag ? contentHeight : 0
+            opacity: root.containsDrag ? 1 : 0
+            highlight: false
+
+            Layout.fillWidth: true
+
+            Behavior on implicitHeight {
+                animation: Appearance.animation.elementResize.numberAnimation.createObject(this)
+            }
+            Behavior on opacity {
+                animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+            }
+
+            filePath: root.previewPath
+            
+        }
+
         Rectangle { // Input area
             id: inputWrapper
             property real spacing: 5
@@ -576,6 +598,42 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                 onRemove: Ai.attachFile("")
             }
 
+            DropArea {
+                id: dropArea
+                anchors.fill: parent
+
+                onContainsDragChanged: {
+                    root.containsDrag = dropArea.containsDrag
+                }
+
+                onPreviewPathChanged: {
+                    root.previewPath = dropArea.previewPath
+                }
+
+                property string previewPath: ""
+    
+                onEntered: (drag) => {
+                    if (drag.hasUrls && drag.urls.length > 0) {
+                        previewPath = drag.urls[0]
+                    }
+                }
+                
+                onExited: {
+                    previewPath = ""
+                }
+
+                
+                onDropped: (drop) => {
+                    if (drop.hasUrls) {
+                        for (var i = 0; i < drop.urls.length; i++) {
+                            console.log("Dropped file:", drop.urls[i])
+                            Ai.attachFile(drop.urls[i])
+                        }
+                        drop.accept(Qt.CopyAction)
+                    }
+                }
+            } 
+
             RowLayout { // Input field and send button
                 id: inputFieldRowLayout
                 anchors {
@@ -592,7 +650,7 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                     Layout.fillWidth: true
                     padding: 10
                     color: activeFocus ? Appearance.m3colors.m3onSurface : Appearance.m3colors.m3onSurfaceVariant
-                    placeholderText: Translation.tr('Message the model... "%1" for commands').arg(root.commandPrefix)
+                    placeholderText: Translation.tr('Message or drag files here... "%1" for commands').arg(root.commandPrefix)
 
                     background: null
 
