@@ -816,8 +816,11 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
 
                 ApiInputBoxIndicator {
                     // Model indicator
-                    icon: "api"
-                    text: Ai.getModel().name
+                    property string currentProvider: Persistent.states.ai.provider
+                    property string providerIcon: currentProvider === "openrouter" ? "openrouter-symbolic" : currentProvider === "google" ? "spark-symbolic" : "mistral-symbolic"
+
+                    symbol: providerIcon
+                    text: Persistent.states.ai.model // TODO: add a readable version
                     tooltipText: Translation.tr("Current model: %1\nSet it with %2model MODEL").arg(Ai.getModel().name).arg(root.commandPrefix)
                 }
 
