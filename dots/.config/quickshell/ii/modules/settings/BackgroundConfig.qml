@@ -380,12 +380,12 @@ ContentPage {
                     options: [
                         {
                             displayName: "Gemini",
-                            icon: "robot",
+                            symbol: "google-gemini-symbolic",
                             value: "gemini"
                         },
                         {
                             displayName: "OpenRouter",
-                            icon: "robot_2",
+                            symbol: "openrouter-symbolic",
                             value: "openrouter"
                         }
                     ]
