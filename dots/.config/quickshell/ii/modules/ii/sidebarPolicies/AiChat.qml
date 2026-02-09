@@ -54,7 +54,14 @@ Item {
             name: "model",
             description: Translation.tr("Choose model"),
             execute: args => {
-                Ai.setModel(args[0]);
+                Persistent.states.ai.model = args[0];
+            }
+        },
+        {
+            name: "provider",
+            description: Translation.tr("Choose provider"),
+            execute: args => {
+                Persistent.states.ai.provider = args[0];
             }
         },
         {
@@ -595,22 +602,56 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                             root.suggestionQuery = "";
                             root.suggestionList = [];
                             return;
-                        } else if (messageInputField.text.startsWith(`${root.commandPrefix}model`)) {
+                        } else if (messageInputField.text.startsWith(`${root.commandPrefix}provider`)) {
                             root.suggestionQuery = messageInputField.text.split(" ")[1] ?? "";
-                            const modelResults = Fuzzy.go(root.suggestionQuery, Ai.modelList.map(model => {
-                                return {
-                                    name: Fuzzy.prepare(model),
-                                    obj: model
-                                };
-                            }), {
+                            
+                            const providers = ["google", "openrouter", "mistral"];
+                            const providerDescriptions = {
+                                "google": {displayName: "Google", description: "Google's LLM"},
+                                "openrouter": {displayName: "OpenRouter", description: "OpenRouter's LLM"},
+                                "mistral": {displayName: "Mistral", description: "Mistral's LLM"}
+                            };
+                            
+                            const providerResults = Fuzzy.go(root.suggestionQuery, providers.map(p => ({
+                                name: Fuzzy.prepare(p),
+                                obj: p
+                            })), {
                                 all: true,
                                 key: "name"
                             });
-                            root.suggestionList = modelResults.map(model => {
+                            
+                            root.suggestionList = providerResults.map(result => {
+                                const providerName = result.target;
+                                const providerInfo = providerDescriptions[providerName];
                                 return {
-                                    name: `${messageInputField.text.trim().split(" ").length == 1 ? (root.commandPrefix + "model ") : ""}${model.target}`,
-                                    displayName: `${Ai.models[model.target].name}`,
-                                    description: `${Ai.models[model.target].description}`
+                                    name: `${messageInputField.text.trim().split(" ").length == 1 ? (root.commandPrefix + "provider ") : ""}${providerName}`,
+                                    displayName: providerInfo.displayName,
+                                    description: providerInfo.description
+                                };
+                            });
+                        } else if (messageInputField.text.startsWith(`${root.commandPrefix}model`)) {
+                            root.suggestionQuery = messageInputField.text.split(" ")[1] ?? "";
+                            
+                            const providerModels = Ai.modelsOfProviders[Persistent.states.ai.provider] || [];
+                            
+                            const modelList = providerModels.map(model => ({
+                                name: Fuzzy.prepare(model.value),
+                                obj: model
+                            }));
+
+                            const modelResults = Fuzzy.go(root.suggestionQuery, modelList, {
+                                all: true,
+                                key: "name"
+                            });
+                            
+                            root.suggestionList = modelResults.map(result => {
+                                const modelValue = result.target;
+                                const model = providerModels.find(m => m.value === modelValue);
+                                
+                                return {
+                                    name: `${messageInputField.text.trim().split(" ").length == 1 ? (root.commandPrefix + "model ") : ""}${model.value}`,
+                                    displayName: model.title,
+                                    description: model.modelProvider ? `Provider: ${model.modelProvider}` : `${Ai.currentProvider} model`
                                 };
                             });
                         } else if (messageInputField.text.startsWith(`${root.commandPrefix}prompt`)) {
