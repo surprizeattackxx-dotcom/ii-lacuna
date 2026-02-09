@@ -288,7 +288,7 @@ Item {
             }
             QuickToggleButton {
                 id: updateButton
-                toggled: false
+                toggled: confirm
                 property bool confirm: false
                 buttonIcon: confirm ? "check" : "download"
                 Timer {
