@@ -602,17 +602,22 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                 id: dropArea
                 anchors.fill: parent
 
+                readonly property string currentProvider: Persistent.states.ai.provider
+
                 onContainsDragChanged: {
+                    if (currentProvider !== "google") return
                     root.containsDrag = dropArea.containsDrag
                 }
 
                 onPreviewPathChanged: {
+                    if (currentProvider !== "google") return
                     root.previewPath = dropArea.previewPath
                 }
 
                 property string previewPath: ""
     
                 onEntered: (drag) => {
+                    if (currentProvider !== "google") return
                     if (drag.hasUrls && drag.urls.length > 0) {
                         previewPath = drag.urls[0]
                     }
@@ -650,7 +655,7 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                     Layout.fillWidth: true
                     padding: 10
                     color: activeFocus ? Appearance.m3colors.m3onSurface : Appearance.m3colors.m3onSurfaceVariant
-                    placeholderText: Translation.tr('Message or drag files here... "%1" for commands').arg(root.commandPrefix)
+                    placeholderText: Persistent.states.ai.provider === "google" ? Translation.tr('Message or drag files here... "%1" for commands').arg(root.commandPrefix) : Translation.tr('Message to models... "%1" for commands').arg(root.commandPrefix)
 
                     background: null
 
