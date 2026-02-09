@@ -111,29 +111,6 @@ Item {
         updateWorkspaceOccupied();
     }
 
-    WheelHandler {
-        onWheel: (event) => {
-            if (event.angleDelta.y < 0)
-                Hyprland.dispatch(`workspace r+1`);
-            else if (event.angleDelta.y > 0)
-                Hyprland.dispatch(`workspace r-1`);
-        }
-        acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
-    }
-
-    MouseArea { 
-        anchors.fill: parent
-        acceptedButtons: Qt.BackButton | Qt.RightButton
-        onPressed: (event) => {
-            if (event.button === Qt.RightButton) {
-                GlobalStates.overviewOpen = !GlobalStates.overviewOpen
-            } 
-            if (event.button === Qt.BackButton) {
-                Hyprland.dispatch(`togglespecialworkspace`);
-            } 
-        }
-    }
-
     implicitWidth: root.vertical ? Appearance.sizes.verticalBarWidth : contentLayout.implicitWidth
     implicitHeight: root.vertical ? contentLayout.implicitHeight : Appearance.sizes.barHeight
 
@@ -269,6 +246,7 @@ Item {
         anchors.fill: parent
         cursorShape: Qt.PointingHandCursor
         hoverEnabled: true
+        acceptedButtons: Qt.RightButton | Qt.LeftButton | Qt.BackButton
         
         property int hoverIndex: {
             const position = root.vertical ? mouseY : mouseX;
@@ -291,9 +269,17 @@ Item {
             return root.workspacesShown - 1;
         }
 
-        onPressed: {
-            const wsId = workspaceOffset + workspaceGroup * workspacesShown + hoverIndex + 1;
-            Hyprland.dispatch(`workspace ${wsId}`);
+        onPressed: (event) => {
+            if (event.button === Qt.RightButton) {
+                GlobalStates.overviewOpen = !GlobalStates.overviewOpen
+            } 
+            if (event.button === Qt.BackButton) {
+                Hyprland.dispatch(`togglespecialworkspace`);
+            }
+            if (event.button === Qt.LeftButton) {
+                const wsId = workspaceOffset + workspaceGroup * workspacesShown + hoverIndex + 1;
+                Hyprland.dispatch(`workspace ${wsId}`);
+            }
         }
         
         onWheel: (event) => {
@@ -424,12 +410,11 @@ Item {
             id: workspaceRepeater
             model: root.workspacesShown
 
-            delegate: MouseArea {
+            delegate: Item {
                 id: background
                 Layout.alignment: Qt.AlignCenter
                 implicitWidth: root.vertical ? root.iconBoxWrapperSize : Math.max(layout.implicitWidth + 8, root.iconBoxWrapperSize)
                 implicitHeight: root.vertical ? Math.max(layout.implicitHeight + 8, root.iconBoxWrapperSize) : root.iconBoxWrapperSize
-                onClicked: Hyprland.dispatch(`workspace ${workspaceOffset + workspaceGroup * workspacesShown + index + 1}`)
                 
                 WorkspaceBackgroundIndicator {
                     workspaceValue: workspaceOffset + workspaceGroup * workspacesShown + index + 1
