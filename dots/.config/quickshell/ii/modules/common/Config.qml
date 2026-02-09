@@ -585,6 +585,11 @@ Singleton {
                 property bool filterPassive: true
             }
 
+            property JsonObject update: JsonObject {
+                property string scriptPath: ""
+                property string scriptFlags: "--no-backup --no-confirm"
+            }
+
             property JsonObject musicRecognition: JsonObject {
                 property int timeout: 16
                 property int interval: 4

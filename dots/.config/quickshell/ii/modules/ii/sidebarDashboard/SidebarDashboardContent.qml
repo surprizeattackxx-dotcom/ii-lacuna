@@ -287,6 +287,33 @@ Item {
                 }
             }
             QuickToggleButton {
+                id: updateButton
+                toggled: false
+                property bool confirm: false
+                buttonIcon: confirm ? "check" : "download"
+                Timer {
+                    id: confirmTimer
+                    interval: 2000
+                    onTriggered: {
+                        confirmTimer.stop();
+                        updateButton.confirm = false
+                    }
+                }
+                onClicked: {
+                    if (confirm) {
+                        GlobalStates.sidebarRightOpen = false;
+                        Quickshell.execDetached(["bash", "-c", Config.options.update.scriptPath + " " + Config.options.update.scriptFlags ]);
+                    } else {
+                        confirm = true
+                        confirmTimer.start()
+                    }
+                    
+                }
+                StyledToolTip {
+                    text: Translation.tr("Update the ii-vynx, make sure to set script path in settings")
+                }
+            }
+            QuickToggleButton {
                 toggled: false
                 buttonIcon: "power_settings_new"
                 onClicked: {
