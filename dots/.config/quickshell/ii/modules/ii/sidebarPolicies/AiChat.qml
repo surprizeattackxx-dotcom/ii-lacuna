@@ -133,6 +133,7 @@ Item {
             name: "clear",
             description: Translation.tr("Clear chat history"),
             execute: () => {
+
                 Ai.clearMessages();
             }
         },
@@ -447,6 +448,7 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                         currentValue: Persistent.states.ai.provider
                         onSelected: newValue => {
                             Persistent.states.ai.provider = newValue;
+                            Persistent.states.ai.model = Ai.modelsOfProviders[providerSelector.currentValue][0].value
                         }
                         options: [
                             {
@@ -474,22 +476,20 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                         textRole: "title"
                         model: Ai.modelsOfProviders[providerSelector.currentValue]
                         enabled: true
-                        currentIndex: getCurrentIndex()
-
-                        function getCurrentIndex() {
-                            for (var i = 0; i < Ai.modelsOfProviders[providerSelector.currentValue].length; i++) {
-                                if (Ai.modelsOfProviders[providerSelector.currentValue][i].value === Persistent.states.ai.model) {
-                                    return i
+                        currentIndex: {
+                            const models = Ai.modelsOfProviders[providerSelector.currentValue];
+                            for (var i = 0; i < models.length; i++) {
+                                if (models[i].value === Persistent.states.ai.model) {
+                                    return i;
                                 }
                             }
-                            return 0
+                            return 0;
                         }
 
                         function updateModel(index = 0) {
                             Persistent.states.ai.model = Ai.modelsOfProviders[providerSelector.currentValue][index].value
                         }
 
-                        onModelChanged: updateModel()
                         onActivated: index => updateModel(index)
                     }
                 }
