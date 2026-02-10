@@ -86,15 +86,15 @@ Singleton {
             "functions": [{"functionDeclarations": [
                 {
                     "name": "switch_to_search_mode",
-                    "description": "Search the web",
+                    "description": "Switch to search mode to perform web searches. Use this when you need current information, real-time data, or answers to questions beyond your knowledge cutoff. After switching, continue with the user's original request.",
                 },
                 {
                     "name": "get_shell_config",
-                    "description": "Get the desktop shell config file contents",
+                    "description": "Retrieve the complete desktop shell configuration file in JSON format. Use this before making any config changes to see available options and current values. Returns the full config structure.",
                 },
                 {
                     "name": "set_shell_config",
-                    "description": "Set a field in the desktop graphical shell config file. Must only be used after `get_shell_config`.",
+                    "description": "Modify a specific field in the desktop shell config. CRITICAL: You MUST call get_shell_config first to see available keys - never guess key names. Use dot notation for nested keys (e.g., 'bar.borderless'). Provide the exact value as a string.",
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -112,7 +112,7 @@ Singleton {
                 },
                 {
                     "name": "run_shell_command",
-                    "description": "Run a shell command in bash and get its output. Use this only for quick commands that don't require user interaction. For commands that require interaction, ask the user to run manually instead.",
+                    "description": "Execute a bash command and return its output. IMPORTANT: This requires user approval before execution. Only use for quick, non-interactive commands (queries, checks, simple operations). For interactive commands, long-running processes, or dangerous operations, ask the user to run them manually instead. The command will be shown to the user for approval.",
                     "parameters": {
                         "type": "object",
                         "properties": {
