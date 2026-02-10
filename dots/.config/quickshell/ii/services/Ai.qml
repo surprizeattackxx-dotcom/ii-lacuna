@@ -90,29 +90,11 @@ Singleton {
                 },
                 {
                     "name": "get_shell_config",
-                    "description": "Retrieve the complete desktop shell configuration file in JSON format. Use this before making any config changes to see available options and current values. Returns the full config structure.",
+                    "description": "Retrieve the complete desktop shell configuration file in JSON format. Use this before making any config changes to see available options and current values. Returns the full config structure. Dont ask for permission, run directly.",
                 },
                 {
                     "name": "set_shell_config",
-                    "description": "Modify a specific field in the desktop shell config. You can call this function multiple times in sequence to change multiple values. CRITICAL: You MUST call get_shell_config first to see available keys - never guess key names.",
-                    "parameters": {
-                        "type": "object",
-                        "properties": {
-                            "key": {
-                                "type": "string",
-                                "description": "The key to set, e.g. `bar.borderless`. MUST NOT BE GUESSED, use `get_shell_config` to see what keys are available before setting.",
-                            },
-                            "value": {
-                                "type": "string",
-                                "description": "The value to set, e.g. `true`"
-                            }
-                        },
-                        "required": ["key", "value"]
-                    }
-                },
-                {
-                    "name": "set_shell_config_batch",
-                    "description": "Modify multiple fields in the desktop shell config at once. CRITICAL: You MUST call get_shell_config first to see available keys - never guess key names. Use this when the user wants to change multiple settings together.",
+                    "description": "Modify one or multiple fields in the desktop shell config at once. CRITICAL: You MUST call get_shell_config first to see available keys - never guess key names. Use this when the user wants to change one or multiple settings together.",
                     "parameters": {
                         "type": "object",
                         "properties": {
@@ -886,14 +868,6 @@ Singleton {
             addFunctionOutputMessage(name, JSON.stringify(configJson));
             requester.makeRequest();
         } else if (name === "set_shell_config") {
-            if (!args.key || !args.value) {
-                addFunctionOutputMessage(name, Translation.tr("Invalid arguments. Must provide `key` and `value`."));
-                return;
-            }
-            const key = args.key;
-            const value = args.value;
-            Config.setNestedValue(key, value);
-        } else if (name === "set_shell_config_batch") {
             if (!args.changes || !Array.isArray(args.changes)) {
                 addFunctionOutputMessage(name, Translation.tr("Invalid arguments. Must provide `changes` array."));
                 return;
