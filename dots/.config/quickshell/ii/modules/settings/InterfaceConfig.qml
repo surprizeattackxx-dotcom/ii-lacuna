@@ -31,7 +31,7 @@ ContentPage {
     }
 
     ContentSection {
-        icon: "keyboard"
+        icon: "model_training"
         title: Translation.tr("AI")
 
         ConfigSwitch {
