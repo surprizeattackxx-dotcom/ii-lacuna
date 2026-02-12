@@ -58,6 +58,7 @@ Item {
     MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.MiddleButton | Qt.BackButton | Qt.ForwardButton | Qt.RightButton | Qt.LeftButton
+        cursorShape: Qt.PointingHandCursor
         onPressed: (event) => {
             if (event.button === Qt.MiddleButton) {
                 activePlayer.togglePlaying();

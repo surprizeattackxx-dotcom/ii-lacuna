@@ -27,6 +27,7 @@ MouseArea {
         onTriggered: activePlayer.positionChanged()
     }
 
+    cursorShape: Qt.PointingHandCursor
     acceptedButtons: Qt.MiddleButton | Qt.BackButton | Qt.ForwardButton | Qt.RightButton | Qt.LeftButton
     hoverEnabled: !Config.options.bar.tooltips.clickToShow
     onPressed: (event) => {
