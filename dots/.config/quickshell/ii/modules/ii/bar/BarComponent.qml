@@ -77,9 +77,9 @@ Item {
     }
 
     readonly property int barGroupStyle: Config.options.bar.barGroupStyle
-
     property color colBackground: barGroupStyle == 1 ? Appearance.m3colors.m3surfaceContainerLow : 
                                   barGroupStyle == 0 ? Appearance.colors.colLayer1 : "transparent"
+    property color colBackgroundHighlight: Appearance.colors.colPrimary
 
     BarGroup {
         id: wrapper
@@ -91,7 +91,7 @@ Item {
         
         startRadius: rootItem.startRadius
         endRadius: rootItem.endRadius
-        colBackground: rootItem.colBackground
+        colBackground: primaryBackgroundComps.includes(modelData.id) ? rootItem.colBackgroundHighlight : rootItem.colBackground
 
         Loader {
             id: itemLoader
