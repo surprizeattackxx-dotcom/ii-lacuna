@@ -22,10 +22,10 @@ Item {
     readonly property int maxSize: 350
     readonly property int fixedSize: root.vertical ? 150 : 225
 
-    property string classText: root.focusingThisMonitor && root.activeWindow?.activated && root.biggestWindow ? 
+    property string appClassText: root.focusingThisMonitor && root.activeWindow?.activated && root.biggestWindow ? 
                 root.activeWindow?.appId : (root.biggestWindow?.class) ?? Translation.tr("Desktop")
                 
-    property string titleText: root.focusingThisMonitor && root.activeWindow?.activated && root.biggestWindow ? 
+    property string appTitleText: root.focusingThisMonitor && root.activeWindow?.activated && root.biggestWindow ? 
                 root.activeWindow?.title : (root.biggestWindow?.title) ?? `${Translation.tr("Workspace")} ${monitor?.activeWorkspace?.id ?? 1}`
     
     implicitHeight: isFixedSize ? fixedSize : (root.vertical ? Math.max(classText.implicitWidth, titleText.implicitWidth) + 20 : colLayout.implicitHeight)
@@ -57,7 +57,7 @@ Item {
             font.pixelSize: Appearance.font.pixelSize.smaller
             color: Appearance.colors.colSubtext
             elide: Text.ElideRight
-            text: root.classText
+            text: root.appClassText
         }
 
         StyledText {
@@ -67,7 +67,7 @@ Item {
             color: Appearance.colors.colOnLayer0
             elide: Text.ElideRight
             rotation: root.vertical ? 90 : 0
-            text: root.vertical ? root.classText : root.titleText
+            text: root.vertical ? root.appClassText : root.appTitleText
         }
     }
 }
