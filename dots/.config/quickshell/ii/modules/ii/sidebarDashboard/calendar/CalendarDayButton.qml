@@ -34,12 +34,12 @@ RippleButton {
             margins: 4
         }
     }
-    
-    Loader {
+
+    LazyLoader {
         id: popupLoader
         active: button.showPopup
         
-        sourceComponent: Item {
+        component: Item {
             parent: button.QsWindow?.contentItem
             anchors.fill: parent
             
@@ -56,10 +56,9 @@ RippleButton {
                 y: {
                     if (!button.QsWindow) return 0;
                     const buttonPos = button.QsWindow.contentItem.mapFromItem(button, 0, 0);
-                    return buttonPos.y - popup.height - 4;
+                    return buttonPos.y - popup.height - 4; 
                 }
             }
-            
         }
     }
     
