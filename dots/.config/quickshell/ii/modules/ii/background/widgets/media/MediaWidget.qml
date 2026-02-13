@@ -29,7 +29,7 @@ AbstractBackgroundWidget {
     property var filteredPlayerList: playerList.filter(player => player != null && player.trackAlbum != "")
     property var filteredActivePlayer: MprisController.activePlayer?.trackAlbum != "" ? MprisController.activePlayer : null
     
-    property MprisPlayer currentPlayer : null
+    property MprisPlayer currentPlayer : filteredActivePlayer
     property var artUrl: currentPlayer?.trackArtUrl
     property string artDownloadLocation: Directories.coverArt
     property string artFileName: Qt.md5(artUrl)
@@ -67,8 +67,6 @@ AbstractBackgroundWidget {
     property bool downloaded: false
     property string displayedArtFilePath: root.downloaded ? Qt.resolvedUrl(artFilePath) : ""
 
-    property bool playerInList: root.playerList.includes(root.currentPlayer)
-
     property list<real> visualizerPoints: [] 
 
     implicitHeight: contentItem.implicitHeight
@@ -89,33 +87,7 @@ AbstractBackgroundWidget {
         }
     }
 
-    Component.onCompleted: Qt.callLater(() => updatePlayer())
     onArtFilePathChanged: updateArt()
-
-    onPlayerListChanged: {
-        if (root.currentPlayer != null) return
-        updatePlayer()
-    }
-    onFilteredActivePlayerChanged: {
-        if (root.currentPlayer != null) return
-        updatePlayer()
-    }
-    onPlayerInListChanged: {
-        if (root.playerInList) return
-        updatePlayer()
-    }
-    
-    function updatePlayer() {
-        // console.log("[Media Player Widget]",filteredActivePlayer)
-        if (MprisController.activePlayer) {
-            root.currentPlayer = MprisController.activePlayer
-        }
-        if (root.filteredPlayerList.length > 0) {
-            root.currentPlayer = root.filteredPlayerList[0]
-            return
-        }
-        root.currentPlayer = root.playerList[0]
-    }
 
     function nextPlayer() {
         root.currentPlayer = root.playerList[(root.playerList.indexOf(root.currentPlayer) + 1) % root.playerList.length]
