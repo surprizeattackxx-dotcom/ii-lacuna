@@ -197,12 +197,12 @@ ApplicationWindow {
                 MaterialShapeWrappedMaterialSymbol {
                     iconSize: Appearance.font.pixelSize.huge
                     shape: MaterialShape.Shape.Ghostish
-                    text: lastSearchIndex !== -1 ? "" : Config.options.settings.enableSearchFunctionality ? "search" : "search_off"
+                    text: resultText.show ? "" : Config.options.settings.enableSearchFunctionality ? "search" : "search_off"
 
                     StyledText {
                         id: resultText
 
-                        readonly property bool show: root.lastSearchIndex !== -1
+                        readonly property bool show: root.lastSearchIndex !== -1 && root.resultsCount > 0
 
                         visible: false
                         animateChange: true
@@ -265,6 +265,11 @@ ApplicationWindow {
                         }
 
                         let length = SearchRegistry.getResultsRanked(searchInput.text).length
+
+                        if (length == 0) {
+                            noMoreResultsAnim.restart();
+                            return
+                        }
                         
                         if (root.lastSearch != searchInput.text) {
                             root.lastSearchIndex = 0
