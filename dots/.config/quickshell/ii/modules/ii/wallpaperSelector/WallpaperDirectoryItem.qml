@@ -157,6 +157,7 @@ MouseArea {
                         }
 
                         onClicked: {
+                            WallpaperBrowser.addSimilarImageMessage(Translation.tr("Searching for a similar image:"), fileModelData.filePath)
                             WallpaperBrowser.moreLikeThisPicture(root.getWallhavenId(fileModelData.fileName), 1);
                             Persistent.states.sidebar.policies.tab = button.wallpaperTabIndex;
                             
