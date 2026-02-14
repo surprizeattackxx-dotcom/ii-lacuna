@@ -22,6 +22,7 @@ RowLayout {
     /// Search Registry ///
     Component.onCompleted: {
         if (page?.register == false) return
+        if (!visible) return
         let section = SearchRegistry.findSection(this)
         if (section && text) section.addKeyword(text)
     }
