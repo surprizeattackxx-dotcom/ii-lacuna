@@ -148,6 +148,7 @@ MouseArea {
                         colBackgroundHover: Appearance.colors.colSecondaryContainerHover
                         colRipple: Appearance.colors.colSecondaryContainerActive
 
+                        // A better way would be better, it will broke when new tabs are added, but it works for now
                         property int wallpaperTabIndex: {
                             let index = 0;
                             if (Config.options.policies.ai !== 0) index++;
@@ -166,11 +167,7 @@ MouseArea {
                         MaterialSymbol {
                             text: "image_search"
 
-                            // anchors.centerIn doesnot work, WHYYYY :((
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            anchors.bottom: parent.bottom
-                            anchors.bottomMargin: 6
-
+                            anchors.centerIn: parent
                             color: Appearance.colors.colPrimary
                             font.pixelSize: Appearance.font.pixelSize.large
                             fill: 1
