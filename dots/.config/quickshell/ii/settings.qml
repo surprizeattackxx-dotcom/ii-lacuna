@@ -22,6 +22,13 @@ ApplicationWindow {
     property string firstRunFileContent: "This file is just here to confirm you've been greeted :>"
     property real contentPadding: 8
     property bool showNextTime: false
+
+    property int currentPage: 0
+    property real scrollPos: 0
+    property string lastSearch: ""
+    property int lastSearchIndex: -1
+    property int resultsCount: 0
+
     property var pages: [
         {
             name: Translation.tr("Quick"),
@@ -65,12 +72,56 @@ ApplicationWindow {
             component: "modules/settings/About.qml"
         }
     ]
-    property int currentPage: 0
+    
 
     visible: true
     onClosing: Qt.quit()
     title: "illogical-impulse Settings"
 
+    property bool allowHeavyLoad: false
+    property int currentLoadIndex: 0
+
+    Repeater {
+        model: root.pages
+        delegate: Loader {
+            required property var modelData
+            required property int index
+            id: testLoader
+            active: allowHeavyLoad && index === root.currentLoadIndex
+            source: modelData.component
+            property bool register: true
+            onLoaded: {
+                active = false
+                // Bir sonraki sayfayı yükle
+                loadNextTimer.start()
+            }
+        }
+    }
+    
+    Timer {
+        id: registerTimer
+        interval: 100
+        running: Config.options.settings.enableSearchFunctionality
+        onTriggered: {
+            allowHeavyLoad = true
+            // console.log("[Settings] Starting registration")
+        }
+    }
+
+    Timer {
+        id: loadNextTimer
+        interval: 100
+        onTriggered: {
+            root.currentLoadIndex++
+            // console.log("[Settings] Loaded page", root.currentLoadIndex, "/", root.pages.length)
+            
+            if (root.currentLoadIndex >= root.pages.length) {
+                console.log("[Settings] All pages registered")
+            }
+        }
+    }
+
+    
     Component.onCompleted: {
         MaterialThemeLoader.reapplyTheme()
         Config.readWriteDelay = 0 // Settings app always only sets one var at a time so delay isn't needed
@@ -109,42 +160,149 @@ ApplicationWindow {
             }
         }
 
-        Item { // Titlebar
-            visible: Config.options?.windows.showTitlebar
+        RowLayout {
+            Layout.alignment: Qt.AlignCenter
             Layout.fillWidth: true
             Layout.fillHeight: false
-            implicitHeight: Math.max(titleText.implicitHeight, windowControlsRow.implicitHeight)
+
+
             StyledText {
                 id: titleText
-                anchors {
-                    left: Config.options.windows.centerTitle ? undefined : parent.left
-                    horizontalCenter: Config.options.windows.centerTitle ? parent.horizontalCenter : undefined
-                    verticalCenter: parent.verticalCenter
-                    leftMargin: 12
-                }
                 color: Appearance.colors.colOnLayer0
                 text: Translation.tr("Settings")
+                Layout.leftMargin: 20
                 font {
                     family: Appearance.font.family.title
                     pixelSize: Appearance.font.pixelSize.title
                     variableAxes: Appearance.font.variableAxes.title
                 }
             }
-            RowLayout { // Window controls row
-                id: windowControlsRow
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.right: parent.right
-                RippleButton {
-                    buttonRadius: Appearance.rounding.full
-                    implicitWidth: 35
-                    implicitHeight: 35
-                    onClicked: root.close()
-                    contentItem: MaterialSymbol {
+
+            Item {
+                Layout.fillWidth: true
+            }
+
+            RowLayout {
+                id: searchBox
+
+                SequentialAnimation {
+                    id: noMoreResultsAnim
+                    NumberAnimation { target: searchBox; property: "Layout.leftMargin"; to: -30; duration: 50 }
+                    NumberAnimation { target: searchBox; property: "Layout.leftMargin"; to: 30; duration: 50 }
+                    NumberAnimation { target: searchBox; property: "Layout.leftMargin"; to: -15; duration: 40 }
+                    NumberAnimation { target: searchBox; property: "Layout.leftMargin"; to: 15; duration: 40 }
+                    NumberAnimation { target: searchBox; property: "Layout.leftMargin"; to: 0; duration: 30 }
+                }
+
+                MaterialShapeWrappedMaterialSymbol {
+                    iconSize: Appearance.font.pixelSize.huge
+                    shape: MaterialShape.Shape.Ghostish
+                    text: lastSearchIndex !== -1 ? "" : Config.options.settings.enableSearchFunctionality ? "search" : "search_off"
+
+                    StyledText {
+                        id: resultText
+
+                        readonly property bool show: root.lastSearchIndex !== -1
+
+                        visible: false
+                        animateChange: true
                         anchors.centerIn: parent
-                        horizontalAlignment: Text.AlignHCenter
-                        text: "close"
-                        iconSize: 20
+                        text: (root.lastSearchIndex % root.resultsCount + 1) + "/" + root.resultsCount
+
+                        onShowChanged: if (!show) resultText.visible = false
+                        Timer {
+                            id: showTimer
+                            interval: 100
+                            running: resultText.show
+                            repeat: false
+                            onTriggered: resultText.visible = true
+                        }
                     }
+                }
+                ToolbarTextField { // Search box
+                    id: searchInput
+                    Layout.topMargin: 4
+                    Layout.bottomMargin: 4
+                    font.pixelSize: Appearance.font.pixelSize.small
+                    enabled: Config.options.settings.enableSearchFunctionality
+                    placeholderText: Config.options.settings.enableSearchFunctionality ? Translation.tr("Search all settings..") : Translation.tr("Searching is disabled")
+                    implicitWidth: Appearance.sizes.searchWidth
+
+                    onTextChanged: {
+                        if (text === "") {
+                            root.lastSearchIndex = -1
+                        }
+                    }
+
+                    // We may use this in the future, this only searches the best result
+                    /* onAccepted: {
+                        if (!searchInput.text || searchInput.text.trim() === "") return
+                        
+                        let normalizedText = searchInput.text.toLowerCase()
+                        let bestResult = SearchRegistry.getBestResult(normalizedText)
+
+                        if (!bestResult) {
+                            noMoreResultsAnim.restart()
+                            return
+                        }
+
+                        root.currentPage = bestResult.pageIndex
+                        root.scrollPos = bestResult.yPos
+                        SearchRegistry.currentSearch = bestResult.matchedString
+                    } */
+
+                    onAccepted: {
+                        const result = SearchRegistry.getResultsRanked(searchInput.text)
+
+                        if (result == null) {
+                            noMoreResultsAnim.restart();
+                            return
+                        }
+
+                        let length = SearchRegistry.getResultsRanked(searchInput.text).length
+                        
+                        if (root.lastSearch != searchInput.text) {
+                            root.lastSearchIndex = 0
+                            root.lastSearch = searchInput.text
+                            
+                        } else {
+                            root.lastSearchIndex++
+                            if (SearchRegistry.getResultsRanked(searchInput.text).length === 1) {
+                                noMoreResultsAnim.restart()
+                            }
+                        }
+
+                        let normalizedText = searchInput.text.toLowerCase()
+                        let results = SearchRegistry.getResultsRanked(normalizedText)
+                        if (results.length > 0) {
+                            let index = root.lastSearchIndex % results.length
+                            let result = results[index]
+                            
+                            root.resultsCount = results.length
+                            root.currentPage = result.pageIndex
+                            root.scrollPos = result.yPos
+                            SearchRegistry.currentSearch = result.matchedString
+                        }
+                    }
+                }
+            }
+            
+
+            Item {
+                Layout.fillWidth: true
+            }
+
+            RippleButton {
+                buttonRadius: Appearance.rounding.full
+                implicitWidth: 35
+                implicitHeight: 35
+                onClicked: root.close()
+                Layout.rightMargin: 10
+                contentItem: MaterialSymbol {
+                    anchors.centerIn: parent
+                    horizontalAlignment: Text.AlignHCenter
+                    text: "close"
+                    iconSize: 20
                 }
             }
         }
@@ -248,6 +406,19 @@ ApplicationWindow {
                         function onCurrentPageChanged() {
                             switchAnim.complete();
                             switchAnim.start();
+                        }
+                        function onScrollPosChanged() {
+                            if (root.scrollPos == -1) return
+                            scrollTimer.start()
+                        }
+                    }
+
+                    Timer {
+                        id: scrollTimer
+                        interval: 250
+                        onTriggered: {
+                            pageLoader.item.contentY = root.scrollPos
+                            root.scrollPos = -1
                         }
                     }
 

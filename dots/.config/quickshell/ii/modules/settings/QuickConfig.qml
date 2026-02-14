@@ -10,6 +10,8 @@ import qs.modules.common.functions
 
 ContentPage {
     id: page
+    readonly property int index: 0
+    property bool register: parent.register ?? false
     forceWidth: true
     interactive: false
 

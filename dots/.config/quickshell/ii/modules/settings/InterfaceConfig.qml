@@ -8,6 +8,8 @@ import Quickshell.Io
 
 ContentPage {
     id: page
+    readonly property int index: 4
+    property bool register: parent.register ?? false
     forceWidth: true
 
     property bool hyprscrollingPluginEnabled: false
@@ -582,7 +584,7 @@ ContentPage {
 
         ConfigRow {
             ContentSubsection {
-                title: Translation.tr("Sidebars position")
+                title: Translation.tr("Sidebar position")
 
                 ConfigSelectionArray {
                     currentValue: Config.options.sidebar.position
