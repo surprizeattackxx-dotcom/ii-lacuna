@@ -12,7 +12,7 @@ Item {
 
     property string currentSearch: ""
     onCurrentSearchChanged: {
-        console.log("CURRENT SERACH:", currentSearch)
+        console.log("Current found search result string:", currentSearch)
     }
 
     // used by config components like ConfigSwitch, ConfigSpinBox
