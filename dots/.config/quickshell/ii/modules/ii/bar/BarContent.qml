@@ -107,58 +107,26 @@ Item { // Bar content region
         RowLayout {
             id: leftSectionRowLayout
             anchors.fill: parent
-            spacing: 10
+            spacing: 0
 
-            BarGroup {
-                id: leftSideButtonGroup
-                startRadius: Appearance.rounding.full
-                endRadius: Config.options.bar.layouts.left.length > 0 ? Appearance.rounding.verysmall : Appearance.rounding.full
-
+            LeftSidebarButton { // Left sidebar button
+                id: leftSidebarButton
                 Layout.alignment: Qt.AlignVCenter
-                Layout.leftMargin: Appearance.rounding.screenRounding / 2
-
-                Component.onCompleted: leftSidebarButtonWidth = leftSideButtonGroup.width - 8
-
-                LeftSidebarButton { // Left sidebar button
-                    colBackground: barLeftSideMouseArea.hovered ? Appearance.colors.colLayer1Hover : ColorUtils.transparentize(Appearance.colors.colLayer1Hover, 1)
-                }
+                Layout.leftMargin: Appearance.rounding.screenRounding
+                colBackground: barLeftSideMouseArea.hovered ? Appearance.colors.colLayer1Hover : ColorUtils.transparentize(Appearance.colors.colLayer1Hover, 1)
             }
-            
-        }
-    }
 
-    Item {
-        id: leftStopper
-        anchors {
-            top: parent.top
-            bottom: parent.bottom
-            left: parent.left
-            leftMargin: Appearance.rounding.screenRounding + leftSidebarButtonWidth
-        }
-        width: 1
-    }
-
-    RowLayout { // Left section
-        id: leftSection
-        anchors {
-            top: parent.top
-            bottom: parent.bottom
-            left: leftStopper.right
-        }
-        spacing: 4
-
-        Repeater {
-            id: leftRepeater
-            model: Config.options.bar.layouts.left
-            delegate: BarComponent {
-                list: leftRepeater.model
-                barSection: 0
+            ActiveWindow {
+                Layout.leftMargin: 10 + (leftSidebarButton.visible ? 0 : Appearance.rounding.screenRounding)
+                Layout.rightMargin: Appearance.rounding.screenRounding
+                Layout.fillWidth: true
+                Layout.fillHeight: true
+                visible: root.useShortenedForm === 0
             }
         }
     }
 
-    
-    Item {
+    Row { // Middle section
         id: middleSection
         anchors {
             top: parent.top
