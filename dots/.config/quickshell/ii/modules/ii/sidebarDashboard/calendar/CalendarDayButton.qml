@@ -37,29 +37,39 @@ RippleButton {
 
     LazyLoader {
         id: popupLoader
-        active: button.showPopup
+        active: itemScale > 0.9
+
+        property real itemScale: button.showPopup ? 1 : 0.85
+        property real itemOpacity: button.showPopup ? 1 : 0
         
-        component: Item {
-            parent: button.QsWindow?.contentItem
-            anchors.fill: parent
+        Behavior on itemScale {
+            animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+        }
+        Behavior on itemOpacity {
+            animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+        }
+
+        component: CalendarPopup {
+            id: popup
+            parent: button.QsWindow?.contentItem // i cant believe this works..
+            scale: popupLoader.itemScale
+            opacity: popupLoader.itemOpacity
             
-            CalendarPopup {
-                id: popup
-                
-                x: {
-                    if (!button.QsWindow) return 0;
-                    const buttonPos = button.QsWindow.contentItem.mapFromItem(button, 0, 0);
-                    const centeredX = buttonPos.x + (button.width / 2) - (popup.width / 2);
-                    return Math.max(0, Math.min(centeredX, parent.width - popup.width));
-                }
-                
-                y: {
-                    if (!button.QsWindow) return 0;
-                    const buttonPos = button.QsWindow.contentItem.mapFromItem(button, 0, 0);
-                    return buttonPos.y - popup.height - 4; 
-                }
+
+            x: {
+                if (!button.QsWindow) return 0;
+                const buttonPos = button.QsWindow.contentItem.mapFromItem(button, 0, 0);
+                const centeredX = buttonPos.x + (button.width / 2) - (popup.width / 2);
+                return Math.max(0, Math.min(centeredX, parent.width - popup.width));
+            }
+            
+            y: {
+                if (!button.QsWindow) return 0;
+                const buttonPos = button.QsWindow.contentItem.mapFromItem(button, 0, 0);
+                return buttonPos.y - popup.height - 4; 
             }
         }
+        
     }
     
     MouseArea {
