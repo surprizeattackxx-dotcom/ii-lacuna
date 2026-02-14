@@ -10,6 +10,11 @@ Item {
 
     property list<var> sections: []
 
+    property string currentSearch: ""
+    onCurrentSearchChanged: {
+        console.log("CURRENT SERACH:", currentSearch)
+    }
+
     // used by config components like ConfigSwitch, ConfigSpinBox
     function findSection(item) {
         while (item) {
@@ -86,27 +91,48 @@ Item {
 
         for (let section of sections) {
             let totalScore = 0
+            let bestMatch = "" 
+            let bestMatchScore = 0
             
-            // direct match
+            // direct match 
             if (section.title.toLowerCase().includes(query)) {
                 totalScore += 1000
+                if (bestMatchScore < 1000) {
+                    bestMatch = section.title
+                    bestMatchScore = 1000
+                }
             }
             
             // direct match
-            if (section._searchText.includes(query)) {
-                totalScore += 500
+            for (let searchStr of section.searchStrings) {
+                let lowerStr = searchStr.toLowerCase()
+                if (lowerStr.includes(query)) {
+                    let score = lowerStr === query ? 800 : 500
+                    totalScore += score
+                    if (score > bestMatchScore) {
+                        bestMatch = searchStr
+                        bestMatchScore = score
+                    }
+                }
             }
             
+            // token based matching
             for (let qToken of queryTokens) {
                 for (let sToken of section._tokens) {
+                    let score = 0
                     if (sToken.startsWith(qToken)) {
-                        totalScore += 200
+                        score = 200
                     } else if (sToken.includes(qToken)) {
-                        totalScore += 100
+                        score = 100
                     } else {
-                        let fuzzyScore = fuzzyMatch(sToken, qToken)
-                        if (fuzzyScore > 0) {
-                            totalScore += fuzzyScore
+                        score = fuzzyMatch(sToken, qToken)
+                    }
+                    
+                    if (score > 0) {
+                        totalScore += score
+                        if (score > bestMatchScore) {
+                            bestMatch = sToken
+                            bestMatchScore = score
                         }
                     }
                 }
@@ -117,6 +143,7 @@ Item {
                     pageIndex: section.pageIndex,
                     title: section.title,
                     keyword: section._searchText,
+                    matchedString: bestMatch || section.title,
                     yPos: section.yPos,
                     score: totalScore
                 })

@@ -189,6 +189,22 @@ ApplicationWindow {
                     implicitWidth: Appearance.sizes.searchWidth
 
                     onAccepted: {
+                        if (!searchInput.text || searchInput.text.trim() === "") return
+                        
+                        let normalizedText = searchInput.text.toLowerCase()
+                        let bestResult = SearchRegistry.getBestResult(normalizedText)
+
+                        if (!bestResult) {
+                            noMoreResultsAnim.restart()
+                            return
+                        }
+
+                        root.currentPage = bestResult.pageIndex
+                        root.scrollPos = bestResult.yPos
+                        SearchRegistry.currentSearch = bestResult.matchedString
+                    }
+
+                    /* onAccepted: {
                         const result = SearchRegistry.getResultsRanked(searchInput.text)
 
                         if (result == null) {
@@ -209,9 +225,17 @@ ApplicationWindow {
                             }
                         }
 
-                        root.currentPage = SearchRegistry.getResultsRanked(searchInput.text)[root.lastSearchIndex % length].pageIndex
-                        root.scrollPos = SearchRegistry.getResultsRanked(searchInput.text)[root.lastSearchIndex % length].yPos
-                    }
+                        let normalizedText = searchInput.text.toLowerCase()
+                        let results = SearchRegistry.getResultsRanked(normalizedText)
+                        if (results.length > 0) {
+                            let index = root.lastSearchIndex % results.length
+                            let result = results[index]
+                            
+                            root.currentPage = result.pageIndex
+                            root.scrollPos = result.yPos
+                            SearchRegistry.currentSearch = result.matchedString
+                        }
+                    } */
                 }
             }
             
