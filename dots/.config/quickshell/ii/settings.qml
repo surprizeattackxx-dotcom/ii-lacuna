@@ -95,7 +95,7 @@ ApplicationWindow {
     
     Timer {
         id: registerTimer
-        interval: 100
+        interval: 250
         running: true
         onTriggered: {
             allowHeavyLoad = true

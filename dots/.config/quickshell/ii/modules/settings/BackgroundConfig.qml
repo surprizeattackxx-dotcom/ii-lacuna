@@ -61,7 +61,6 @@ ContentPage {
         icon: "clock_loader_40"
         title: Translation.tr("Widget: Clock")
         keywords: ["clock", "widget", "digital", "cookie", "animate", "sides", "rotate", "dial", "hour", "minute", "second", "date", "quote", "background", "widgets"]
-        id: settingsClock
 
         function stylePresent(styleName) {
             if (!Config.options.background.widgets.clock.showOnlyWhenLocked && Config.options.background.widgets.clock.style === styleName) {
