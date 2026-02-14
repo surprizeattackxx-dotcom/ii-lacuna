@@ -92,6 +92,7 @@ ContentPage {
                 Layout.fillWidth: true
             }
             ConfigSelectionArray {
+                register: true
                 Layout.fillWidth: false
                 currentValue: Config.options.background.widgets.clock.placementStrategy
                 onSelected: newValue => {
@@ -128,6 +129,7 @@ ContentPage {
 
         ConfigRow {
             ContentSubsection {
+                register: true
                 visible: !Config.options.background.widgets.clock.showOnlyWhenLocked
                 title: Translation.tr("Clock style")
                 Layout.fillWidth: true
@@ -152,6 +154,7 @@ ContentPage {
             }
 
             ContentSubsection {
+                register: true
                 title: Translation.tr("Clock style (locked)")
                 Layout.fillWidth: false
                 ConfigSelectionArray {
@@ -288,9 +291,6 @@ ContentPage {
         ContentSubsection {
             visible: settingsClock.cookiePresent
             title: Translation.tr("Cookie clock settings")
-
-            
-            
 
             ConfigSpinBox {
                 enabled: Config.options.background.widgets.clock.cookie.backgroundStyle !== "shape"
@@ -684,6 +684,7 @@ ContentPage {
                 Layout.fillWidth: true
             }
             ConfigSelectionArray {
+                register: true
                 Layout.fillWidth: false
                 currentValue: Config.options.background.widgets.weather.placementStrategy
                 onSelected: newValue => {
@@ -731,6 +732,7 @@ ContentPage {
                 Layout.fillWidth: true
             }
             ConfigSelectionArray {
+                register: true
                 Layout.fillWidth: false
                 currentValue: Config.options.background.widgets.media.placementStrategy
                 onSelected: newValue => {
