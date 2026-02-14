@@ -34,6 +34,7 @@ ColumnLayout {
             text: root.title
         }
         MaterialSymbol {
+            opacity: 1 - highlightOverlay.opacity
             visible: root.tooltip && root.tooltip.length > 0
             text: "info"
             iconSize: Appearance.font.pixelSize.large
