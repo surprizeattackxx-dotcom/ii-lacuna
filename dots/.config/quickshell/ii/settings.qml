@@ -78,30 +78,48 @@ ApplicationWindow {
     title: "illogical-impulse Settings"
 
     property bool allowHeavyLoad: false
+    property int currentLoadIndex: 0
 
     Repeater {
         model: root.pages
         delegate: Loader {
             required property var modelData
+            required property int index
             id: testLoader
-            active: allowHeavyLoad
+            active: allowHeavyLoad && index === root.currentLoadIndex
             source: modelData.component
             property bool register: true
             onLoaded: {
                 active = false
+                // Bir sonraki sayfayı yükle
+                loadNextTimer.start()
             }
         }
     }
     
     Timer {
         id: registerTimer
-        interval: 250
+        interval: 100
         running: true
         onTriggered: {
             allowHeavyLoad = true
-            console.log("[Settings] Registering")
+            // console.log("[Settings] Starting registration")
         }
     }
+
+    Timer {
+        id: loadNextTimer
+        interval: 100
+        onTriggered: {
+            root.currentLoadIndex++
+            // console.log("[Settings] Loaded page", root.currentLoadIndex, "/", root.pages.length)
+            
+            if (root.currentLoadIndex >= root.pages.length) {
+                console.log("[Settings] All pages registered")
+            }
+        }
+    }
+
     
     Component.onCompleted: {
         MaterialThemeLoader.reapplyTheme()
