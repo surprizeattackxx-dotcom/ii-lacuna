@@ -9,10 +9,39 @@ ColumnLayout {
     property string title
     property string icon: ""
     property string tooltip: ""
+    property list<string> stringMap: []
     default property alias data: sectionContent.data
 
     Layout.fillWidth: true
     spacing: 6
+
+    Timer {
+        id: registerDelayTimer
+        interval: 250
+        onTriggered: {
+            
+        }
+    }
+
+    Component.onCompleted: {
+        if (page?.register == false) return
+        // console.log("KEYWORDS", root.stringMap)
+        if (!page?.index) return
+        SearchRegistry.registerSection({
+            pageIndex: page?.index,
+            title: root.title,
+            searchStrings: root.stringMap.slice(),
+            yPos: root.y
+        })
+    }
+
+    function addKeyword(word) {
+        if (!word) return
+        // console.log("ADD KEYWORD", word)
+        stringMap.push(word)
+    }
+
+    
 
     RowLayout {
         spacing: 6

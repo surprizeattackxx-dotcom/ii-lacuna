@@ -22,6 +22,12 @@ ApplicationWindow {
     property string firstRunFileContent: "This file is just here to confirm you've been greeted :>"
     property real contentPadding: 8
     property bool showNextTime: false
+
+    property int currentPage: 0
+    property real scrollPos: 0
+    property string lastSearch: ""
+    property int lastSearchIndex: 0 
+
     property var pages: [
         {
             name: Translation.tr("Quick"),
@@ -71,6 +77,32 @@ ApplicationWindow {
     onClosing: Qt.quit()
     title: "illogical-impulse Settings"
 
+    property bool allowHeavyLoad: false
+
+    Repeater {
+        model: root.pages
+        delegate: Loader {
+            required property var modelData
+            id: testLoader
+            active: allowHeavyLoad
+            source: modelData.component
+            property bool register: true
+            onLoaded: {
+                active = false
+            }
+        }
+    }
+    
+    Timer {
+        id: registerTimer
+        interval: 250
+        running: true
+        onTriggered: {
+            allowHeavyLoad = true
+            console.log("[Settings] Registering")
+        }
+    }
+    
     Component.onCompleted: {
         MaterialThemeLoader.reapplyTheme()
         Config.readWriteDelay = 0 // Settings app always only sets one var at a time so delay isn't needed
@@ -130,21 +162,103 @@ ApplicationWindow {
                     variableAxes: Appearance.font.variableAxes.title
                 }
             }
-            RowLayout { // Window controls row
-                id: windowControlsRow
-                anchors.verticalCenter: parent.verticalCenter
-                anchors.right: parent.right
-                RippleButton {
-                    buttonRadius: Appearance.rounding.full
-                    implicitWidth: 35
-                    implicitHeight: 35
-                    onClicked: root.close()
-                    contentItem: MaterialSymbol {
-                        anchors.centerIn: parent
-                        horizontalAlignment: Text.AlignHCenter
-                        text: "close"
-                        iconSize: 20
+
+            Item {
+                Layout.fillWidth: true
+            }
+
+            RowLayout {
+                id: searchBox
+
+                SequentialAnimation {
+                    id: noMoreResultsAnim
+                    NumberAnimation { target: searchBox; property: "Layout.leftMargin"; to: -30; duration: 50 }
+                    NumberAnimation { target: searchBox; property: "Layout.leftMargin"; to: 30; duration: 50 }
+                    NumberAnimation { target: searchBox; property: "Layout.leftMargin"; to: -15; duration: 40 }
+                    NumberAnimation { target: searchBox; property: "Layout.leftMargin"; to: 15; duration: 40 }
+                    NumberAnimation { target: searchBox; property: "Layout.leftMargin"; to: 0; duration: 30 }
+                }
+
+                MaterialShapeWrappedMaterialSymbol {
+                    iconSize: Appearance.font.pixelSize.huge
+                    shape: MaterialShape.Shape.Cookie7Sided
+                    text: "search"
+                }
+                ToolbarTextField { // Search box
+                    id: searchInput
+                    Layout.topMargin: 4
+                    Layout.bottomMargin: 4
+                    font.pixelSize: Appearance.font.pixelSize.small
+                    placeholderText: Translation.tr("Search all settings..")
+                    implicitWidth: Appearance.sizes.searchWidth
+
+                    onAccepted: {
+                        if (!searchInput.text || searchInput.text.trim() === "") return
+                        
+                        let normalizedText = searchInput.text.toLowerCase()
+                        let bestResult = SearchRegistry.getBestResult(normalizedText)
+
+                        if (!bestResult) {
+                            noMoreResultsAnim.restart()
+                            return
+                        }
+
+                        root.currentPage = bestResult.pageIndex
+                        root.scrollPos = bestResult.yPos
+                        SearchRegistry.currentSearch = bestResult.matchedString
                     }
+
+                    /* onAccepted: {
+                        const result = SearchRegistry.getResultsRanked(searchInput.text)
+
+                        if (result == null) {
+                            noMoreResultsAnim.restart();
+                            return
+                        }
+
+                        let length = SearchRegistry.getResultsRanked(searchInput.text).length
+                        
+                        if (root.lastSearch != searchInput.text) {
+                            root.lastSearchIndex = 0
+                            root.lastSearch = searchInput.text
+                            
+                        } else {
+                            root.lastSearchIndex++
+                            if (SearchRegistry.getResultsRanked(searchInput.text).length === 1) {
+                                noMoreResultsAnim.restart()
+                            }
+                        }
+
+                        let normalizedText = searchInput.text.toLowerCase()
+                        let results = SearchRegistry.getResultsRanked(normalizedText)
+                        if (results.length > 0) {
+                            let index = root.lastSearchIndex % results.length
+                            let result = results[index]
+                            
+                            root.currentPage = result.pageIndex
+                            root.scrollPos = result.yPos
+                            SearchRegistry.currentSearch = result.matchedString
+                        }
+                    } */
+                }
+            }
+            
+
+            Item {
+                Layout.fillWidth: true
+            }
+
+            RippleButton {
+                buttonRadius: Appearance.rounding.full
+                implicitWidth: 35
+                implicitHeight: 35
+                onClicked: root.close()
+                Layout.rightMargin: 10
+                contentItem: MaterialSymbol {
+                    anchors.centerIn: parent
+                    horizontalAlignment: Text.AlignHCenter
+                    text: "close"
+                    iconSize: 20
                 }
             }
         }

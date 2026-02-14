@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 
@@ -12,6 +13,13 @@ ColumnLayout {
     Layout.fillWidth: true
     Layout.topMargin: 4
     spacing: 2
+
+    Component.onCompleted: {
+        if (page?.register == false) return
+        let section = SearchRegistry.findSection(this)
+        if (section && title) section.addKeyword(title)
+        if (section && tooltip) section.addKeyword(tooltip)
+    }
 
     RowLayout {
         ContentSubsectionLabel {

@@ -1,5 +1,7 @@
 import qs.modules.common.widgets
 import qs.modules.common
+import qs.services
+import qs.modules.common.functions
 import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
@@ -14,6 +16,32 @@ RippleButton {
     font.pixelSize: Appearance.font.pixelSize.small
     
     onClicked: checked = !checked
+
+    property color normalColor: ColorUtils.transparentize(Appearance?.colors.colLayer1Hover, 1) 
+    property color highlightColor: Appearance.colors.colSecondaryContainer
+
+    colBackground: normalColor
+
+    /// Search Registry ///
+    Component.onCompleted: {
+        if (page?.register == false) return
+        let section = SearchRegistry.findSection(this)
+        if (section && text) section.addKeyword(text)
+    }
+
+    readonly property string currentSearch: SearchRegistry.currentSearch
+    onCurrentSearchChanged: {
+        if (SearchRegistry.currentSearch.toLowerCase() === root.text.toLowerCase()) {
+            highlightOverlay.startAnimation()
+        }
+    }
+
+    HighlightOverlay {
+        id: highlightOverlay
+        anchors.fill: parent
+        radius: root.buttonEffectiveRadius
+        color: root.highlightColor
+    }
 
     contentItem: RowLayout {
         spacing: 10
@@ -40,4 +68,3 @@ RippleButton {
         }
     }
 }
-
