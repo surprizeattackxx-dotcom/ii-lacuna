@@ -100,7 +100,7 @@ ApplicationWindow {
     Timer {
         id: registerTimer
         interval: 100
-        running: true
+        running: Config.options.settings.enableSearchFunctionality
         onTriggered: {
             allowHeavyLoad = true
             // console.log("[Settings] Starting registration")
@@ -196,14 +196,15 @@ ApplicationWindow {
                 MaterialShapeWrappedMaterialSymbol {
                     iconSize: Appearance.font.pixelSize.huge
                     shape: MaterialShape.Shape.Cookie7Sided
-                    text: "search"
+                    text: Config.options.settings.enableSearchFunctionality ? "search" : "search_off"
                 }
                 ToolbarTextField { // Search box
                     id: searchInput
                     Layout.topMargin: 4
                     Layout.bottomMargin: 4
                     font.pixelSize: Appearance.font.pixelSize.small
-                    placeholderText: Translation.tr("Search all settings..")
+                    enabled: Config.options.settings.enableSearchFunctionality
+                    placeholderText: Config.options.settings.enableSearchFunctionality ? Translation.tr("Search all settings..") : Translation.tr("Searching is disabled")
                     implicitWidth: Appearance.sizes.searchWidth
 
                     onAccepted: {
