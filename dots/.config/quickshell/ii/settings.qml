@@ -26,7 +26,7 @@ ApplicationWindow {
     property int currentPage: 0
     property real scrollPos: 0
     property string lastSearch: ""
-    property int lastSearchIndex: 0
+    property int lastSearchIndex: 0 
 
     property var pages: [
         {
