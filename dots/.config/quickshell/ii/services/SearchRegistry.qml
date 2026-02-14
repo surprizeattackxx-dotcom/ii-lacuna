@@ -93,17 +93,19 @@ Item {
             let totalScore = 0
             let bestMatch = "" 
             let bestMatchScore = 0
+            let bestMatchSource = "" 
             
-            // direct match 
+            // direct match in title
             if (section.title.toLowerCase().includes(query)) {
                 totalScore += 1000
                 if (bestMatchScore < 1000) {
                     bestMatch = section.title
+                    bestMatchSource = section.title
                     bestMatchScore = 1000
                 }
             }
             
-            // direct match
+            // direct match in searchStrings
             for (let searchStr of section.searchStrings) {
                 let lowerStr = searchStr.toLowerCase()
                 if (lowerStr.includes(query)) {
@@ -111,29 +113,47 @@ Item {
                     totalScore += score
                     if (score > bestMatchScore) {
                         bestMatch = searchStr
+                        bestMatchSource = searchStr
                         bestMatchScore = score
                     }
                 }
             }
             
-            // token based matching
-            for (let qToken of queryTokens) {
-                for (let sToken of section._tokens) {
-                    let score = 0
-                    if (sToken.startsWith(qToken)) {
-                        score = 200
-                    } else if (sToken.includes(qToken)) {
-                        score = 100
-                    } else {
-                        score = fuzzyMatch(sToken, qToken)
-                    }
-                    
-                    if (score > 0) {
-                        totalScore += score
-                        if (score > bestMatchScore) {
-                            bestMatch = sToken
-                            bestMatchScore = score
+            for (let searchStr of section.searchStrings) {
+                let searchStrLower = searchStr.toLowerCase()
+                let searchTokens = tokenize(searchStrLower)
+                let matchedTokenCount = 0
+                let tokenScore = 0
+                
+                for (let qToken of queryTokens) {
+                    for (let sToken of searchTokens) {
+                        let score = 0
+                        if (sToken.startsWith(qToken)) {
+                            score = 200
+                            matchedTokenCount++
+                        } else if (sToken.includes(qToken)) {
+                            score = 100
+                            matchedTokenCount++
+                        } else {
+                            let fuzzyScore = fuzzyMatch(sToken, qToken)
+                            if (fuzzyScore > 0) {
+                                score = fuzzyScore
+                                matchedTokenCount++
+                            }
                         }
+                        
+                        if (score > 0) {
+                            tokenScore += score
+                        }
+                    }
+                }
+                
+                if (tokenScore > 0) {
+                    totalScore += tokenScore
+                    if (tokenScore > bestMatchScore && matchedTokenCount > 0) {
+                        bestMatch = searchStr
+                        bestMatchSource = searchStr
+                        bestMatchScore = tokenScore
                     }
                 }
             }
