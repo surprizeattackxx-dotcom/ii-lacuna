@@ -188,7 +188,7 @@ Item {
         implicitWidth: root.vertical ? individualIconBoxHeight : indicatorLength
     }
     
-    Rectangle {
+    Rectangle { // NOTE: we still dont have an unhover animation
         id: hoverIndicator
         z: 2
         anchors.horizontalCenter: root.vertical ? parent.horizontalCenter : undefined
@@ -198,8 +198,24 @@ Item {
         radius: Appearance.rounding.full
         
         visible: interactionMouseArea.containsMouse
+        opacity: visible ? 1 : 0
         
-        property int hoverIdx: interactionMouseArea.containsMouse ? interactionMouseArea.hoverIndex : root.workspaceIndexInGroup
+        property int hoverIdx: interactionMouseArea.hoverIndex
+        property bool wasVisible: false
+        
+
+        onVisibleChanged: { // we disable the animations on first contact, then enable it
+            if (visible && !wasVisible) {
+                positionBehavior.enabled = false
+                lengthBehavior.enabled = false
+                
+                Qt.callLater(function() {
+                    positionBehavior.enabled = true
+                    lengthBehavior.enabled = true
+                })
+            }
+            wasVisible = visible
+        }
         
         function offsetFor(index) {
             let y = 0
@@ -218,8 +234,8 @@ Item {
         
         readonly property real accumulatedPreviousOffsets: offsetFor(hoverIdx)
         
-        property real indicatorPosition: hoverIdx * root.iconBoxWrapperSize + accumulatedPreviousOffsets + root.iconBoxWrapperSize * 0.05 // this should be half the bottom multiplier
-        property real indicatorLength: root.iconBoxWrapperSize + currentItemOffset - root.iconBoxWrapperSize * 0.1                        // this should be 2x of the top multiplier
+        property real indicatorPosition: hoverIdx * root.iconBoxWrapperSize + accumulatedPreviousOffsets + root.iconBoxWrapperSize * 0.05
+        property real indicatorLength: root.iconBoxWrapperSize + currentItemOffset - root.iconBoxWrapperSize * 0.1
         
         y: root.vertical ? indicatorPosition : 0
         x: root.vertical ? 0 : indicatorPosition
@@ -227,10 +243,16 @@ Item {
         implicitWidth: root.vertical ? individualIconBoxHeight : indicatorLength
         
         Behavior on indicatorPosition {
-            animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+            id: positionBehavior
+            animation: Appearance.animation.elementMove.numberAnimation.createObject(hoverIndicator)
         }
         Behavior on indicatorLength {
-            animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+            id: lengthBehavior
+            animation: Appearance.animation.elementMove.numberAnimation.createObject(hoverIndicator)
+        }
+        
+        Behavior on opacity {
+            animation: Appearance.animation.elementMove.numberAnimation.createObject(hoverIndicator)
         }
         
         HoverOverlay {
