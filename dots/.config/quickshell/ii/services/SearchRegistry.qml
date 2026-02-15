@@ -16,13 +16,43 @@ Item {
         console.log("Current found search result string:", currentSearch)
     }
 
+    Component.onCompleted: {
+        pageFile.start([
+            Directories.generalConfigPath,
+            Directories.barConfigPath,
+            Directories.backgroundConfigPath,
+            Directories.interfaceConfigPath,
+            Directories.servicesConfigPath,
+            Directories.advancedConfigPath
+        ])
+    }
+
     FileView {
         id: pageFile
-        path: Directories.interfaceConfigPath
         blockLoading: true
 
+        property var files: []
+        property int currentIndex: 0
+
+        function start(filesArray) {
+            files = filesArray
+            currentIndex = 0
+            loadNext()
+        }
+
+        function loadNext() {
+            if (currentIndex >= files.length)
+                return
+
+            path = files[currentIndex]
+        }
+
         onLoaded: {
-            root.indexQmlFile(pageFile.text())
+            root.indexQmlFile(text())
+
+            currentIndex++
+
+            Qt.callLater(() => loadNext())
         }
     }
 
