@@ -188,10 +188,8 @@ ApplicationWindow {
                     }
 
                     onTextChanged: {
-                        if (text === "") {
-                            root.lastSearchIndex = -1
-                            root.resultsCount = 0
-                        }
+                        root.lastSearchIndex = -1
+                        root.resultsCount = 0
                     }
 
                     // We may use this in the future, this only searches the best result
