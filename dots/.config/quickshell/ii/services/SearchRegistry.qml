@@ -56,6 +56,9 @@ Item {
         }
     }
 
+
+    // Fetches the needed string like text, title from the qml file
+
     function indexQmlFile(qmlText) {
         if (!qmlText)
             return
@@ -108,6 +111,8 @@ Item {
         console.log("[SearchRegistry] Indexed", sections.length, "sections")
     }
 
+    // Helper function for indexQmlFile(), extracts blocks from the qml file
+
     function extractBlocks(text, type) {
         let results = []
         let i = 0
@@ -151,6 +156,8 @@ Item {
         return results
     }
 
+    // Helper function for indexQmlFile(), extracts properties from the qml file
+
     function extractProperty(block, prop) {
         let m
 
@@ -169,6 +176,8 @@ Item {
         return ""
     }
 
+    // Helper function for indexQmlFile(), extracts the page index
+    
     function extractPageIndex(qmlText) {
         let m = qmlText.match(/readonly\s+property\s+int\s+index\s*:\s*(\d+)/)
         return m ? parseInt(m[1]) : -1
