@@ -58,7 +58,7 @@ ApplicationWindow {
         },
         {
             name: Translation.tr("Services"),
-            icon: "settings",
+            icon: "api",
             component: "modules/settings/ServicesConfig.qml"
         },
         {
