@@ -21,6 +21,10 @@ Item {
     HighlightOverlay {
         id: highlightOverlay
         anchors.fill: parent
+        anchors.topMargin: -2
+        anchors.bottomMargin: -2
+        anchors.leftMargin: -4
+        anchors.rightMargin: -4
     }
 
     SearchHandler {
