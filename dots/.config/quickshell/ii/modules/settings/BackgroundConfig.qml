@@ -731,18 +731,26 @@ ContentPage {
             Item {
                 Layout.fillWidth: true
             }
+
+            // TODO, FIXME: this is a hack, we have to find a better way to select material shapes in the settings app
+            // And also this is WRONG as a UI component.
             ConfigSelectionArray {
                 register: true
                 Layout.fillWidth: false
                 currentValue: Config.options.background.widgets.media.placementStrategy
                 onSelected: newValue => {
                     if (newValue === "selectShape") {
-                        mediaBackgroundShapeLoader.active = true;
+                        mediaBackgroundShapeLoader.active = !mediaBackgroundShapeLoader.active;
                         return;
                     }
                     Config.options.background.widgets.media.placementStrategy = newValue;
                 }
                 options: [
+                    {
+                        displayName: "",
+                        icon: "shape_line",
+                        value: "selectShape"
+                    },
                     {
                         displayName: Translation.tr("Draggable"),
                         icon: "drag_pan",
@@ -757,11 +765,6 @@ ContentPage {
                         displayName: Translation.tr("Most busy"),
                         icon: "shapes",
                         value: "mostBusy"
-                    },
-                    {
-                        displayName: "",
-                        icon: "shape_line",
-                        value: "selectShape"
                     }
                 ]
             }
@@ -797,15 +800,6 @@ ContentPage {
             }
         }
 
-        ConfigSwitch {
-            buttonIcon: "colors"
-            text: Translation.tr("Tint art cover")
-            checked: Config.options.background.widgets.media.tintArtCover
-            onCheckedChanged: {
-                Config.options.background.widgets.media.tintArtCover = checked;
-            }
-        }
-
         ConfigRow {
             uniform: true
             ConfigSwitch {
@@ -814,6 +808,14 @@ ContentPage {
                 checked: Config.options.background.widgets.media.useAlbumColors
                 onCheckedChanged: {
                     Config.options.background.widgets.media.useAlbumColors = checked;
+                }
+            }
+            ConfigSwitch {
+                buttonIcon: "colors"
+                text: Translation.tr("Tint art cover")
+                checked: Config.options.background.widgets.media.tintArtCover
+                onCheckedChanged: {
+                    Config.options.background.widgets.media.tintArtCover = checked;
                 }
             }
         }
