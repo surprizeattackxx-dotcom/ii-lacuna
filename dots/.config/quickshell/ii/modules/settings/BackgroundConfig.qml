@@ -614,6 +614,7 @@ ContentPage {
                 }
 
                 RippleButtonWithShape {
+                    visible: Config.options.background.widgets.clock.cookie.backgroundStyle == "shape"
                     Layout.fillWidth: false
                     shapeString: Config.options.background.widgets.clock.cookie.backgroundShape
                     showDropDown: true
