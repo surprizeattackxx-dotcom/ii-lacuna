@@ -154,6 +154,7 @@ ApplicationWindow {
                     iconSize: Appearance.font.pixelSize.huge
                     shape: MaterialShape.Shape.Ghostish
                     text: resultText.show ? "" : "search" 
+                    animateChange: true
 
                     StyledText {
                         id: resultText
