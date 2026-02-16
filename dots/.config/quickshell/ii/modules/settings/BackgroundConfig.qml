@@ -728,29 +728,47 @@ ContentPage {
                     Config.options.background.widgets.media.enable = checked;
                 }
             }
+            
+
+            RippleButton {
+                buttonRadius: Appearance.rounding.full
+                
+                buttonText: ""
+
+                colBackground: Appearance.colors.colSecondaryContainer
+                colBackgroundHover: Appearance.colors.colSecondaryContainerHover
+                colRipple: Appearance.colors.colSecondaryContainerActive
+                
+                implicitWidth: 40
+                MaterialShape {
+                    id: mediaBackgroundShape
+                    shapeString: Config.options.background.widgets.media.backgroundShape
+                    color: Appearance.colors.colOnSecondaryContainer
+                    width: 20
+                    height: 20
+                    anchors.centerIn: parent
+                }
+
+                onClicked: {
+                    mediaBackgroundShapeLoader.active = !mediaBackgroundShapeLoader.active;
+                }
+                StyledToolTip {
+                    text: Translation.tr("Select a material shape")
+                }
+            }
+
             Item {
                 Layout.fillWidth: true
             }
 
-            // TODO, FIXME: this is a hack, we have to find a better way to select material shapes in the settings app
-            // And also this is WRONG as a UI component.
             ConfigSelectionArray {
                 register: true
                 Layout.fillWidth: false
                 currentValue: Config.options.background.widgets.media.placementStrategy
                 onSelected: newValue => {
-                    if (newValue === "selectShape") {
-                        mediaBackgroundShapeLoader.active = !mediaBackgroundShapeLoader.active;
-                        return;
-                    }
                     Config.options.background.widgets.media.placementStrategy = newValue;
                 }
                 options: [
-                    {
-                        displayName: "",
-                        icon: "shape_line",
-                        value: "selectShape"
-                    },
                     {
                         displayName: Translation.tr("Draggable"),
                         icon: "drag_pan",
