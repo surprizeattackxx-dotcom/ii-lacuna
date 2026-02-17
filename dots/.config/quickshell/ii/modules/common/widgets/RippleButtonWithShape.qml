@@ -4,19 +4,23 @@ import qs.modules.common
 import qs.modules.common.widgets
 
 RippleButton {
-    id: buttonWithIconRoot
-    property bool showDropDown: false
+    id: buttonWithShapeRoot
+
     property string shapeString: ""
     property string mainText: ""
+
+    property string extraIcon: ""
+    property int extraIconSize: Appearance.font.pixelSize.large
+    
     property Component mainContentComponent: Component {
         StyledText {
             visible: text !== ""
-            text: buttonWithIconRoot.mainText
+            text: buttonWithShapeRoot.mainText
             font.pixelSize: Appearance.font.pixelSize.small
             color: Appearance.colors.colOnSecondaryContainer
         }
     }
-    implicitWidth: showDropDown ? 55 : 40
+    implicitWidth: contentLayout.implicitWidth + horizontalPadding * 2
     implicitHeight: 35
     horizontalPadding: 10
     buttonRadius: Appearance.rounding.full
@@ -26,29 +30,30 @@ RippleButton {
     colRipple: Appearance.colors.colSecondaryContainerActive
 
     contentItem: RowLayout {
+        id: contentLayout
         anchors.verticalCenter: parent.verticalCenter
-        spacing: 0
+        spacing: 5
         Loader {
             id: materialShapeLoader
             anchors.verticalCenter: parent.verticalCenter
-            active: buttonWithIconRoot.shapeString !== ""
+            active: buttonWithShapeRoot.shapeString !== ""
             sourceComponent: MaterialShape {
-                shapeString: buttonWithIconRoot.shapeString
+                shapeString: buttonWithShapeRoot.shapeString
                 width: Appearance.font.pixelSize.larger
                 height: Appearance.font.pixelSize.larger
                 color: Appearance.colors.colOnSecondaryContainer
             }
         }
         MaterialSymbol {
-            visible: showDropDown
+            visible: buttonWithShapeRoot.extraIcon !== ""
             anchors.verticalCenter: parent.verticalCenter
-            text: "arrow_drop_down"
-            iconSize: Appearance.font.pixelSize.huge
+            text: buttonWithShapeRoot.extraIcon
+            iconSize: buttonWithShapeRoot.extraIconSize
         }
-        /* Loader {
+        Loader {
             Layout.fillWidth: true
-            sourceComponent: buttonWithIconRoot.mainContentComponent
+            sourceComponent: buttonWithShapeRoot.mainContentComponent
             Layout.alignment: Qt.AlignVCenter
-        } */
+        }
     }
 }

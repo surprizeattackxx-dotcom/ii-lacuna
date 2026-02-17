@@ -616,14 +616,16 @@ ContentPage {
                 RippleButtonWithShape {
                     visible: Config.options.background.widgets.clock.cookie.backgroundStyle == "shape"
                     Layout.fillWidth: false
+
                     shapeString: Config.options.background.widgets.clock.cookie.backgroundShape
-                    showDropDown: true
+                    implicitWidth: 60
+                    extraIcon: "edit"
 
                     onClicked: {
                         backgroundShapeLoader.active = !backgroundShapeLoader.active;
                     }
                     StyledToolTip {
-                        text: Translation.tr("Select a material shape")
+                        text: Translation.tr("Edit the material shape")
                     }
                 }
 
@@ -753,13 +755,14 @@ ContentPage {
             
             RippleButtonWithShape {
                 shapeString: Config.options.background.widgets.media.backgroundShape
-                showDropDown: true
+                implicitWidth: 60
+                extraIcon: "edit"
 
                 onClicked: {
                     mediaBackgroundShapeLoader.active = !mediaBackgroundShapeLoader.active;
                 }
                 StyledToolTip {
-                    text: Translation.tr("Select a material shape")
+                    text: Translation.tr("Edit the material shape")
                 }
             }
 
