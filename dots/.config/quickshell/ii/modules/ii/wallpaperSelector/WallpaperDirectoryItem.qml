@@ -137,18 +137,13 @@ MouseArea {
                     anchors.margins: 8
 
                     asynchronous: true
-                    sourceComponent: RippleButton {
-                        id: button
-                        anchors.centerIn: parent
-
-                        implicitWidth: 30
-                        implicitHeight: 30
+                    sourceComponent: WallpaperActionButton {
+                        buttonIcon: "image_search"
+                        buttonFill: 1
+                        tooltipText: Translation.tr("Search for similar images")
 
                         colBackground: "transparent"
-                        colBackgroundHover: Appearance.colors.colSecondaryContainerHover
-                        colRipple: Appearance.colors.colSecondaryContainerActive
 
-                        // A better way would be better, it will broke when new tabs are added, but it works for now
                         property int wallpaperTabIndex: {
                             let index = 0;
                             if (Config.options.policies.ai !== 0) index++;
@@ -164,18 +159,34 @@ MouseArea {
                             GlobalStates.policiesPanelOpen = true;
                             GlobalStates.wallpaperSelectorOpen = false;
                         }
+                    }
+                }
 
-                        MaterialSymbol {
-                            text: "image_search"
+                FadeLoader {
+                    id: favouriteButtonLoader
+                    shown: !root.isDirectory && (root.containsMouse || isFavourite)
 
-                            anchors.centerIn: parent
-                            color: Appearance.colors.colPrimary
-                            font.pixelSize: Appearance.font.pixelSize.large
-                            fill: 1
-                        }
+                    anchors.bottom: parent.bottom
+                    anchors.right: parent.right
+                    anchors.margins: 8
 
-                        StyledToolTip {
-                            text: Translation.tr("Search for more images like this in the 'Wallpapers' tab")
+                    property bool isFavourite: Persistent.states.wallpaper.favourites.includes(fileModelData.filePath)
+
+                    sourceComponent: WallpaperActionButton {
+                        buttonIcon: favouriteButtonLoader.isFavourite ? "favorite" : "favorite_border"
+                        buttonFill: favouriteButtonLoader.isFavourite ? 1 : 0
+                        tooltipText: Translation.tr("Toggle favourite")
+
+                        onClicked: {
+                            const favs = Array.from(Persistent.states.wallpaper.favourites);
+                            const path = fileModelData.filePath;
+                            const index = favs.indexOf(path);
+                            if (index === -1) {
+                                favs.push(path);
+                            } else {
+                                favs.splice(index, 1);
+                            }
+                            Persistent.states.wallpaper.favourites = favs;
                         }
                     }
                 }
@@ -206,6 +217,38 @@ MouseArea {
                 }
                 text: fileModelData.fileName
             }
+        }
+    }
+
+
+    component WallpaperActionButton: RippleButton {
+        id: button
+
+        property alias buttonIcon: materialSymbol.text
+        property alias buttonFill: materialSymbol.fill
+        property alias tooltipText: tooltip.text
+
+        implicitWidth: 30
+        implicitHeight: 30
+
+        colBackground: Appearance.colors.colSecondaryContainer
+        colBackgroundHover: Appearance.colors.colSecondaryContainerHover
+        colRipple: Appearance.colors.colSecondaryContainerActive
+
+        MaterialSymbol {
+            id: materialSymbol
+
+            text: button.buttonIcon
+            fill: button.buttonFill
+
+            anchors.centerIn: parent
+            color: Appearance.colors.colPrimary
+            font.pixelSize: Appearance.font.pixelSize.large
+        }
+
+        StyledToolTip {
+            id: tooltip
+            text: button.tooltipText
         }
     }
 }
