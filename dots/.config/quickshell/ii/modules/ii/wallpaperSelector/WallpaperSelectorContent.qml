@@ -47,13 +47,17 @@ MouseArea {
     function refreshFavourites() {
         favouritesModel.clear();
         const favs = Persistent.states.wallpaper.favourites;
+        const query = filterField.text.toLowerCase();
         for (let i = 0; i < favs.length; i++) {
             const path = favs[i];
-            favouritesModel.append({
-                filePath: path,
-                fileName: path.split('/').pop(),
-                fileIsDir: false
-            });
+            const fileName = path.split('/').pop();
+            if (query === "" || fileName.toLowerCase().includes(query)) {
+                favouritesModel.append({
+                    filePath: path,
+                    fileName: fileName,
+                    fileIsDir: false
+                });
+            }
         }
     }
 
@@ -389,6 +393,7 @@ MouseArea {
 
                     Toolbar {
                         id: extraOptions
+                        z: 1
                         colBackground: Appearance.m3colors.m3surfaceContainerLow
                         anchors {
                             bottom: parent.bottom
@@ -416,7 +421,15 @@ MouseArea {
                         IconToolbarButton {
                             implicitWidth: height
                             onClicked: {
-                                Wallpapers.randomFromCurrentFolder();
+                                if (root.favMode) {
+                                    const favs = Persistent.states.wallpaper.favourites;
+                                    if (favs.length > 0) {
+                                        const randomPath = favs[Math.floor(Math.random() * favs.length)];
+                                        root.selectWallpaperPath(randomPath);
+                                    }
+                                } else {
+                                    Wallpapers.randomFromCurrentFolder();
+                                }
                             }
                             text: "ifl"
                             StyledToolTip {
@@ -444,6 +457,9 @@ MouseArea {
                             // Search
                             onTextChanged: {
                                 Wallpapers.searchQuery = text;
+                                if (root.favMode) {
+                                    root.refreshFavourites();
+                                }
                             }
 
                             Keys.onPressed: event => {
