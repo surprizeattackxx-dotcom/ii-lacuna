@@ -317,6 +317,14 @@ MouseArea {
                         anchors.fill: indeterminateProgressBar
                     }
 
+                    StyledText {
+                        visible: root.favMode && grid.model.count === 0
+                        text: Translation.tr("No favourites yet. Click the heart icon on any wallpaper to add it to favourites.")
+                        anchors.centerIn: parent
+
+                        font.family: Appearance.font.family.reading
+                    }
+
                     GridView {
                         id: grid
                         visible: count > 0
