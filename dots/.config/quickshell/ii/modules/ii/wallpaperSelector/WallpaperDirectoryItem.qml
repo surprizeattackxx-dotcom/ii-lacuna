@@ -138,6 +138,7 @@ MouseArea {
 
                     asynchronous: true
                     sourceComponent: WallpaperActionButton {
+                        id: button
                         buttonIcon: "image_search"
                         buttonFill: 1
                         tooltipText: Translation.tr("Search for similar images")
@@ -152,6 +153,10 @@ MouseArea {
                         }
 
                         onClicked: {
+                            if (button.wallpaperTabIndex === -1) {
+                                console.log("Wallpaper policies tab is disabled, cannot search for similar images. TODO: add an indicator to user");
+                                return;
+                            }
                             WallpaperBrowser.addSimilarImageMessage(Translation.tr("Searching for a similar image:"), fileModelData.filePath)
                             WallpaperBrowser.moreLikeThisPicture(root.getWallhavenId(fileModelData.fileName), 1);
                             Persistent.states.sidebar.policies.tab = button.wallpaperTabIndex;
