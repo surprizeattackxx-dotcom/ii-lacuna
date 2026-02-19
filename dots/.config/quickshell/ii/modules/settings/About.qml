@@ -157,9 +157,10 @@ ContentPage {
             spacing: 20
             Layout.topMargin: 10
             Layout.bottomMargin: 10
-            IconImage {
-                implicitSize: 80
-                source: Quickshell.iconPath("illogical-impulse")
+            CustomIcon {
+                width: 80
+                height: 80
+                source: "ii-vynx"
             }
             ColumnLayout {
                 Layout.alignment: Qt.AlignVCenter
