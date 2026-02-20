@@ -22,7 +22,7 @@ Item { // MediaMode instance
     property string artDownloadLocation: Directories.coverArt
     property string artFileName: Qt.md5(artUrl)
     property string artFilePath: `${artDownloadLocation}/${artFileName}`
-    property color artDominantColor: ColorUtils.mix((colorQuantizer?.colors[0] ?? Appearance.colors.colPrimary), Appearance.colors.colPrimaryContainer, 0.8) || Appearance.m3colors.m3secondaryContainer
+    property color artDominantColor: colorQuantizer.colors[0] ?? "#31313131"
     property bool downloaded: false
     property string displayedArtFilePath: ""
 
@@ -42,6 +42,8 @@ Item { // MediaMode instance
 
         updateArt();
     }
+
+    property bool canChangeColor: true
 
     Process { // Cover art downloader
         id: coverArtDownloader
@@ -63,30 +65,52 @@ Item { // MediaMode instance
         rescaleSize: 1 // Rescale to 1x1 pixel for faster processing
 
         onColorsChanged: {
-            if (root.downloaded && colors.length > 0) {
-                let colStr = colors[0].toString();
-                switchColorProc.colorString = colStr;
-                switchColorProc.running = true;
+            if (!root.canChangeColor) {
+                console.log("[Media Mode] Color change delayed, pending color:", colorQuantizer.colors[0])
+                switchColorDelayTimer.pendingColor = colorQuantizer.colors[0]
+                switchColorDelayTimer.restart()
+                return;
             }
+            else {
+                switchColorProc.colorString = colorQuantizer.colors[0] 
+                Qt.callLater(() => {
+                    switchColorProc.running = true
+                    root.canChangeColor = false
+                    switchColorDelayTimer.restart()
+                })
+            }
+            
+
         }
     }
 
-    // sometimes color quantizer's color change does not work (i have no idea why)
-    onDisplayedArtFilePathChanged: {
-        colorQuantizer.source = root.displayedArtFilePath;
-        let colStr = colorQuantizer.colors[0].toString();
-        if (root.artUrl && root.downloaded) {
-            switchColorProc.colorString = colStr;
-            switchColorProc.running = true;
+    Timer {
+        id: switchColorDelayTimer
+        interval: 10000
+        property string pendingColor: ""
+        onTriggered: {
+            if (pendingColor == "") root.canChangeColor = true 
+            else {
+                console.log("[Media Mode] Delay timer triggered, pending color:", pendingColor)
+                switchColorProc.colorString = pendingColor
+                Qt.callLater(() => {
+                    switchColorProc.running = true
+                    root.canChangeColor = false
+                    switchColorDelayTimer.restart()
+                })
+                pendingColor = ""
+            }
+            
         }
     }
+
     
 
     Process {
         id: switchColorProc
         property string colorString: ""
         // TODO: FIXME: commenting for now bc its causing config reload issue
-        //command: [`${Directories.wallpaperSwitchScriptPath}`, "--noswitch", "--color", switchColorProc.colorString]
+        command: [`${Directories.wallpaperSwitchScriptPath}`, "--noswitch", "--color", switchColorProc.colorString]
     }
 
     property QtObject blendedColors: AdaptedMaterialScheme {
