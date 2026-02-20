@@ -246,6 +246,9 @@ Singleton {
                     property bool enableSidebar: true
                     property real widgetsFactor: 1.2
                 }
+                property JsonObject mediaMode: JsonObject {
+                    property bool enableBackgroundAnimation: true // It **may** cause nausea for someone
+                }
             }
 
             property JsonObject bar: JsonObject {

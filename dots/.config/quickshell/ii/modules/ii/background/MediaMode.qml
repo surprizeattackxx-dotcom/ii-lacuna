@@ -122,6 +122,97 @@ Item { // MediaMode instance
                         anchors.fill: parent
                         color: ColorUtils.transparentize(blendedColors.colLayer0, 0.3)
                     }
+
+                    transform: [
+                        Scale {
+                            id: floatScale
+                            origin.x: blurredArt.width / 2
+                            origin.y: blurredArt.height / 2
+                            xScale: 1.15
+                            yScale: 1.15
+                        },
+                        Translate {
+                            id: floatTranslate
+                            x: 0
+                            y: 0
+                        }
+                    ]
+
+                    SequentialAnimation {
+                        running: Config.options.background.mediaMode.enableBackgroundAnimation
+                        loops: Animation.Infinite
+
+                        NumberAnimation {
+                            target: floatTranslate
+                            property: "x"
+                            from: -50
+                            to: 30
+                            duration: 18000
+                            easing.type: Easing.InOutSine
+                        }
+                        NumberAnimation {
+                            target: floatTranslate
+                            property: "x"
+                            from: 30
+                            to: -20
+                            duration: 14000
+                            easing.type: Easing.InOutSine
+                        }
+                        NumberAnimation {
+                            target: floatTranslate
+                            property: "x"
+                            from: -20
+                            to: 50
+                            duration: 22000
+                            easing.type: Easing.InOutSine
+                        }
+                        NumberAnimation {
+                            target: floatTranslate
+                            property: "x"
+                            from: 50
+                            to: -50
+                            duration: 16000
+                            easing.type: Easing.InOutSine
+                        }
+                    }
+
+                    SequentialAnimation {
+                        running: Config.options.background.mediaMode.enableBackgroundAnimation
+                        loops: Animation.Infinite
+
+                        NumberAnimation {
+                            target: floatTranslate
+                            property: "y"
+                            from: 20
+                            to: -50
+                            duration: 22000
+                            easing.type: Easing.InOutSine
+                        }
+                        NumberAnimation {
+                            target: floatTranslate
+                            property: "y"
+                            from: -50
+                            to: 30
+                            duration: 16000
+                            easing.type: Easing.InOutSine
+                        }
+                        NumberAnimation {
+                            target: floatTranslate
+                            property: "y"
+                            from: 30
+                            to: -30
+                            duration: 19000
+                            easing.type: Easing.InOutSine
+                        }
+                        NumberAnimation {
+                            target: floatTranslate
+                            property: "y"
+                            from: -30
+                            to: 20
+                            duration: 15000
+                            easing.type: Easing.InOutSine
+                        }
+                    }
                 }
 
                 RowLayout {
