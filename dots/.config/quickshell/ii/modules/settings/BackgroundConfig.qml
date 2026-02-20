@@ -59,6 +59,28 @@ ContentPage {
     }
 
     ContentSection {
+        icon: "music_note"
+        title: Translation.tr("Media mode")
+
+        ConfigSwitch {
+            buttonIcon: "animation"
+            text: Translation.tr("Enable background animation")
+            checked: Config.options.background.mediaMode.enableBackgroundAnimation
+            onCheckedChanged: {
+                Config.options.background.mediaMode.enableBackgroundAnimation = checked;
+            }
+        }
+        ConfigSwitch {
+            buttonIcon: "format_color_fill"
+            text: Translation.tr("Change shell color to match album art")
+            checked: Config.options.background.mediaMode.changeShellColor
+            onCheckedChanged: {
+                Config.options.background.mediaMode.changeShellColor = checked;
+            }
+        }
+    }
+
+    ContentSection {
         id: settingsClock
         icon: "clock_loader_40"
         title: Translation.tr("Widget: Clock")

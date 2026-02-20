@@ -65,6 +65,7 @@ Item { // MediaMode instance
         rescaleSize: 1 // Rescale to 1x1 pixel for faster processing
 
         onColorsChanged: {
+            if (!Config.options.background.mediaMode.changeShellColor) return;
             if (!root.canChangeColor) {
                 console.log("[Media Mode] Color change delayed, pending color:", colorQuantizer.colors[0])
                 switchColorDelayTimer.pendingColor = colorQuantizer.colors[0]

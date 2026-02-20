@@ -248,6 +248,7 @@ Singleton {
                 }
                 property JsonObject mediaMode: JsonObject {
                     property bool enableBackgroundAnimation: true // It **may** cause nausea for someone
+                    property bool changeShellColor: true // Changes the shell color to the album color
                 }
             }
 
