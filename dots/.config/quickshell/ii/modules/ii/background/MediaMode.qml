@@ -86,7 +86,7 @@ Item { // MediaMode instance
 
     Timer {
         id: switchColorDelayTimer
-        interval: 10000
+        interval: 2500
         property string pendingColor: ""
         onTriggered: {
             if (pendingColor == "") root.canChangeColor = true 
@@ -109,7 +109,6 @@ Item { // MediaMode instance
     Process {
         id: switchColorProc
         property string colorString: ""
-        // TODO: FIXME: commenting for now bc its causing config reload issue
         command: [`${Directories.wallpaperSwitchScriptPath}`, "--noswitch", "--color", switchColorProc.colorString]
     }
 

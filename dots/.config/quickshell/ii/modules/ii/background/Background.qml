@@ -143,8 +143,19 @@ Variants {
             }
         }
 
+        Timer {
+            id: mediaModeDelayTimer
+            interval: 600
+            repeat: false
+            onTriggered: {
+                bgRoot.effectiveMediaModeOpen = bgRoot.mediaModeOpen;
+            }
+        }
+
         property bool mediaModeOpen: Persistent.states.media.mediaMode
+        property bool effectiveMediaModeOpen: false
         onMediaModeOpenChanged: {
+            mediaModeDelayTimer.restart();
             if (!mediaModeOpen) {
                 Wallpapers.apply(bgRoot.wallpaperPath);
             }
@@ -155,7 +166,7 @@ Variants {
             anchors.fill: parent
             clip: true
             scale: showOpeningAnimation && overviewOpen && Config.options.overview.style === "scrolling" ? zoomedRatio : defaultRatio
-            opacity: Persistent.states.media.mediaMode ? 0 : 1
+            opacity: effectiveMediaModeOpen ? 0 : 1
             
             Behavior on opacity {
                 NumberAnimation { duration: 300; easing.type: Easing.InOutQuad }
@@ -369,7 +380,7 @@ Variants {
         Loader {
             id: mediaModeLoader
             anchors.fill: parent
-            active: Persistent.states.media.mediaMode
+            active: effectiveMediaModeOpen
             asynchronous: true
             sourceComponent: MediaMode {}
             opacity: status === Loader.Ready ? 1 : 0
