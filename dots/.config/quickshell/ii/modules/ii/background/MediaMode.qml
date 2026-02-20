@@ -23,14 +23,12 @@ Item { // MediaMode instance
     property string artFilePath: `${artDownloadLocation}/${artFileName}`
     property color artDominantColor: ColorUtils.mix((colorQuantizer?.colors[0] ?? Appearance.colors.colPrimary), Appearance.colors.colPrimaryContainer, 0.8) || Appearance.m3colors.m3secondaryContainer
     property bool downloaded: false
-
-    property string displayedArtFilePath: root.downloaded ? Qt.resolvedUrl(artFilePath) : ""
+    property string displayedArtFilePath: ""
 
     onArtFilePathChanged: {
-        loader.active = false;
-
         if (!root.artUrl || root.artUrl.length == 0) {
             root.artDominantColor = Appearance.m3colors.m3secondaryContainer;
+            root.displayedArtFilePath = "";
             return;
         }
 
@@ -49,8 +47,8 @@ Item { // MediaMode instance
         command: ["bash", "-c", `[ -f ${artFilePath} ] || curl -sSL '${targetFile}' -o '${artFilePath}'`]
         onExited: (exitCode, exitStatus) => {
             if (exitCode === 0) {
+                root.displayedArtFilePath = Qt.resolvedUrl(root.artFilePath);
                 root.downloaded = true;
-                recreateDelay.start();
             }
         }
     }
@@ -80,14 +78,6 @@ Item { // MediaMode instance
 
     property QtObject blendedColors: AdaptedMaterialScheme {
         color: artDominantColor
-    }
-
-    Timer { // Recreate UI component delay
-        id: recreateDelay
-        interval: 10
-        onTriggered: {
-            loader.active = true;
-        }
     }
 
     Loader {
