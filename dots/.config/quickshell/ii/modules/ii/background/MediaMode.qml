@@ -10,6 +10,7 @@ import QtQuick
 import QtQuick.Effects
 import QtQuick.Layouts
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Services.Mpris
 
@@ -60,7 +61,7 @@ Item { // MediaMode instance
         rescaleSize: 1 // Rescale to 1x1 pixel for faster processing
 
         onColorsChanged: {
-            if (Persistent.states.mediaMode && root.artUrl && root.downloaded && colors.length > 0) {
+            if (Persistent.states.media.mediaMode && root.artUrl && root.downloaded && colors.length > 0) {
                 let colStr = colors[0].toString();
                 if (colStr !== "") {
                     switchColorProc.colorString = colStr;
@@ -78,6 +79,17 @@ Item { // MediaMode instance
 
     property QtObject blendedColors: AdaptedMaterialScheme {
         color: artDominantColor
+    }
+
+
+    // I am not sure about using global shortcuts without a wrapper file but NWM....
+    GlobalShortcut {
+        name: "mediaModeToggle"
+        description: "Toggles media mode on press"
+
+        onPressed: {
+            Persistent.states.media.mediaMode = !Persistent.states.media.mediaMode;
+        }
     }
 
     Loader {
