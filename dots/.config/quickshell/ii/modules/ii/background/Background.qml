@@ -23,6 +23,8 @@ Variants {
     id: root
     model: Quickshell.screens
 
+    
+
     PanelWindow {
         id: bgRoot
 
@@ -366,6 +368,19 @@ Variants {
             opacity: status === Loader.Ready ? 1 : 0
             Behavior on opacity {
                 NumberAnimation { duration: 300; easing.type: Easing.InOutQuad }
+            }
+
+            // IMPORTANT: FIXME: NOTE: TODO: FUCKME: Fix this, this is a really really really bad approach
+            // I couldnt find a better place to put this global shortcut, YOU!, yes YOU, if you are reading this, 
+            // please move this global shortcut to a more appropriate place, like maybe the media widget itself, or the global states, or literally anywhere else but here. This is really bad.
+            GlobalShortcut {
+                name: "mediaModeToggle"
+                description: "Toggles media mode on press"
+
+                onPressed: {
+                    if (!monitor.focused) return
+                    Persistent.states.media.mediaMode = !Persistent.states.media.mediaMode;
+                }
             }
         }
     }

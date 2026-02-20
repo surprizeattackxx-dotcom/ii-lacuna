@@ -70,6 +70,7 @@ Item { // MediaMode instance
             }
         }
     }
+    
 
     Process {
         id: switchColorProc
@@ -79,17 +80,6 @@ Item { // MediaMode instance
 
     property QtObject blendedColors: AdaptedMaterialScheme {
         color: artDominantColor
-    }
-
-
-    // I am not sure about using global shortcuts without a wrapper file but NWM....
-    GlobalShortcut {
-        name: "mediaModeToggle"
-        description: "Toggles media mode on press"
-
-        onPressed: {
-            Persistent.states.media.mediaMode = !Persistent.states.media.mediaMode;
-        }
     }
 
     Loader {
