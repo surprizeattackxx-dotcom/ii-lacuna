@@ -26,6 +26,13 @@ Item { // MediaMode instance
     property bool downloaded: false
     property string displayedArtFilePath: ""
 
+    function updateArt() {
+        coverArtDownloader.targetFile = root.artUrl 
+        coverArtDownloader.artFilePath = root.artFilePath
+        root.downloaded = false
+        coverArtDownloader.running = true
+    }
+
     onArtFilePathChanged: {
         if (!root.artUrl || root.artUrl.length == 0) {
             root.artDominantColor = Appearance.m3colors.m3secondaryContainer;
@@ -33,12 +40,7 @@ Item { // MediaMode instance
             return;
         }
 
-        // Binding does not work in Process
-        coverArtDownloader.targetFile = root.artUrl;
-        coverArtDownloader.artFilePath = root.artFilePath;
-        // Download
-        root.downloaded = false;
-        coverArtDownloader.running = true;
+        updateArt();
     }
 
     Process { // Cover art downloader
@@ -83,7 +85,8 @@ Item { // MediaMode instance
     Process {
         id: switchColorProc
         property string colorString: ""
-        command: [`${Directories.wallpaperSwitchScriptPath}`, "--noswitch", "--color", switchColorProc.colorString]
+        // TODO: FIXME: commenting for now bc its causing config reload issue
+        //command: [`${Directories.wallpaperSwitchScriptPath}`, "--noswitch", "--color", switchColorProc.colorString]
     }
 
     property QtObject blendedColors: AdaptedMaterialScheme {
@@ -243,6 +246,16 @@ Item { // MediaMode instance
                                         width: artBackground.width
                                         height: artBackground.height
                                         radius: artBackground.radius
+                                    }
+                                }
+
+                                MouseArea {
+                                    anchors.fill: artBackground
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: {
+                                        root.displayedArtFilePath = "" // Force
+                                        root.updateArt()
                                     }
                                 }
 
