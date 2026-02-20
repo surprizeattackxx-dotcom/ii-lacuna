@@ -265,7 +265,7 @@ Item { // MediaMode instance
                                 Layout.preferredWidth: 400
                                 Layout.preferredHeight: 400
                                 Layout.alignment: Qt.AlignHCenter
-                                radius: Appearance.rounding.verysmall
+                                radius: Appearance.rounding.large
                                 color: ColorUtils.transparentize(blendedColors.colLayer1, 0.5)
 
                                 layer.enabled: true
