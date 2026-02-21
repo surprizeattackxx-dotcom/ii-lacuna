@@ -435,6 +435,21 @@ Item { // MediaMode instance
                                     animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
                                 }
 
+                                layer.enabled: true
+                                    layer.effect: OpacityMask {
+                                        maskSource: Rectangle {
+                                            width: geniusFlickable.width
+                                            height: geniusFlickable.height
+                                            gradient: Gradient {
+                                                GradientStop { position: 0.0; color: "transparent" }
+                                                GradientStop { position: 0.3; color: "black" }
+                                                GradientStop { position: 0.7; color: "black" }
+                                                GradientStop { position: 1.0; color: "transparent" }
+                                            }
+                                        }
+                                    }
+
+
                                 StyledText {
                                     id: geniusText
                                     width: parent.width
