@@ -246,6 +246,11 @@ Singleton {
                     property bool enableSidebar: true
                     property real widgetsFactor: 1.2
                 }
+                property JsonObject mediaMode: JsonObject {
+                    property bool enable: false
+                    property bool enableBackgroundAnimation: true // It **may** cause nausea for someone
+                    property bool changeShellColor: true // Changes the shell color to the album color
+                }
             }
 
             property JsonObject bar: JsonObject {
@@ -575,6 +580,10 @@ Singleton {
             property JsonObject resources: JsonObject {
                 property int updateInterval: 3000
                 property int historyLength: 60
+            }
+
+            property JsonObject lyricsService: JsonObject {
+                property bool enable: true
             }
 
             property JsonObject tray: JsonObject {
