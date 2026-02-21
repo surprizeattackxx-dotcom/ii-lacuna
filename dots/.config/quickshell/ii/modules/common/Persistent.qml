@@ -177,7 +177,6 @@ Singleton {
                 }
             }
             property JsonObject media: JsonObject {
-                property bool mediaMode: false
                 property rect popupRect: Qt.rect(0, 0, 0, 0)
             }
 

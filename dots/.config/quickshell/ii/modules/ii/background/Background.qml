@@ -153,7 +153,7 @@ Variants {
             }
         }
 
-        property bool mediaModeOpen: Persistent.states.media.mediaMode
+        property bool mediaModeOpen: Config.options.background.mediaMode.enable
         property bool effectiveMediaModeOpen: false
         onMediaModeOpenChanged: {
             mediaModeDelayTimer.restart();
@@ -398,7 +398,7 @@ Variants {
 
                 onPressed: {
                     if (!monitor.focused) return
-                    Persistent.states.media.mediaMode = !Persistent.states.media.mediaMode;
+                    Config.options.background.mediaMode.enable = !Config.options.background.mediaMode.enable;
                 }
             }
         }
