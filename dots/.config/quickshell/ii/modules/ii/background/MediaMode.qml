@@ -262,6 +262,7 @@ Item { // MediaMode instance
                             StyledRectangularShadow {
                                 target: artBackground
                             }
+                            
 
                             Rectangle { // Art background
                                 id: artBackground
@@ -279,15 +280,34 @@ Item { // MediaMode instance
                                         radius: artBackground.radius
                                     }
                                 }
-                                
 
                                 MouseArea {
-                                    anchors.fill: artBackground
+                                    id: artMouseArea
+                                    z: 10
+                                    anchors.fill: parent
                                     hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
+                                    acceptedButtons: Qt.MiddleButton
                                     onClicked: {
                                         root.displayedArtFilePath = "" // Force
                                         root.updateArt()
+                                    }
+                                    onEntered: musicControls.opacity = 1
+                                    onExited: musicControls.opacity = 0
+
+                                    MaterialMusicControls {
+                                        id: musicControls
+
+                                        opacity: 0
+                                        Behavior on opacity {
+                                            animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+                                        }
+                                        
+                                        player: root.player
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        anchors.bottom: parent.bottom
+                                        anchors.bottomMargin: 20
+                                        Layout.preferredWidth: parent.width
+                                        Layout.preferredHeight: parent.height / 3
                                     }
                                 }
 
