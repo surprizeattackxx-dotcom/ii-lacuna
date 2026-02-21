@@ -81,7 +81,7 @@ Item { // MediaMode instance
                 return !(trimmed.startsWith("[") && trimmed.endsWith("]"))
             })
 
-            root.geniusLyricsString = filtered.join("\n")
+            root.geniusLyricsString = filtered.slice(1).join("\n")
         }
     }
 
