@@ -58,45 +58,8 @@ Item { // MediaMode instance
         }
     }
     
-    property string geniusLyricsString: ""
+    property string geniusLyricsString: LyricsService.geniusLyrics
 
-    LrclibLyrics {
-        id: lrclibLyrics
-        enabled: (root.player?.trackTitle?.length > 0) && (root.player?.trackArtist?.length > 0)
-        title: root.player?.trackTitle ?? ""
-        artist: root.player?.trackArtist ?? ""
-        duration: root.player?.length ?? 0
-        position: root.player?.position ?? 0
-        selectedId: 0
-    }
-
-    GeniusLyrics {
-        id: geniusLyrics
-        onLyricsUpdated: (lyrics) => {
-            let lines = lyrics.split("\n")
-
-            // remove lines that are section headers like [Verse], [Chorus]
-            let filtered = lines.filter(line => {
-                let trimmed = line.trim()
-                return !(trimmed.startsWith("[") && trimmed.endsWith("]"))
-            })
-
-            root.geniusLyricsString = filtered.slice(1).join("\n")
-        }
-    }
-
-    Component.onCompleted: {
-        if (root.player) {
-            geniusLyrics.fetchLyrics(root.player.trackArtist, root.player.trackTitle)
-        }
-    }
-
-    readonly property string trackTitle: root.player?.trackTitle
-    onTrackTitleChanged: {
-        if (root.player) {
-            geniusLyrics.fetchLyrics(root.player.trackArtist, root.player.trackTitle)
-        }
-    }
 
     ColorQuantizer {
         id: colorQuantizer
@@ -480,9 +443,9 @@ Item { // MediaMode instance
     component LyricScroller: Item {
         anchors.fill: parent
         clip: true
-        visible: lrclibLyrics.lines.length > 0
+        visible: LyricsService.syncedLines.length > 0
 
-        readonly property bool hasSyncedLines: lrclibLyrics.lines.length > 0
+        readonly property bool hasSyncedLines: LyricsService.syncedLines.length > 0
         readonly property int rowHeight: Math.max(30, Math.min(Math.floor(height / 5), Appearance.font.pixelSize.hugeass * 3))
         readonly property real baseY: (height - rowHeight) / 2
         readonly property real downScale: 0.85
@@ -490,7 +453,7 @@ Item { // MediaMode instance
         property int halfVisibleLines: 3
         property int visibleLineCount: halfVisibleLines * 2 + 1
 
-        readonly property int targetCurrentIndex: hasSyncedLines ? lrclibLyrics.currentIndex : -1
+        readonly property int targetCurrentIndex: hasSyncedLines ? LyricsService.currentIndex : -1
 
         property int lastIndex: -1
         property bool isMovingForward: true
@@ -529,9 +492,9 @@ Item { // MediaMode instance
                     required property int index
                     property int lineOffset: index - lyricScroller.halfVisibleLines
                     property int actualIndex: lyricScroller.targetCurrentIndex + lineOffset
-                    property bool isValidLine: lyricScroller.hasSyncedLines && actualIndex >= 0 && actualIndex < lrclibLyrics.lines.length
+                    property bool isValidLine: lyricScroller.hasSyncedLines && actualIndex >= 0 && actualIndex < LyricsService.syncedLines.length
 
-                    text: isValidLine ? lrclibLyrics.lines[actualIndex].text : (lineOffset === 0 && lyricScroller.targetCurrentIndex === -1 ? (lrclibLyrics.displayText || "♪") : "")
+                    text: isValidLine ? LyricsService.syncedLines[actualIndex].text : (lineOffset === 0 && lyricScroller.targetCurrentIndex === -1 ? (LyricsService.statusText || "♪") : "")
 
                     // The old line offset maps where this visual line was logically positioned in the previous state.
                     property int oldLineOffset: lyricScroller.isMovingForward ? lineOffset + 1 : lineOffset - 1
