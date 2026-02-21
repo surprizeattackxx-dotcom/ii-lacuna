@@ -73,9 +73,15 @@ Item { // MediaMode instance
     GeniusLyrics {
         id: geniusLyrics
         onLyricsUpdated: (lyrics) => {
-            // we have to remove first 7 lines because it contains metadata such as titlte, artist and contributors etc.
             let lines = lyrics.split("\n")
-            root.geniusLyricsString = lines.slice(7).join("\n")
+
+            // remove lines that are section headers like [Verse], [Chorus]
+            let filtered = lines.filter(line => {
+                let trimmed = line.trim()
+                return !(trimmed.startsWith("[") && trimmed.endsWith("]"))
+            })
+
+            root.geniusLyricsString = filtered.slice(7).join("\n") //TODO: better approach to remove the metadata at the beginning of the lyrics
         }
     }
 
@@ -449,7 +455,7 @@ Item { // MediaMode instance
                                     width: parent.width
                                     text: root.geniusLyricsString
                                     color: Appearance.colors.colOnLayer0
-                                    font.pixelSize: Appearance.font.pixelSize.hugeass
+                                    font.pixelSize: Appearance.font.pixelSize.hugeass * 1.2
                                     font.weight: Font.Medium
                                     wrapMode: Text.Wrap
                                     horizontalAlignment: Text.AlignLeft
