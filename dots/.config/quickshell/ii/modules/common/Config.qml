@@ -582,6 +582,10 @@ Singleton {
                 property int historyLength: 60
             }
 
+            property JsonObject lyricsService: JsonObject {
+                property bool enable: true
+            }
+
             property JsonObject tray: JsonObject {
                 property bool monochromeIcons: true
                 property bool showItemId: false

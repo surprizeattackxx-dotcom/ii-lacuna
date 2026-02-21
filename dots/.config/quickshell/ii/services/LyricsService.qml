@@ -18,6 +18,7 @@ import Quickshell.Services.Mpris
 Singleton {
     id: root
 
+    readonly property bool lyricsEnabled: Config.options.lyricsService.enable
     readonly property MprisPlayer activePlayer: MprisController.activePlayer
     
     readonly property alias syncedLines: lrclib.lines
@@ -28,7 +29,7 @@ Singleton {
 
     LrclibLyrics {
         id: lrclib
-        enabled: (root.activePlayer?.trackTitle?.length > 0) && (root.activePlayer?.trackArtist?.length > 0)
+        enabled: (root.activePlayer?.trackTitle?.length > 0) && (root.activePlayer?.trackArtist?.length > 0) && lyricsEnabled
         title: root.activePlayer?.trackTitle ?? ""
         artist: root.activePlayer?.trackArtist ?? ""
         duration: root.activePlayer?.length ?? 0
@@ -43,6 +44,7 @@ Singleton {
         readonly property string trackTitle: root.activePlayer?.trackTitle
         onTrackTitleChanged: {
             if (root.activePlayer) {
+                if (!lyricsEnabled) return;
                 genius.hasString = false
                 genius.fetchLyrics(root.activePlayer.trackArtist, root.activePlayer.trackTitle)
             }
@@ -50,6 +52,7 @@ Singleton {
         property string lyricsString: ""
         property bool hasString: false
         onLyricsUpdated: (lyrics) => {
+            if (!lyricsEnabled) return;
             let lines = lyrics.split("\n")
             let filtered = lines.filter(line => {
                 let trimmed = line.trim()
@@ -63,6 +66,7 @@ Singleton {
     readonly property string currentTrackId: root.activePlayer?.trackTitle ?? ""
     
     onCurrentTrackIdChanged: {
+        if (!lyricsEnabled) return;
         if (currentTrackId !== "" && root.activePlayer?.trackArtist) {
             genius.fetchLyrics(root.activePlayer.trackArtist, root.activePlayer.trackTitle)
         } else {

@@ -121,6 +121,24 @@ ContentPage {
         
     }
 
+
+    ContentSection {
+        icon: "lyrics"
+        title: Translation.tr("Lyrics")
+
+        ConfigSwitch {
+            buttonIcon: "check"
+            text: Translation.tr("Enable lyrics service")
+            checked: Config.options.lyricsService.enable
+            onCheckedChanged: {
+                Config.options.lyricsService.enable = checked;
+            }
+            StyledToolTip {
+                text: Translation.tr("Disabling this will prevent the API from being called, but already cached lyrics will still be available.")
+            }
+        }
+    }
+
     ContentSection {
         icon: "file_open"
         title: Translation.tr("Save paths")

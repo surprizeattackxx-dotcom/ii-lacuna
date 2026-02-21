@@ -387,8 +387,9 @@ Item { // MediaMode instance
                                 anchors.left: parent.left
                                 anchors.leftMargin: 250
                                 anchors.verticalCenter: parent.verticalCenter
-                                loading: geniusFlickable.opacity == 0 
+                                loading: geniusFlickable.opacity == 0 && !lyricScroller.hasSyncedLines
                                 visible: loading
+                                implicitSize: 96
                             }
 
                             Flickable {
@@ -399,6 +400,7 @@ Item { // MediaMode instance
                                 Behavior on opacity {
                                     animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
                                 }
+                                
 
                                 clip: true
                                 contentHeight: geniusText.implicitHeight
