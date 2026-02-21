@@ -36,22 +36,26 @@ Singleton {
     }
 
     readonly property alias geniusLyrics: genius.lyricsString
+    readonly property alias geniusHasLyrics: genius.hasString
 
     GeniusLyrics {
         id: genius
         readonly property string trackTitle: root.activePlayer?.trackTitle
         onTrackTitleChanged: {
             if (root.activePlayer) {
+                genius.hasString = false
                 genius.fetchLyrics(root.activePlayer.trackArtist, root.activePlayer.trackTitle)
             }
         }
         property string lyricsString: ""
+        property bool hasString: false
         onLyricsUpdated: (lyrics) => {
             let lines = lyrics.split("\n")
             let filtered = lines.filter(line => {
                 let trimmed = line.trim()
                 return !(trimmed.startsWith("[") && trimmed.endsWith("]"))
             })
+            genius.hasString = true
             lyricsString = filtered.slice(1).join("\n")
         }
     }

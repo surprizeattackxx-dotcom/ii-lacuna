@@ -386,7 +386,12 @@ Item { // MediaMode instance
                             Flickable {
                                 id: geniusFlickable
                                 anchors.fill: parent
-                                visible: !lyricScroller.hasSyncedLines && root.geniusLyricsString.length > 0
+                                
+                                opacity: !lyricScroller.hasSyncedLines && LyricsService.geniusHasLyrics ? 1 : 0
+                                Behavior on opacity {
+                                    animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+                                }
+
                                 clip: true
                                 contentHeight: geniusText.implicitHeight
                                 interactive: true
