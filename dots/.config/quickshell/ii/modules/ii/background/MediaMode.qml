@@ -383,6 +383,14 @@ Item { // MediaMode instance
                                 onTriggered: root.player.positionChanged()
                             }
 
+                            MaterialLoadingIndicator {
+                                anchors.left: parent.left
+                                anchors.leftMargin: 250
+                                anchors.verticalCenter: parent.verticalCenter
+                                loading: geniusFlickable.opacity == 0 
+                                visible: loading
+                            }
+
                             Flickable {
                                 id: geniusFlickable
                                 anchors.fill: parent
