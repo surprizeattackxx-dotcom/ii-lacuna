@@ -395,9 +395,15 @@ Item { // MediaMode instance
                                 property bool isSyncing: true
 
                                 readonly property real rawTargetY: {
-                                    var progress = root.player.position / root.player.length
-                                    var maxScroll = contentHeight - (geniusFlickable.height / 2)
-                                    return Math.max(0, (progress * maxScroll) - (geniusFlickable.height / 2))
+                                    var lines = root.geniusLyricsString.split('\n')
+                                    var totalLines = lines.length
+                                    
+                                    var currentLineIndex = (root.player.position / root.player.length) * totalLines
+                                    
+                                    var averageLineHeight = contentHeight / totalLines
+                                    var targetY = (currentLineIndex * averageLineHeight)
+                                    
+                                    return Math.max(0, targetY - (geniusFlickable.height / 2))
                                 }
 
                                 onMovementEnded: {
