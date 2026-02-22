@@ -92,7 +92,6 @@ StyledOverlayWidget {
                     defaultLyricsSize: Appearance.font.pixelSize.large
                     halfVisibleLines: 2
                     rowHeight: 20
-                    downScale: 0.95
                 }
             }
 
