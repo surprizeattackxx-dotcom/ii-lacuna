@@ -3,6 +3,7 @@ import QtQuick
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
+import Quickshell.Services.Mpris
 
 // Shows Genius lyrics in a scrollable, syncable view. Syncing is based on the current position of the track and the total length, so it's not perfect but it's something.
 
