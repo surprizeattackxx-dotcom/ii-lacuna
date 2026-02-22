@@ -145,6 +145,11 @@ Variants {
         }
 
         property bool mediaModeOpen: Config.options.background.mediaMode.enable
+        onMediaModeOpenChanged: {
+            if (!mediaModeOpen) {
+                Wallpapers.apply(Config.options.background.wallpaperPath)
+            }
+        }
 
 
         Item {
