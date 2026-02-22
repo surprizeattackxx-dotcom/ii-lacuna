@@ -39,6 +39,19 @@ Singleton {
     readonly property alias geniusLyrics: genius.lyricsString
     readonly property alias geniusHasLyrics: genius.hasString
 
+    Component.onCompleted: geniusFirstFetchDelay.restart()
+
+    Timer {
+        id: geniusFirstFetchDelay
+        running: false
+        interval: 1000
+        onTriggered: {
+            if (root.activePlayer) {
+                genius.fetchLyrics(root.activePlayer.trackArtist, root.activePlayer.trackTitle)
+            }
+        }
+    }
+
     GeniusLyrics {
         id: genius
         readonly property string trackTitle: root.activePlayer?.trackTitle
@@ -53,6 +66,7 @@ Singleton {
         property bool hasString: false
         onLyricsUpdated: (lyrics) => {
             if (!lyricsEnabled) return;
+            // console.log("Got Genius lyrics:", lyrics)
             let lines = lyrics.split("\n")
             let filtered = lines.filter(line => {
                 let trimmed = line.trim()
