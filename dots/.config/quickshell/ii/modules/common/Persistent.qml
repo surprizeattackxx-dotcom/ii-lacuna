@@ -85,6 +85,7 @@ Singleton {
 
             property JsonObject idle: JsonObject {
                 property bool inhibit: false
+                property string sessionId: ""
             }
 
             property JsonObject overlay: JsonObject {
