@@ -259,26 +259,38 @@ Item { // MediaMode instance
                             anchors.verticalCenter: parent.verticalCenter
                             width: parent.width
                             
-                            StyledRectangularShadow {
-                                target: artBackground
-                            }
-                            
-
-                            Rectangle { // Art background
+                            // TODO: we have to add a drop shadow to cover art but it doesnt work somehow?
+                            MaterialShape { // Art background
                                 id: artBackground
                                 Layout.preferredWidth: 400
                                 Layout.preferredHeight: 400
                                 Layout.alignment: Qt.AlignHCenter
-                                radius: Appearance.rounding.large
                                 color: ColorUtils.transparentize(blendedColors.colLayer1, 0.5)
+                                shapeString: Config.options.background.mediaMode.backgroundShape
 
                                 layer.enabled: true
                                 layer.effect: OpacityMask {
-                                    maskSource: Rectangle {
+                                    maskSource: MaterialShape {
                                         width: artBackground.width
+                                        shapeString: Config.options.background.mediaMode.backgroundShape
                                         height: artBackground.height
-                                        radius: artBackground.radius
                                     }
+                                }
+
+                                StyledImage { // Art image
+                                    id: mediaArt
+                                    property int size: parent.height
+                                    anchors.fill: parent
+
+                                    source: root.displayedArtFilePath
+                                    fillMode: Image.PreserveAspectCrop
+                                    cache: false
+                                    antialiasing: true
+
+                                    width: size
+                                    height: size
+                                    sourceSize.width: size
+                                    sourceSize.height: size
                                 }
 
                                 MouseArea {
@@ -309,22 +321,6 @@ Item { // MediaMode instance
                                         Layout.preferredWidth: parent.width
                                         Layout.preferredHeight: parent.height / 3
                                     }
-                                }
-
-                                StyledImage { // Art image
-                                    id: mediaArt
-                                    property int size: parent.height
-                                    anchors.fill: parent
-
-                                    source: root.displayedArtFilePath
-                                    fillMode: Image.PreserveAspectCrop
-                                    cache: false
-                                    antialiasing: true
-
-                                    width: size
-                                    height: size
-                                    sourceSize.width: size
-                                    sourceSize.height: size
                                 }
                             }
 

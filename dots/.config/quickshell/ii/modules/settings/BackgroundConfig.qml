@@ -63,6 +63,67 @@ ContentPage {
         title: Translation.tr("Media mode")
         tooltip: Translation.tr("Toggle the mode with a keybind that executes 'quickshell:mediaModeToggle'\nExample: bindd = Super, Z, Toggle media mode, global, quickshell:mediaModeToggle")
 
+        ConfigRow {
+
+            ConfigSwitch {
+                Layout.fillWidth: true
+                buttonIcon: "check"
+                text: Translation.tr("Enable")
+                checked: Config.options.background.mediaMode.enable
+                onCheckedChanged: {
+                    Config.options.background.mediaMode.enable = checked;
+                }
+                StyledToolTip {
+                    text: Translation.tr("Using a keybind instead of this toggle is recommended")
+                }
+            }
+
+            RippleButtonWithShape {
+                Layout.fillWidth: false
+
+                shapeString: Config.options.background.mediaMode.backgroundShape
+                implicitWidth: 60
+                extraIcon: "edit"
+
+                onClicked: {
+                    mediaModeBackgroundShapeLoader.active = !mediaModeBackgroundShapeLoader.active;
+                }
+                StyledToolTip {
+                    text: Translation.tr("Edit the material shape")
+                }
+            }
+        }
+        
+
+        Loader { 
+            id: mediaModeBackgroundShapeLoader
+            active: false
+            visible: active
+            Layout.fillWidth: true
+            sourceComponent: ContentSubsection {
+                title: Translation.tr("Background shape")
+                
+                ConfigSelectionArray {
+                    currentValue: Config.options.background.mediaMode.backgroundShape
+                    onSelected: newValue => {
+                        Config.options.background.mediaMode.backgroundShape = newValue;
+                    }
+                    options: ([ 
+                        "Circle", "Square", "Slanted", "Arch", "Arrow", "SemiCircle", "Oval", "Pill", "Triangle",
+                        "Diamond", "ClamShell", "Pentagon", "Gem", "Sunny", "VerySunny", "Cookie4Sided", "Cookie6Sided", 
+                        "Cookie7Sided", "Cookie9Sided", "Cookie12Sided", "Ghostish", "Clover4Leaf", "Clover8Leaf", "Burst", 
+                        "SoftBurst", "Flower", "Puffy", "PuffyDiamond", "PixelCircle", "Bun", "Heart" 
+                    ]).map(icon => { 
+                        return { 
+                            displayName: "", 
+                            shape: icon, 
+                            value: icon 
+                        } 
+                    })
+                }
+            }
+        }
+
         ConfigSwitch {
             buttonIcon: "animation"
             text: Translation.tr("Enable background animation")
