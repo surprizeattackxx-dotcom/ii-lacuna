@@ -283,7 +283,6 @@ Singleton {
                     property JsonObject lyrics: JsonObject {
                         property bool enable: true
                         property int customSize: 400
-                        property string style: "scrolling" // Options: "static", "scrolling"
                         property bool showLoadingIndicator: true
                         property bool useGradientMask: true
                     }

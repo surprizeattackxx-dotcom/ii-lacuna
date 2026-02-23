@@ -318,43 +318,16 @@ ContentPage {
         ContentSubsection {
             title: Translation.tr("Lyrics")
 
-            ConfigRow {
-                ConfigSwitch {
-                    buttonIcon: "check"
-                    text: Translation.tr("Enable")
-                    Layout.fillWidth: false
-                    checked: Config.options.bar.mediaPlayer.lyrics.enable
-                    onCheckedChanged: {
-                        Config.options.bar.mediaPlayer.lyrics.enable = checked;
-                    }
-                    StyledToolTip {
-                        text: Translation.tr("Lyrics will be visible when they are fetched with API")
-                    }
+            ConfigSwitch {
+                buttonIcon: "check"
+                text: Translation.tr("Enable")
+                Layout.fillWidth: true
+                checked: Config.options.bar.mediaPlayer.lyrics.enable
+                onCheckedChanged: {
+                    Config.options.bar.mediaPlayer.lyrics.enable = checked;
                 }
-
-                Item {
-                    Layout.fillWidth: true
-                }
-
-                ConfigSelectionArray {
-                    register: true
-                    Layout.fillWidth: false
-                    currentValue: Config.options.bar.mediaPlayer.lyrics.style
-                    onSelected: newValue => {
-                        Config.options.bar.mediaPlayer.lyrics.style = newValue
-                    }
-                    options: [
-                        {
-                            displayName: Translation.tr("Static"),
-                            icon: "text_fields",
-                            value: "static"
-                        },
-                        {
-                            displayName: Translation.tr("Scrolling"),
-                            icon: "swap_vert",
-                            value: "scrolling"
-                        }
-                    ]
+                StyledToolTip {
+                    text: Translation.tr("Lyrics will be visible when they are fetched with API")
                 }
             }
 
