@@ -78,7 +78,7 @@ Item {
 
     property string backgroundStyle: Config.options.background.widgets.clock.cookie.backgroundStyle
     StyledDropShadow {
-        target: root.useSineCookie ? sineCookieLoader : roundedPolygonCookieLoader
+        target: backgroundStyle === "sine" ? sineCookieLoader : backgroundStyle === "shape" ? materialShapeCookieLoader : roundedPolygonCookieLoader
 
         RotationAnimation on rotation {
             running: Config.options.background.widgets.clock.cookie.constantlyRotate
@@ -93,7 +93,7 @@ Item {
         id: sineCookieLoader
         z: 0
         visible: false // The DropShadow already draws it
-        active: root.useSineCookie
+        active: backgroundStyle === "sine"
         sourceComponent: SineCookie {
             implicitSize: root.implicitSize
             sides: Config.options.background.widgets.clock.cookie.sides
@@ -104,7 +104,7 @@ Item {
         id: roundedPolygonCookieLoader
         z: 0
         visible: false // The DropShadow already draws it
-        active: !root.useSineCookie
+        active: backgroundStyle === "cookie"
         sourceComponent: MaterialCookie {
             implicitSize: root.implicitSize
             sides: Config.options.background.widgets.clock.cookie.sides
