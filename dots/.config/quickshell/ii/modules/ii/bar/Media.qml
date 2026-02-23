@@ -17,7 +17,6 @@ Item {
     
     property int customSize: Config.options.bar.mediaPlayer.customSize
     property int lyricsCustomSize: Config.options.bar.mediaPlayer.lyrics.customSize
-    property bool useCustomSize: Config.options.bar.mediaPlayer.useCustomSize 
     readonly property int maxWidth: 300
 
     readonly property bool showLoadingIndicator: Config.options.bar.mediaPlayer.lyrics.showLoadingIndicator
@@ -26,7 +25,7 @@ Item {
     readonly property string lyricsStyle: Config.options.bar.mediaPlayer.lyrics.style
 
     Layout.fillHeight: true
-    implicitWidth: useCustomSize ? lyricScroller.hasSyncedLines ? lyricsCustomSize :customSize : Math.min(rowLayout.implicitWidth + rowLayout.spacing, maxWidth)
+    implicitWidth: lyricScroller.hasSyncedLines ? lyricsCustomSize :customSize
     implicitHeight: Appearance.sizes.barHeight
 
     Behavior on implicitWidth {
@@ -136,7 +135,7 @@ Item {
         }
 
         StyledText {
-            visible: !lyricScroller.hasSyncedLines
+            visible: !lyricScroller.hasSyncedLines || !lyricsEnabled
             width: rowLayout.width - (CircularProgress.size + rowLayout.spacing * 2)
             Layout.alignment: Qt.AlignVCenter
             Layout.fillWidth: visible // Ensures the text takes up available space
@@ -153,6 +152,8 @@ Item {
             Layout.preferredWidth: hasSyncedLines ? root.implicitWidth - (mediaCircProg.implicitSize + rowLayout.spacing * 2) : 0
             Layout.preferredHeight: parent.height
             Layout.alignment: Qt.AlignCenter
+
+            visible: lyricsEnabled
             
             defaultLyricsSize: Appearance.font.pixelSize.smallest
             useGradientMask: root.useGradientMask

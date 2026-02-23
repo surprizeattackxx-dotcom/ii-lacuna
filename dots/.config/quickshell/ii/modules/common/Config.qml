@@ -279,7 +279,6 @@ Singleton {
                 property bool vertical: false
                 
                 property JsonObject mediaPlayer: JsonObject {
-                    property bool useCustomSize: false
                     property int customSize: 250
                     property JsonObject lyrics: JsonObject {
                         property bool enable: true

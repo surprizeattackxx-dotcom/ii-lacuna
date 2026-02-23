@@ -284,24 +284,11 @@ ContentPage {
         icon: "music_cast"
         title: Translation.tr("Media player")
 
-        ConfigSwitch {
-            enabled: !Config.options.bar.vertical
-            buttonIcon: "crop_free"
-            text: Translation.tr("Use custom size")
-            checked: Config.options.bar.mediaPlayer.useCustomSize
-            onCheckedChanged: {
-                Config.options.bar.mediaPlayer.useCustomSize = checked;
-            }
-            StyledToolTip {
-                text: Translation.tr("Only available in horizontal mode")
-            }
-        }
-
         ConfigRow {
             uniform: true
 
             ConfigSpinBox {
-                enabled: !Config.options.bar.vertical && Config.options.bar.mediaPlayer.useCustomSize
+                enabled: !Config.options.bar.vertical
                 icon: "width_full"
                 text: Translation.tr("Custom size")
                 value: Config.options.bar.mediaPlayer.customSize
@@ -314,7 +301,7 @@ ContentPage {
             }
 
             ConfigSpinBox {
-                enabled: !Config.options.bar.vertical && Config.options.bar.mediaPlayer.useCustomSize
+                enabled: !Config.options.bar.vertical
                 icon: "width_full"
                 text: Translation.tr("Lyrics custom size")
                 value: Config.options.bar.mediaPlayer.lyrics.customSize
