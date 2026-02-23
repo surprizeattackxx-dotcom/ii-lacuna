@@ -258,71 +258,79 @@ Item { // MediaMode instance
                         ColumnLayout {
                             anchors.verticalCenter: parent.verticalCenter
                             width: parent.width
+
+                            StyledDropShadow {
+                                target: artBackgroundLoader
+                            }
                             
-                            // TODO: we have to add a drop shadow to cover art but it doesnt work somehow?
-                            MaterialShape { // Art background
-                                id: artBackground
+                            Loader {
+                                id: artBackgroundLoader
                                 Layout.preferredWidth: 400
                                 Layout.preferredHeight: 400
                                 Layout.alignment: Qt.AlignHCenter
-                                color: ColorUtils.transparentize(blendedColors.colLayer1, 0.5)
-                                shapeString: Config.options.background.mediaMode.backgroundShape
-
-                                layer.enabled: true
-                                layer.effect: OpacityMask {
-                                    maskSource: MaterialShape {
-                                        width: artBackground.width
-                                        shapeString: Config.options.background.mediaMode.backgroundShape
-                                        height: artBackground.height
-                                    }
-                                }
-
-                                StyledImage { // Art image
-                                    id: mediaArt
-                                    property int size: parent.height
+                                active: true
+                                sourceComponent: MaterialShape { // Art background
+                                    id: artBackground
                                     anchors.fill: parent
+                                    color: ColorUtils.transparentize(blendedColors.colLayer1, 0.5)
+                                    shapeString: Config.options.background.mediaMode.backgroundShape
 
-                                    source: root.displayedArtFilePath
-                                    fillMode: Image.PreserveAspectCrop
-                                    cache: false
-                                    antialiasing: true
-
-                                    width: size
-                                    height: size
-                                    sourceSize.width: size
-                                    sourceSize.height: size
-                                }
-
-                                MouseArea {
-                                    id: artMouseArea
-                                    z: 10
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    acceptedButtons: Qt.MiddleButton
-                                    onClicked: {
-                                        root.displayedArtFilePath = "" // Force
-                                        root.updateArt()
-                                    }
-                                    onEntered: musicControls.opacity = 1
-                                    onExited: musicControls.opacity = 0
-
-                                    MaterialMusicControls {
-                                        id: musicControls
-
-                                        opacity: 0
-                                        Behavior on opacity {
-                                            animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+                                    layer.enabled: true
+                                    layer.effect: OpacityMask {
+                                        maskSource: MaterialShape {
+                                            width: artBackground.width
+                                            shapeString: Config.options.background.mediaMode.backgroundShape
+                                            height: artBackground.height
                                         }
-                                        
-                                        player: root.player
-                                        anchors.horizontalCenter: parent.horizontalCenter
-                                        anchors.bottom: parent.bottom
-                                        anchors.bottomMargin: 20
-                                        Layout.preferredWidth: parent.width
-                                        Layout.preferredHeight: parent.height / 3
+                                    }
+
+                                    StyledImage { // Art image
+                                        id: mediaArt
+                                        property int size: parent.height
+                                        anchors.fill: parent
+
+                                        source: root.displayedArtFilePath
+                                        fillMode: Image.PreserveAspectCrop
+                                        cache: false
+                                        antialiasing: true
+
+                                        width: size
+                                        height: size
+                                        sourceSize.width: size
+                                        sourceSize.height: size
+                                    }
+
+                                    MouseArea {
+                                        id: artMouseArea
+                                        z: 10
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        acceptedButtons: Qt.MiddleButton
+                                        onClicked: {
+                                            root.displayedArtFilePath = "" // Force
+                                            root.updateArt()
+                                        }
+                                        onEntered: musicControls.opacity = 1
+                                        onExited: musicControls.opacity = 0
+
+                                        MaterialMusicControls {
+                                            id: musicControls
+
+                                            opacity: 0
+                                            Behavior on opacity {
+                                                animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+                                            }
+                                            
+                                            player: root.player
+                                            anchors.horizontalCenter: parent.horizontalCenter
+                                            anchors.bottom: parent.bottom
+                                            anchors.bottomMargin: 20
+                                            Layout.preferredWidth: parent.width
+                                            Layout.preferredHeight: parent.height / 3
+                                        }
                                     }
                                 }
-                            }
+                            }  
 
                             ColumnLayout {
                                 Layout.fillWidth: true
