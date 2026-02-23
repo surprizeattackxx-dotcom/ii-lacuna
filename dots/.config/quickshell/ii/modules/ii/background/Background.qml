@@ -144,7 +144,7 @@ Variants {
             }
         }
 
-        property bool mediaModeOpen: Config.options.background.mediaMode.enable
+        property bool mediaModeOpen: Config.options.background.mediaMode.enable && MprisController.activePlayer
         onMediaModeOpenChanged: {
             if (!mediaModeOpen) {
                 Wallpapers.apply(Config.options.background.wallpaperPath)
