@@ -15,6 +15,10 @@ Item {
 
     property bool hasSyncedLines: LyricsService.syncedLines.length > 0
 
+    onPlayerChanged: {
+        Persistent.states.background.mediaMode.userScrollOffset = 0
+    }
+
     Timer {
         running: root.player?.playbackState == MprisPlaybackState.Playing && hasSyncedLines > 0
         interval: 250
@@ -45,7 +49,6 @@ Item {
         contentHeight: geniusText.implicitHeight
         interactive: true
 
-        property real userOffset: 0
         property bool isSyncing: true
 
         readonly property real rawTargetY: {
@@ -60,16 +63,25 @@ Item {
             return Math.max(0, targetY - (geniusFlickable.height / 2))
         }
 
+        property real userScrollOffset: Persistent.states.background.mediaMode.userScrollOffset
+        onUserScrollOffsetChanged: {
+            updateScrolling()
+        }
+
         onMovementEnded: {
-            userOffset = contentY - rawTargetY
+            Persistent.states.background.mediaMode.userScrollOffset = contentY - rawTargetY
             isSyncing = true 
         }
 
         onMovementStarted: isSyncing = false
 
         onRawTargetYChanged: {
+            updateScrolling()
+        }
+
+        function updateScrolling() {
             if (isSyncing && !dragging && !flicking) {
-                contentY = Math.min(contentHeight - height, rawTargetY + userOffset)
+                contentY = Math.min(contentHeight - height, rawTargetY + Persistent.states.background.mediaMode.userScrollOffset)
             }
         }
 
