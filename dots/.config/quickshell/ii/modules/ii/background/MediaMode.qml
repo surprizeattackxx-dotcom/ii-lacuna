@@ -5,7 +5,6 @@ import qs.modules.common.widgets
 import qs.modules.common.utils
 import qs.services
 import qs.modules.common.functions
-import Qt5Compat.GraphicalEffects
 import QtQuick
 import QtQuick.Effects
 import QtQuick.Layouts
@@ -250,123 +249,9 @@ Item { // MediaMode instance
                     anchors.margins: 13
                     spacing: 15
 
-                    Item {
+                    MediaModeCoverArt {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
-
-                        // We wrap the Left Side (Art + Text) into a ColumnLayout
-                        ColumnLayout {
-                            anchors.verticalCenter: parent.verticalCenter
-                            width: parent.width
-
-                            StyledDropShadow {
-                                target: artBackgroundLoader
-                            }
-                            
-                            Loader {
-                                id: artBackgroundLoader
-                                Layout.preferredWidth: 400
-                                Layout.preferredHeight: 400
-                                Layout.alignment: Qt.AlignHCenter
-                                active: true
-                                sourceComponent: MaterialShape { // Art background
-                                    id: artBackground
-                                    anchors.fill: parent
-                                    color: ColorUtils.transparentize(blendedColors.colLayer1, 0.5)
-                                    shapeString: Config.options.background.mediaMode.backgroundShape
-
-                                    layer.enabled: true
-                                    layer.effect: OpacityMask {
-                                        maskSource: MaterialShape {
-                                            width: artBackground.width
-                                            shapeString: Config.options.background.mediaMode.backgroundShape
-                                            height: artBackground.height
-                                        }
-                                    }
-
-                                    StyledImage { // Art image
-                                        id: mediaArt
-                                        property int size: parent.height
-                                        anchors.fill: parent
-
-                                        source: root.displayedArtFilePath
-                                        fillMode: Image.PreserveAspectCrop
-                                        cache: false
-                                        antialiasing: true
-
-                                        width: size
-                                        height: size
-                                        sourceSize.width: size
-                                        sourceSize.height: size
-                                    }
-
-                                    MouseArea {
-                                        id: artMouseArea
-                                        z: 10
-                                        anchors.fill: parent
-                                        hoverEnabled: true
-                                        acceptedButtons: Qt.MiddleButton
-                                        onClicked: {
-                                            root.displayedArtFilePath = "" // Force
-                                            root.updateArt()
-                                        }
-                                        onEntered: musicControls.opacity = 1
-                                        onExited: musicControls.opacity = 0
-
-                                        MaterialMusicControls {
-                                            id: musicControls
-
-                                            opacity: 0
-                                            Behavior on opacity {
-                                                animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
-                                            }
-                                            
-                                            player: root.player
-                                            anchors.horizontalCenter: parent.horizontalCenter
-                                            anchors.bottom: parent.bottom
-                                            anchors.bottomMargin: 20
-                                            Layout.preferredWidth: parent.width
-                                            Layout.preferredHeight: parent.height / 3
-                                        }
-                                    }
-                                }
-                            }  
-
-                            ColumnLayout {
-                                Layout.fillWidth: true
-                                spacing: 8
-                                Layout.topMargin: 20
-
-                                StyledText {
-                                    Layout.fillWidth: true
-                                    text: root.player?.trackArtist || Translation.tr("Unknown Artist")
-                                    color: Appearance.colors.colSubtext
-                                    font.pixelSize: Appearance.font.pixelSize.huge
-                                    font.family: Appearance.font.family.title
-                                    elide: Text.ElideRight
-                                    horizontalAlignment: Text.AlignHCenter
-                                    font.variableAxes: ({
-                                            "ROND": 75
-                                        })
-                                }
-
-                                StyledText {
-                                    Layout.fillWidth: true
-                                    text: root.player?.trackTitle || Translation.tr("Unknown Title")
-                                    font.pixelSize: Appearance.font.pixelSize.hugeass * 1.5
-                                    font.weight: Font.Bold
-                                    font.family: Appearance.font.family.title
-                                    color: Appearance.colors.colOnLayer0
-                                    elide: Text.ElideRight
-                                    wrapMode: Text.Wrap
-                                    maximumLineCount: 2
-                                    horizontalAlignment: Text.AlignHCenter
-                                    font.variableAxes: ({
-                                            "ROND": 75
-                                        })
-                                }
-                            }
-                        }
                     }
 
                     Item {
