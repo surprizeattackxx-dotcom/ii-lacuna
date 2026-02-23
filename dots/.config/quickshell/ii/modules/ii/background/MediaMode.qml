@@ -24,6 +24,10 @@ Item { // MediaMode instance
     property bool downloaded: false
     property string displayedArtFilePath: ""
 
+    readonly property string trackTitle: root.player.trackTitle || ""
+    Component.onCompleted: Persistent.states.background.mediaMode.userScrollOffset = 0
+    onTrackTitleChanged: Persistent.states.background.mediaMode.userScrollOffset = 0
+
     function updateArt() {
         coverArtDownloader.targetFile = root.artUrl 
         coverArtDownloader.artFilePath = root.artFilePath

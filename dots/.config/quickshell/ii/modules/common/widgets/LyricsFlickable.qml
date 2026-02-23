@@ -15,9 +15,6 @@ Item {
 
     property bool hasSyncedLines: LyricsService.syncedLines.length > 0
 
-    onPlayerChanged: {
-        Persistent.states.background.mediaMode.userScrollOffset = 0
-    }
 
     Timer {
         running: root.player?.playbackState == MprisPlaybackState.Playing && hasSyncedLines > 0
