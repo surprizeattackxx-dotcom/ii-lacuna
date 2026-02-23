@@ -20,7 +20,9 @@ Singleton {
 
     readonly property bool lyricsEnabled: Config.options.lyricsService.enable
     readonly property MprisPlayer activePlayer: MprisController.activePlayer
-    
+
+    readonly property bool hasSyncedLines: lrclib.lines.length > 0
+
     readonly property alias syncedLines: lrclib.lines
     readonly property alias currentIndex: lrclib.currentIndex
     readonly property string plainLyrics: genius.lyricsString

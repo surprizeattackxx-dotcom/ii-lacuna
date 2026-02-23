@@ -25,30 +25,16 @@ Item {
     readonly property string lyricsStyle: Config.options.bar.mediaPlayer.lyrics.style
 
     Layout.fillHeight: true
-    implicitWidth: lyricScroller.hasSyncedLines ? lyricsCustomSize :customSize
+    implicitWidth: LyricsService.hasSyncedLines ? lyricsCustomSize :customSize
     implicitHeight: Appearance.sizes.barHeight
 
     Behavior on implicitWidth {
         animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(root)
     }
 
-    Loader {
-        id: lyricsLoader
-        active: lyricsEnabled
-        sourceComponent: LrclibLyrics {
-            id: lrclibLyrics
-            enabled: (root.activePlayer?.trackTitle?.length > 0) && (root.activePlayer?.trackArtist?.length > 0) && root.visible && root.lyricsEnabled
-            title: root.activePlayer?.trackTitle ?? ""
-            artist: root.activePlayer?.trackArtist ?? ""
-            duration: root.activePlayer?.length ?? 0
-            position: root.activePlayer?.position ?? 0
-            selectedId: 0 //? I have no idea what this does, but it works so whatever
-        }
-    }
-
     Timer {
         running: activePlayer?.playbackState == MprisPlaybackState.Playing
-        interval: lyricScroller.hasSyncedLines ? 250 : Config.options.resources.updateInterval
+        interval: LyricsService.hasSyncedLines ? 250 : Config.options.resources.updateInterval
         repeat: true
         onTriggered: activePlayer.positionChanged()
     }
@@ -80,7 +66,7 @@ Item {
 
         Loader {
             id: loadingIndLoader
-            active: root.showLoadingIndicator && !lyricScroller.hasSyncedLines && root.lyricsEnabled && (root.activePlayer?.trackTitle?.length > 0) && (root.activePlayer?.trackArtist?.length > 0)
+            active: root.showLoadingIndicator && !LyricsService.hasSyncedLines && root.lyricsEnabled && (root.activePlayer?.trackTitle?.length > 0) && (root.activePlayer?.trackArtist?.length > 0)
             visible: active
             
             Layout.preferredWidth: active ? item.implicitWidth : 0
@@ -94,7 +80,7 @@ Item {
 
             sourceComponent: MaterialLoadingIndicator {
                 id: lyricsLoadingIndicator
-                property bool couldntFetch: lyricsLoader.item?.error === "No synced lyrics" 
+                property bool couldntFetch: LyricsService.statusText === "No synced lyrics" 
                 
                 loading: !couldntFetch
                 color: couldntFetch ? Appearance.colors.colErrorContainer : Appearance.colors.colPrimaryContainer
@@ -135,7 +121,7 @@ Item {
         }
 
         StyledText {
-            visible: !lyricScroller.hasSyncedLines || !lyricsEnabled
+            visible: !LyricsService.hasSyncedLines || !lyricsEnabled
             width: rowLayout.width - (CircularProgress.size + rowLayout.spacing * 2)
             Layout.alignment: Qt.AlignVCenter
             Layout.fillWidth: visible // Ensures the text takes up available space
@@ -146,20 +132,19 @@ Item {
             text: `${cleanedTitle}${activePlayer?.trackArtist ? ' • ' + activePlayer.trackArtist : ''}`
         }
 
-        //TODO: i hate putting these to a loader rn, add this to a loader later
+        // I CANT PUT THIS MF TO A LOADER, PLS HELP MY FUCKING MIND
         LyricScroller {
             id: lyricScroller
+            
             Layout.preferredWidth: hasSyncedLines ? root.implicitWidth - (mediaCircProg.implicitSize + rowLayout.spacing * 2) : 0
             Layout.preferredHeight: parent.height
             Layout.alignment: Qt.AlignCenter
-
-            visible: lyricsEnabled
             
             defaultLyricsSize: Appearance.font.pixelSize.smallest
             useGradientMask: root.useGradientMask
             halfVisibleLines: 1
             downScale: 0.98
-            rowHeight: 8
+            rowHeight: 10
             gradientDensity: 0.25
         }
     }
