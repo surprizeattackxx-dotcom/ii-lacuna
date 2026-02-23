@@ -124,14 +124,47 @@ ContentPage {
             }
         }
 
-        ConfigSwitch {
-            buttonIcon: "animation"
-            text: Translation.tr("Enable background animation")
-            checked: Config.options.background.mediaMode.enableBackgroundAnimation
-            onCheckedChanged: {
-                Config.options.background.mediaMode.enableBackgroundAnimation = checked;
+        ConfigRow {
+
+            ConfigSwitch {
+                Layout.fillWidth: false
+                buttonIcon: "animation"
+                text: Translation.tr("Enable background animation")
+                checked: Config.options.background.mediaMode.backgroundAnimation.enable
+                onCheckedChanged: {
+                    Config.options.background.mediaMode.backgroundAnimation.enable = checked;
+                }
+            }
+
+            ConfigSpinBox {
+                enabled: Config.options.background.mediaMode.backgroundAnimation.enable
+                Layout.fillWidth: true
+                icon: "speed"
+                text: Translation.tr("Speed scale")
+                value: Config.options.background.mediaMode.backgroundAnimation.speedScale
+                from: 0
+                to: 100
+                stepSize: 5
+                onValueChanged: {
+                    Config.options.background.mediaMode.backgroundAnimation.speedScale = value;
+                }
+
+                MouseArea {
+                    z: -1
+                    id: spinBoxMouseArea
+                    anchors.fill: parent
+                    hoverEnabled: true
+                }
+
+                StyledToolTip {
+                    extraVisibleCondition: spinBoxMouseArea.containsMouse
+                    text: Translation.tr("1: very slow | 10: default | 20: 2x speed...")
+                }
+                
             }
         }
+        
+
         ConfigSwitch {
             buttonIcon: "format_color_fill"
             text: Translation.tr("Change shell color to match album art")
