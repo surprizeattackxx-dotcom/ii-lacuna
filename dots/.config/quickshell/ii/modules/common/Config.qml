@@ -11,7 +11,7 @@ Singleton {
     property string filePath: Directories.shellConfigPath
     property alias options: configOptionsJsonAdapter
     property bool ready: false
-    property int readWriteDelay: 50 // milliseconds
+    property int readWriteDelay: 150 // milliseconds
     property bool blockWrites: false
 
     function setNestedValue(nestedKey, value) {
