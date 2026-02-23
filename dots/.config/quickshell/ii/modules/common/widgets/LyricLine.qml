@@ -12,8 +12,8 @@ Item {
     property bool reallyUseGradient: useGradient
 
     property real defaultLyricsSize: Appearance.font.pixelSize.hugeass * 1.5
-
     property int textHorizontalAlignment: Text.AlignHCenter
+    property real gradientDensity: 1.0
 
     width: parent.width
     height: lyricScroller.rowHeight
@@ -51,11 +51,11 @@ Item {
                 gradient: Gradient {
                     GradientStop {
                         position: 0.0
-                        color: lyricLineItem.gradientDirection === "top" ? "transparent" : "black"
+                        color: lyricLineItem.gradientDirection === "top" ? Qt.rgba(0,0,0,gradientDensity) : "black"
                     }
                     GradientStop {
                         position: 1.0
-                        color: lyricLineItem.gradientDirection === "top" ? "black" : "transparent"
+                        color: lyricLineItem.gradientDirection === "top" ? "black" : Qt.rgba(0,0,0,gradientDensity)
                     }
                 }
             }

@@ -19,6 +19,7 @@ Item {
     property real downScale: 0.85
     property int halfVisibleLines: 3
     property bool useGradientMask: true
+    property real gradientDensity: 1.0
 
     property real defaultLyricsSize: Appearance.font.pixelSize.normal * 1.5
     property string textAlign: "center"
@@ -63,6 +64,7 @@ Item {
                 property int actualIndex: root.targetCurrentIndex + lineOffset
                 property bool isValidLine: root.hasSyncedLines && actualIndex >= 0 && actualIndex < LyricsService.syncedLines.length
 
+                gradientDensity: 1 - root.gradientDensity
                 defaultLyricsSize: root.defaultLyricsSize
                 changeTextWeight: root.changeTextWeight
                 textHorizontalAlignment: root.textAlign === "left"  ? Text.AlignLeft  :

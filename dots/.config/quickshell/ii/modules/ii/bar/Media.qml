@@ -157,9 +157,10 @@ Item {
             
             defaultLyricsSize: Appearance.font.pixelSize.smallest
             useGradientMask: root.useGradientMask
-            halfVisibleLines: 2
-            downScale: 0.95
-            rowHeight: 10
+            halfVisibleLines: 1
+            downScale: 0.98
+            rowHeight: 8
+            gradientDensity: 0.25
         }
     }
 }
