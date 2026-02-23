@@ -318,46 +318,54 @@ ContentPage {
         ContentSubsection {
             title: Translation.tr("Lyrics")
 
-            ConfigSwitch {
-                buttonIcon: "check"
-                text: Translation.tr("Enable")
-                Layout.fillWidth: true
-                checked: Config.options.bar.mediaPlayer.lyrics.enable
-                onCheckedChanged: {
-                    Config.options.bar.mediaPlayer.lyrics.enable = checked;
-                }
-                StyledToolTip {
-                    text: Translation.tr("Lyrics will be visible when they are fetched with API")
-                }
-            }
-
             ConfigRow {
-                uniform: true
                 ConfigSwitch {
-                    enabled: Config.options.bar.mediaPlayer.lyrics.enable && Config.options.bar.mediaPlayer.lyrics.style === "scrolling"
-                    buttonIcon: "gradient"
-                    text: Translation.tr("Use gradient mask")
-                    checked: Config.options.bar.mediaPlayer.lyrics.useGradientMask
+                    buttonIcon: "check"
+                    text: Translation.tr("Enable")
+                    Layout.fillWidth: false
+                    checked: Config.options.bar.mediaPlayer.lyrics.enable
                     onCheckedChanged: {
-                        Config.options.bar.mediaPlayer.lyrics.useGradientMask = checked;
-                    }
-                }
-                ConfigSwitch {
-                    enabled: Config.options.bar.mediaPlayer.lyrics.enable
-                    buttonIcon: "clock_loader_60"
-                    text: Translation.tr("Show loading indicator")
-                    checked: Config.options.bar.mediaPlayer.lyrics.showLoadingIndicator
-                    onCheckedChanged: {
-                        Config.options.bar.mediaPlayer.lyrics.showLoadingIndicator = checked;
+                        Config.options.bar.mediaPlayer.lyrics.enable = checked;
                     }
                     StyledToolTip {
-                        text: Translation.tr("Show an indicator while lyrics are being fetched")
+                        text: Translation.tr("Lyrics will be visible when they are fetched with API")
                     }
+                }
+
+                Item {
+                    Layout.fillWidth: true
+                }
+
+                ConfigSelectionArray {
+                    Layout.fillWidth: false
+                    currentValue: Config.options.bar.mediaPlayer.lyrics.style
+                    onSelected: newValue => {
+                        Config.options.bar.mediaPlayer.lyrics.style = newValue
+                    }
+                    options: [
+                        {
+                            displayName: Translation.tr("Static"),
+                            icon: "format_size",
+                            value: "static"
+                        },
+                        {
+                            displayName: Translation.tr("Scroller"),
+                            icon: "keyboard_double_arrow_up",
+                            value: "scroller"
+                        }
+                    ]
                 }
             }
 
-            
-
+            ConfigSwitch {
+                enabled: Config.options.bar.mediaPlayer.lyrics.enable && Config.options.bar.mediaPlayer.lyrics.style === "scroller"
+                buttonIcon: "gradient"
+                text: Translation.tr("Use gradient mask")
+                checked: Config.options.bar.mediaPlayer.lyrics.useGradientMask
+                onCheckedChanged: {
+                    Config.options.bar.mediaPlayer.lyrics.useGradientMask = checked;
+                }
+            }
             
         }
 

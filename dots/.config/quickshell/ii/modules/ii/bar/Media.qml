@@ -25,7 +25,7 @@ Item {
     readonly property string lyricsStyle: Config.options.bar.mediaPlayer.lyrics.style
 
     Layout.fillHeight: true
-    implicitWidth: LyricsService.hasSyncedLines ? lyricsCustomSize :customSize
+    implicitWidth: LyricsService.hasSyncedLines && root.lyricsEnabled ? lyricsCustomSize : customSize
     implicitHeight: Appearance.sizes.barHeight
 
     Behavior on implicitWidth {
@@ -58,94 +58,87 @@ Item {
         }   
     }
 
-    RowLayout { // Real content
-        id: rowLayout
+    ClippedFilledCircularProgress {
+        id: mediaCircProg
+        visible: !loadingIndLoader.active
+        
+        anchors.left: parent.left
+        anchors.verticalCenter: parent.verticalCenter
 
-        spacing: 4
-        anchors.fill: parent
+        lineWidth: Appearance.rounding.unsharpen
+        value: activePlayer?.position / activePlayer?.length
+        implicitSize: 20
+        colPrimary: Appearance.colors.colOnSecondaryContainer
+        enableAnimation: false
 
-        Loader {
-            id: loadingIndLoader
-            active: root.showLoadingIndicator && !LyricsService.hasSyncedLines && root.lyricsEnabled && (root.activePlayer?.trackTitle?.length > 0) && (root.activePlayer?.trackArtist?.length > 0)
-            visible: active
+        Item {
+            anchors.centerIn: parent
+            width: mediaCircProg.implicitSize
+            height: mediaCircProg.implicitSize
             
-            Layout.preferredWidth: active ? item.implicitWidth : 0
-            Layout.preferredHeight: active ? item.implicitHeight : 0
-
-            Timer {
-                id: loadingIndicatorDissappearTimer
-                interval: 1500
-                onTriggered: loadingIndLoader.active = false
-            }
-
-            sourceComponent: MaterialLoadingIndicator {
-                id: lyricsLoadingIndicator
-                property bool couldntFetch: LyricsService.statusText === "No synced lyrics" 
-                
-                loading: !couldntFetch
-                color: couldntFetch ? Appearance.colors.colErrorContainer : Appearance.colors.colPrimaryContainer
-                shapeColor: couldntFetch ? Appearance.colors.colOnErrorContainer : Appearance.colors.colOnPrimaryContainer
-                implicitSize: 24
-
-                onCouldntFetchChanged: {
-                    if (couldntFetch) {
-                        loadingIndicatorDissappearTimer.start()
-                    }
-                }
-            }
-        }
-
-        ClippedFilledCircularProgress {
-            id: mediaCircProg
-            visible: !loadingIndLoader.active
-            Layout.alignment: Qt.AlignVCenter
-            lineWidth: Appearance.rounding.unsharpen
-            value: activePlayer?.position / activePlayer?.length
-            implicitSize: 20
-            colPrimary: Appearance.colors.colOnSecondaryContainer
-            enableAnimation: false
-
-            Item {
+            MaterialSymbol {
                 anchors.centerIn: parent
-                width: mediaCircProg.implicitSize
-                height: mediaCircProg.implicitSize
-                
-                MaterialSymbol {
-                    anchors.centerIn: parent
-                    fill: 1
-                    text: activePlayer?.isPlaying ? "pause" : "music_note"
-                    iconSize: Appearance.font.pixelSize.normal
-                    color: Appearance.m3colors.m3onSecondaryContainer
-                }
+                fill: 1
+                text: activePlayer?.isPlaying ? "pause" : "music_note"
+                iconSize: Appearance.font.pixelSize.normal
+                color: Appearance.m3colors.m3onSecondaryContainer
             }
-        }
-
-        StyledText {
-            visible: !LyricsService.hasSyncedLines || !lyricsEnabled
-            width: rowLayout.width - (CircularProgress.size + rowLayout.spacing * 2)
-            Layout.alignment: Qt.AlignVCenter
-            Layout.fillWidth: visible // Ensures the text takes up available space
-            Layout.rightMargin: rowLayout.spacing
-            horizontalAlignment: Text.AlignHCenter
-            elide: Text.ElideRight // Truncates the text on the right
-            color: Appearance.colors.colOnLayer1
-            text: `${cleanedTitle}${activePlayer?.trackArtist ? ' • ' + activePlayer.trackArtist : ''}`
-        }
-
-        // I CANT PUT THIS MF TO A LOADER, PLS HELP MY FUCKING MIND
-        LyricScroller {
-            id: lyricScroller
-            
-            Layout.preferredWidth: hasSyncedLines ? root.implicitWidth - (mediaCircProg.implicitSize + rowLayout.spacing * 2) : 0
-            Layout.preferredHeight: parent.height
-            Layout.alignment: Qt.AlignCenter
-            
-            defaultLyricsSize: Appearance.font.pixelSize.smallest
-            useGradientMask: root.useGradientMask
-            halfVisibleLines: 1
-            downScale: 0.98
-            rowHeight: 10
-            gradientDensity: 0.25
         }
     }
+
+    StyledText {
+        visible: !LyricsService.hasSyncedLines || !lyricsEnabled
+        width: parent.width - mediaCircProg.implicitSize * 2
+        
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.horizontalCenterOffset: mediaCircProg.implicitSize / 2
+        anchors.verticalCenter: parent.verticalCenter
+        
+        horizontalAlignment: Text.AlignHCenter
+        elide: Text.ElideRight // Truncates the text on the right
+        color: Appearance.colors.colOnLayer1
+        text: `${cleanedTitle}${activePlayer?.trackArtist ? ' • ' + activePlayer.trackArtist : ''}`
+    } 
+
+    Loader {
+        id: lyricsItemLoader 
+        active: lyricsEnabled
+        anchors.fill: parent
+        
+        sourceComponent: Item {
+            id: lyricsItem
+            visible: lyricsEnabled
+            anchors.fill: parent
+
+            Loader {
+                active: lyricsStyle == "static"
+                anchors.centerIn: parent
+                sourceComponent: StyledText {
+                    anchors.centerIn: parent
+                    font.pixelSize: Appearance.font.pixelSize.smallie
+                    text: LyricsService.syncedLines[LyricsService.currentIndex].text
+                    animateChange: true
+                }
+            }
+
+            Loader {
+                active: lyricsStyle == "scroller"
+                anchors.fill: parent
+                sourceComponent: LyricScroller {
+                    id: lyricScroller
+                    
+                    anchors.fill: parent
+                    visible: lyricsStyle == "scroller" && LyricsService.hasSyncedLines
+                    
+                    defaultLyricsSize: Appearance.font.pixelSize.smallest
+                    useGradientMask: root.useGradientMask
+                    halfVisibleLines: 1
+                    downScale: 0.98
+                    rowHeight: 10
+                    gradientDensity: 0.25
+                }
+            }
+        }   
+    }
+    
 }
