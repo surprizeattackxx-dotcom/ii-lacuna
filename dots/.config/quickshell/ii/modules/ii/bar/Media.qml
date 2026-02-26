@@ -120,13 +120,9 @@ Item {
                 active: lyricsStyle == "static"
                 anchors.fill: parent
                 anchors.centerIn: parent
-                sourceComponent: StyledText {
+                sourceComponent: LyricsStatic {
                     anchors.fill: parent
                     anchors.centerIn: parent
-                    font.pixelSize: Appearance.font.pixelSize.smallie
-                    text: LyricsService.syncedLines[LyricsService.currentIndex].text
-                    animateChange: true
-                    elide: Text.ElideRight
                     horizontalAlignment: Text.AlignHCenter
                 }
             }

@@ -28,6 +28,9 @@ Item { // MediaMode instance
     Component.onCompleted: Persistent.states.background.mediaMode.userScrollOffset = 0
     onTrackTitleChanged: Persistent.states.background.mediaMode.userScrollOffset = 0
 
+    property bool canChangeColor: true
+    property string geniusLyricsString: LyricsService.plainLyrics
+
     function updateArt() {
         coverArtDownloader.targetFile = root.artUrl 
         coverArtDownloader.artFilePath = root.artFilePath
@@ -45,8 +48,6 @@ Item { // MediaMode instance
         updateArt();
     }
 
-    property bool canChangeColor: true
-
     Process { // Cover art downloader
         id: coverArtDownloader
         property string targetFile: root.artUrl
@@ -60,8 +61,6 @@ Item { // MediaMode instance
         }
     }
     
-    property string geniusLyricsString: LyricsService.geniusLyrics
-
 
     ColorQuantizer {
         id: colorQuantizer
