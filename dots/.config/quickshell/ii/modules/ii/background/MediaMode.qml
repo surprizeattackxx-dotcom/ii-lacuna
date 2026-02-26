@@ -20,7 +20,7 @@ Item { // MediaMode instance
     property string artDownloadLocation: Directories.coverArt
     property string artFileName: Qt.md5(artUrl)
     property string artFilePath: `${artDownloadLocation}/${artFileName}`
-    property color artDominantColor: colorQuantizer.colors[0] ?? "#31313131"
+    property color artDominantColor: colorQuantizer.colors[0] ?? "#31313131" // 31 means gooning in Turkish btw :)
     property bool downloaded: false
     property string displayedArtFilePath: ""
 
