@@ -24,8 +24,7 @@ MaterialShape {
 
     MaterialSymbol {
         id: symbol
-        anchors.fill: parent
-        anchors.margins: 8
+        anchors.centerIn: parent
         color: root.colSymbol
         rotation: 360 - root.rotation
     }
