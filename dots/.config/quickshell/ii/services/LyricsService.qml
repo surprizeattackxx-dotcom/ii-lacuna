@@ -19,6 +19,9 @@ Singleton {
     id: root
 
     readonly property bool lyricsEnabled: Config.options.lyricsService.enable
+    readonly property bool geniusEnabled: Config.options.lyricsService.enableGenius
+    readonly property bool lrclibEnabled: Config.options.lyricsService.enableLrclib
+
     readonly property MprisPlayer activePlayer: MprisController.activePlayer
 
     readonly property bool hasSyncedLines: lrclib.lines.length > 0
@@ -31,7 +34,7 @@ Singleton {
 
     LrclibLyrics {
         id: lrclib
-        enabled: (root.activePlayer?.trackTitle?.length > 0) && (root.activePlayer?.trackArtist?.length > 0) && lyricsEnabled
+        enabled: (root.activePlayer?.trackTitle?.length > 0) && (root.activePlayer?.trackArtist?.length > 0) && lyricsEnabled && lrclibEnabled
         title: root.activePlayer?.trackTitle ?? ""
         artist: root.activePlayer?.trackArtist ?? ""
         duration: root.activePlayer?.length ?? 0
@@ -59,7 +62,7 @@ Singleton {
         readonly property string trackTitle: root.activePlayer?.trackTitle
         onTrackTitleChanged: {
             if (root.activePlayer) {
-                if (!lyricsEnabled) return;
+                if (!lyricsEnabled || !geniusEnabled) return;
                 genius.hasString = false
                 genius.fetchLyrics(root.activePlayer.trackArtist, root.activePlayer.trackTitle)
             }
@@ -67,7 +70,7 @@ Singleton {
         property string lyricsString: ""
         property bool hasString: false
         onLyricsUpdated: (lyrics) => {
-            if (!lyricsEnabled) return;
+            if (!lyricsEnabled || !geniusEnabled) return;
             // console.log("Got Genius lyrics:", lyrics)
             let lines = lyrics.split("\n")
             let filtered = lines.filter(line => {
@@ -82,7 +85,7 @@ Singleton {
     readonly property string currentTrackId: root.activePlayer?.trackTitle ?? ""
     
     onCurrentTrackIdChanged: {
-        if (!lyricsEnabled) return;
+        if (!lyricsEnabled || !geniusEnabled) return;
         if (currentTrackId !== "" && root.activePlayer?.trackArtist) {
             genius.fetchLyrics(root.activePlayer.trackArtist, root.activePlayer.trackTitle)
         } else {
