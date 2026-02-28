@@ -93,6 +93,14 @@ Item {
                         wrapMode: lyricText.wrapMode
                         color: "#22ffffff"
                         opacity: isCurrent ? 1.0 : 0.4
+
+                        layer.enabled: isCurrent
+                        layer.effect: DropShadow {
+                            color: Appearance.colors.colPrimary
+                            horizontalOffset: 0
+                            verticalOffset: 0
+                            radius: 20
+                        }
                     }
 
                     Item {
