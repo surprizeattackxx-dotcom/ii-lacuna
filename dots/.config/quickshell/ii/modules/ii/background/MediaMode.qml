@@ -173,6 +173,7 @@ Item { // MediaMode instance
                             // Lrclib (synced) lyrics
                             LyricsSyllable {
                                 anchors.fill: parent
+                                anchors.rightMargin: 100
                             }
 
                             // Lrclib (synced) lyrics - alternative
