@@ -101,6 +101,14 @@ Item {
                             verticalOffset: 0
                             radius: 20
                         }
+
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: {
+                                LyricsService.changeDurationToIndex(index)
+                            }
+                        }
                     }
 
                     Item {

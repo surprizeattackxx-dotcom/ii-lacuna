@@ -67,6 +67,11 @@ Singleton {
         return lrclib.lines[index + 1].time - lrclib.lines[index].time;
     }
 
+    function changeDurationToIndex(index) {
+        if (!hasSyncedLines) return;
+        root.activePlayer.position = root.syncedLines[index].time
+    }
+
     Component.onCompleted: geniusFirstFetchDelay.restart()
     Timer {
         id: geniusFirstFetchDelay
