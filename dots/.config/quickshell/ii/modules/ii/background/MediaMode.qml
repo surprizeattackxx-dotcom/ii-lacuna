@@ -141,6 +141,16 @@ Item { // MediaMode instance
                     artFilePath: root.displayedArtFilePath
                     overlayColor: ColorUtils.transparentize(blendedColors.colLayer0, 0.3)
                     animationEnabled: Config.options.background.mediaMode.backgroundAnimation.enable
+
+                    workspaceNorm: {
+                        const chunkSize = Config?.options.bar.workspaces.shown ?? 10
+                        const lower = Math.floor(bgRoot.firstWorkspaceId / chunkSize) * chunkSize
+                        const upper = Math.ceil(bgRoot.lastWorkspaceId / chunkSize) * chunkSize
+                        const range = upper - lower
+                        const id = bgRoot.monitor.activeWorkspace?.id ?? 1
+                        return range > 0 ? (id - lower) / range : 0.5
+                    }
+
                 }
 
                 RowLayout {
