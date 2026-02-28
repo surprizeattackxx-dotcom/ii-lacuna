@@ -143,8 +143,7 @@ Item {
             from: -150
             to: lyricsList.width + 150
             duration: isCurrent ? LyricsService.getLineDuration(index) * 1000 : 0
-            paused: !root.isPlaying 
-            running: isCurrent
+            running: isCurrent && root.isPlaying
             easing.type: Easing.Linear
         }
 
@@ -168,8 +167,7 @@ Item {
             from: -20
             to: lyricText.height + 20
             duration: isCurrent ? LyricsService.getLineDuration(index) * 1000 : 0
-            paused: !root.isPlaying
-            running: isCurrent
+            running: isCurrent && root.isPlaying
             easing.type: Easing.Linear
         }
 
