@@ -16,7 +16,7 @@ Item {
     required property int monitorIndex 
     required property var panelWindow
 
-    readonly property bool hyprscrollingEnabled: Config.options.overview.hyprscrollingImplementation.enable
+    readonly property bool hyprscrollingEnabled: true //FIXME
     readonly property bool useWorkspaceMap: Config.options.overview.useWorkspaceMap
     readonly property list<int> workspaceMap: Config.options.overview.workspaceMap
     readonly property string backgroundStyle: Config.options.overview.scrollingStyle.backgroundStyle
@@ -285,6 +285,7 @@ Item {
                     scale: root.scaleRatio
                     widgetMonitor: HyprlandData.monitors.find(m => m.id == root.monitor.id) // used by overview window
                     windowData: windowByAddress[address]
+                    hyprscrollingEnabled: root.hyprscrollingEnabled
 
                     property int wsId: windowData?.workspace?.id
 
