@@ -58,6 +58,7 @@ Singleton {
         interval: root.readWriteDelay
         repeat: false
         onTriggered: {
+            if (!root.ready) return;
             configFileView.writeAdapter()
         }
     }
