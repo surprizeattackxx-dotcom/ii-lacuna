@@ -67,7 +67,7 @@ Item {
                     scale: isCurrent ? 1.0 : 0.85
                     
                     Behavior on scale { 
-                        NumberAnimation { duration: 400; easing.type: Easing.OutQuart } 
+                        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
                     }
 
                     // Maske için kullanılan görünmez metin
