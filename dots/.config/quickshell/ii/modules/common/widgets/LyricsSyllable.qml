@@ -56,7 +56,7 @@ Item {
             
             highlightFollowsCurrentItem: true
             highlightRangeMode: highlightFollowsCurrentItem ? ListView.StrictlyEnforceRange : ListView.NoHighlightRange
-            preferredHighlightBegin: parent.height / 2 - 100
+            preferredHighlightBegin: parent.height / 2 - 60
             preferredHighlightEnd: parent.height / 2
             highlightMoveDuration: 600
 
