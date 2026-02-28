@@ -141,17 +141,31 @@ EOF
     mv "$RESTORE_SCRIPT.tmp" "$RESTORE_SCRIPT"
 }
 
+## Explanation for the functions: set_wallpaper_path, set_thumbnail_path, set_accent_color
+## We have to mimic the same format as the QML such as 4 spaces for indents and going to next line on empty arrays
+## So watchChanges on FileView's will not be triggerred (i hope)
+
 set_wallpaper_path() {
     local path="$1"
     if [ -f "$SHELL_CONFIG_FILE" ]; then
-        jq --arg path "$path" '.background.wallpaperPath = $path' "$SHELL_CONFIG_FILE" > "$SHELL_CONFIG_FILE.tmp" && mv "$SHELL_CONFIG_FILE.tmp" "$SHELL_CONFIG_FILE"
+        jq --indent 4 --arg path "$path" \
+            '.background.wallpaperPath = $path' \
+            "$SHELL_CONFIG_FILE" \
+            | sed -E 's/\[\s*\]/[\n]/g' \
+            > "$SHELL_CONFIG_FILE.tmp" \
+            && mv "$SHELL_CONFIG_FILE.tmp" "$SHELL_CONFIG_FILE"
     fi
 }
 
 set_thumbnail_path() {
     local path="$1"
     if [ -f "$SHELL_CONFIG_FILE" ]; then
-        jq --arg path "$path" '.background.thumbnailPath = $path' "$SHELL_CONFIG_FILE" > "$SHELL_CONFIG_FILE.tmp" && mv "$SHELL_CONFIG_FILE.tmp" "$SHELL_CONFIG_FILE"
+        jq --indent 4 --arg path "$path" \
+            '.background.thumbnailPath = $path' \
+            "$SHELL_CONFIG_FILE" \
+            | sed -E 's/\[\s*\]/[\n]/g' \
+            > "$SHELL_CONFIG_FILE.tmp" \
+            && mv "$SHELL_CONFIG_FILE.tmp" "$SHELL_CONFIG_FILE"
     fi
 }
 
@@ -336,7 +350,12 @@ main() {
     }
     set_accent_color() {
         local color="$1"
-        jq --arg color "$color" '.appearance.palette.accentColor = $color' "$SHELL_CONFIG_FILE" > "$SHELL_CONFIG_FILE.tmp" && mv "$SHELL_CONFIG_FILE.tmp" "$SHELL_CONFIG_FILE"
+        local tmp=$(jq --indent 4 --arg color "$color" \
+            '.appearance.palette.accentColor = $color' \
+            "$SHELL_CONFIG_FILE" \
+            | sed -E 's/\[\s*\]/[\n]/g')
+
+        echo "$tmp" > "$SHELL_CONFIG_FILE"
     }
 
     detect_scheme_type_from_image() {
