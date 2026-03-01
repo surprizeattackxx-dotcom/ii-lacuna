@@ -260,7 +260,7 @@ Singleton {
                     }
                     property JsonObject visualizer: JsonObject {
                         property bool show: false
-                        property int maxVisualizerValue: 2500
+                        property int maxVisualizerValue: 500
                         property int smoothing: 3
                         property int cornerRadius: Appearance.rounding.verysmall
                         property int barWidth: 20
