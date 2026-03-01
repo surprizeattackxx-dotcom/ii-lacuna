@@ -9,7 +9,6 @@ import Quickshell.Services.Mpris
 
 Item {
     id: root
-    visible: LyricsService.syncedLines.length > 0
     clip: true
 
     readonly property int highlightStyle: Config.options.background.mediaMode.syllable.textHighlightStyle
@@ -18,11 +17,8 @@ Item {
     
     property real largeFontSize: Appearance.font.pixelSize.hugeass * 2.0
 
-    Timer {
-        running: LyricsService.activePlayer?.playbackState == MprisPlaybackState.Playing
-        interval: 250
-        repeat: true
-        onTriggered: LyricsService.activePlayer.positionChanged()
+    Component.onCompleted: {
+        LyricsService.initiliazeLyrics()
     }
 
     Item {

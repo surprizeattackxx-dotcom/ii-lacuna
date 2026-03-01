@@ -75,6 +75,14 @@ Singleton {
         if (!hasSyncedLines) return;
         root.activePlayer.position = root.syncedLines[index].time
     }
+    
+    // https://quickshell.org/docs/master/types/Quickshell.Services.Mpris/MprisPlayer/#position
+    Timer {
+        running: root.activePlayer?.playbackState == MprisPlaybackState.Playing && root.hasSyncedLines && root.isInitialized
+        interval: 250
+        repeat: true
+        onTriggered: root.activePlayer.positionChanged()
+    }
 
     Component.onCompleted: geniusFirstFetchDelay.restart()
     Timer {
