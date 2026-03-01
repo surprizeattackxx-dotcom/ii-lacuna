@@ -23,6 +23,9 @@ Item { // MediaMode instance
     property bool downloaded: false
     property string displayedArtFilePath: ""
 
+    readonly property bool showVisualizer: Config.options.background.mediaMode.visualizer.show
+    property list<real> visualizerPoints: []
+
     readonly property string trackTitle: root.player.trackTitle || ""
     Component.onCompleted: Persistent.states.background.mediaMode.userScrollOffset = 0
     onTrackTitleChanged: Persistent.states.background.mediaMode.userScrollOffset = 0
@@ -75,6 +78,47 @@ Item { // MediaMode instance
         }
     }
 
+    Process {
+        id: cavaProc
+        running: root.showVisualizer
+        onRunningChanged: {
+            if (!cavaProc.running) {
+                root.visualizerPoints = [];
+            }
+        }
+        command: ["cava", "-p", `${FileUtils.trimFileProtocol(Directories.scriptPath)}/cava/raw_output_config.txt`]
+        stdout: SplitParser {
+            onRead: data => {
+                // Parse `;`-separated values into the visualizerPoints array
+                let points = data.split(";").map(p => parseFloat(p.trim())).filter(p => !isNaN(p));
+                root.visualizerPoints = points;
+            }
+        }
+    }
+
+    property var visualizerOptions: Config.options.background.mediaMode.visualizer
+
+    Loader {
+        z: 5
+        active: root.showVisualizer
+        anchors.fill: parent
+        anchors.margins: -40 // to extend it
+        sourceComponent: BarVisualizer {
+            id: visualizerCanvas
+            anchors.fill: parent
+            live: true
+            
+            points: root.visualizerPoints
+            color: Appearance.colors.colPrimary
+            cornerRadius: visualizerOptions.cornerRadius
+            maxVisualizerValue: visualizerOptions.maxVisualizerValue
+            smoothing: visualizerOptions.smoothing
+            barSpacing: visualizerOptions.barSpacing
+            barWidth: visualizerOptions.barWidth
+        }
+    }
+    
+
     Loader {
         id: loader
         anchors.fill: parent
@@ -86,6 +130,8 @@ Item { // MediaMode instance
                 id: background
                 anchors.fill: parent
                 color: ColorUtils.applyAlpha(Appearance.colors.colLayer0, 1)
+
+                
 
                 FloatingArtBackground {
                     anchors.fill: parent

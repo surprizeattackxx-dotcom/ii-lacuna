@@ -258,6 +258,14 @@ Singleton {
                     property JsonObject syllable: JsonObject {
                         property int textHighlightStyle: 0 // 0: vertical, 1: horizontal (not perfect bc its not synced in a word level, but a cool animation to have)
                     }
+                    property JsonObject visualizer: JsonObject {
+                        property bool show: false
+                        property int maxVisualizerValue: 2500
+                        property int smoothing: 3
+                        property int cornerRadius: Appearance.rounding.verysmall
+                        property int barWidth: 20
+                        property real barSpacing: 0.4
+                    }
                     
                 }
             }
