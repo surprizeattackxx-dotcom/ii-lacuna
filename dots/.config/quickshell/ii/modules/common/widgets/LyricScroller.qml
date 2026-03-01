@@ -35,6 +35,13 @@ Item {
         LyricsService.initiliazeLyrics()
     }
 
+    Timer {
+        running: LyricsService.activePlayer?.playbackState == MprisPlaybackState.Playing
+        interval: 250
+        repeat: true
+        onTriggered: LyricsService.activePlayer.positionChanged()
+    }
+
     onTargetCurrentIndexChanged: {
         if (targetCurrentIndex !== lastIndex) {
             isMovingForward = targetCurrentIndex > lastIndex;

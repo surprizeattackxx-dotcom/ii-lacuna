@@ -168,32 +168,39 @@ Item { // MediaMode instance
                         Layout.fillHeight: true
 
                         Item {
+                            id: lyricsItem
                             anchors.fill: parent
                             anchors.leftMargin: -120
                             anchors.rightMargin: 120
                             anchors.topMargin: 40
                             anchors.bottomMargin: 40
 
-                            // Genius lyrics
-                            LyricsFlickable {
-                                anchors.fill: parent
-                                player: root.player
+                            readonly property bool hasSyncedLines: LyricsService.syncedLines.length > 0
+                            readonly property bool geniusEnabled: Config.options.lyricsService.enableGenius
+                            readonly property bool lrclibEnabled: Config.options.lyricsService.enableLrclib
+
+                            Component.onCompleted: {
+                                if (!geniusEnabled && !lrclibEnabled) return
+                                LyricsService.initiliazeLyrics()
                             }
 
-                            // Lrclib (synced) lyrics
-                            LyricsSyllable {
+                            FadeLoader {
+                                shown: !lyricsItem.hasSyncedLines
                                 anchors.fill: parent
-                                anchors.rightMargin: 100
+                                sourceComponent: LyricsFlickable {
+                                    anchors.fill: parent
+                                    player: root.player
+                                }
                             }
-
-                            // Lrclib (synced) lyrics - alternative
-                            /* LyricScroller {
-                                id: lyricScroller
+                            
+                            FadeLoader {
+                                shown: lyricsItem.hasSyncedLines
                                 anchors.fill: parent
-                                defaultLyricsSize: Appearance.font.pixelSize.hugeass * 1.5
-                                textAlign: "left"
-                                changeTextWeight: true
-                            } */
+                                sourceComponent: LyricsSyllable {
+                                    anchors.fill: parent
+                                    anchors.rightMargin: 100
+                                }
+                            }
                         }
                     }
                 }

@@ -3,6 +3,7 @@ import qs.services
 import QtQuick
 import QtQuick.Controls
 import Qt5Compat.GraphicalEffects 
+import Quickshell.Services.Mpris
 
 // An animated version on LyricsSyllable (i have no idea why it is named as syllable dont judge me)
 
@@ -16,6 +17,13 @@ Item {
     readonly property bool isPlaying: LyricsService.activePlayer.isPlaying 
     
     property real largeFontSize: Appearance.font.pixelSize.hugeass * 2.0
+
+    Timer {
+        running: LyricsService.activePlayer?.playbackState == MprisPlaybackState.Playing
+        interval: 250
+        repeat: true
+        onTriggered: LyricsService.activePlayer.positionChanged()
+    }
 
     Item {
         id: listMaskSource
@@ -165,10 +173,6 @@ Item {
                 }
             }
         }
-    }
-
-    Component.onCompleted: {
-        LyricsService.initiliazeLyrics()
     }
 
     component HorizontalHighlight: LinearGradient {
