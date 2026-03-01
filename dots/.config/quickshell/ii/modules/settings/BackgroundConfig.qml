@@ -235,12 +235,12 @@ ContentPage {
                 ConfigSpinBox {
                     icon: "open_in_full"
                     text: Translation.tr("Max value")
-                    value: 10000 - Config.options.background.mediaMode.visualizer.maxVisualizerValue * 10
+                    value: 4000 - Config.options.background.mediaMode.visualizer.maxVisualizerValue
                     from: 0
-                    to: 1000
-                    stepSize: 100
+                    to: 4000
+                    stepSize: 250
                     onValueChanged: {
-                        Config.options.background.mediaMode.visualizer.maxVisualizerValue = 10000 - value * 10;
+                        Config.options.background.mediaMode.visualizer.maxVisualizerValue = 4000 - value;
                     }
                 }
                 ConfigSpinBox {
