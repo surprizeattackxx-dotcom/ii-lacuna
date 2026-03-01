@@ -114,6 +114,7 @@ Item { // MediaMode instance
                     MediaModeCoverArt {
                         Layout.fillWidth: true
                         Layout.fillHeight: true
+                        showLoadingIndicator: !root.downloaded
                     }
 
                     Item {

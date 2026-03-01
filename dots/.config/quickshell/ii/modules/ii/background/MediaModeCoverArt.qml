@@ -13,6 +13,27 @@ Item {
     id: coverArt
 
     property string backgroundShapeString: Config.options.background.mediaMode.backgroundShape
+    
+    // We add a little delay to showing the loading indicator in order to avoid showing it on every track change for a split second
+    property bool showLoadingIndicator: false
+    property bool effectiveShowLoadingIndicator: false
+    onShowLoadingIndicatorChanged: {
+        if (coverArt.showLoadingIndicator) {
+            loadingIndTimer.restart()   
+        } else {
+            loadingIndTimer.stop() 
+            coverArt.effectiveShowLoadingIndicator = false
+        }
+    }
+    Timer {
+        id: loadingIndTimer
+        interval: 200
+        repeat: false
+        running: false
+        onTriggered: {
+            coverArt.effectiveShowLoadingIndicator = true
+        }
+    }
 
     ColumnLayout {
         anchors.verticalCenter: parent.verticalCenter
@@ -52,6 +73,17 @@ Item {
 
                     width: size
                     height: size
+                }
+
+                FadeLoader {
+                    shown: coverArt.effectiveShowLoadingIndicator
+                    anchors.centerIn: parent
+                    MaterialLoadingIndicator {
+                        anchors.centerIn: parent
+                        loading: true
+                        visible: loading
+                        implicitSize: 96
+                    }
                 }
 
                 MouseArea {
