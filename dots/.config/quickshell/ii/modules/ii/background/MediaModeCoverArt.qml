@@ -43,20 +43,15 @@ Item {
                     }
                 }
 
-                StyledImage { // Art image
+                TransitionImage { // Art image
                     id: mediaArt
                     property int size: parent.height
                     anchors.fill: parent
 
-                    source: root.displayedArtFilePath
-                    fillMode: Image.PreserveAspectCrop
-                    cache: false
-                    antialiasing: true
+                    imageSource: root.displayedArtFilePath
 
                     width: size
                     height: size
-                    sourceSize.width: size
-                    sourceSize.height: size
                 }
 
                 MouseArea {

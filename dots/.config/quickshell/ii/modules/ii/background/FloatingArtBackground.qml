@@ -36,12 +36,10 @@ Item {
         NumberAnimation { duration: 600; easing.type: Easing.OutCubic }
     }
 
-    Image {
+    TransitionImage {
         id: img
         anchors.fill: parent
-        source: root.artFilePath
-        fillMode: Image.PreserveAspectCrop
-        cache: false; antialiasing: true; asynchronous: true
+        imageSource: root.artFilePath
 
         layer.enabled: true
         layer.effect: StyledBlurEffect { source: img }

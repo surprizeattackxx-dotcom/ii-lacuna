@@ -92,7 +92,7 @@ Item { // MediaMode instance
 
     Timer {
         id: switchColorDelayTimer
-        interval: 2500
+        interval: 1500
         property string pendingColor: ""
         onTriggered: {
             if (pendingColor == "") root.canChangeColor = true 
