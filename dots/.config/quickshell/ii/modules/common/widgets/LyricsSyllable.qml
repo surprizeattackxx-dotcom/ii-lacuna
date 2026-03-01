@@ -61,7 +61,7 @@ Item {
             highlightMoveDuration: 600
 
             function scrollToCurrentItem() {
-                if (!lyricsList.currentItem) return
+                if (!lyricsList.currentItem || lyricsList.moving) return
                 let item = lyricsList.currentItem
                 let targetY = item.y - (lyricsList.height / 2 - item.height / 2)
                 
