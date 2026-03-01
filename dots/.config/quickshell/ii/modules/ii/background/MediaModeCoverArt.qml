@@ -60,43 +60,18 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     acceptedButtons: Qt.MiddleButton
+
                     onClicked: {
                         root.displayedArtFilePath = "" // Force
                         root.updateArt()
                     }
-                    opacity: containsMouse ? 1 : 0
-                    Behavior on opacity {
-                        animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+
+                    FadeLoader {
+                        anchors.fill: parent
+                        shown: artMouseArea.containsMouse
+                        sourceComponent: MusicControlLayout {}
                     }
 
-                    MaterialMusicControls {
-                        id: musicControls
-                        anchors.centerIn: parent
-                        
-                        baseButtonHeight: 60
-                        baseButtonWidth: 60
-                        player: root.player
-                        
-                        Layout.preferredWidth: parent.width
-                        Layout.preferredHeight: parent.height / 3
-                    }
-
-                    StyledSlider { 
-                        implicitWidth: parent.width / 2
-
-                        anchors.top: musicControls.bottom
-                        anchors.topMargin: 10
-                        anchors.horizontalCenter: parent.horizontalCenter
-
-                        configuration: StyledSlider.Configuration.Wavy
-                        highlightColor: Appearance.colors.colPrimary
-                        trackColor: Appearance.colors.colSecondaryContainer
-                        handleColor: Appearance.colors.colPrimary
-                        value: root.player?.position / root.player?.length
-                        onMoved: {
-                            root.player.position = value * root.player.length;
-                        }
-                    }
                 }
             }
         }  
@@ -134,6 +109,49 @@ Item {
                         "ROND": 75
                     })
             }
+        }
+    }
+
+    component MusicControlLayout: ColumnLayout {
+        id: layout
+        anchors.fill: parent
+        spacing: 10
+
+        Item {
+            Layout.fillHeight: true
+        }
+
+        MaterialMusicControls {
+            id: musicControls
+            
+            baseButtonHeight: 60
+            baseButtonWidth: 60
+            player: root.player
+            
+            Layout.alignment: Qt.AlignCenter
+            Layout.fillHeight: false
+            Layout.preferredHeight: baseButtonHeight
+            Layout.topMargin: layout.spacing * 2 
+        }
+
+        StyledSlider { 
+            Layout.alignment: Qt.AlignHCenter
+            Layout.fillHeight: false
+            Layout.fillWidth: false
+            Layout.preferredWidth: parent.implicitWidth
+
+            configuration: StyledSlider.Configuration.Wavy
+            highlightColor: Appearance.colors.colPrimary
+            trackColor: Appearance.colors.colSecondaryContainer
+            handleColor: Appearance.colors.colPrimary
+            value: root.player?.position / root.player?.length
+            onMoved: {
+                root.player.position = value * root.player.length;
+            }
+        }
+
+        Item {
+            Layout.fillHeight: true
         }
     }
 }
