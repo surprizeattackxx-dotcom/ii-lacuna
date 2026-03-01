@@ -31,7 +31,7 @@ Item {
             sourceComponent: MaterialShape { // Art background
                 id: artBackground
                 anchors.fill: parent
-                color: ColorUtils.transparentize(blendedColors.colLayer1, 0.5)
+                color: ColorUtils.transparentize(Appearance.colors.colLayer1, 0.5)
                 shapeString: coverArt.backgroundShapeString
 
                 layer.enabled: true

@@ -20,7 +20,6 @@ Item { // MediaMode instance
     property string artDownloadLocation: Directories.coverArt
     property string artFileName: Qt.md5(artUrl)
     property string artFilePath: `${artDownloadLocation}/${artFileName}`
-    property color artDominantColor: colorQuantizer.colors[0] ?? "#31313131" // 31 means gooning in Turkish btw :)
     property bool downloaded: false
     property string displayedArtFilePath: ""
 
@@ -40,7 +39,6 @@ Item { // MediaMode instance
 
     onArtFilePathChanged: {
         if (!root.artUrl || root.artUrl.length == 0) {
-            root.artDominantColor = Appearance.m3colors.m3secondaryContainer;
             root.displayedArtFilePath = "";
             return;
         }
@@ -71,55 +69,9 @@ Item { // MediaMode instance
         // We have to delay the color change if the media changes too quickly...
         onColorsChanged: {
             if (!Config.options.background.mediaMode.changeShellColor) return;
-            if (!root.canChangeColor) {
-                console.log("[Media Mode] Color change delayed, pending color:", colorQuantizer.colors[0])
-                switchColorDelayTimer.pendingColor = colorQuantizer.colors[0]
-                switchColorDelayTimer.restart()
-                return;
-            }
-            else {
-                switchColorProc.colorString = colorQuantizer.colors[0] 
-                Qt.callLater(() => {
-                    switchColorProc.running = true
-                    root.canChangeColor = false
-                    switchColorDelayTimer.restart()
-                })
-            }
-            
-
+            // console.log("[Media Mode] Requesting to change shell color")
+            LyricsService.changeShellColor(colorQuantizer.colors[0])
         }
-    }
-
-    Timer {
-        id: switchColorDelayTimer
-        interval: 1500
-        property string pendingColor: ""
-        onTriggered: {
-            if (pendingColor == "") root.canChangeColor = true 
-            else {
-                console.log("[Media Mode] Delay timer triggered, pending color:", pendingColor)
-                switchColorProc.colorString = pendingColor
-                Qt.callLater(() => {
-                    switchColorProc.running = true
-                    root.canChangeColor = false
-                    switchColorDelayTimer.restart()
-                })
-                pendingColor = ""
-            }
-            
-        }
-    }
-
-    
-
-    Process {
-        id: switchColorProc
-        property string colorString: ""
-        command: [`${Directories.wallpaperSwitchScriptPath}`, "--noswitch", "--color", switchColorProc.colorString]
-    }
-
-    property QtObject blendedColors: AdaptedMaterialScheme {
-        color: artDominantColor
     }
 
     Loader {
@@ -132,14 +84,14 @@ Item { // MediaMode instance
             Rectangle { // Background
                 id: background
                 anchors.fill: parent
-                color: ColorUtils.applyAlpha(blendedColors.colLayer0, 1)
+                color: ColorUtils.applyAlpha(Appearance.colors.colLayer0, 1)
 
                 FloatingArtBackground {
                     anchors.fill: parent
 
                     animationSpeedScale: Config.options.background.mediaMode.backgroundAnimation.speedScale / 10
                     artFilePath: root.displayedArtFilePath
-                    overlayColor: ColorUtils.transparentize(blendedColors.colLayer0, 0.3)
+                    overlayColor: ColorUtils.transparentize(Appearance.colors.colLayer0, 0.3)
                     animationEnabled: Config.options.background.mediaMode.backgroundAnimation.enable
 
                     workspaceNorm: {
