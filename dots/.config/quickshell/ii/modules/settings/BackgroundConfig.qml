@@ -91,6 +91,7 @@ ContentPage {
             }
         }
         
+
         Loader { 
             id: mediaModeBackgroundShapeLoader
             active: false
@@ -189,88 +190,6 @@ ContentPage {
             }
         }
         
-        ContentSubsection {
-            title: Translation.tr("Visualizer")
-
-            ConfigSwitch {
-                Layout.fillWidth: true
-                buttonIcon: "equalizer"
-                text: Translation.tr("Show visualizer")
-                checked: Config.options.background.mediaMode.visualizer.show
-                onCheckedChanged: {
-                    Config.options.background.mediaMode.visualizer.show = checked;
-                }
-                StyledToolTip {
-                    text: Translation.tr("WARNING: Expect around 40-50 MB of RAM usage per monitor")
-                }
-            }
-
-            ConfigRow {
-
-                ConfigSpinBox {
-                    icon: "format_letter_spacing"
-                    text: Translation.tr("Bar spacing")
-                    value: Config.options.background.mediaMode.visualizer.barSpacing * 10
-                    from: 0
-                    to: 10
-                    stepSize: 1
-                    onValueChanged: {
-                        Config.options.background.mediaMode.visualizer.barSpacing = value / 10;
-                    }
-                }
-                ConfigSpinBox {
-                    icon: "fit_page_width"
-                    text: Translation.tr("Bar width")
-                    value: Config.options.background.mediaMode.visualizer.barWidth
-                    from: 0
-                    to: 40
-                    stepSize: 2
-                    onValueChanged: {
-                        Config.options.background.mediaMode.visualizer.barWidth = value;
-                    }
-                }
-            }
-            
-            ConfigRow {
-                ConfigSpinBox {
-                    icon: "open_in_full"
-                    text: Translation.tr("Max value")
-                    value: 10000 - Config.options.background.mediaMode.visualizer.maxVisualizerValue * 10
-                    from: 0
-                    to: 1000
-                    stepSize: 100
-                    onValueChanged: {
-                        Config.options.background.mediaMode.visualizer.maxVisualizerValue = 10000 - value * 10;
-                    }
-                }
-                ConfigSpinBox {
-                    icon: "line_curve"
-                    text: Translation.tr("Smoothing")
-                    value: Config.options.background.mediaMode.visualizer.smoothing
-                    from: 0
-                    to: 5
-                    stepSize: 1
-                    onValueChanged: {
-                        Config.options.background.mediaMode.visualizer.smoothing = value;
-                    }
-                }
-                
-            }
-            
-            ConfigSpinBox {
-                icon: "rounded_corner"
-                text: Translation.tr("Corner radius")
-                value: Config.options.background.mediaMode.visualizer.cornerRadius
-                from: 0
-                to: 20
-                stepSize: 2
-                onValueChanged: {
-                    Config.options.background.mediaMode.visualizer.cornerRadius = value;
-                }
-            }
-
-
-        }
     }
 
     ContentSection {
