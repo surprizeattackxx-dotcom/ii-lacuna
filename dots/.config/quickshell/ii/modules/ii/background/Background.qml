@@ -148,6 +148,7 @@ Variants {
         onMediaModeOpenChanged: {
             if (!mediaModeOpen) {
                 Wallpapers.apply(Config.options.background.wallpaperPath)
+                LyricsService.shellColorChanged = false
             }
         }
 

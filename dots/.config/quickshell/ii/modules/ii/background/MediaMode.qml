@@ -68,6 +68,7 @@ Item { // MediaMode instance
 
         // We have to delay the color change if the media changes too quickly...
         onColorsChanged: {
+            // console.log("[Media Mode] Colors changed: ", colorQuantizer.colors)
             if (!Config.options.background.mediaMode.changeShellColor) return;
             // console.log("[Media Mode] Requesting to change shell color")
             LyricsService.changeShellColor(colorQuantizer.colors[0])
