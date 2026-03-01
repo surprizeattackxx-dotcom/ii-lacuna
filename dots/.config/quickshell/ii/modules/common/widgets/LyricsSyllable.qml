@@ -107,20 +107,22 @@ Item {
                     }
 
                     // Maske için kullanılan görünmez metin
-                    Text {
+                    StyledText {
                         id: lyricText
                         text: modelData.text
                         anchors.centerIn: parent
                         width: parent.width - 40 
                         font.pixelSize: root.largeFontSize
-                        font.weight: isCurrent ? Font.Bold : Font.Normal
+                        font.family: Appearance.font.family.title
+                        font.weight: isCurrent ? Font.Bold : Font.DemiBold
+                        font.styleName: "" // Set empty to prevent conflicts, not meaningless
                         horizontalAlignment: Text.AlignHCenter
                         wrapMode: Text.WordWrap
                         visible: false 
                     }
 
                     // Pasif Arka Plan Metni
-                    Text {
+                    StyledText {
                         id: backgroundText
                         text: lyricText.text
                         anchors.fill: lyricText
