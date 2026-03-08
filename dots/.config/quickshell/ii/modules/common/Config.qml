@@ -288,9 +288,10 @@ Singleton {
                 property bool vertical: false
                 
                 property JsonObject mediaPlayer: JsonObject {
+                    property bool useFixedSize: false
                     property int customSize: 250
                     property JsonObject lyrics: JsonObject {
-                        property bool enable: true
+                        property bool enable: false
                         property int customSize: 400
                         property string style: "scroller" // Options: scroller, static
                         property bool useGradientMask: true
