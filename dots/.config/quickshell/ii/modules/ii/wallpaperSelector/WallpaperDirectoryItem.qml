@@ -143,7 +143,7 @@ MouseArea {
                         buttonFill: 1
                         tooltipText: Translation.tr("Search for similar images")
 
-                        colBackground: root.containsMouse ? Appearance.colors.colSecondaryContainerHover : "transparent"
+                        
 
                         property int wallpaperTabIndex: {
                             let index = 0;
@@ -236,7 +236,7 @@ MouseArea {
         implicitWidth: 30
         implicitHeight: 30
 
-        colBackground: Appearance.colors.colSecondaryContainer
+        colBackground: root.containsMouse ? Appearance.colors.colSecondaryContainerHover : "transparent"
         colBackgroundHover: Appearance.colors.colSecondaryContainerHover
         colRipple: Appearance.colors.colSecondaryContainerActive
 
