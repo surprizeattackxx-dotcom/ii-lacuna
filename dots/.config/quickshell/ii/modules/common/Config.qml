@@ -727,6 +727,9 @@ Singleton {
             
             property JsonObject wallpaperSelector: JsonObject {
                 property bool useSystemFileDialog: false
+                property list<var> directories: [
+                    {"icon": "wallpaper", "name": "Wallpapers", "path": `${Directories.pictures}/Wallpapers`}
+                ]
             }
             
             property JsonObject windows: JsonObject {
