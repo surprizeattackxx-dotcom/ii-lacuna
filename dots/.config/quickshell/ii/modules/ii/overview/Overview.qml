@@ -20,7 +20,7 @@ Scope {
 
         LazyLoader {
             id: realOverviewLoader
-            required property ShellScreen modelData
+            required property var modelData
             property int monitorIndex: overviewVariant.model.indexOf(modelData)
             property bool monitorIsFocused: (Hyprland.focusedMonitor?.id == monitorIndex)
             active: monitorIsFocused
