@@ -804,7 +804,7 @@ Singleton {
     // We have to delay this a little to make sure the clipboard is updated
     Timer {
         id: handleClipboardTimer
-        interval: 150
+        interval: 450
         onTriggered: {
             const currentClipboardEntry = Cliphist.entries[0];
             const cleanCliphistEntry = CF.StringUtils.cleanCliphistEntry(currentClipboardEntry);
