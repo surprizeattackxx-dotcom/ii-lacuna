@@ -19,6 +19,7 @@ Item { // Wrapper
     readonly property int typingDebounceInterval: 200
     readonly property int typingResultLimit: 15 // Should be enough to cover the whole view
 
+    readonly property bool noRoundingMode: Config.options.appearance.noRoundingMode
     property string searchingText: LauncherSearch.query
     property bool showResults: searchingText != ""
     implicitWidth: searchWidgetContent.implicitWidth + Appearance.sizes.elevationMargin * 2
@@ -100,12 +101,13 @@ Item { // Wrapper
     StyledRectangularShadow {
         target: searchWidgetContent
     }
+
     Rectangle { // Background
         id: searchWidgetContent
         clip: true
         implicitWidth: gridLayout.implicitWidth
         implicitHeight: gridLayout.implicitHeight
-        radius: searchBar.height / 2 + searchBar.verticalPadding
+        radius: Config.options.appearance.noRoundingMode ? 0 : searchBar.height / 2 + searchBar.verticalPadding
         color: Appearance.colors.colBackgroundSurfaceContainer
 
         Behavior on implicitHeight {
