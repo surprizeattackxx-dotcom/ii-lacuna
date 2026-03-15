@@ -21,7 +21,6 @@ Item { // Wrapper
 
     property string searchingText: LauncherSearch.query
     property bool showResults: searchingText != ""
-    property string overviewPosition: "top" // REALLYFIXME: a fallback value for now, its not used anymore 
     implicitWidth: searchWidgetContent.implicitWidth + Appearance.sizes.elevationMargin * 2
     implicitHeight: searchWidgetContent.implicitHeight + searchBar.verticalPadding * 2 + Appearance.sizes.elevationMargin * 2
 
@@ -138,7 +137,6 @@ Item { // Wrapper
                 Layout.rightMargin: 4
                 Layout.topMargin: verticalPadding
                 Layout.bottomMargin: verticalPadding
-                Layout.row: root.overviewPosition == "bottom" ? 2 : 0
                 Synchronizer on searchingText {
                     property alias source: root.searchingText
                 }
@@ -164,7 +162,6 @@ Item { // Wrapper
                 spacing: 2
                 KeyNavigation.up: searchBar
                 highlightMoveDuration: 100
-                Layout.row: root.overviewPosition == "bottom" ? 0 : 2
 
                 onFocusChanged: {
                     if (focus)
