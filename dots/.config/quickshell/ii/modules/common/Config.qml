@@ -110,6 +110,7 @@ Singleton {
                 property int wrappedFrameThickness: 10
                 property bool noRoundingMode: false
                 property JsonObject fonts: JsonObject {
+                    property bool enableCustom: false
                     property string main: "Google Sans Flex"
                     property string numbers: "Google Sans Flex"
                     property string title: "Google Sans Flex"
