@@ -95,6 +95,23 @@ ContentPage {
     }
 
     ContentSection {
+        icon: "more"
+        title: Translation.tr("Extra")
+
+        ConfigSwitch {
+            buttonIcon: "buttons_alt"
+            text: Translation.tr("Toggle Hyprland window rounding with rounding style")
+            checked: Config.options.appearance.toggleWindowRounding
+            onCheckedChanged: {
+                Config.options.appearance.toggleWindowRounding = checked;
+            }
+            StyledToolTip {
+                text: Translation.tr("Changes the window rounding to match the selected rounding style\nSo window rounding does not look cursed on 'no rounding' mode")
+            }
+        }   
+    }
+
+    ContentSection {
         icon: "text_format"
         title: Translation.tr("Fonts")
 
@@ -250,7 +267,4 @@ ContentPage {
             }
         }
     }
-
-
-
 }

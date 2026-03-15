@@ -109,6 +109,7 @@ Singleton {
                 property int fakeScreenRounding: 2 // 0: None | 1: Always | 2: When not fullscreen | 3: Wrapped
                 property int wrappedFrameThickness: 10
                 property bool noRoundingMode: false
+                property bool toggleWindowRounding: true // Changes Hyprland window rounding to 0 if noRoundingMode is true
                 property JsonObject fonts: JsonObject {
                     property bool enableCustom: false
                     property string main: "Google Sans Flex"

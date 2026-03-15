@@ -401,22 +401,28 @@ ContentPage {
 
             ContentSubsection {
                 title: Translation.tr("Rounding style")
-                tooltip: Translation.tr("Square corners mode is experimental")
+                tooltip: Translation.tr("Sharp mode is experimental")
                 Layout.fillWidth: false
 
                 ConfigSelectionArray {
                     currentValue: Config.options.appearance.noRoundingMode
                     onSelected: newValue => {
                         Config.options.appearance.noRoundingMode = newValue;
+                        if (!Config.options.appearance.toggleWindowRounding) return;
+                        if (newValue) {
+                            Quickshell.execDetached(["hyprctl", "keyword", "decoration:rounding", "0"])
+                        } else {
+                            Quickshell.execDetached(["hyprctl", "keyword", "decoration:rounding", "18"]) // NOTE: Is using 18 okay here?
+                        }
                     }
                     options: [ 
                         {
-                            displayName: Translation.tr("Normal"),
-                            icon: "circle",
+                            displayName: Translation.tr("Default"),
+                            icon: "rounded_corner",
                             value: false
                         }, 
                         {
-                            displayName: Translation.tr("Square"),
+                            displayName: Translation.tr("Sharp"),
                             icon: "square",
                             value: true
                         }

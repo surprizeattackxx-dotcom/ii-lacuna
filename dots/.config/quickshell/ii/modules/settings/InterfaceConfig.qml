@@ -148,7 +148,7 @@ ContentPage {
     }
 
     ContentSection {
-        icon: "switch_access"
+        icon: "more"
         title: Translation.tr("Extra")
 
         ConfigSwitch {
