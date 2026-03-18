@@ -354,9 +354,21 @@ MouseArea {
                             iconSize: Appearance.font.pixelSize.larger
                         }
                         ConfigSelectionArray {
-                            options: [
-                                { displayName: wallpaperSelectorContent.browserMode ? Translation.tr("Wallpaper Browser") : Translation.tr("Favourites") }
-                            ]
+                            options: {
+                                let items = [{ displayName: wallpaperSelectorContent.browserMode ? Translation.tr("Wallpaper Browser") : Translation.tr("Favourites"), isRoot: true }];
+                                if (wallpaperSelectorContent.browserMode) {
+                                    const tags = WallpaperBrowser.currentSearchTags;
+                                    for (let i = 0; i < tags.length; i++) {
+                                        items.push({ displayName: tags[i], value: tags[i] });
+                                    }
+                                }
+                                return items;
+                            }
+                            onSelected: newValue => {
+                                if (!newValue) return;
+                                WallpaperBrowser.clearResponses();
+                                WallpaperBrowser.makeRequest([newValue], 20, 1);
+                            }
                         }
                     }
                     

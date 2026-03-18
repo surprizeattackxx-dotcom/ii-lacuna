@@ -82,10 +82,12 @@ Toolbar {
 
         onAccepted: {
             if (wallpaperSelectorContent.browserMode && text.trim().length > 0) {
-                const tags = text.trim().split(/\s+/);
+                const newTags = text.trim().split(/\s+/);
+                const allTags = [...newTags];
                 WallpaperBrowser.clearResponses();
-                WallpaperBrowser.makeRequest(tags, 20, 1);
+                WallpaperBrowser.makeRequest(allTags, 20, 1);
                 grid.currentIndex = 0;
+                text = "";
             }
         }
 
