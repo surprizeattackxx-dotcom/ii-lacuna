@@ -19,7 +19,7 @@ GroupButton {
     property bool leftmost: false
     property bool rightmost: false
     
-    readonly property bool sharpModeEnabled: Config.options.appearance.noRoundingMode
+    readonly property bool sharpModeEnabled: Config.options.appearance.sharpMode
     readonly property int fullRadius: sharpModeEnabled ? Appearance.rounding.full : height / 2
     leftRadius: (toggled || leftmost) ? fullRadius : Appearance.rounding.unsharpenmore
     rightRadius: (toggled || rightmost) ? fullRadius : Appearance.rounding.unsharpenmore
