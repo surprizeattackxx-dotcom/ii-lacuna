@@ -14,12 +14,10 @@ MouseArea {
 
     property bool isVideo: {
         const path = fileModelData.fileName.toLowerCase();
-        return path.endsWith('.mp4') || path.endsWith('.webm') || 
-                path.endsWith('.mkv') || path.endsWith('.avi') || 
-                path.endsWith('.mov') || path.endsWith('.m4v') ||
-                path.endsWith('.ogv');
+        return path.endsWith('.mp4') || path.endsWith('.webm') || path.endsWith('.mkv') || path.endsWith('.avi') || path.endsWith('.mov') || path.endsWith('.m4v') || path.endsWith('.ogv');
     }
-    property bool useThumbnail: Images.isValidImageByName(fileModelData.fileName) || root.isVideo
+    property bool isApi: fileModelData.isApi || false
+    property bool useThumbnail: (Images.isValidImageByName(fileModelData.fileName) || root.isVideo) && !root.isApi
     property bool showLoadingIndicator: false
 
     property alias colBackground: background.color
@@ -30,19 +28,19 @@ MouseArea {
     margins: Appearance.sizes.wallpaperSelectorItemMargins
     padding: Appearance.sizes.wallpaperSelectorItemPadding
 
-    signal activated()
+    signal activated
 
     hoverEnabled: true
     onClicked: root.activated()
 
     function getWallhavenId(url) {
-        const urlStr = url.toString()
-        const fileName = urlStr.split('/').pop() 
-        const fileNameWithoutExt = fileName.split('.')[0] 
-        const match = fileNameWithoutExt.match(/^wallhaven-([a-zA-Z0-9]{6})$/i)
-        return match ? match[1] : null
+        const urlStr = url.toString();
+        const fileName = urlStr.split('/').pop();
+        const fileNameWithoutExt = fileName.split('.')[0];
+        const match = fileNameWithoutExt.match(/^wallhaven-([a-zA-Z0-9]{6})$/i);
+        return match ? match[1] : null;
     }
-    
+
     Rectangle {
         id: background
         anchors.fill: parent
@@ -195,12 +193,34 @@ MouseArea {
 
                 Loader {
                     id: iconLoader
-                    active: !root.useThumbnail
+                    active: !root.useThumbnail && !root.isApi
                     anchors.fill: parent
                     sourceComponent: DirectoryIcon {
                         fileModelData: root.fileModelData
                         sourceSize.width: wallpaperItemColumnLayout.width
                         sourceSize.height: wallpaperItemColumnLayout.height - wallpaperItemColumnLayout.spacing - wallpaperItemName.height
+                    }
+                }
+
+                Loader {
+                    id: apiImageLoader
+                    active: root.isApi
+                    anchors.fill: parent
+                    sourceComponent: StyledImage {
+                        source: fileModelData.filePath
+                        fillMode: Image.PreserveAspectCrop
+                        clip: true
+                        sourceSize.width: wallpaperItemColumnLayout.width
+                        sourceSize.height: wallpaperItemColumnLayout.height - wallpaperItemColumnLayout.spacing - wallpaperItemName.height
+
+                        layer.enabled: true
+                        layer.effect: OpacityMask {
+                            maskSource: Rectangle {
+                                width: apiImageLoader.width
+                                height: apiImageLoader.height
+                                radius: Appearance.rounding.small
+                            }
+                        }
                     }
                 }
             }
@@ -221,7 +241,6 @@ MouseArea {
             }
         }
     }
-
 
     component WallpaperActionButton: RippleButton {
         id: button
