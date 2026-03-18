@@ -246,69 +246,91 @@ MouseArea {
                         }
                         text: Translation.tr("Pick a wallpaper")
                     }
-                    ListView {
-                        // Quick dirs
+                    Item {
+                        id: quickDirsContainer
                         Layout.fillHeight: true
-                        Layout.margins: 4
-                        implicitWidth: 140
-                        clip: true
-                        model: [
-                            { icon: "home", name: "Home", path: Directories.home }, 
-                            { icon: "docs", name: "Documents", path: Directories.documents }, 
-                            { icon: "download", name: "Downloads", path: Directories.downloads }, 
-                            { icon: "image", name: "Pictures", path: Directories.pictures }, 
-                            { icon: "movie", name: "Videos", path: Directories.videos }, 
-                            { icon: "public", name: "Browser", path: "BROWSER_MODE" }, 
-                            { icon: "favorite", name: "Favourites", path: "FAVOURITES_MODE" }, 
-                            { icon: "", name: "---", path: "INTENTIONALLY_INVALID_DIR" }, 
-                            ...Config.options.wallpaperSelector.directories,
-                            ...(Config.options.policies.weeb === 1 ? [{ icon: "favorite", name: "Homework", path: `${Directories.pictures}/homework` }] : []),
-                        ]
-                        delegate: RippleButton {
-                            id: quickDirButton
-                            required property var modelData
-                            anchors {
-                                left: parent.left
-                                right: parent.right
-                            }
-                            onClicked: {
-                                if (quickDirButton.modelData.path === "FAVOURITES_MODE") {
-                                    wallpaperSelectorContent.favMode = true;
-                                    wallpaperSelectorContent.browserMode = false;
-                                    wallpaperSelectorContent.refreshFavourites();
-                                } else if (quickDirButton.modelData.path === "BROWSER_MODE") {
-                                    wallpaperSelectorContent.favMode = false;
-                                    wallpaperSelectorContent.browserMode = true;
-                                } else {
-                                    wallpaperSelectorContent.favMode = false;
-                                    wallpaperSelectorContent.browserMode = false;
-                                    Wallpapers.setDirectory(quickDirButton.modelData.path)
-                                }
-                            }
-                            enabled: modelData.icon.length > 0
-                            toggled: {
-                                if (modelData.path === "FAVOURITES_MODE") return wallpaperSelectorContent.favMode;
-                                if (modelData.path === "BROWSER_MODE") return wallpaperSelectorContent.browserMode;
-                                return !wallpaperSelectorContent.favMode && !wallpaperSelectorContent.browserMode && Wallpapers.directory === Qt.resolvedUrl(modelData.path);
-                            }
-                            colBackgroundToggled: Appearance.colors.colSecondaryContainer
-                            colBackgroundToggledHover: Appearance.colors.colSecondaryContainerHover
-                            colRippleToggled: Appearance.colors.colSecondaryContainerActive
-                            buttonRadius: Appearance.rounding.full
-                            implicitHeight: 38
+                        Layout.fillWidth: true
+                        implicitWidth: 160
 
-                            contentItem: RowLayout {
-                                MaterialSymbol {
-                                    color: quickDirButton.toggled ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnLayer1
-                                    iconSize: Appearance.font.pixelSize.larger
-                                    text: quickDirButton.modelData.icon
-                                    fill: quickDirButton.toggled ? 1 : 0
+                        Flickable {
+                            id: sideBarFlickable
+                            anchors.fill: parent
+                            contentHeight: sideBarRail.implicitHeight
+                            clip: true
+                            interactive: contentHeight > height
+                            
+                            ScrollBar.vertical: StyledScrollBar { 
+                                visible: sideBarFlickable.interactive
+                            }
+
+                            NavigationRailTabArray {
+                                id: sideBarRail
+                                anchors.top: parent.top
+                                anchors.left: parent.left
+                                anchors.right: parent.right
+                                anchors.leftMargin: 10
+                                anchors.rightMargin: 10
+                                Layout.topMargin: 0
+                                expanded: true
+                                currentIndex: {
+                                    const model = sideBarRepeater.model;
+                                    for (let i = 0; i < model.length; i++) {
+                                        let item = model[i];
+                                        let isToggled = false;
+                                        if (item.path === "FAVOURITES_MODE") isToggled = wallpaperSelectorContent.favMode;
+                                        else if (item.path === "BROWSER_MODE") isToggled = wallpaperSelectorContent.browserMode;
+                                        else isToggled = !wallpaperSelectorContent.favMode && !wallpaperSelectorContent.browserMode && Wallpapers.directory === Qt.resolvedUrl(item.path);
+                                        
+                                        if (isToggled) return i;
+                                    }
+                                    return -1;
                                 }
-                                StyledText {
-                                    Layout.fillWidth: true
-                                    horizontalAlignment: Text.AlignLeft
-                                    color: quickDirButton.toggled ? Appearance.colors.colOnSecondaryContainer : Appearance.colors.colOnLayer1
-                                    text: quickDirButton.modelData.name
+
+                                Repeater {
+                                    id: sideBarRepeater
+                                    model: [
+                                        { icon: "home", name: Translation.tr("Home"), path: Directories.home }, 
+                                        { icon: "docs", name: Translation.tr("Documents"), path: Directories.documents }, 
+                                        { icon: "download", name: Translation.tr("Downloads"), path: Directories.downloads }, 
+                                        { icon: "image", name: Translation.tr("Pictures"), path: Directories.pictures }, 
+                                        { icon: "movie", name: Translation.tr("Videos"), path: Directories.videos }, 
+                                        { icon: "public", name: Translation.tr("Browser"), path: "BROWSER_MODE" }, 
+                                        { icon: "favorite", name: Translation.tr("Favourites"), path: "FAVOURITES_MODE" }, 
+                                        { icon: "", name: "---", path: "INTENTIONALLY_INVALID_DIR" }, 
+                                        ...Config.options.wallpaperSelector.directories,
+                                        ...(Config.options.policies.weeb === 1 ? [{ icon: "favorite", name: Translation.tr("Homework"), path: `${Directories.pictures}/homework` }] : []),
+                                    ]
+                                    delegate: NavigationRailButton {
+                                        id: quickDirButton
+                                        required property var modelData
+                                        required property int index
+                                        
+                                        baseSize: 40
+                                        baseHighlightHeight: 32
+                                        iconSize: 18
+                                        
+                                        buttonIcon: modelData.icon
+                                        buttonText: modelData.name
+                                        expanded: true
+                                        toggled: sideBarRail.currentIndex === index
+                                        showToggledHighlight: false
+                                        
+                                        onClicked: {
+                                            if (quickDirButton.modelData.path === "FAVOURITES_MODE") {
+                                                wallpaperSelectorContent.favMode = true;
+                                                wallpaperSelectorContent.browserMode = false;
+                                                wallpaperSelectorContent.refreshFavourites();
+                                            } else if (quickDirButton.modelData.path === "BROWSER_MODE") {
+                                                wallpaperSelectorContent.favMode = false;
+                                                wallpaperSelectorContent.browserMode = true;
+                                            } else {
+                                                wallpaperSelectorContent.favMode = false;
+                                                wallpaperSelectorContent.browserMode = false;
+                                                Wallpapers.setDirectory(quickDirButton.modelData.path)
+                                            }
+                                        }
+                                        enabled: modelData.icon.length > 0
+                                    }
                                 }
                             }
                         }

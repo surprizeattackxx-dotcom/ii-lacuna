@@ -18,6 +18,7 @@ TabButton {
 
     property real baseSize: 56
     property real baseHighlightHeight: 32
+    property real iconSize: 24
     property real highlightCollapsedTopMargin: 8
     padding: 0
 
@@ -102,7 +103,7 @@ TabButton {
                 id: navRailButtonIcon
                 rotation: root.buttonIconRotation
                 anchors.centerIn: parent
-                iconSize: 24
+                iconSize: root.iconSize
                 fill: toggled ? 1 : 0
                 font.weight: (toggled || root.hovered) ? Font.DemiBold : Font.Normal
                 text: buttonIcon
