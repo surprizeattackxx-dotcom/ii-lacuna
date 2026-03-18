@@ -7,6 +7,8 @@ Toolbar {
     id: extraOptions
     z: 1
 
+    property string text: filterField.text
+
     IconToolbarButton {
         implicitWidth: height
         onClicked: {

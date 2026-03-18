@@ -20,6 +20,7 @@ MouseArea {
     property bool browserMode: false
 
     property var moreOptionsModelData: null
+    property string filterText: extraOptions.text
 
     property var apiImages: {
         let allImages = [];
@@ -74,7 +75,7 @@ MouseArea {
     function refreshFavourites() {
         favouritesModel.clear();
         const favs = Persistent.states.wallpaper.favourites;
-        const query = filterField.text.toLowerCase();
+        const query = filterText.toLowerCase();
         for (let i = 0; i < favs.length; i++) {
             const path = favs[i];
             const fileName = path.split('/').pop();
@@ -102,7 +103,7 @@ MouseArea {
     function selectWallpaperPath(filePath) {
         if (filePath && filePath.length > 0) {
             Wallpapers.select(filePath, wallpaperSelectorContent.useDarkMode);
-            filterField.text = "";
+            filterText = "";
             wallpaperSelectorContent.browserMode = false;
         }
     }
@@ -120,7 +121,7 @@ MouseArea {
         WallpaperBrowser.moreLikeThisPicture(id, 1);
         wallpaperSelectorContent.browserMode = true;
         wallpaperSelectorContent.favMode = false;
-        filterField.text = "";
+        filterText = "";
     }
 
     function toggleFavourite(path) {
@@ -174,8 +175,8 @@ MouseArea {
             grid.activateCurrent();
             event.accepted = true;
         } else if (event.key === Qt.Key_Backspace) {
-            if (filterField.text.length > 0) {
-                filterField.text = filterField.text.substring(0, filterField.text.length - 1);
+            if (filterText.length > 0) {
+                filterText = filterText.substring(0, filterText.length - 1);
             }
             filterField.forceActiveFocus();
             event.accepted = true;
@@ -187,8 +188,8 @@ MouseArea {
             event.accepted = true;
         } else {
             if (event.text.length > 0) {
-                filterField.text += event.text;
-                filterField.cursorPosition = filterField.text.length;
+                filterText += event.text;
+                filterField.cursorPosition = filterText.length;
                 filterField.forceActiveFocus();
             }
             event.accepted = true;
