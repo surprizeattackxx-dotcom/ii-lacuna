@@ -4,11 +4,14 @@ import QtQuick
 import QtQuick.Layouts
 
 RippleButton {
+    id: root
+
     property real buttonSize: Appearance.sizes.dockButtonSize
-    width:  buttonSize
+
+    width: buttonSize
     height: buttonSize
     buttonRadius: Appearance.rounding.normal
-    background.implicitWidth:  buttonSize
+    background.implicitWidth: buttonSize
     background.implicitHeight: buttonSize
     padding: 0
 

@@ -8,32 +8,32 @@ import qs.modules.common.functions
 RippleButton {
     id: root
 
-    property int    buttonSize:    Appearance.sizes.dockButtonSize
-    property int    symbolSize:    Math.round(root.buttonSize * 0.5)
-    property bool   isVertical:    false
-    property string symbolName:    ""
-    property color  activeColor:   Appearance.m3colors.m3onPrimary
-    property color  inactiveColor: Appearance.colors.colOnLayer0
-    property bool   dragActive:    false
-    property string dragSymbol:    ""
-    property int    normalShape:   MaterialShape.Shape.Pill
-    property int    activeShape:   MaterialShape.Shape.Cookie9Sided
-    property bool   dragOver:      false
-    property string fileDropIcon:  ""
-    property bool   fileDropActive: false
+    property int buttonSize: Appearance.sizes.dockButtonSize
+    property int symbolSize: Math.round(root.buttonSize * 0.5)
+    property bool isVertical: false
+    property string symbolName: ""
+    property color activeColor: Appearance.m3colors.m3onPrimary
+    property color inactiveColor: Appearance.colors.colOnLayer0
+    property bool dragActive: false
+    property string dragSymbol: ""
+    property int normalShape: MaterialShape.Shape.Pill
+    property int activeShape: MaterialShape.Shape.Cookie9Sided
+    property bool dragOver: false
+    property string fileDropIcon: ""
+    property bool fileDropActive: false
 
-    width:  buttonSize
+    width: buttonSize
     height: buttonSize
 
     rippleEnabled: false
-    padding:       0
+    padding: 0
 
-    colBackground:             "transparent"
-    colBackgroundHover:        "transparent"
-    colBackgroundToggled:      "transparent"
+    colBackground: "transparent"
+    colBackgroundHover: "transparent"
+    colBackgroundToggled: "transparent"
     colBackgroundToggledHover: "transparent"
-    
-    background.implicitWidth:  0
+
+    background.implicitWidth: 0
     background.implicitHeight: 0
 
     contentItem: Item {
@@ -59,7 +59,7 @@ RippleButton {
                            root.hovered ? Appearance.colors.colSecondaryContainerHover :
                            Appearance.colors.colSecondaryContainer
                 }
-                
+
                 if (root.toggled) {
                     return root.down ? Appearance.colors.colPrimaryActive :
                            root.hovered ? Appearance.colors.colPrimaryHover :
@@ -69,14 +69,14 @@ RippleButton {
                        root.hovered ? Appearance.colors.colLayer1Hover :
                        "transparent"
             }
-            
+
             Behavior on color {
                 animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
             }
 
             text: root.fileDropActive ? root.fileDropIcon
-                : root.dragActive     ? root.dragSymbol
-                :                       root.symbolName
+                : root.dragActive ? root.dragSymbol
+                : root.symbolName
 
             iconSize: (root.dragActive || root.fileDropActive)
                 ? Math.round(root.buttonSize * 0.4)

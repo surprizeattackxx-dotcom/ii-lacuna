@@ -12,14 +12,14 @@ import Quickshell.Widgets
 DockButton {
     id: root
 
-    property var appToplevel:   null
-    property var dockContent:   null
+    property var appToplevel: null
+    property var dockContent: null
     property int delegateIndex: -1
-    property int lastFocused:   -1
+    property int lastFocused: -1
 
-    property int iconSize:       Appearance.sizes.dockButtonSize
-    property int dotMargin:      Math.round((Config.options?.dock.height ?? 60) * 0.2)
-    property int countDotWidth:  Math.round((Config.options?.dock.height ?? 60) * 0.17)
+    property int iconSize: Appearance.sizes.dockButtonSize
+    property int dotMargin: Math.round((Config.options?.dock.height ?? 60) * 0.2)
+    property int countDotWidth: Math.round((Config.options?.dock.height ?? 60) * 0.17)
     property int countDotHeight: Math.round((Config.options?.dock.height ?? 60) * 0.07)
 
     readonly property var desktopEntry: appToplevel
@@ -46,7 +46,7 @@ DockButton {
 
     pointingHandCursor: false
 
-    width:  buttonSize + dotMargin * 2
+    width: buttonSize + dotMargin * 2
     height: buttonSize + dotMargin * 2
 
     opacity: isDragging ? 0.0 : 1.0
@@ -63,10 +63,10 @@ DockButton {
         if (!dockContent || !dockContent.dragActive) return 0
         if (delegateIndex === dockContent.draggedIndex) return 0
 
-        const step           = buttonSize + dotMargin * 2
-        const isThisPinned   = TaskbarApps.isPinned(appToplevel?.appId ?? "")
+        const step = buttonSize + dotMargin * 2
+        const isThisPinned = TaskbarApps.isPinned(appToplevel?.appId ?? "")
         const isDraggedPinned = TaskbarApps.isPinned(dockContent.draggedAppId)
-        const intent         = dockContent.dragIntent
+        const intent = dockContent.dragIntent
 
         // Case 1: reordering among pinned apps
         if (isThisPinned && isDraggedPinned) {
@@ -79,7 +79,7 @@ DockButton {
 
             if (intent === "reorder") {
                 const t = dockContent.dropTargetIndex
-                if (t > d && delegateIndex > d && delegateIndex <= t) return  step
+                if (t > d && delegateIndex > d && delegateIndex <= t) return step
                 if (t < d && delegateIndex >= t && delegateIndex < d) return -step
             }
             return 0
@@ -100,16 +100,16 @@ DockButton {
         Behavior on x {
             enabled: !root.isDragging && !(dockContent?.suppressAnimation ?? false)
             NumberAnimation {
-                duration:           Appearance.animation.elementMoveFast.duration
-                easing.type:        Appearance.animation.elementMoveFast.type
+                duration: Appearance.animation.elementMoveFast.duration
+                easing.type: Appearance.animation.elementMoveFast.type
                 easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
             }
         }
         Behavior on y {
             enabled: !root.isDragging && !(dockContent?.suppressAnimation ?? false)
             NumberAnimation {
-                duration:           Appearance.animation.elementMoveFast.duration
-                easing.type:        Appearance.animation.elementMoveFast.type
+                duration: Appearance.animation.elementMoveFast.duration
+                easing.type: Appearance.animation.elementMoveFast.type
                 easing.bezierCurve: Appearance.animation.elementMoveFast.bezierCurve
             }
         }
@@ -117,23 +117,23 @@ DockButton {
 
     MouseArea {
         id: mainMouseArea
-        width:  root.buttonSize
+        width: root.buttonSize
         height: root.buttonSize
         anchors.centerIn: parent
 
-        hoverEnabled:    true
+        hoverEnabled: true
         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
         preventStealing: drag.active
 
-        drag.target:    appToplevel ? dockContent.dragGhostItem : null
-        drag.axis:      root.isVertical ? Drag.YAxis : Drag.XAxis
+        drag.target: appToplevel ? dockContent.dragGhostItem : null
+        drag.axis: root.isVertical ? Drag.YAxis : Drag.XAxis
         drag.threshold: 0
 
         readonly property real ghostHalf: (dockContent?.dragGhostItem?.width ?? 0) / 2
 
-        drag.minimumX: root.isVertical ? 0 : (dockContent?.pinButtonCenter   ?? 0) - ghostHalf
+        drag.minimumX: root.isVertical ? 0 : (dockContent?.pinButtonCenter ?? 0) - ghostHalf
         drag.maximumX: root.isVertical ? 0 : (dockContent?.unpinButtonCenter ?? 0) - ghostHalf
-        drag.minimumY: root.isVertical ? (dockContent?.pinButtonCenter   ?? 0) - ghostHalf : 0
+        drag.minimumY: root.isVertical ? (dockContent?.pinButtonCenter ?? 0) - ghostHalf : 0
         drag.maximumY: root.isVertical ? (dockContent?.unpinButtonCenter ?? 0) - ghostHalf : 0
 
         property bool wasDragging: false
@@ -142,9 +142,9 @@ DockButton {
             if (dockContent?.suppressHover) return
             if (appToplevel?.toplevels?.length > 0) {
                 dockContent.lastHoveredButton = root
-                dockContent.buttonHovered     = true
+                dockContent.buttonHovered = true
             } else {
-                dockContent.buttonHovered   = false
+                dockContent.buttonHovered = false
                 dockContent.popupIsResizing = false
             }
             if (appToplevel && appToplevel.toplevels)
@@ -181,7 +181,7 @@ DockButton {
                 return
             }
             if (mouse.button === Qt.RightButton) {
-                dockContent.buttonHovered     = false
+                dockContent.buttonHovered = false
                 dockContent.lastHoveredButton = null
                 dockContextMenu.open()
                 return
@@ -201,16 +201,16 @@ DockButton {
     }
 
     altAction: () => {
-        dockContent.buttonHovered     = false
+        dockContent.buttonHovered = false
         dockContent.lastHoveredButton = null
         dockContextMenu.open()
     }
 
     DockContextMenu {
         id: dockContextMenu
-        appToplevel:  root.appToplevel
+        appToplevel: root.appToplevel
         desktopEntry: root.desktopEntry
-        anchorItem:   root
+        anchorItem: root
     }
 
     Connections {
@@ -229,13 +229,13 @@ DockButton {
             // ── Icon ─────────────────────────────────────────────────────
             Item {
                 id: iconZone
-                width:  root.buttonSize
+                width: root.buttonSize
                 height: root.buttonSize
                 anchors.centerIn: parent
 
                 Item {
                     id: iconContainer
-                    width:  root.iconSize
+                    width: root.iconSize
                     height: root.iconSize
                     anchors.centerIn: parent
 
@@ -257,7 +257,7 @@ DockButton {
                     // Desaturated overlay for inactive pinned apps
                     Desaturate {
                         anchors.fill: parent
-                        source:       baseIcon
+                        source: baseIcon
                         desaturation: 0.8
                         visible: !root.appIsRunning
                             && !Config.options.dock.monochromeIcons
@@ -273,14 +273,14 @@ DockButton {
                             Desaturate {
                                 id: monoDesat
                                 anchors.fill: parent
-                                source:       baseIcon
+                                source: baseIcon
                                 desaturation: 0.8
-                                visible:      false
+                                visible: false
                             }
                             ColorOverlay {
                                 anchors.fill: monoDesat
                                 source: monoDesat
-                                color:  ColorUtils.transparentize(Appearance.colors.colPrimary, 0.9)
+                                color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.9)
                             }
                         }
                     }
@@ -292,10 +292,10 @@ DockButton {
                 id: indicatorContainer
                 visible: root.appIsRunning
 
-                readonly property int totalCount:    root.appToplevel ? root.appToplevel.toplevels.length : 0
+                readonly property int totalCount: root.appToplevel ? root.appToplevel.toplevels.length : 0
                 readonly property int maxVisibleDots: 5
-                readonly property int visibleCount:  Math.min(totalCount, maxVisibleDots)
-                readonly property int focusedIndex:  root.focusedWindowIndex
+                readonly property int visibleCount: Math.min(totalCount, maxVisibleDots)
+                readonly property int focusedIndex: root.focusedWindowIndex
 
                 // Use wider dots when there are 3 or fewer windows
                 readonly property bool useWide: totalCount <= 3
@@ -315,10 +315,10 @@ DockButton {
                 readonly property int windowStart: {
                     if (totalCount <= maxVisibleDots) return 0
                     const centeredStart = focusedIndex - Math.floor(maxVisibleDots / 2)
-                    const maxStart      = totalCount - maxVisibleDots
+                    const maxStart = totalCount - maxVisibleDots
                     return Math.max(0, Math.min(maxStart, centeredStart))
                 }
-                readonly property bool hasHiddenLeft:  windowStart > 0
+                readonly property bool hasHiddenLeft: windowStart > 0
                 readonly property bool hasHiddenRight: (windowStart + visibleCount) < totalCount
 
                 width: root.isVertical
@@ -345,8 +345,8 @@ DockButton {
                     delegate: Rectangle {
                         id: dotRect
 
-                        readonly property int  absoluteIndex:  indicatorContainer.windowStart + index
-                        readonly property bool isFocused:      absoluteIndex === indicatorContainer.focusedIndex
+                        readonly property int absoluteIndex: indicatorContainer.windowStart + index
+                        readonly property bool isFocused: absoluteIndex === indicatorContainer.focusedIndex
 
                         // Edge dots that hint at hidden windows are rendered smaller
                         readonly property bool isOverflowHint:
@@ -355,7 +355,7 @@ DockButton {
 
                         readonly property real shrinkFactor: (isOverflowHint && !isFocused) ? 0.72 : 1.0
 
-                        width:  indicatorContainer.baseDotW * shrinkFactor
+                        width: indicatorContainer.baseDotW * shrinkFactor
                         height: indicatorContainer.baseDotH * shrinkFactor
 
                         radius: Appearance.rounding.full

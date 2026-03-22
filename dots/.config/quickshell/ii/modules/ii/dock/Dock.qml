@@ -12,7 +12,6 @@ import Quickshell.Widgets
 import Quickshell.Wayland
 import Quickshell.Hyprland
 
-
 Scope {
     id: root
 
@@ -29,16 +28,16 @@ Scope {
 
             property bool positionChanging: false
             readonly property bool isVertical: GlobalStates.dockIsVertical
-            
+
             readonly property real availableW: screen?.width ?? 1920
             readonly property real availableH: screen?.height ?? 1080
 
             readonly property bool barActive: GlobalStates.barOpen
             readonly property bool barIsVertical: Config.options?.bar?.vertical ?? false
-            
-            readonly property real barThickness: barActive 
-                ? (barIsVertical 
-                    ? (Config.options?.bar?.sizes?.width ?? Appearance.sizes.verticalBarWidth) 
+
+            readonly property real barThickness: barActive
+                ? (barIsVertical
+                    ? (Config.options?.bar?.sizes?.width ?? Appearance.sizes.verticalBarWidth)
                     : (Config.options?.bar?.sizes?.height ?? Appearance.sizes.barHeight))
                 : 0
 
@@ -46,44 +45,44 @@ Scope {
 
             readonly property real maxWidth: Math.max(1, availableW - (Appearance.sizes.hyprlandGapsOut * 2)
                 - (!isVertical && barConflictsWithDock ? barThickness : 0))
-            
+
             readonly property real maxHeight: Math.max(1, availableH - (Appearance.sizes.hyprlandGapsOut * 2)
                 - (isVertical && barConflictsWithDock ? barThickness : 0))
 
-            readonly property real dockWidth: isVertical 
+            readonly property real dockWidth: isVertical
                 ? dockContent.visualWidth + dockContent.dockPadding * 2 + Appearance.sizes.hyprlandGapsOut * 2
                 : Math.min(dockContent.visualWidth + dockContent.dockPadding * 2 + Appearance.sizes.hyprlandGapsOut * 2, maxWidth)
-            
-            readonly property real dockHeight: isVertical 
+
+            readonly property real dockHeight: isVertical
                 ? Math.min(dockContent.visualHeight + dockContent.dockPadding * 2 + Appearance.sizes.hyprlandGapsOut * 2, maxHeight)
                 : dockContent.visualHeight + dockContent.dockPadding * 2 + Appearance.sizes.hyprlandGapsOut * 2
 
             implicitWidth: Math.max(1, dockWidth)
             implicitHeight: Math.max(1, dockHeight)
 
-            readonly property real dockThickness: isVertical 
+            readonly property real dockThickness: isVertical
                 ? dockWidth
                 : dockHeight
 
-            property bool reveal: root.pinned 
-                            || (Config.options?.dock.hoverToReveal && dockMouseArea.containsMouse) 
+            property bool reveal: root.pinned
+                            || (Config.options?.dock.hoverToReveal && dockMouseArea.containsMouse)
                             || (dockContent.requestDockShow)
                             || (!ToplevelManager.activeToplevel?.activated)
 
             anchors {
-                top:    GlobalStates.dockEffectivePosition !== "bottom"
+                top: GlobalStates.dockEffectivePosition !== "bottom"
                 bottom: GlobalStates.dockEffectivePosition !== "top"
-                left:   GlobalStates.dockEffectivePosition !== "right"
-                right:  GlobalStates.dockEffectivePosition !== "left"
+                left: GlobalStates.dockEffectivePosition !== "right"
+                right: GlobalStates.dockEffectivePosition !== "left"
             }
 
             exclusiveZone: root.pinned ? dockThickness : 0
             WlrLayershell.namespace: "quickshell:dock"
             WlrLayershell.layer: WlrLayer.Overlay
-            color: "transparent" 
+            color: "transparent"
 
-            mask: Region { 
-                item: dockMouseArea 
+            mask: Region {
+                item: dockMouseArea
             }
 
             Timer {
@@ -102,7 +101,7 @@ Scope {
 
             HyprlandFocusGrab {
                 id: dragFocusGrab
-                active: dockContent.dragActive || dockContent.fileDragActive 
+                active: dockContent.dragActive || dockContent.fileDragActive
                 windows: [dockRoot]
                 onCleared: {
                     if (dockContent.dragActive)
@@ -120,8 +119,8 @@ Scope {
                 property real fullyHiddenOffset: dockRoot.dockThickness + 1
                 property real currentOffset: dockRoot.reveal ? 0 : (Config.options?.dock.hoverToReveal ? hiddenOffset : fullyHiddenOffset)
 
-                width:  dockRoot.isVertical ? dockRoot.dockThickness 
-                    : dockContent.visualWidth + dockContent.dockPadding * 2 + Appearance.sizes.hyprlandGapsOut * 2 
+                width: dockRoot.isVertical ? dockRoot.dockThickness
+                    : dockContent.visualWidth + dockContent.dockPadding * 2 + Appearance.sizes.hyprlandGapsOut * 2
                 height: dockRoot.isVertical ? dockContent.visualHeight + dockContent.dockPadding * 2 + Appearance.sizes.hyprlandGapsOut * 2
                     : dockRoot.dockThickness
 
@@ -174,22 +173,22 @@ Scope {
                     }
                 ]
 
-                Behavior on anchors.topMargin    { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(dockMouseArea) }
+                Behavior on anchors.topMargin { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(dockMouseArea) }
                 Behavior on anchors.bottomMargin { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(dockMouseArea) }
-                Behavior on anchors.leftMargin   { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(dockMouseArea) }
-                Behavior on anchors.rightMargin  { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(dockMouseArea) }
+                Behavior on anchors.leftMargin { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(dockMouseArea) }
+                Behavior on anchors.rightMargin { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(dockMouseArea) }
 
                 StyledRectangularShadow { target: dockVisualBackground }
 
-              Rectangle {
+                Rectangle {
                     id: dockVisualBackground
                     anchors.centerIn: parent
-                    
-                    width: isVertical 
+
+                    width: isVertical
                         ? dockContent.visualWidth + dockContent.dockPadding * 2
                         : Math.min(dockContent.visualWidth + dockContent.dockPadding * 2, maxWidth - Appearance.sizes.hyprlandGapsOut * 2)
-                    
-                    height: isVertical 
+
+                    height: isVertical
                         ? Math.min(dockContent.visualHeight + dockContent.dockPadding * 2, maxHeight - Appearance.sizes.hyprlandGapsOut * 2)
                         : dockContent.visualHeight + dockContent.dockPadding * 2
 
@@ -197,7 +196,7 @@ Scope {
                     border.width: 1
                     border.color: Appearance.colors.colLayer0Border
                     radius: Appearance.rounding.large
-                    
+
                     DropArea {
                         id: fileDropArea
                         anchors.fill: parent
@@ -226,7 +225,7 @@ Scope {
                         id: dockContent
                         anchors.fill: parent
                         isPinned: root.pinned
-                        currentScreen: dockRoot.screen 
+                        currentScreen: dockRoot.screen
                         onTogglePinRequested: {
                             root.pinned = !root.pinned
                         }

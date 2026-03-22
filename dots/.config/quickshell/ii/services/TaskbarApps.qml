@@ -55,7 +55,7 @@ Singleton {
 
     function togglePin(appId) {
         if (!appId) return
-        const norm    = normalizeAppId(appId)
+        const norm = normalizeAppId(appId)
         const current = Config.options.dock.pinnedApps ?? []
         Config.options.dock.pinnedApps = isPinned(appId)
             ? current.filter(id => normalizeAppId(id) !== norm)
@@ -64,9 +64,9 @@ Singleton {
 
     function reorderPinnedApp(fromAppId, toAppId) {
         if (fromAppId === toAppId) return
-        const pinned  = Array.from(Config.options.dock.pinnedApps)
+        const pinned = Array.from(Config.options.dock.pinnedApps)
         const fromIdx = pinned.indexOf(fromAppId)
-        const toIdx   = pinned.indexOf(toAppId)
+        const toIdx = pinned.indexOf(toAppId)
         if (fromIdx === -1 || toIdx === -1) return
         pinned.splice(toIdx, 0, pinned.splice(fromIdx, 1)[0])
         Config.options.dock.pinnedApps = pinned
@@ -75,22 +75,22 @@ Singleton {
     // ── Pinned file helpers ───────────────────────────────────────────────
     function addPinnedFile(path) {
         const cleanPath = path.toString().replace(/^file:\/\//, "")
-        const current   = Config.options?.dock?.pinnedFiles ?? []
+        const current = Config.options?.dock?.pinnedFiles ?? []
         if (current.includes(cleanPath)) return
         Config.options.dock.pinnedFiles = current.concat([cleanPath])
     }
 
     function removePinnedFile(path) {
         const cleanPath = path.toString().replace(/^file:\/\//, "")
-        const current   = Config.options?.dock?.pinnedFiles ?? []
+        const current = Config.options?.dock?.pinnedFiles ?? []
         Config.options.dock.pinnedFiles = current.filter(p => p !== cleanPath)
     }
 
     function reorderPinnedFile(fromPath, toPath) {
         if (!fromPath || !toPath || fromPath === toPath) return
-        const files   = Array.from(Config.options?.dock?.pinnedFiles ?? [])
+        const files = Array.from(Config.options?.dock?.pinnedFiles ?? [])
         const fromIdx = files.indexOf(fromPath)
-        const toIdx   = files.indexOf(toPath)
+        const toIdx = files.indexOf(toPath)
         if (fromIdx === -1 || toIdx === -1) return
         files.splice(toIdx, 0, files.splice(fromIdx, 1)[0])
         Config.options.dock.pinnedFiles = files
@@ -104,7 +104,7 @@ Singleton {
     Timer {
         id: themeRefreshTimer
         interval: 300
-        repeat:   true
+        repeat: true
         property int count: 0
         onTriggered: {
             root.iconThemeRevision += 1
@@ -128,19 +128,19 @@ Singleton {
 
     FileView {
         id: xdgDirsFile
-        path:         Quickshell.env("HOME") + "/.config/user-dirs.dirs"
+        path: Quickshell.env("HOME") + "/.config/user-dirs.dirs"
         blockLoading: true
         onLoaded: {
-            const home   = Quickshell.env("HOME")
+            const home = Quickshell.env("HOME")
             const keyMap = {
-                "XDG_DOWNLOAD_DIR":    "downloads",
-                "XDG_DOCUMENTS_DIR":   "documents",
-                "XDG_PICTURES_DIR":    "pictures",
-                "XDG_MUSIC_DIR":       "music",
-                "XDG_VIDEOS_DIR":      "videos",
-                "XDG_DESKTOP_DIR":     "desktop",
+                "XDG_DOWNLOAD_DIR": "downloads",
+                "XDG_DOCUMENTS_DIR": "documents",
+                "XDG_PICTURES_DIR": "pictures",
+                "XDG_MUSIC_DIR": "music",
+                "XDG_VIDEOS_DIR": "videos",
+                "XDG_DESKTOP_DIR": "desktop",
                 "XDG_PUBLICSHARE_DIR": "publicshare",
-                "XDG_TEMPLATES_DIR":   "templates",
+                "XDG_TEMPLATES_DIR": "templates",
             }
             const result = {}
             for (const line of xdgDirsFile.text().split("\n")) {
@@ -158,9 +158,9 @@ Singleton {
     // Pinned apps without open windows are included; running apps not in the pinned
     // list are appended at the end.
     property var apps: {
-        const pinnedMap   = new Map()
+        const pinnedMap = new Map()
         const unpinnedMap = new Map()
-        const pinnedApps  = Config.options?.dock.pinnedApps ?? []
+        const pinnedApps = Config.options?.dock.pinnedApps ?? []
 
         const ignoredRegexes = (Config.options?.dock.ignoredAppRegexes ?? []).map(pattern => {
             try   { return new RegExp(pattern, "i") }

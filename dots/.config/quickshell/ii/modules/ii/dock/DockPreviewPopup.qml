@@ -12,12 +12,12 @@ import qs.modules.common.functions
 PopupWindow {
     id: previewPopup
 
-    property var  dockRoot:    null
-    property var  appTopLevel: null
-    property var  dockWindow:  null
+    property var dockRoot: null
+    property var appTopLevel: null
+    property var dockWindow: null
 
     readonly property bool isVertical: dockRoot?.isVertical ?? false
-    readonly property string dockPos:  GlobalStates.dockEffectivePosition
+    readonly property string dockPos: GlobalStates.dockEffectivePosition
 
     readonly property int maxPreviews: {
         if (!dockWindow || !dockRoot) return 1
@@ -29,7 +29,7 @@ PopupWindow {
 
         const availableSpace = isVertical
             ? (dockWindow.height ?? 1080) - popupBackground.margins * 2 - popupBackground.padding * 2
-            : (dockWindow.width  ?? 1920) - popupBackground.margins * 2 - popupBackground.padding * 2
+            : (dockWindow.width ?? 1920) - popupBackground.margins * 2 - popupBackground.padding * 2
         return Math.max(1, Math.floor((availableSpace + spacing) / (previewSize + spacing)))
     }
 
@@ -45,7 +45,7 @@ PopupWindow {
         if (shouldShow)
             show = true
         else if (dockRoot.anyContextMenuOpen)
-            show = false 
+            show = false
         else
             hideTimer.restart()
     }
@@ -69,9 +69,9 @@ PopupWindow {
         }
 
         gravity: {
-            if (dockPos === "left")  return Edges.Right  | Edges.Bottom
-            if (dockPos === "right") return Edges.Left   | Edges.Bottom
-            if (dockPos === "top")   return Edges.Bottom | Edges.Right
+            if (dockPos === "left") return Edges.Right | Edges.Bottom
+            if (dockPos === "right") return Edges.Left | Edges.Bottom
+            if (dockPos === "top") return Edges.Bottom | Edges.Right
             return Edges.Top | Edges.Right
         }
 
@@ -93,9 +93,9 @@ PopupWindow {
             + popupBackground.padding * 2
             + popupBackground.margins * 2
             + 5
-    
+
     StyledRectangularShadow {
-        target:  popupBackground
+        target: popupBackground
         opacity: popupBackground.opacity
         visible: popupBackground.visible
     }
@@ -106,7 +106,7 @@ PopupWindow {
         property real margins: 5
         property real padding: 6
 
-        onImplicitWidthChanged:  { dockRoot.popupIsResizing = true; resizeTimer.restart() }
+        onImplicitWidthChanged: { dockRoot.popupIsResizing = true; resizeTimer.restart() }
         onImplicitHeightChanged: { dockRoot.popupIsResizing = true; resizeTimer.restart() }
 
         Timer {
@@ -141,11 +141,11 @@ PopupWindow {
 
         opacity: previewPopup.show ? 1 : 0
         visible: (appTopLevel?.toplevels?.length ?? 0) > 0
-        clip:    true
-        color:   Appearance.m3colors.m3surfaceContainer
-        radius:  Appearance.rounding.normal
+        clip: true
+        color: Appearance.m3colors.m3surfaceContainer
+        radius: Appearance.rounding.normal
         implicitHeight: previewRowLayout.implicitHeight + padding * 2
-        implicitWidth:  previewRowLayout.implicitWidth  + padding * 2
+        implicitWidth: previewRowLayout.implicitWidth + padding * 2
 
         Behavior on implicitWidth {
             animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
@@ -164,14 +164,14 @@ PopupWindow {
         GridLayout {
             id: previewRowLayout
             anchors {
-                top:        parent.top
-                left:       parent.left
-                topMargin:  popupBackground.padding
+                top: parent.top
+                left: parent.left
+                topMargin: popupBackground.padding
                 leftMargin: popupBackground.padding
             }
-            flow:          isVertical ? GridLayout.TopToBottom : GridLayout.LeftToRight
+            flow: isVertical ? GridLayout.TopToBottom : GridLayout.LeftToRight
             columnSpacing: 6
-            rowSpacing:    6
+            rowSpacing: 6
 
             Repeater {
                 model: ScriptModel { values: (appTopLevel?.toplevels ?? []).slice(0, previewPopup.maxPreviews) }
@@ -183,13 +183,13 @@ PopupWindow {
 
                     onClicked: {
                         modelData?.activate()
-                        dockRoot.buttonHovered     = false
+                        dockRoot.buttonHovered = false
                         dockRoot.lastHoveredButton = null
                     }
                     middleClickAction: () => modelData?.close()
 
                     contentItem: ColumnLayout {
-                        implicitWidth:  screencopyView.implicitWidth
+                        implicitWidth: screencopyView.implicitWidth
                         implicitHeight: screencopyView.implicitHeight
 
                         ButtonGroup {
@@ -197,14 +197,14 @@ PopupWindow {
 
                             WrapperRectangle {
                                 Layout.fillWidth: true
-                                color:   ColorUtils.transparentize(Appearance.colors.colSurfaceContainer)
-                                radius:  Appearance.rounding.small
-                                margin:  5
+                                color: ColorUtils.transparentize(Appearance.colors.colSurfaceContainer)
+                                radius: Appearance.rounding.small
+                                margin: 5
 
                                 StyledText {
                                     Layout.fillWidth: true
                                     font.pixelSize: Appearance.font.pixelSize.small
-                                    text:  windowButton.modelData?.title ?? ""
+                                    text: windowButton.modelData?.title ?? ""
                                     elide: Text.ElideRight
                                     color: Appearance.m3colors.m3onSurface
                                 }
@@ -212,16 +212,16 @@ PopupWindow {
 
                             RippleButton {
                                 id: closeButton
-                                colBackground:  ColorUtils.transparentize(Appearance.colors.colSurfaceContainer)
-                                implicitWidth:  dockRoot.windowControlsHeight
+                                colBackground: ColorUtils.transparentize(Appearance.colors.colSurfaceContainer)
+                                implicitWidth: dockRoot.windowControlsHeight
                                 implicitHeight: dockRoot.windowControlsHeight
-                                buttonRadius:   Appearance.rounding.full
+                                buttonRadius: Appearance.rounding.full
 
                                 contentItem: MaterialSymbol {
                                     anchors.centerIn: parent
-                                    text:     "close"
+                                    text: "close"
                                     iconSize: Appearance.font.pixelSize.normal
-                                    color:    Appearance.m3colors.m3onSurface
+                                    color: Appearance.m3colors.m3onSurface
                                 }
                                 onClicked: windowButton.modelData?.close()
                             }
@@ -229,9 +229,9 @@ PopupWindow {
 
                         ScreencopyView {
                             id: screencopyView
-                            captureSource:  previewPopup.visible ? windowButton.modelData : null
-                            live:           true
-                            paintCursor:    true
+                            captureSource: previewPopup.visible ? windowButton.modelData : null
+                            live: true
+                            paintCursor: true
                             constraintSize: Qt.size(
                                 dockRoot.maxWindowPreviewWidth,
                                 dockRoot.maxWindowPreviewHeight
@@ -239,7 +239,7 @@ PopupWindow {
                             layer.enabled: true
                             layer.effect: OpacityMask {
                                 maskSource: Rectangle {
-                                    width:  screencopyView.width
+                                    width: screencopyView.width
                                     height: screencopyView.height
                                     radius: Appearance.rounding.small
                                 }

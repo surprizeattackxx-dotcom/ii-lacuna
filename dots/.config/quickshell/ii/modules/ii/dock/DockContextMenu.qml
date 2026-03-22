@@ -12,9 +12,9 @@ import qs
 Loader {
     id: root
 
-    property var  appToplevel:  null
-    property var  desktopEntry: null
-    property Item anchorItem:   parent
+    property var appToplevel: null
+    property var desktopEntry: null
+    property Item anchorItem: parent
 
     property bool isClosing: false
 
@@ -23,7 +23,7 @@ Loader {
     function open() {
         if (active && !isClosing) return
         isClosing = false
-        active    = true
+        active = true
         if (root.item) root.item.startOpenAnimation()
     }
 
@@ -37,7 +37,7 @@ Loader {
         if (!root.active) root.closed()
     }
 
-    active:  false
+    active: false
     visible: active
 
     sourceComponent: PopupWindow {
@@ -45,20 +45,20 @@ Loader {
         visible: true
         color: "transparent"
 
-        property real dockMargin:   -16
-        property real shadowMargin:  20
+        property real dockMargin: -16
+        property real shadowMargin: 20
 
         anchor {
             adjustment: PopupAdjustment.None
             window: root.anchorItem?.QsWindow.window
             onAnchoring: {
-                const item   = root.anchorItem
+                const item = root.anchorItem
                 if (!item) return
-                const pos    = GlobalStates.dockEffectivePosition
-                const win    = item.QsWindow.window
+                const pos = GlobalStates.dockEffectivePosition
+                const win = item.QsWindow.window
                 const mapped = item.mapToItem(null, item.width / 2, item.height / 2)
-                const dm     = popupWindow.dockMargin
-                const dock   = (pos === "left" || pos === "right") ? win.width / 2 : win.height / 2
+                const dm = popupWindow.dockMargin
+                const dock = (pos === "left" || pos === "right") ? win.width / 2 : win.height / 2
 
                 if (pos === "bottom") {
                     anchor.rect.x = mapped.x - popupWindow.implicitWidth / 2
@@ -76,28 +76,28 @@ Loader {
             }
         }
 
-        implicitWidth:  menuContent.implicitWidth  + popupWindow.shadowMargin * 2
+        implicitWidth: menuContent.implicitWidth + popupWindow.shadowMargin * 2
         implicitHeight: menuContent.implicitHeight + popupWindow.shadowMargin * 2
 
         function startOpenAnimation() {
-            menuContent.scale   = 1.0
+            menuContent.scale = 1.0
             menuContent.opacity = 1.0
         }
 
         function startCloseAnimation() {
-            menuContent.scale   = 0.8
+            menuContent.scale = 0.8
             menuContent.opacity = 0.0
         }
 
         HyprlandFocusGrab {
             id: focusGrab
-            active:  root.active && !root.isClosing
+            active: root.active && !root.isClosing
             windows: [popupWindow]
             onCleared: root.close()
         }
 
         StyledRectangularShadow {
-            target:  menuContent
+            target: menuContent
             opacity: menuContent.opacity
             visible: menuContent.visible
         }
@@ -106,14 +106,14 @@ Loader {
             id: menuContent
             property real menuMargin: 8
             anchors.centerIn: parent
-            color:  Appearance.m3colors.m3surfaceContainer
+            color: Appearance.m3colors.m3surfaceContainer
             radius: Appearance.rounding.normal
 
-            implicitWidth:  menuColumn.implicitWidth  + (appName.Layout.leftMargin * 2) + (menuMargin * 2)
+            implicitWidth: menuColumn.implicitWidth + (appName.Layout.leftMargin * 2) + (menuMargin * 2)
             implicitHeight: menuColumn.implicitHeight + appName.Layout.topMargin + menuMargin * 2
 
             opacity: 0.0
-            scale:   0.8
+            scale: 0.8
 
             transformOrigin: Item.Center
 
@@ -125,23 +125,23 @@ Loader {
 
             Behavior on opacity {
                 NumberAnimation {
-                    duration:           menuContent.currentAnimConfig.duration
-                    easing.type:        menuContent.currentAnimConfig.type
+                    duration: menuContent.currentAnimConfig.duration
+                    easing.type: menuContent.currentAnimConfig.type
                     easing.bezierCurve: menuContent.currentAnimConfig.bezierCurve
                 }
             }
 
             Behavior on scale {
                 NumberAnimation {
-                    duration:           menuContent.currentAnimConfig.duration
-                    easing.type:        menuContent.currentAnimConfig.type
+                    duration: menuContent.currentAnimConfig.duration
+                    easing.type: menuContent.currentAnimConfig.type
                     easing.bezierCurve: menuContent.currentAnimConfig.bezierCurve
                 }
             }
 
             onOpacityChanged: {
                 if (opacity === 0.0 && root.isClosing) {
-                    root.active    = false
+                    root.active = false
                     root.isClosing = false
                 }
             }
@@ -149,34 +149,34 @@ Loader {
             ColumnLayout {
                 id: menuColumn
                 anchors.fill: parent
-                anchors.leftMargin:   menuContent.menuMargin
-                anchors.rightMargin:  menuContent.menuMargin
-                anchors.topMargin:    menuContent.menuMargin / 2
+                anchors.leftMargin: menuContent.menuMargin
+                anchors.rightMargin: menuContent.menuMargin
+                anchors.topMargin: menuContent.menuMargin / 2
                 anchors.bottomMargin: menuContent.menuMargin
                 spacing: 0
 
                 // App name header
                 Item {
                     id: appName
-                    Layout.fillWidth:   true
-                    Layout.topMargin:   menuContent.menuMargin
+                    Layout.fillWidth: true
+                    Layout.topMargin: menuContent.menuMargin
                     Layout.bottomMargin: menuContent.menuMargin
-                    Layout.leftMargin:  2
+                    Layout.leftMargin: 2
                     Layout.rightMargin: 2
                     implicitHeight: appNameRow.implicitHeight
-                    implicitWidth:  appNameRow.implicitWidth
+                    implicitWidth: appNameRow.implicitWidth
 
                     RowLayout {
                         id: appNameRow
                         anchors {
-                            left:            parent.left
-                            verticalCenter:  parent.verticalCenter
+                            left: parent.left
+                            verticalCenter: parent.verticalCenter
                         }
                         spacing: 6
 
                         Item {
-                            implicitWidth:    22
-                            implicitHeight:   22
+                            implicitWidth: 22
+                            implicitHeight: 22
                             Layout.alignment: Qt.AlignLeft
 
                             IconImage {
@@ -197,30 +197,30 @@ Loader {
                                     Desaturate {
                                         id: menuMonoDesat
                                         anchors.fill: parent
-                                        source:       menuAppIcon
+                                        source: menuAppIcon
                                         desaturation: 0.8
-                                        visible:      false
+                                        visible: false
                                     }
                                     ColorOverlay {
                                         anchors.fill: menuMonoDesat
                                         source: menuMonoDesat
-                                        color:  ColorUtils.transparentize(Appearance.colors.colPrimary, 0.9)
+                                        color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.9)
                                     }
                                 }
                             }
                         }
 
                         StyledText {
-                            text:           root.desktopEntry?.name ?? (root.appToplevel ? root.appToplevel.appId : "")
+                            text: root.desktopEntry?.name ?? (root.appToplevel ? root.appToplevel.appId : "")
                             font.pixelSize: Appearance.font.pixelSize.small
-                            color:          Appearance.colors.colOnLayer0
-                            font.weight:    Font.DemiBold
+                            color: Appearance.colors.colOnLayer0
+                            font.weight: Font.DemiBold
                         }
                     }
                 }
 
                 Rectangle {
-                    Layout.fillWidth:   true
+                    Layout.fillWidth: true
                     Layout.bottomMargin: menuContent.menuMargin
                     implicitHeight: 1
                     color: Appearance.colors.colLayer0Border
@@ -241,15 +241,15 @@ Loader {
                         ]
 
                         shapeString: shapePool[index % shapePool.length]
-                        labelText:   modelData.name ?? ""
+                        labelText: modelData.name ?? ""
                         onTriggered: { modelData.execute(); root.close() }
                     }
                 }
 
                 Rectangle {
                     visible: (root.desktopEntry?.actions?.length ?? 0) > 0
-                    Layout.fillWidth:    true
-                    Layout.topMargin:    menuContent.menuMargin
+                    Layout.fillWidth: true
+                    Layout.topMargin: menuContent.menuMargin
                     Layout.bottomMargin: menuContent.menuMargin
                     implicitHeight: 1
                     color: Appearance.colors.colLayer0Border
@@ -258,15 +258,15 @@ Loader {
                 DockMenuButton {
                     Layout.fillWidth: true
                     symbolName: "launch"
-                    labelText:  qsTr("Launch")
+                    labelText: qsTr("Launch")
                     onTriggered: { root.desktopEntry?.execute(); root.close() }
                 }
 
                 DockMenuButton {
-                    Layout.fillWidth:  true
+                    Layout.fillWidth: true
                     Layout.leftMargin: 2
                     symbolName: (root.appToplevel && TaskbarApps.isPinned(root.appToplevel.appId)) ? "keep_off" : "keep"
-                    labelText:  (root.appToplevel && TaskbarApps.isPinned(root.appToplevel.appId)) ? qsTr("Unpin") : qsTr("Pin")
+                    labelText: (root.appToplevel && TaskbarApps.isPinned(root.appToplevel.appId)) ? qsTr("Unpin") : qsTr("Pin")
                     onTriggered: {
                         if (root.appToplevel) TaskbarApps.togglePin(root.appToplevel.appId)
                         root.close()

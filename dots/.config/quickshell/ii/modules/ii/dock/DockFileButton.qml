@@ -14,13 +14,13 @@ import Quickshell.Io
 DockButton {
     id: root
 
-    property var    dockContent:   null
-    property int    delegateIndex: -1
-    property string filePath:      ""
+    property var dockContent: null
+    property int delegateIndex: -1
+    property string filePath: ""
 
-    property int iconSize:   Appearance.sizes.dockButtonSize
+    property int iconSize: Appearance.sizes.dockButtonSize
     property int buttonSize: Appearance.sizes.dockButtonSize
-    property int dotMargin:  Math.round((Config.options?.dock.height ?? 60) * 0.2)
+    property int dotMargin: Math.round((Config.options?.dock.height ?? 60) * 0.2)
 
     readonly property bool isVertical: dockContent?.isVertical ?? false
 
@@ -67,7 +67,7 @@ DockButton {
 
     onFilePathChanged: {
         if (!root.isImage && root.filePath !== "" && !root.isDirectory) {
-            root.cachedXdgIcon       = ""
+            root.cachedXdgIcon = ""
             mimeQueryProcess.running = true
         }
     }
@@ -79,14 +79,14 @@ DockButton {
 
         if (root.isDirectory) {
             const map = {
-                [dirs.downloads]:   "folder-downloads",
-                [dirs.documents]:   "folder-documents",
-                [dirs.pictures]:    "folder-pictures",
-                [dirs.music]:       "folder-music",
-                [dirs.videos]:      "folder-videos",
-                [dirs.desktop]:     "folder-desktop",
+                [dirs.downloads]: "folder-downloads",
+                [dirs.documents]: "folder-documents",
+                [dirs.pictures]: "folder-pictures",
+                [dirs.music]: "folder-music",
+                [dirs.videos]: "folder-videos",
+                [dirs.desktop]: "folder-desktop",
                 [dirs.publicshare]: "folder-publicshare",
-                [dirs.templates]:   "folder-templates",
+                [dirs.templates]: "folder-templates",
             }
             return Quickshell.iconPath(map[filePath.toString()] ?? "folder", "folder")
         }
@@ -109,21 +109,21 @@ DockButton {
 
         const dragIdx = dockContent.fileDraggedIndex
         const dropIdx = dockContent.fileDropIndex
-        const step    = buttonSize + dotMargin * 2
+        const step = buttonSize + dotMargin * 2
 
         if (dockContent.fileDragIntent === "unpin")
             return delegateIndex > dragIdx ? -step : 0
 
         if (dockContent.fileDragIntent === "reorder") {
             if (dragIdx < dropIdx && delegateIndex > dragIdx && delegateIndex <= dropIdx) return -step
-            if (dragIdx > dropIdx && delegateIndex >= dropIdx && delegateIndex < dragIdx) return  step
+            if (dragIdx > dropIdx && delegateIndex >= dropIdx && delegateIndex < dragIdx) return step
         }
 
         return 0
     }
 
     // ── Size & animation ──────────────────────────────────────────────────
-    width:  buttonSize + dotMargin * 2
+    width: buttonSize + dotMargin * 2
     height: buttonSize + dotMargin * 2
 
     opacity: isDragging ? 0.0 : 1.0
@@ -140,16 +140,16 @@ DockButton {
         Behavior on x {
             enabled: !root.isDragging && !(dockContent?.fileSuppressAnim ?? false)
             NumberAnimation {
-                duration:           Appearance.animation.elementMove.duration
-                easing.type:        Appearance.animation.elementMove.type
+                duration: Appearance.animation.elementMove.duration
+                easing.type: Appearance.animation.elementMove.type
                 easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
             }
         }
         Behavior on y {
             enabled: !root.isDragging && !(dockContent?.fileSuppressAnim ?? false)
             NumberAnimation {
-                duration:           Appearance.animation.elementMove.duration
-                easing.type:        Appearance.animation.elementMove.type
+                duration: Appearance.animation.elementMove.duration
+                easing.type: Appearance.animation.elementMove.type
                 easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
             }
         }
@@ -161,20 +161,20 @@ DockButton {
     MouseArea {
         id: fileMouseArea
         anchors.centerIn: parent
-        width:  root.buttonSize
+        width: root.buttonSize
         height: root.buttonSize
-        hoverEnabled:    true
+        hoverEnabled: true
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         preventStealing: drag.active
 
-        drag.target:    dockContent?.fileDragGhostItem ?? null
-        drag.axis:      root.isVertical ? Drag.YAxis : Drag.XAxis
+        drag.target: dockContent?.fileDragGhostItem ?? null
+        drag.axis: root.isVertical ? Drag.YAxis : Drag.XAxis
         drag.threshold: 0
 
         readonly property real ghostHalf: (dockContent?.fileDragGhostItem?.width ?? 0) / 2
-        drag.minimumX: root.isVertical ? 0 : (dockContent?.pinButtonCenter   ?? 0) - ghostHalf
+        drag.minimumX: root.isVertical ? 0 : (dockContent?.pinButtonCenter ?? 0) - ghostHalf
         drag.maximumX: root.isVertical ? 0 : (dockContent?.unpinButtonCenter ?? 0) - ghostHalf
-        drag.minimumY: root.isVertical ? (dockContent?.pinButtonCenter   ?? 0) - ghostHalf : 0
+        drag.minimumY: root.isVertical ? (dockContent?.pinButtonCenter ?? 0) - ghostHalf : 0
         drag.maximumY: root.isVertical ? (dockContent?.unpinButtonCenter ?? 0) - ghostHalf : 0
 
         property bool wasDragging: false
@@ -204,7 +204,7 @@ DockButton {
                 return
             }
             if (mouse.button === Qt.RightButton) {
-                dockContent.buttonHovered     = false
+                dockContent.buttonHovered = false
                 dockContent.lastHoveredButton = null
                 fileContextMenu.open()
                 return
@@ -217,7 +217,7 @@ DockButton {
     // ── Context menu ──────────────────────────────────────────────────────
     DockFileContextMenu {
         id: fileContextMenu
-        filePath:   root.filePath
+        filePath: root.filePath
         anchorItem: root
     }
 
@@ -232,12 +232,12 @@ DockButton {
     PopupWindow {
         id: fileTooltipPopup
 
-        anchor.window:  dockContent.QsWindow.window
-        implicitWidth:  tooltipRect.implicitWidth
+        anchor.window: dockContent.QsWindow.window
+        implicitWidth: tooltipRect.implicitWidth
         implicitHeight: tooltipRect.implicitHeight
 
-        property int          tooltipOffset: -root.dotMargin
-        readonly property bool showTooltip:  fileMouseArea.containsMouse && !(dockContent?.fileDragActive ?? false)
+        property int tooltipOffset: -root.dotMargin
+        readonly property bool showTooltip: fileMouseArea.containsMouse && !(dockContent?.fileDragActive ?? false)
         readonly property string dockPosition: GlobalStates.dockEffectivePosition
 
         anchor.rect.x: {
@@ -254,10 +254,10 @@ DockButton {
 
         Rectangle {
             id: tooltipRect
-            implicitWidth:  tooltipText.implicitWidth + 24
+            implicitWidth: tooltipText.implicitWidth + 24
             implicitHeight: tooltipText.implicitHeight + 12
-            opacity:         fileTooltipPopup.showTooltip ? 1.0 : 0.0
-            scale:           fileTooltipPopup.showTooltip ? 1.0 : 0.8
+            opacity: fileTooltipPopup.showTooltip ? 1.0 : 0.0
+            scale: fileTooltipPopup.showTooltip ? 1.0 : 0.8
             transformOrigin: fileTooltipPopup.dockPosition === "top" ? Item.Top : Item.Bottom
 
             Behavior on opacity {
@@ -267,20 +267,20 @@ DockButton {
                 animation: Appearance.animation.elementResize.numberAnimation.createObject(tooltipRect)
             }
 
-            color:        Appearance.m3colors.m3surfaceContainer
-            radius:       Appearance.rounding.small
+            color: Appearance.m3colors.m3surfaceContainer
+            radius: Appearance.rounding.small
             border.width: 1
             border.color: Appearance.colors.colLayer0Border
 
             Text {
                 id: tooltipText
                 anchors.centerIn: parent
-                text:  root.fileName
+                text: root.fileName
                 color: Appearance.colors.colOnSurface
                 font {
-                    family:            Appearance.font.family.main
-                    variableAxes:      Appearance.font.variableAxes.main
-                    pixelSize:         Appearance.font.pixelSize.small ?? 16
+                    family: Appearance.font.family.main
+                    variableAxes: Appearance.font.variableAxes.main
+                    pixelSize: Appearance.font.pixelSize.small ?? 16
                     hintingPreference: Font.PreferNoHinting
                 }
             }
@@ -292,7 +292,7 @@ DockButton {
         anchors.fill: parent
 
         Item {
-            width:  root.buttonSize
+            width: root.buttonSize
             height: root.buttonSize
             anchors.centerIn: parent
 
@@ -300,17 +300,17 @@ DockButton {
             Image {
                 id: thumbnailImage
                 anchors.fill: parent
-                visible:      root.isImage
-                source:       root.isImage ? ("file://" + root.filePath) : ""
-                fillMode:     Image.PreserveAspectCrop
+                visible: root.isImage
+                source: root.isImage ? ("file://" + root.filePath) : ""
+                fillMode: Image.PreserveAspectCrop
                 asynchronous: true
-                cache:        true
-                sourceSize:   Qt.size(root.iconSize * 2, root.iconSize * 2)
+                cache: true
+                sourceSize: Qt.size(root.iconSize * 2, root.iconSize * 2)
 
                 layer.enabled: true
                 layer.effect: OpacityMask {
                     maskSource: Rectangle {
-                        width:  thumbnailImage.width
+                        width: thumbnailImage.width
                         height: thumbnailImage.height
                         radius: Appearance.rounding.small
                     }
@@ -320,10 +320,10 @@ DockButton {
             // Placeholder shown while the image thumbnail is loading
             MaterialSymbol {
                 anchors.centerIn: parent
-                visible:  root.isImage && thumbnailImage.status !== Image.Ready
-                text:     "image"
+                visible: root.isImage && thumbnailImage.status !== Image.Ready
+                text: "image"
                 iconSize: root.iconSize
-                color:    Appearance.colors.colOnLayer0
+                color: Appearance.colors.colOnLayer0
             }
 
             // XDG icon for non-image files
@@ -333,8 +333,8 @@ DockButton {
                 visible: !root.isImage && root.resolvedXdgIcon !== ""
 
                 implicitSize: root.iconSize
-                width:        root.iconSize
-                height:       root.iconSize
+                width: root.iconSize
+                height: root.iconSize
 
                 source: root.resolvedXdgIcon
 
@@ -348,10 +348,10 @@ DockButton {
             // Fallback folder icon for directories with no specific XDG icon
             MaterialSymbol {
                 anchors.centerIn: parent
-                visible:  !root.isImage && root.resolvedXdgIcon === "" && root.isDirectory
-                text:     "folder"
+                visible: !root.isImage && root.resolvedXdgIcon === "" && root.isDirectory
+                text: "folder"
                 iconSize: root.iconSize
-                color:    Appearance.colors.colOnLayer0
+                color: Appearance.colors.colOnLayer0
             }
         }
     }

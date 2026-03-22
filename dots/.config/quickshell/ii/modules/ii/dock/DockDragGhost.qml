@@ -9,15 +9,15 @@ import qs.modules.common.functions
 
 Item {
     id: root
-    width:  Appearance.sizes.dockButtonSize
+    width: Appearance.sizes.dockButtonSize
     height: Appearance.sizes.dockButtonSize
 
     property string draggedAppId: ""
-    property bool   willUnpin:    false
+    property bool willUnpin: false
 
-    property bool   isFile:           false
-    property bool   fileIsImage:      false
-    property string filePath:         ""
+    property bool isFile: false
+    property bool fileIsImage: false
+    property string filePath: ""
     property string fileResolvedIcon: ""
 
     Item {
@@ -60,17 +60,17 @@ Item {
         Image {
             id: ghostThumbnail
             anchors.fill: parent
-            visible:      root.fileIsImage
-            source:       root.fileIsImage ? ("file://" + root.filePath) : ""
-            fillMode:     Image.PreserveAspectCrop
+            visible: root.fileIsImage
+            source: root.fileIsImage ? ("file://" + root.filePath) : ""
+            fillMode: Image.PreserveAspectCrop
             asynchronous: true
-            cache:        true
-            sourceSize:   Qt.size(Appearance.sizes.dockButtonSize * 2, Appearance.sizes.dockButtonSize * 2)
+            cache: true
+            sourceSize: Qt.size(Appearance.sizes.dockButtonSize * 2, Appearance.sizes.dockButtonSize * 2)
 
             layer.enabled: true
             layer.effect: OpacityMask {
                 maskSource: Rectangle {
-                    width:  ghostThumbnail.width
+                    width: ghostThumbnail.width
                     height: ghostThumbnail.height
                     radius: Appearance.rounding.small
                 }
@@ -79,16 +79,16 @@ Item {
 
         MaterialSymbol {
             anchors.centerIn: parent
-            visible:  root.fileIsImage && ghostThumbnail.status !== Image.Ready
-            text:     "image"
+            visible: root.fileIsImage && ghostThumbnail.status !== Image.Ready
+            text: "image"
             iconSize: Appearance.sizes.dockButtonSize
-            color:    Appearance.colors.colOnLayer0
+            color: Appearance.colors.colOnLayer0
         }
 
         IconImage {
             anchors.fill: parent
-            visible:  !root.fileIsImage
-            source:   root.fileResolvedIcon
+            visible: !root.fileIsImage
+            source: root.fileResolvedIcon
         }
     }
 }
