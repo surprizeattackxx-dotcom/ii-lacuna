@@ -120,6 +120,7 @@ DockButton {
         width: root.buttonSize
         height: root.buttonSize
         anchors.centerIn: parent
+        cursorShape: Qt.PointingHandCursor
 
         hoverEnabled: true
         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton

@@ -166,6 +166,7 @@ DockButton {
         hoverEnabled: true
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         preventStealing: drag.active
+        cursorShape: Qt.PointingHandCursor
 
         drag.target: dockContent?.fileDragGhostItem ?? null
         drag.axis: root.isVertical ? Drag.YAxis : Drag.XAxis
