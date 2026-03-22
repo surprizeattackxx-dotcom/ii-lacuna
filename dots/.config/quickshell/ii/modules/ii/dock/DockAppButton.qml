@@ -28,7 +28,6 @@ DockButton {
 
     property bool isVertical: dockContent?.isVertical ?? false
 
-    readonly property bool isDragging: dockContent?.draggedAppId === appToplevel?.appId
 
     property bool appIsActive: appToplevel && appToplevel.toplevels.find(t => t.activated === true) !== undefined
 
@@ -40,9 +39,9 @@ DockButton {
         return -1
     }
 
-    readonly property bool appIsRunning: appToplevel && appToplevel.toplevels && appToplevel.toplevels.length > 0
-
+    readonly property bool isDragging: dockContent?.draggedAppId === appToplevel?.appId
     readonly property string dockPos: dock.dockEffectivePosition
+    readonly property bool appIsRunning: appToplevel && appToplevel.toplevels && appToplevel.toplevels.length > 0
 
     pointingHandCursor: false
 

@@ -810,7 +810,7 @@ Item {
             DockSeparator { 
                 anchors.fill: parent 
                 isVertical: root.isVertical
-                marginScale: 0.15 // O il valore che preferisci per i bordi esterni
+                marginScale: 0.15 
             }
         }
 
