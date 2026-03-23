@@ -391,6 +391,7 @@ Singleton {
 
     Component.onCompleted: {
         setModel(currentModelId, false, false); // Do necessary setup for model
+        root.addUserModels() // Config onReadyChanged above might not fire if config is loaded before this service
     }
 
     function guessModelLogo(model) {
@@ -415,7 +416,9 @@ Singleton {
     }
 
     function addModel(modelName, data) {
-        root.models[modelName] = aiModelComponent.createObject(this, data);
+        root.models = Object.assign({}, root.models, {
+            [modelName]: aiModelComponent.createObject(this, data)
+        });
     }
 
     Process {
