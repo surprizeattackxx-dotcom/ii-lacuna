@@ -211,7 +211,7 @@ Scope {
                         isPinned: dock.pinned
                         currentScreen: dockRoot.screen
                         onTogglePinRequested: {
-                            dock.pinned = !root.pinned
+                            dock.pinned = !dock.pinned
                         }
                     }
                 }
