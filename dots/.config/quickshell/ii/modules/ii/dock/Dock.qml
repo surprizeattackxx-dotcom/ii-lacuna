@@ -77,7 +77,7 @@ Scope {
             property bool reveal: dock.pinned
                             || (Config.options?.dock.hoverToReveal && dockMouseArea.containsMouse)
                             || (dockContent.requestDockShow)
-                            || (!ToplevelManager.activeToplevel?.activated)
+                            || (ToplevelManager.activeToplevel?.activated === false)
 
             anchors {
                 top: dock.dockEffectivePosition !== "bottom"
