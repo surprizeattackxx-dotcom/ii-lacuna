@@ -25,18 +25,81 @@ Item {
     readonly property bool lyricsEnabled: Config.options.bar.mediaPlayer.lyrics.enable
     readonly property bool useGradientMask: Config.options.bar.mediaPlayer.lyrics.useGradientMask
     readonly property string lyricsStyle: Config.options.bar.mediaPlayer.lyrics.style
+    readonly property bool artworkEnabled: Config.options.bar.mediaPlayer.artwork.enable
+
+    // Keep sizing self-contained so text/lyrics can anchor between art and the right-side button.
+    readonly property int progressButtonSize: 20 // Must match ClippedFilledCircularProgress.implicitSize
+    // Keep artwork small enough to never dominate the bar height/width.
+    readonly property int artworkBoxSize: artworkEnabled ? Math.min(25, Appearance.sizes.barHeight - 8) : 0
+    readonly property int artworkContentPadding: artworkEnabled ? 6 : 0
 
     property int textMetricsSpacing: 50 // text metrics returns width without spacing
     property int textMetricsAdvance: Math.min(textMetrics.advanceWidth + textMetricsSpacing, Config.options.bar.mediaPlayer.maxSize)
-    implicitWidth: LyricsService.hasSyncedLines && root.lyricsEnabled ? lyricsCustomSize : useFixedSize ? customSize : textMetricsAdvance
+    // Base width matches the original layout (circle on the left).
+    // When artwork is enabled we swap: left circle area -> left artwork area,
+    // so we adjust by (artworkBoxSize - progressButtonSize) instead of adding artworkBoxSize.
+    implicitWidth: (LyricsService.hasSyncedLines && root.lyricsEnabled
+                     ? lyricsCustomSize
+                     : useFixedSize ? customSize : textMetricsAdvance)
+                    + (artworkEnabled ? Math.max(artworkBoxSize - progressButtonSize, 0) + artworkContentPadding * 2 : 0)
     implicitHeight: Appearance.sizes.barHeight
 
     Behavior on implicitWidth {
+        enabled: !artworkEnabled
         animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(root)
     }
 
     Component.onCompleted: {
         LyricsService.initiliazeLyrics()
+    }
+
+    readonly property string artSource: activePlayer?.trackArtUrl && activePlayer.trackArtUrl !== ""
+                                     ? activePlayer.trackArtUrl
+                                     : ""
+
+    Item {
+        id: artworkItem
+        visible: artworkEnabled
+        anchors.left: parent.left
+        anchors.verticalCenter: parent.verticalCenter
+        width: artworkEnabled ? artworkBoxSize : 0
+        height: artworkEnabled ? artworkBoxSize : 0
+
+        Rectangle {
+            anchors.fill: parent
+            color: Appearance.colors.colPrimaryContainer
+            radius: 6
+
+            Image {
+                anchors.fill: parent
+                source: root.artSource
+                fillMode: Image.PreserveAspectCrop
+                cache: false
+                antialiasing: true
+                width: parent.width
+                height: parent.height
+                sourceSize.width: width
+                sourceSize.height: height
+
+                layer.enabled: true
+                layer.effect: OpacityMask {
+                    maskSource: Rectangle {
+                        width: artworkItem.width
+                        height: artworkItem.height
+                        radius: 6
+                    }
+                }
+            }
+
+            MaterialSymbol {
+                anchors.centerIn: parent
+                visible: root.artSource.length === 0
+                fill: 1
+                text: "music_note"
+                iconSize: Math.max(12, artworkItem.width * 0.5)
+                color: Appearance.colors.colOnSecondaryContainer
+            }
+        }
     }
 
     MouseArea {
@@ -58,30 +121,36 @@ Item {
         }   
     }
 
-    ClippedFilledCircularProgress {
-        id: mediaCircProg
-        visible: !loadingIndLoader.active
-        
-        anchors.left: parent.left
+    Item {
+        id: mediaCircProgSlot
+        width: root.progressButtonSize
+        height: root.progressButtonSize
         anchors.verticalCenter: parent.verticalCenter
+        x: artworkEnabled ? root.width - width : 0
 
-        lineWidth: Appearance.rounding.unsharpen
-        value: activePlayer?.position / activePlayer?.length
-        implicitSize: 20
-        colPrimary: Appearance.colors.colOnSecondaryContainer
-        enableAnimation: false
+        ClippedFilledCircularProgress {
+            id: mediaCircProg
+            anchors.fill: parent
+            visible: !loadingIndLoader.active
+            implicitSize: root.progressButtonSize
 
-        Item {
-            anchors.centerIn: parent
-            width: mediaCircProg.implicitSize
-            height: mediaCircProg.implicitSize
-            
-            MaterialSymbol {
+            lineWidth: Appearance.rounding.unsharpen
+            value: activePlayer?.position / activePlayer?.length
+            colPrimary: Appearance.colors.colOnSecondaryContainer
+            enableAnimation: false
+
+            Item {
                 anchors.centerIn: parent
-                fill: 1
-                text: activePlayer?.isPlaying ? "pause" : "music_note"
-                iconSize: Appearance.font.pixelSize.normal
-                color: Appearance.m3colors.m3onSecondaryContainer
+                width: mediaCircProg.implicitSize
+                height: mediaCircProg.implicitSize
+                
+                MaterialSymbol {
+                    anchors.centerIn: parent
+                    fill: 1
+                    text: activePlayer?.isPlaying ? "pause" : "music_note"
+                    iconSize: Appearance.font.pixelSize.normal
+                    color: Appearance.m3colors.m3onSecondaryContainer
+                }
             }
         }
     }
@@ -91,34 +160,47 @@ Item {
         text: `${cleanedTitle}${activePlayer?.trackArtist ? ' • ' + activePlayer.trackArtist : ''}`
     }
 
-    StyledText {
-        visible: !LyricsService.hasSyncedLines || !lyricsEnabled
-        width: parent.width - mediaCircProg.implicitSize * 2
-        
+    StyledText { // No artwork: restore original centered title layout
+        visible: (!LyricsService.hasSyncedLines || !lyricsEnabled) && !artworkEnabled
+        width: parent.width - mediaCircProgSlot.width * 2
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.horizontalCenterOffset: mediaCircProg.implicitSize / 2
+        anchors.horizontalCenterOffset: mediaCircProgSlot.width / 2
         anchors.verticalCenter: parent.verticalCenter
-        
+
         horizontalAlignment: Text.AlignHCenter
         elide: Text.ElideRight // Truncates the text on the right
         color: Appearance.colors.colOnLayer1
         text: `${cleanedTitle}${activePlayer?.trackArtist ? ' • ' + activePlayer.trackArtist : ''}`
-    } 
+    }
 
-    Loader {
-        id: lyricsItemLoader 
-        active: lyricsEnabled
+    StyledText { // Artwork enabled: title is between art and the right-side button
+        visible: (!LyricsService.hasSyncedLines || !lyricsEnabled) && artworkEnabled
+        anchors.verticalCenter: parent.verticalCenter
+        anchors.left: artworkItem.right
+        anchors.right: mediaCircProgSlot.left
+        anchors.leftMargin: artworkContentPadding
+        anchors.rightMargin: artworkContentPadding
 
-        width: parent.width - mediaCircProg.implicitSize * 2
-        height: parent.height
-        
-        anchors.left: parent.left
-        anchors.leftMargin: mediaCircProg.implicitSize * 1.5
+        horizontalAlignment: Text.AlignHCenter
+        elide: Text.ElideRight // Truncates the text on the right
+        color: Appearance.colors.colOnLayer1
+        text: `${cleanedTitle}${activePlayer?.trackArtist ? ' • ' + activePlayer.trackArtist : ''}`
+    }
+
+    Loader { // Lyrics with artwork: stretch between art and the right-side button
+        id: lyricsItemLoaderWithArt
+        active: lyricsEnabled && artworkEnabled
+
+        anchors.top: parent.top
+        anchors.bottom: parent.bottom
+        anchors.left: artworkItem.right
+        anchors.right: mediaCircProgSlot.left
+        anchors.leftMargin: artworkContentPadding
+        anchors.rightMargin: artworkContentPadding
 
         sourceComponent: Item {
             id: lyricsItem
             visible: lyricsEnabled
-            
             anchors.centerIn: parent
 
             Loader {
@@ -137,10 +219,8 @@ Item {
                 anchors.fill: parent
                 sourceComponent: LyricScroller {
                     id: lyricScroller
-                    
                     anchors.fill: parent
                     visible: lyricsStyle == "scroller" && LyricsService.hasSyncedLines
-                    
                     defaultLyricsSize: Appearance.font.pixelSize.smallest
                     useGradientMask: root.useGradientMask
                     halfVisibleLines: 1
@@ -149,7 +229,49 @@ Item {
                     gradientDensity: 0.25
                 }
             }
-        }   
+        }
     }
-    
+
+    Loader { // Lyrics without artwork: restore original anchors
+        id: lyricsItemLoaderNoArt
+        active: lyricsEnabled && !artworkEnabled
+        width: parent.width - mediaCircProgSlot.width * 2
+        height: parent.height
+        anchors.left: parent.left
+        anchors.leftMargin: mediaCircProgSlot.width * 1.5
+
+        sourceComponent: Item {
+            id: lyricsItem
+            visible: lyricsEnabled
+            anchors.centerIn: parent
+
+            Loader {
+                active: lyricsStyle == "static"
+                anchors.fill: parent
+                anchors.centerIn: parent
+                sourceComponent: LyricsStatic {
+                    anchors.fill: parent
+                    anchors.centerIn: parent
+                    horizontalAlignment: Text.AlignHCenter
+                }
+            }
+
+            Loader {
+                active: lyricsStyle == "scroller"
+                anchors.fill: parent
+                sourceComponent: LyricScroller {
+                    id: lyricScroller
+                    anchors.fill: parent
+                    visible: lyricsStyle == "scroller" && LyricsService.hasSyncedLines
+                    defaultLyricsSize: Appearance.font.pixelSize.smallest
+                    useGradientMask: root.useGradientMask
+                    halfVisibleLines: 1
+                    downScale: 0.98
+                    rowHeight: 10
+                    gradientDensity: 0.25
+                }
+            }
+        }
+    }
+
 }
