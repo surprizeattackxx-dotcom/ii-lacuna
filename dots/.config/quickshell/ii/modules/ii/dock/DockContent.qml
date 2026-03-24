@@ -97,12 +97,17 @@ Item {
         onTriggered: { if (!root.hasRealData) root.showMusicPlayer = false }
     }
 
+    property string dragState: "idle"
+
     property var processedPinnedApps: []
     property var processedRunningApps: []
     property bool _ignoringAppsChanged: false
     property bool suppressAnimation: false
 
-    property bool dragActive: false
+    readonly property bool dragActive: dragState !== "idle"
+    readonly property bool isAppDrag: dragState === "app"
+    readonly property bool isFileDrag: dragState === "file"
+    
     property string draggedAppId: ""
     property string dragIntent: "none"
     property int draggedIndex: -1
@@ -159,7 +164,7 @@ Item {
         dropTargetIndex = delegateIdx
         draggedAppId = appId
         dragIntent = TaskbarApps.isPinned(appId) ? "reorder" : "none"
-        dragActive = true
+        dragState = "app"
         buttonHovered = false
         if (previewPopupLoader.item) previewPopupLoader.item.show = false
     }
@@ -192,7 +197,7 @@ Item {
         const fromIdx = draggedIndex
         const toIdx = dropTargetIndex
 
-        dragActive = false
+        dragState = "idle"
         draggedAppId = ""
         dragIntent = "none"
         draggedIndex = -1
@@ -257,7 +262,6 @@ Item {
     property bool _ignoringFilesChanged: false
     property bool fileSuppressAnim: false
 
-    property bool fileDragActive: false
     property int fileDraggedIndex: -1
     property int fileDropIndex: -1
     property string fileDragIntent: "reorder"
@@ -288,7 +292,7 @@ Item {
         fileDraggedIndex = index
         fileDropIndex = index
         fileDragIntent = "none"
-        fileDragActive = true
+        dragState = "file"
         buttonHovered = false
         if (previewPopupLoader.item) previewPopupLoader.item.show = false
         Qt.callLater(() => { root.fileSuppressAnim = false })
@@ -307,7 +311,7 @@ Item {
     }
 
     function endFileDrag() {
-        if (!fileDragActive) return
+        if (!isFileDrag) return
 
         root.fileSuppressAnim = true
         root._ignoringFilesChanged = true
@@ -316,7 +320,7 @@ Item {
         const fromIdx = fileDraggedIndex
         const toIdx = fileDropIndex
 
-        fileDragActive = false
+        dragState = "idle"
         fileDraggedIndex = -1
         fileDropIndex = -1
         fileDragIntent = "reorder"
@@ -386,7 +390,7 @@ Item {
                 toggled: root.isPinned
                 isVertical: root.isVertical
                 onClicked: root.togglePinRequested()
-                dragActive: root.dragActive && !TaskbarApps.isPinned(root.draggedAppId)
+                dragActive: root.isAppDrag && !TaskbarApps.isPinned(root.draggedAppId)
                 dragOver: root.dragActive && root.dragIntent === "pin" && !TaskbarApps.isPinned(root.draggedAppId)
                 dragSymbol: "keep"
                 fileDropIcon: root.externalDragIcon
@@ -657,9 +661,9 @@ Item {
                     Layout.alignment: Qt.AlignCenter
                     Layout.preferredWidth: root.isVertical
                         ? root.buttonSlotSize
-                        : (root.processedFiles.length > 0 ? (fileListLoader.item?.implicitWidth ?? 0) : 0)
+                        : (root.processedFiles.length > 0 ? root.processedFiles.length * root.buttonSlotSize : 0)
                     Layout.preferredHeight: root.isVertical
-                        ? (root.processedFiles.length > 0 ? (fileListLoader.item?.implicitHeight ?? 0) : 0)
+                        ? (root.processedFiles.length > 0 ? root.processedFiles.length * root.buttonSlotSize : 0)
                         : root.buttonSlotSize
                     opacity: root.processedFiles.length > 0 ? 1.0 : 0.0
                     visible: opacity > 0
@@ -705,11 +709,11 @@ Item {
                             ScrollBar.vertical: null
 
                             Behavior on implicitWidth {
-                                enabled: !root.fileDragActive
+                                enabled: !root.isFileDrag
                                 animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
                             }
                             Behavior on implicitHeight {
-                                enabled: !root.fileDragActive
+                                enabled: !root.isFileDrag
                                 animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
                             }
 
@@ -718,7 +722,7 @@ Item {
                                 keys: ["dock-file-reorder"]
                                 enabled: !root.externalDragOver
                                 onPositionChanged: (drag) => {
-                                    if (!root.fileDragActive) return
+                                    if (!root.isFileDrag) return
                                     const step = root.buttonSlotSize
                                     const pos = isVertical ? drag.y : drag.x
                                     root.fileDropIndex = Math.max(0, Math.min(
@@ -839,24 +843,24 @@ Item {
                 activeShape: MaterialShape.Shape.SoftBurst
                 isVertical: root.isVertical
                 onClicked: GlobalStates.overviewOpen = !GlobalStates.overviewOpen
-                dragActive: (root.dragActive && TaskbarApps.isPinned(root.draggedAppId)) || root.fileDragActive
-                dragOver: (root.dragActive && root.dragIntent === "unpin" && TaskbarApps.isPinned(root.draggedAppId)) || (root.fileDragActive && root.fileDragIntent === "unpin")
-                dragSymbol: root.fileDragActive ? "do_not_disturb_on" : "keep_off"
+                dragActive: (root.dragActive && TaskbarApps.isPinned(root.draggedAppId)) || root.isFileDrag
+                dragOver: (root.dragActive && root.dragIntent === "unpin" && TaskbarApps.isPinned(root.draggedAppId)) || (root.isFileDrag && root.fileDragIntent === "unpin")
+                dragSymbol: root.isFileDrag ? "do_not_disturb_on" : "keep_off"
             }
         }
     }
 
     readonly property var draggedFileDelegate: {
-        if (!root.fileDragActive || root.fileDraggedIndex < 0) return null
+        if (!root.isFileDrag || root.fileDraggedIndex < 0) return null
         return fileListLoader.item?.itemAtIndex(root.fileDraggedIndex) ?? null
     }
 
     DockDragGhost {
         id: dragGhost
-        visible: root.dragActive || root.fileDragActive
+        visible: root.dragActive
         draggedAppId: root.dragActive ? root.draggedAppId : ""
         willUnpin: root.dragIntent === "unpin" || root.fileDragIntent === "unpin"
-        isFile: root.fileDragActive
+        isFile: root.isFileDrag
         fileIsImage: root.draggedFileDelegate?.isImage ?? false
         filePath: root.draggedFileDelegate?.filePath ?? ""
         fileResolvedIcon: root.draggedFileDelegate?.resolvedXdgIcon ?? ""
@@ -873,8 +877,8 @@ Item {
             animation: Appearance.animation.elementResize.numberAnimation.createObject(this)
         }
 
-        Drag.active: root.dragActive || root.fileDragActive
-        Drag.keys: root.fileDragActive ? ["dock-file-reorder"] : ["dock-reorder"]
+        Drag.active: root.dragActive || root.isFileDrag
+        Drag.keys: root.isFileDrag ? ["dock-file-reorder"] : ["dock-reorder"]
         Drag.hotSpot.x: width / 2
         Drag.hotSpot.y: height / 2
     }

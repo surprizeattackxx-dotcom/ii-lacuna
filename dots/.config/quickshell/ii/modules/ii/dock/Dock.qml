@@ -121,11 +121,11 @@ Scope {
 
             HyprlandFocusGrab {
                 id: dragFocusGrab
-                active: dockContent.dragActive || dockContent.fileDragActive
+                active: dockContent.dragState != "idle"
                 windows: [dockRoot]
                 onCleared: {
-                    if (dockContent.dragActive) dockContent.endDrag()
-                    if (dockContent.fileDragActive) dockContent.endFileDrag()
+                    if (dockContent.isAppDrag) dockContent.endDrag()
+                    if (dockContent.isFileDrag) dockContent.endFileDrag()
                 }
             }
 
@@ -178,7 +178,7 @@ Scope {
 
                     width: dockRoot.sizing.backgroundWidth
                     height: dockRoot.sizing.backgroundHeight
-                    
+
                     color: Appearance.colors.colLayer0
                     border.width: 1
                     border.color: Appearance.colors.colLayer0Border
