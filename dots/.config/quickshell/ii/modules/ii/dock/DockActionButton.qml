@@ -21,6 +21,7 @@ RippleButton {
     property bool dragOver: false
     property string fileDropIcon: ""
     property bool fileDropActive: false
+    readonly property bool isDragging: dragActive || fileDropActive
 
     width: buttonSize
     height: buttonSize
@@ -41,20 +42,20 @@ RippleButton {
             id: shapeSymbol
             anchors.centerIn: parent
 
-            shape: (root.dragActive || root.fileDropActive) ? root.activeShape : root.normalShape
+            shape: root.isDragging ? root.activeShape : root.normalShape
 
             implicitSize: root.dragOver ? root.buttonSize * 1.1 : root.buttonSize * 0.9
             Behavior on implicitSize {
                 animation: Appearance.animation.elementResize.numberAnimation.createObject(this)
             }
 
-            rotation: root.dragOver ? 90 : ((root.dragActive || root.fileDropActive) ? 45 : 0)
+            rotation: root.dragOver ? 90 : (root.isDragging ? 45 : 0)
             Behavior on rotation {
                 animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
             }
 
             color: {
-                if (root.dragActive || root.fileDropActive) {
+                if (root.isDragging) {
                     return root.down ? Appearance.colors.colSecondaryContainerActive :
                            root.hovered ? Appearance.colors.colSecondaryContainerHover :
                            Appearance.colors.colSecondaryContainer
@@ -78,14 +79,14 @@ RippleButton {
                 : root.dragActive ? root.dragSymbol
                 : root.symbolName
 
-            iconSize: (root.dragActive || root.fileDropActive)
+            iconSize: root.isDragging
                 ? Math.round(root.buttonSize * 0.4)
                 : root.symbolSize
             Behavior on iconSize {
                 animation: Appearance.animation.elementResize.numberAnimation.createObject(this)
             }
 
-            colSymbol: (root.dragActive || root.fileDropActive)
+            colSymbol: root.isDragging
                 ? Appearance.colors.colOnSecondaryContainer
                 : (root.toggled ? root.activeColor : root.inactiveColor)
             Behavior on colSymbol {
