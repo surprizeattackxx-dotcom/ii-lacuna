@@ -15,9 +15,9 @@ Loader {
     property var appToplevel: null
     property var desktopEntry: null
     property Item anchorItem: parent
-    readonly property string dockPos: dock.dockEffectivePosition
-
     property bool isClosing: false
+
+    readonly property string dockPos: dock.dockEffectivePosition
 
     signal closed()
 
