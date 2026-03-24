@@ -572,7 +572,6 @@ Item {
                         ? Math.max(1, contentHeight)
                         : root.buttonSlotSize
 
-                    cacheBuffer: 99999
                     interactive: false
                     clip: true
                     animateAppearance: false
