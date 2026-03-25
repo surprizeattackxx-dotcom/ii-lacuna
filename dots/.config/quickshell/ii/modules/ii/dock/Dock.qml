@@ -187,19 +187,40 @@ Scope {
                     DropArea {
                         id: fileDropArea
                         anchors.fill: parent
+                        keys: ["text/uri-list"]
+
+                        // We delay the re-enablement slightly after an internal drag ends
+                        // to prevent the "exited" event from firing for the internal drag.
+                        property bool blockDueToInternal: dockContent.dragActive
+                        onBlockDueToInternalChanged: {
+                            if (!blockDueToInternal) {
+                                reEnableTimer.restart()
+                            } else {
+                                enabled = false
+                            }
+                        }
+
+                        Timer {
+                            id: reEnableTimer
+                            interval: 50
+                            onTriggered: fileDropArea.enabled = true
+                        }
 
                         onEntered: (drag) => {
                             if (!drag.hasUrls) return
+                            //console.log("[Dock] External drag entered")
                             const url = drag.urls[0]?.toString() ?? ""
                             dockContent.externalDragIcon = dockContent.mimeIconFromPath(url)
                             dockContent.externalDragOver = true
                         }
                         onExited: {
+                            //console.log("[Dock] External drag exited")
                             dockContent.externalDragIcon = ""
                             dockContent.externalDragOver = false
                         }
                         onDropped: (drop) => {
                             if (!drop.hasUrls) return
+                            //console.log("[Dock] External drag dropped")
                             for (let i = 0; i < drop.urls.length; i++)
                                 TaskbarApps.addPinnedFile(drop.urls[i])
                             drop.accept(Qt.CopyAction)
