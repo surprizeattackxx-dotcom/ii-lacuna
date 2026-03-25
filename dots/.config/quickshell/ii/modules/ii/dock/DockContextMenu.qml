@@ -118,26 +118,14 @@ Loader {
 
             transformOrigin: Item.Center
 
-            readonly property var currentAnimConfig: root.isClosing
-                ? Appearance.animation.elementMoveExit
-                : Appearance.animation.elementMoveEnter
-
             Component.onCompleted: startOpenAnimation()
 
             Behavior on opacity {
-                NumberAnimation {
-                    duration: menuContent.currentAnimConfig.duration
-                    easing.type: menuContent.currentAnimConfig.type
-                    easing.bezierCurve: menuContent.currentAnimConfig.bezierCurve
-                }
+                animation: Appearance.animation.elementResize.numberAnimation.createObject(this)
             }
 
             Behavior on scale {
-                NumberAnimation {
-                    duration: menuContent.currentAnimConfig.duration
-                    easing.type: menuContent.currentAnimConfig.type
-                    easing.bezierCurve: menuContent.currentAnimConfig.bezierCurve
-                }
+                animation: Appearance.animation.elementResize.numberAnimation.createObject(this)
             }
 
             onOpacityChanged: {

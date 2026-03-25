@@ -20,52 +20,61 @@ Item {
     property string filePath: ""
     property string fileResolvedIcon: ""
 
-    Item {
+    readonly property string renderType: isFile ? (fileIsImage ? "image" : "file") : "app"
+
+    Loader {
         anchors.fill: parent
-        visible: !root.isFile
-
-        IconImage {
-            id: ghostIcon
-            anchors.centerIn: parent
-            implicitSize: Appearance.sizes.dockButtonSize
-            source: draggedAppId !== ""
-                ? Quickshell.iconPath(TaskbarApps.getCachedIcon(draggedAppId), "image-missing")
-                : ""
-        }
-
-        Loader {
-            active: Config.options.dock.monochromeIcons
-            anchors.fill: ghostIcon
-            sourceComponent: Item {
-                Desaturate {
-                    id: desaturatedIcon
-                    visible: false
-                    anchors.fill: parent
-                    source: ghostIcon
-                    desaturation: 0.8
-                }
-                ColorOverlay {
-                    anchors.fill: desaturatedIcon
-                    source: desaturatedIcon
-                    color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.9)
-                }
+        sourceComponent: {
+            switch (renderType) {
+                case "app": return appComponent
+                case "image": return imageComponent
+                case "file": return fileComponent
             }
         }
     }
 
-    Item {
-        anchors.fill: parent
-        visible: root.isFile
+    Component {
+        id: appComponent
+        Item {
+            anchors.fill: parent
 
+            IconImage {
+                id: ghostIcon
+                anchors.centerIn: parent
+                implicitSize: Appearance.sizes.dockButtonSize
+                source: draggedAppId !== "" ? Quickshell.iconPath(TaskbarApps.getCachedIcon(draggedAppId), "image-missing") : ""
+            }
+
+            Loader {
+                active: Config.options.dock.monochromeIcons
+                anchors.fill: ghostIcon
+                sourceComponent: Item {
+                    Desaturate {
+                        id: desaturatedIcon
+                        visible: false
+                        anchors.fill: parent
+                        source: ghostIcon
+                        desaturation: 0.8
+                    }
+                    ColorOverlay {
+                        anchors.fill: desaturatedIcon
+                        source: desaturatedIcon
+                        color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.9)
+                    }
+                }
+            }
+        }
+    }
+    
+    Component {
+        id: imageComponent
         Image {
             id: ghostThumbnail
             anchors.fill: parent
-            visible: root.fileIsImage
             source: root.fileIsImage ? ("file://" + root.filePath) : ""
             fillMode: Image.PreserveAspectCrop
             asynchronous: true
             cache: true
-            sourceSize: Qt.size(Appearance.sizes.dockButtonSize * 2, Appearance.sizes.dockButtonSize * 2)
 
             layer.enabled: true
             layer.effect: OpacityMask {
@@ -75,19 +84,21 @@ Item {
                     radius: Appearance.rounding.small
                 }
             }
-        }
 
-        MaterialSymbol {
-            anchors.centerIn: parent
-            visible: root.fileIsImage && ghostThumbnail.status !== Image.Ready
-            text: "image"
-            iconSize: Appearance.sizes.dockButtonSize
-            color: Appearance.colors.colOnLayer0
+            MaterialSymbol { // fallback symbol
+                anchors.centerIn: parent
+                visible: ghostThumbnail.status !== Image.Ready
+                text: "image"
+                iconSize: Appearance.sizes.dockButtonSize / 2
+                color: Appearance.colors.colOnLayer0
+            } 
         }
-
+    }
+    
+    Component {
+        id: fileComponent
         IconImage {
             anchors.fill: parent
-            visible: !root.fileIsImage
             source: root.fileResolvedIcon
         }
     }
