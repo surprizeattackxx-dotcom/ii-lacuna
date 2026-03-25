@@ -299,7 +299,6 @@ Item {
                 id: pinButton
                 anchors.centerIn: parent
                 symbolName: "keep"
-                isVertical: root.isVertical
                 toggled: root.isPinned
                 onClicked: root.togglePinRequested()
                 dragActive: root.isAppDrag && !TaskbarApps.isPinned(root.draggedAppId)
@@ -491,7 +490,6 @@ Item {
                 anchors.centerIn: parent
                 symbolName: "apps"
                 activeShape: MaterialShape.Shape.SoftBurst
-                isVertical: root.isVertical
                 onClicked: GlobalStates.overviewOpen = !GlobalStates.overviewOpen
                 dragActive: (root.dragActive && TaskbarApps.isPinned(root.draggedAppId)) || root.isFileDrag
                 dragOver: (root.dragActive && root.dragIntent === "unpin" && TaskbarApps.isPinned(root.draggedAppId)) || (root.isFileDrag && root.fileDragIntent === "unpin")

@@ -6,6 +6,7 @@ import qs.modules.common
 import qs.modules.common.widgets
 import qs.services
 import qs.modules.common.functions
+import "./widgets"
 
 Item {
     id: root
@@ -38,30 +39,12 @@ Item {
         Item {
             anchors.fill: parent
 
-            IconImage {
-                id: ghostIcon
+            DockIcon {
                 anchors.centerIn: parent
-                implicitSize: Appearance.sizes.dockButtonSize
-                source: draggedAppId !== "" ? Quickshell.iconPath(TaskbarApps.getCachedIcon(draggedAppId), "image-missing") : ""
-            }
-
-            Loader {
-                active: Config.options.dock.monochromeIcons
-                anchors.fill: ghostIcon
-                sourceComponent: Item {
-                    Desaturate {
-                        id: desaturatedIcon
-                        visible: false
-                        anchors.fill: parent
-                        source: ghostIcon
-                        desaturation: 0.8
-                    }
-                    ColorOverlay {
-                        anchors.fill: desaturatedIcon
-                        source: desaturatedIcon
-                        color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.9)
-                    }
-                }
+                implicitWidth: Appearance.sizes.dockButtonSize
+                implicitHeight: Appearance.sizes.dockButtonSize
+                appId: root.draggedAppId
+                isRunning: true
             }
         }
     }

@@ -15,8 +15,10 @@ Item {
 
     readonly property bool useWide: totalCount <= 3
 
-    readonly property real baseDotW: root.isVertical ? root.countDotHeight : (useWide ? root.countDotWidth : root.countDotHeight)
-    readonly property real baseDotH: root.isVertical ? (useWide ? root.countDotWidth : root.countDotHeight) : root.countDotHeight
+    readonly property real countDotWidth: Math.round(root.dockHeight * 0.17)
+    readonly property real countDotHeight: Math.round(root.dockHeight * 0.07)
+    readonly property real baseDotW: root.isVertical ? countDotHeight : (useWide ? countDotWidth : countDotHeight)
+    readonly property real baseDotH: root.isVertical ? (useWide ? countDotWidth : countDotHeight) : countDotHeight
 
     readonly property real dotSpacing: 3
     readonly property real pitchX: root.isVertical ? 0 : (baseDotW + dotSpacing)

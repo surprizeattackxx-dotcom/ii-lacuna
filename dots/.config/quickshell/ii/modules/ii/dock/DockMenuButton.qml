@@ -17,12 +17,12 @@ RippleButton {
 
     implicitHeight: 35
     buttonRadius: Appearance.rounding.normal
-
     colBackground: "transparent"
     colBackgroundHover: Appearance.colors.colLayer1Hover
     colRipple: Appearance.colors.colLayer1Active
-    
     releaseAction: () => root.triggered()
+
+    readonly property color contentColor: isDestructive ? Appearance.colors.colError : Appearance.colors.colOnLayer0
 
     contentItem: RowLayout {
         spacing: 6
@@ -40,9 +40,7 @@ RippleButton {
             sourceComponent: MaterialShape {
                 shapeString: root.shapeString
                 implicitSize: 18
-                color: root.isDestructive
-                    ? Appearance.colors.colError
-                    : Appearance.colors.colOnLayer0
+                color: root.contentColor
             }
         }
 
@@ -50,9 +48,7 @@ RippleButton {
             visible: root.symbolName !== "" && root.shapeString === ""
             text: root.symbolName
             iconSize: 18
-            color: root.isDestructive
-                ? Appearance.colors.colError
-                : Appearance.colors.colOnLayer0
+            color: root.contentColor
         }
 
         IconImage {
@@ -61,9 +57,7 @@ RippleButton {
             source: root.iconName !== "" ? Quickshell.iconPath(root.iconName, "") : ""
             layer.enabled: true
             layer.effect: ColorOverlay {
-                color: root.isDestructive
-                    ? Appearance.colors.colError
-                    : Appearance.colors.colOnLayer0
+                color: root.contentColor
             }
         }
 
@@ -72,9 +66,7 @@ RippleButton {
             Layout.fillWidth: true
             horizontalAlignment: Text.AlignLeft
             font.pixelSize: Appearance.font.pixelSize.small
-            color: root.isDestructive
-                ? Appearance.colors.colError
-                : Appearance.colors.colOnLayer0
+            color: root.contentColor
         }
     }
 }

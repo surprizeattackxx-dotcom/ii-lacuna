@@ -1,16 +1,12 @@
 import QtQuick
-import QtQuick.Layouts
-import Quickshell
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
 
-RippleButton {
+DockButton {
     id: root
 
-    property int buttonSize: Appearance.sizes.dockButtonSize
     property int symbolSize: Math.round(root.buttonSize * 0.5)
-    property bool isVertical: false
     property string symbolName: ""
     property color activeColor: Appearance.m3colors.m3onPrimary
     property color inactiveColor: Appearance.colors.colOnLayer0
@@ -22,17 +18,6 @@ RippleButton {
     property string fileDropIcon: ""
     property bool fileDropActive: false
     readonly property bool isDragging: dragActive || fileDropActive
-
-    width: buttonSize
-    height: buttonSize
-
-    rippleEnabled: false
-    padding: 0
-
-    colBackground: "transparent"
-    colBackgroundHover: "transparent"
-    colBackgroundToggled: "transparent"
-    colBackgroundToggledHover: "transparent"
 
     background.implicitWidth: 0
     background.implicitHeight: 0

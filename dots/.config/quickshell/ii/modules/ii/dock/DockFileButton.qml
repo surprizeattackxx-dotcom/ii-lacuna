@@ -18,7 +18,6 @@ DockButton {
     property int delegateIndex: -1
     property string filePath: ""
 
-    property int iconSize: Appearance.sizes.dockButtonSize
     property int buttonSize: Appearance.sizes.dockButtonSize
     property int dotMargin: Math.round((Config.options?.dock.height ?? 60) * 0.2)
 
@@ -273,17 +272,12 @@ DockButton {
             border.width: 1
             border.color: Appearance.colors.colLayer0Border
 
-            Text {
+            StyledText {
                 id: tooltipText
                 anchors.centerIn: parent
                 text: root.fileName
                 color: Appearance.colors.colOnSurface
-                font {
-                    family: Appearance.font.family.main
-                    variableAxes: Appearance.font.variableAxes.main
-                    pixelSize: Appearance.font.pixelSize.small ?? 16
-                    hintingPreference: Font.PreferNoHinting
-                }
+                font.pixelSize: Appearance.font.pixelSize.small
             }
         }
     }
@@ -306,7 +300,7 @@ DockButton {
                 fillMode: Image.PreserveAspectCrop
                 asynchronous: true
                 cache: true
-                sourceSize: Qt.size(root.iconSize * 2, root.iconSize * 2)
+                sourceSize: Qt.size(root.buttonSize * 2, root.buttonSize * 2)
 
                 layer.enabled: true
                 layer.effect: OpacityMask {
@@ -323,7 +317,7 @@ DockButton {
                 anchors.centerIn: parent
                 visible: root.isImage && thumbnailImage.status !== Image.Ready
                 text: "image"
-                iconSize: root.iconSize
+                iconSize: root.buttonSize
                 color: Appearance.colors.colOnLayer0
             }
 
@@ -333,16 +327,16 @@ DockButton {
                 anchors.centerIn: parent
                 visible: !root.isImage && root.resolvedXdgIcon !== ""
 
-                implicitSize: root.iconSize
-                width: root.iconSize
-                height: root.iconSize
+                implicitSize: root.buttonSize
+                width: root.buttonSize
+                height: root.buttonSize
 
                 source: root.resolvedXdgIcon
 
                 // Force icon reload when the theme changes
                 backer.sourceSize: Qt.size(
-                    root.iconSize + TaskbarApps.iconThemeRevision,
-                    root.iconSize + TaskbarApps.iconThemeRevision
+                    root.buttonSize + TaskbarApps.iconThemeRevision,
+                    root.buttonSize + TaskbarApps.iconThemeRevision
                 )
             }
 
@@ -351,7 +345,7 @@ DockButton {
                 anchors.centerIn: parent
                 visible: !root.isImage && root.resolvedXdgIcon === "" && root.isDirectory
                 text: "folder"
-                iconSize: root.iconSize
+                iconSize: root.buttonSize
                 color: Appearance.colors.colOnLayer0
             }
         }

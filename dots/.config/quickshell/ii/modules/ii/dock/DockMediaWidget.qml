@@ -10,6 +10,7 @@ import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.utils
 import qs.modules.common.functions
+import "./widgets"
 
 Item {
     id: root
@@ -89,47 +90,18 @@ Item {
         }
     }
 
-
-    component NextButton: RippleButton {
-        id: nextBtn
+    component NextButton: DockMediaButton {
         width: root.controlSize
         height: root.controlSize
-        buttonRadius: Appearance.rounding.full
+        symbolName: "skip_next"
         onClicked: root.currentPlayer?.next()
-        rippleEnabled: false
-        colBackground: "transparent"
-        colBackgroundHover: "transparent"
-        colBackgroundToggled: "transparent"
-        colBackgroundToggledHover: "transparent"
-
-        MaterialSymbol {
-            anchors.centerIn: parent
-            iconSize: root.controlSize * 0.72
-            fill: 1
-            text: "skip_next"
-            color: Appearance.colors.colOnLayer0
-        }
     }
     
-    component PlayButton: RippleButton {
-        id: playBtn
+    component PlayButton: DockMediaButton {
         width: root.controlSize
         height: root.controlSize
-        buttonRadius: Appearance.rounding.full
+        symbolName: root.isPlaying ? "pause" : "play_arrow"
         onClicked: root.currentPlayer?.togglePlaying()
-        rippleEnabled: false
-        colBackground: "transparent"
-        colBackgroundHover: "transparent"
-        colBackgroundToggled: "transparent"
-        colBackgroundToggledHover: "transparent"
-
-        MaterialSymbol {
-            anchors.centerIn: parent
-            iconSize: root.controlSize * 0.72
-            fill: 1
-            text: root.isPlaying ? "pause" : "play_arrow"
-            color: Appearance.colors.colOnLayer0
-        }
     }
 
     Loader {
@@ -141,7 +113,7 @@ Item {
             ArtworkItem {
                 id: artH
                 anchors.left: parent.left
-                anchors.leftMargin: root.dotMargin + musicSepWrapper.Layout.preferredWidth
+                anchors.leftMargin: 8
                 anchors.verticalCenter: parent.verticalCenter
             }
 
@@ -205,7 +177,7 @@ Item {
             ArtworkItem {
                 id: artV
                 anchors.top: parent.top
-                anchors.topMargin: root.dotMargin + musicSepWrapper.Layout.preferredHeight
+                anchors.topMargin: 8
                 anchors.horizontalCenter: parent.horizontalCenter
             }
 
@@ -252,5 +224,4 @@ Item {
             }
         }
     }
-    
 }

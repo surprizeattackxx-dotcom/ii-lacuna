@@ -3,9 +3,7 @@ import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
 import qs
-import Qt5Compat.GraphicalEffects
 import QtQuick
-import QtQuick.Layouts
 
 DockButton {
     id: root
@@ -15,11 +13,8 @@ DockButton {
     property int delegateIndex: -1
     property int lastFocused: -1
 
-    property int iconSize: Appearance.sizes.dockButtonSize
     readonly property real dockHeight: Config.options?.dock.height ?? 60
     property int dotMargin: Math.round(dockHeight * 0.2)
-    property int countDotWidth: Math.round(dockHeight * 0.17)
-    property int countDotHeight: Math.round(dockHeight * 0.07)
 
     readonly property var desktopEntry: appToplevel ? TaskbarApps.getCachedDesktopEntry(appToplevel.appId) : null
     property bool isVertical: dockContent?.isVertical ?? false
