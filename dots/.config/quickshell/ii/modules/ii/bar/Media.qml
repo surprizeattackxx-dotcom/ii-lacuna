@@ -67,7 +67,7 @@ Item {
         Rectangle {
             anchors.fill: parent
             color: Appearance.colors.colPrimaryContainer
-            radius: 6
+            radius: Appearance.rounding.full
 
             Image {
                 anchors.fill: parent
