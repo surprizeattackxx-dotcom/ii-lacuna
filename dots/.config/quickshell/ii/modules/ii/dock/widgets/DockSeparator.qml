@@ -6,7 +6,7 @@ import qs
 Item {
     id: root
     
-    property bool isVertical: true
+    readonly property bool isVertical: dockEffectivePosition === "left" || dockEffectivePosition === "right"
     property real marginScale: 0.2
     property color color: Appearance.colors.colOutlineVariant
 
