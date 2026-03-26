@@ -5,7 +5,7 @@ import "../"
 
 Item {
     property bool show: true
-    property real marginScale: 0.15
+    property real marginScale: 0.2
     visible: show || opacity > 0
     opacity: show ? 1.0 : 0.0
     Layout.alignment: Qt.AlignCenter
@@ -25,6 +25,5 @@ Item {
     DockSeparator {
         anchors.fill: parent
         isVertical: root.isVertical
-        marginScale: parent.marginScale
     }
 }

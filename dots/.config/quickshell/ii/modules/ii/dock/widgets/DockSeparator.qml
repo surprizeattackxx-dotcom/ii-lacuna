@@ -7,7 +7,7 @@ Item {
     id: root
     
     property bool isVertical: true
-    property real marginScale: 0.15
+    property real marginScale: 0.2
     property color color: Appearance.colors.colOutlineVariant
 
     Rectangle {
