@@ -55,7 +55,7 @@ Item {
         onExited: root.mediaHovered = false
         
         onClicked: (mouse) => {
-            if (mouse.button === Qt.MiddleButton) {
+            if (mouse.button === Qt.MiddleButton || mouse.button === Qt.LeftButton) {
                 root.currentPlayer?.togglePlaying();
             } else if (mouse.button === Qt.RightButton) {
                 root.currentPlayer?.next();
