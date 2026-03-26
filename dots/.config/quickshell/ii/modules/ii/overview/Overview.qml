@@ -176,7 +176,7 @@ Scope {
                         anchors {
                             horizontalCenter: parent.horizontalCenter
                             top: parent.top
-                            topMargin: root.margin + Appearance.sizes.elevationMargin
+                            topMargin: root.margin * 2 + Appearance.sizes.elevationMargin
                         }
                         SearchWidget {
                             id: searchWidget
