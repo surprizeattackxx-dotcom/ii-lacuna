@@ -84,6 +84,7 @@ setup_hyprland_source() {
         if grep -q "# ii-vynx" "$MAIN_HYPR_CONF"; then
             log_verbose "Source already exists in $MAIN_HYPR_CONF, skipping append."
         else
+            cp "$MAIN_HYPR_CONF" "${MAIN_HYPR_CONF}.bak" # Backup the original file
             echo -e "\n# ii-vynx\nsource = $II_VYNX_CONF" >> "$MAIN_HYPR_CONF"
             echo -e "${GREEN}✓ Successfully appended source to $MAIN_HYPR_CONF.${NC}"
         fi
