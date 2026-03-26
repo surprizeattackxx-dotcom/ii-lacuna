@@ -88,10 +88,10 @@ Scope {
                 property int barSize: Config.options.bar.vertical ? Appearance.sizes.verticalBarWidth : Appearance.sizes.barHeight
                 property int margin: isZoomInStyle ? barSize : barSize * 2
                 margins { 
-                    top: -margin
-                    bottom: -margin
-                    left: -margin
-                    right: -margin
+                    top: -margin * 2
+                    bottom: -margin * 2
+                    left: -margin * 2
+                    right: -margin * 2
                 }
 
                 HyprlandFocusGrab {
