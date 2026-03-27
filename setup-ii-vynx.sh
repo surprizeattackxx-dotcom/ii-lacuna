@@ -74,6 +74,7 @@ setup_hyprland_source() {
 
     if [ -f "$REPO_HYPR_CONF" ]; then
         cp "$REPO_HYPR_CONF" "$II_VYNX_CONF"
+        echo -e "${GREEN}✓ Successfully copied custom ii-vynx config${NC}"
         log_verbose "Copied $REPO_HYPR_CONF to $II_VYNX_CONF"
     else
         echo -e "${RED}⚠ Error: Couldn't find Hyprland config ($REPO_HYPR_CONF), please report this bug!${NC}"
