@@ -24,6 +24,7 @@ Rectangle {
 
     property bool showBrightness: Config.options.sidebar.quickSliders.showBrightness 
     property bool showVolume: Config.options.sidebar.quickSliders.showVolume 
+    property bool showGamma: Config.options.sidebar.quickSliders.showGamma
     property bool showMic: Config.options.sidebar.quickSliders.showMic 
 
     RowLayout {
@@ -59,36 +60,13 @@ Rectangle {
                 setVal: (v) => { Audio.sink.audio.volume = v } },
                 { show: showMic, icon: "mic", 
                 getVal: () => Audio.source.audio.volume, 
-                setVal: (v) => { Audio.source.audio.volume = v } }
-            ]
-
-            QuickSlider {
-                required property var modelData
-                Layout.fillWidth: true
-                visible: modelData.show
-                materialSymbol: modelData.icon
-                value: modelData.getVal()
-                onMoved: modelData.setVal(value)
-            }
-        }
-
-        Loader {
-            anchors {
-                left: parent.left
-                right: parent.right
-            }
-            visible: active
-            active: Config.options.sidebar.quickSliders.showBrightness
-            sourceComponent: QuickSlider {
-                materialSymbol: "light_mode"
-                secondaryMaterialSymbol: "wb_twilight"
-                stopIndicatorValues: Hyprsunset.gamma !== 100 && root.brightnessMonitor?.brightness !== 0 ? [0.3 + root.brightnessMonitor?.brightness * 0.7] : []
-                value: Hyprsunset.gamma === 100? 0.3 + root.brightnessMonitor?.brightness * 0.7 : Hyprsunset.gamma / 100 * 0.3
-                tooltipContent: Hyprsunset.gamma === 100 ? `${Math.round(root.brightnessMonitor?.brightness * 100)}%` : `${Translation.tr("Gamma")} ${Hyprsunset.gamma}%`
-                onMoved: {
-                    if (value >= 0.3) {
+                setVal: (v) => { Audio.source.audio.volume = v } },
+                { show: showGamma, icon: "light_mode",  secondaryIcon: "wb_twilight",
+                getVal: () => Hyprsunset.gamma === 100? 0.3 + root.brightnessMonitor?.brightness * 0.7 : Hyprsunset.gamma / 100 * 0.3, 
+                setVal: (v) => {
+                    if (v >= 0.3) {
                         // 0.3 - 1.0 brightness
-                        root.brightnessMonitor.setBrightness((value - 0.3) / 0.7);
+                        root.brightnessMonitor.setBrightness((v - 0.3) / 0.7);
                         if (Hyprsunset.gamma !== 100) {
                             Hyprsunset.setGamma(100);
                         }
@@ -97,9 +75,19 @@ Rectangle {
                         if (root.brightnessMonitor.brightness !== 0) {
                             root.brightnessMonitor.setBrightness(0);
                         }
-                        Hyprsunset.setGamma(value * 100 / 0.3);
+                        Hyprsunset.setGamma(v * 100 / 0.3);
                     }
-                }
+                } }
+            ]
+
+            QuickSlider {
+                required property var modelData
+                Layout.fillWidth: true
+                visible: modelData.show
+                materialSymbol: modelData.icon
+                secondaryMaterialSymbol: modelData?.secondaryIcon ?? "" 
+                value: modelData.getVal()
+                onMoved: modelData.setVal(value)
             }
         }
     }
