@@ -343,8 +343,9 @@ cp -r "$SOURCE_DIR/." "$TARGET_DIR/"
 
 if [ $? -eq 0 ]; then
     echo -e "${GREEN}✓ Successfully copied: $TARGET_DIR${NC}"
-    setup_hyprland_source
     install_cli
+    sleep 1.0
+    setup_hyprland_source
 else
     echo -e "${RED}✗ An error occurred while copying!${NC}"
     exit 1
