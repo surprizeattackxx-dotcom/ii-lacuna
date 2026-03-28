@@ -10,16 +10,18 @@ Singleton {
     id: root
 
     readonly property string hyprlandConfigPath: Directories.home.replace("file://", "") + "/.local/share/ii-vynx/hyprland.conf"
-
+    
     Process {
         id: configWriter
+        
+        running: false
         property string pendingCommand: ""
-
         command: ["bash", "-c", pendingCommand]
 
-        onExited: function(exitCode) {
-            if (exitCode !== 0) {
-                console.error("[HyprlandSettings] changeKey failed, exitCode:", exitCode)
+        onExited: (exitCode, exitStatus) => {
+            // NOTE: This will not work bc we are running it detached
+            if (exitCode === 1) {
+                Quickshell.execDetached(["notify-send", Translation.tr("Couldn't change the setting"), Translation.tr("Make sure you have vynx-cli installed"), "-a", "Shell"])
             }
         }
     }
@@ -45,9 +47,9 @@ Singleton {
             const field = parts[1].trim()
 
             
-            sedCmd = `sed -E '/^${section}[[:space:]]*[{]/,/^[}]/ s|^([[:space:]]*${field}[[:space:]]*=[[:space:]]*).*|\\1${value}|' '${path}' > '${tmpPath}' && mv '${tmpPath}' '${path}'`
+            sedCmd = `vynx hyprset key '${section}:${field}' '${value}' >/dev/null 2>&1 || true`
         } else {
-            sedCmd = `sed -E 's|^([[:space:]]*${key}[[:space:]]*=[[:space:]]*).*|\\1${value}|' '${path}' > '${tmpPath}' && mv '${tmpPath}' '${path}'`
+            // idk.. put smthng here
         }
 
         //console.log("[HyprlandSettings] Running command:", sedCmd)
@@ -70,9 +72,7 @@ Singleton {
         const tmpPath = "/tmp/hypr_config_write.tmp"
         const path = root.hyprlandConfigPath
 
-        // animation = workspaces, 1, 7, menu_decel, slidevert
-        // Son alan varsa değiştir, yoksa ekle
-        const sedCmd = `sed -E 's|^([[:space:]]*animation[[:space:]]*=[[:space:]]*${animName}[[:space:]]*,[^,]*,[^,]*,[^,]*)(,[^,]*)?$|\\1, ${style}|' '${path}' > '${tmpPath}' && mv '${tmpPath}' '${path}'`
+        const sedCmd = `vynx hyprset anim '${animName}' '${style}' >/dev/null 2>&1 || true`
 
         configWriter.pendingCommand = sedCmd
         configWriter.startDetached()

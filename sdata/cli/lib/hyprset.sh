@@ -80,7 +80,7 @@ mode_anim() {
 
     if grep -qE "$pattern" "$CONFIG_PATH"; then
         # Update existing animation parameters
-        sed -i -E "s|${pattern}.*|\1 ${full_params}|" "$CONFIG_PATH"
+        sed -i -E "s|^([[:space:]]*animation[[:space:]]*=[[:space:]]*${anim_name}[[:space:]]*,[^,]+,[^,]+,[^,]+,).*|\1 ${full_params}|" "$CONFIG_PATH"
     else
         # Append new animation if it doesn't exist
         warn "Animation '${anim_name}' missing, appending..."
