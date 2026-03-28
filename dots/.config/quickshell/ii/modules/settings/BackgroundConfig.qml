@@ -22,6 +22,7 @@ ContentPage {
             text: Translation.tr("Vertical")
             checked: Config.options.background.parallax.vertical
             onCheckedChanged: {
+                HyprlandSettings.changeAnimation("workspaces", checked ? "slidevert" : "slide");
                 Config.options.background.parallax.vertical = checked;
             }
         }

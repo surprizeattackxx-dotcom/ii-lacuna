@@ -55,6 +55,28 @@ Singleton {
         configWriter.startDetached()
     }
 
+    function changeAnimation(animName, style) {
+        if (configWriter.running) {
+            console.warn("[HyprlandConfig] Writer busy, skipping")
+            return
+        }
+
+        const safeCheck = /['"\\`$|&;]/
+        if (safeCheck.test(String(animName)) || safeCheck.test(String(style))) {
+            console.error("[HyprlandConfig] Unsafe characters rejected:", animName, style)
+            return
+        }
+
+        const tmpPath = "/tmp/hypr_config_write.tmp"
+        const path = root.hyprlandConfigPath
+
+        // animation = workspaces, 1, 7, menu_decel, slidevert
+        // Son alan varsa değiştir, yoksa ekle
+        const sedCmd = `sed -E 's|^([[:space:]]*animation[[:space:]]*=[[:space:]]*${animName}[[:space:]]*,[^,]*,[^,]*,[^,]*)(,[^,]*)?$|\\1, ${style}|' '${path}' > '${tmpPath}' && mv '${tmpPath}' '${path}'`
+
+        configWriter.pendingCommand = sedCmd
+        configWriter.startDetached()
+    }
 
     function setLayout(layout) {
         if (layout !== "default" && layout !== "scrolling" && layout !== "dwindle" && layout !== "monocle" && layout !== "master") return
