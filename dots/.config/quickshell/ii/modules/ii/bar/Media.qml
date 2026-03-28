@@ -151,9 +151,12 @@ Item {
 
     StyledText {
         visible: (!LyricsService.hasSyncedLines || !lyricsEnabled)
-        anchors.horizontalCenter: parent.horizontalCenter
-        anchors.horizontalCenterOffset: artworkEnabled ? 0 : mediaCircProgSlot.width / 2
-        anchors.verticalCenter: parent.verticalCenter
+        anchors {
+            horizontalCenter: parent.horizontalCenter
+            horizontalCenterOffset: artworkEnabled ? 0 : mediaCircProgSlot.width / 2
+            verticalCenter: parent.verticalCenter
+            verticalCenterOffset: 1 // to vertically center it
+        }
         horizontalAlignment: Text.AlignHCenter
         width: artworkEnabled ? parent.implicitWidth - (artworkItem.width + mediaCircProgSlot.width + artworkContentPadding + 20) : parent.implicitWidth - mediaCircProgSlot.width - 20
         elide: Text.ElideRight
