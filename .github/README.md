@@ -65,11 +65,6 @@ Run the setup script:
 ```
 ./setup-ii-vynx.sh
 ```
-<div align="center">
-    <h2>• vynx cli •</h2>
-</div>
-
-Installation script also install the vynx cli. This cli is mostly used to change the hyprland configs from the shell settings. But you can also use it from terminal or automate something with it. Detailed command descriptions are on the [wiki](https://github.com/vaguesyntax/ii-vynx/wiki).
 
 <div align="center">
     <h2>• documentation •</h2>
