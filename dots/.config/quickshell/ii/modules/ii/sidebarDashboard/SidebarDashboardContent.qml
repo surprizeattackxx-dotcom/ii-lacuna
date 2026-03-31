@@ -313,7 +313,7 @@ Item {
                 }
                 onClicked: {
                     if (confirm) {
-                        Quickshell.execDetached(["vynx", "update", "--no-confirm", "--no-backup"]);
+                        Quickshell.execDetached([Directories.cliPath, "update", "--no-confirm", "--no-backup"]);
                         GlobalStates.sidebarRightOpen = false;
                     } else {
                         confirm = true

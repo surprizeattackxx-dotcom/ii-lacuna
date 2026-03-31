@@ -72,7 +72,7 @@ Singleton {
         const tmpPath = "/tmp/hypr_config_write.tmp"
         const path = root.hyprlandConfigPath
 
-        const sedCmd = `vynx hyprset anim '${animName}' '${style}' >/dev/null 2>&1 || true`
+        const sedCmd = `${Directories.cliPath} hyprset anim '${animName}' '${style}' >/dev/null 2>&1 || true`
 
         configWriter.pendingCommand = sedCmd
         configWriter.startDetached()
