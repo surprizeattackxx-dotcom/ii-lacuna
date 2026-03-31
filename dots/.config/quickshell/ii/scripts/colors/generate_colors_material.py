@@ -25,6 +25,7 @@ parser.add_argument('--term_fg_boost', type=float , default=0.35, help='Make ter
 parser.add_argument('--blend_bg_fg', action='store_true', default=False, help='Shift terminal background or foreground towards accent')
 parser.add_argument('--cache', type=str, default=None, help='file path to store the generated color')
 parser.add_argument('--debug', action='store_true', default=False, help='debug mode')
+parser.add_argument('--preview', action='store_true', help='preview the generated colorscheme and returns three accent colors to be previewed in the UI')
 args = parser.parse_args()
 
 rgba_to_hex = lambda rgba: "#{:02X}{:02X}{:02X}".format(rgba[0], rgba[1], rgba[2])
@@ -131,6 +132,14 @@ else:
     material_colors['successContainer'] = '#D1E8D5'
     material_colors['onSuccessContainer'] = '#0C1F13'
 
+if args.preview:
+    print(json.dumps({
+        "primary": material_colors.get("primary"),
+        "primary_container": material_colors.get("primaryContainer"),
+        "secondary": material_colors.get("secondary")
+    }))
+    exit(0)
+
 # Terminal Colors
 if args.termscheme is not None:
     with open(args.termscheme, 'r') as f:
@@ -140,7 +149,6 @@ if args.termscheme is not None:
     try: 
         primary_color_argb = hex_to_argb(material_colors['primary_paletteKeyColor'])
     except KeyError:
-        print("primary_paletteKeyColor not found in material colors, using white as fallback")
         primary_color_argb = hex_to_argb("#ffffff")
     
 for color, val in term_source_colors.items():
