@@ -64,9 +64,9 @@ Rectangle {
                 { show: showGamma, icon: "light_mode",  secondaryIcon: "wb_twilight",
                 getVal: () => Hyprsunset.gamma === 100 ? 0.3 + root.brightnessMonitor?.brightness * 0.7 : (Hyprsunset.gamma - Hyprsunset.gammaLowerLimit) / (100 - Hyprsunset.gammaLowerLimit) * 0.3,
                 setVal: (v) => {
-                    if (value >= 0.3) {
+                    if (v >= 0.3) {
                         // 0.3 - 1.0 brightness
-                        root.brightnessMonitor.setBrightness((value - 0.3) / 0.7);
+                        root.brightnessMonitor.setBrightness((v - 0.3) / 0.7);
                         if (Hyprsunset.gamma !== 100) {
                             Hyprsunset.setGamma(100);
                         }
@@ -75,7 +75,7 @@ Rectangle {
                         if (root.brightnessMonitor.brightness !== 0) {
                             root.brightnessMonitor.setBrightness(0);
                         }
-                        Hyprsunset.setGamma((value / 0.3 * (100 - Hyprsunset.gammaLowerLimit) + Hyprsunset.gammaLowerLimit));
+                        Hyprsunset.setGamma((v / 0.3 * (100 - Hyprsunset.gammaLowerLimit) + Hyprsunset.gammaLowerLimit));
                     }
                 } }
             ]
