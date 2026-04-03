@@ -134,11 +134,22 @@ Scope { // Scope
                     GlobalFocusGrab.removeDismissable(panelWindow);
                 }
             }
+
+            Connections {
+                target: root
+                function onPinChanged() {
+                    if (panelWindow.visible) {
+                        if (root.pin) GlobalFocusGrab.removeDismissable(panelWindow);
+                        else GlobalFocusGrab.addDismissable(panelWindow);
+                    }
+                }
+            }
+
             
             Connections {
                 target: GlobalFocusGrab
                 function onDismissed() {
-                    panelWindow.hide();
+                    if (!root.pin) panelWindow.hide();
                 }
             }
 
@@ -222,7 +233,11 @@ Scope { // Scope
 
             visible: GlobalStates.sidebarLeftOpen
             onVisibleChanged: {
-                if (!visible) GlobalStates.sidebarLeftOpen = false;
+                if (visible) {
+                    if (!root.pin) GlobalFocusGrab.addDismissable(panelWindow);
+                } else {
+                    GlobalFocusGrab.removeDismissable(panelWindow);
+                }
             }
             
             Rectangle {
