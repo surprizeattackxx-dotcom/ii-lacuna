@@ -269,6 +269,7 @@ Singleton {
                     property bool enableBackgroundAnimation: true // It **may** cause nausea for someone
                     property bool changeShellColor: true // Changes the shell color to the album color
                     property int backgroundOpacity: 50 // In percent
+                    property int backgroundBlurRadius: 120
                     property JsonObject backgroundAnimation: JsonObject {
                         property bool enable: true
                         property int speedScale: 10 // 1: very slow, 10: default, 20: 2x speed etc.
