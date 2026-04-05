@@ -345,6 +345,20 @@ Variants {
                     }
                 }
 
+                property bool mediaModeOpen: mediaModeLoader.active && MprisController.activePlayer
+                onMediaModeOpenChanged: {
+                    if (!mediaModeOpen) {
+                        Wallpapers.apply(Config.options.background.wallpaperPath)
+                        LyricsService.shellColorChanged = false
+                    }
+                }
+
+                Component.onCompleted: {
+                    if (!mediaModeOpen) {
+                        Wallpapers.apply(Config.options.background.wallpaperPath)
+                    }
+                }
+
                 Loader {
                     id: mediaModeLoader
                     anchors.fill: parent
