@@ -331,7 +331,6 @@ Variants {
                         scaledScreenWidth: bgRoot.screen.width
                         scaledScreenHeight: bgRoot.screen.height
                         wallpaperScale: 1
-                        //wallpaperSafetyTriggered: bgRoot.wallpaperSafetyTriggered
                     }
                 }
 

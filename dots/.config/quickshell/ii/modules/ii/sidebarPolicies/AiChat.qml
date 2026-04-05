@@ -667,10 +667,8 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                 id: inputFieldRowLayout
                 anchors {
                     bottom: commandButtonsRow.top
-                    bottom: commandButtonsRow.top
                     left: parent.left
                     right: parent.right
-                    bottomMargin: 5
                     bottomMargin: 5
                 }
                 spacing: 0
@@ -690,7 +688,6 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                         color: activeFocus ? Appearance.m3colors.m3onSurface : Appearance.m3colors.m3onSurfaceVariant
                         placeholderText: Translation.tr('Message the model... "%1" for commands').arg(root.commandPrefix)
 
-                        background: null
                         background: null
 
                         onTextChanged: {
@@ -836,10 +833,6 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                             root.handleInput(text);
                             text = "";
                         }
-                        function accept() {
-                            root.handleInput(text);
-                            text = "";
-                        }
 
                         Keys.onPressed: event => {
                             if (event.key === Qt.Key_Tab) {
@@ -959,7 +952,6 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                 
                 RippleButton { // Send button
                     id: sendButton
-                    Layout.alignment: Qt.AlignBottom
                     Layout.alignment: Qt.AlignBottom
                     Layout.rightMargin: 5
                     implicitWidth: 40
