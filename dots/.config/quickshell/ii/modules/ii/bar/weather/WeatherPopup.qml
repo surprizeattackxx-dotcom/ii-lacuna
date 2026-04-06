@@ -10,11 +10,28 @@ import qs.modules.ii.bar
 StyledPopup {
     id: root
 
+    // Adaptive layout properties based on screen height
+    property real availableHeight: Screen.height
+    property bool compactMode: availableHeight < 900
+    property bool veryCompactMode: availableHeight < 750
+
+    // Adaptive spacing and margins
+    property int mainSpacing: veryCompactMode ? 8 : (compactMode ? 12 : 16)
+    property int heroMargins: veryCompactMode ? 12 : (compactMode ? 16 : 24)
+    property int heroIconSize: veryCompactMode ? 80 : (compactMode ? 95 : 110)
+    property int hourlyChartHeight: veryCompactMode ? 120 : (compactMode ? 140 : 160)
+    property int hourlyBarMin: veryCompactMode ? 35 : (compactMode ? 42 : 50)
+    property int hourlyBarMax: veryCompactMode ? 85 : (compactMode ? 110 : 140)
+    property int forecastCardHeight: veryCompactMode ? 100 : (compactMode ? 120 : 140)
+    property int forecastIconSize: veryCompactMode ? 40 : (compactMode ? 46 : 52)
+    property int cardMargins: veryCompactMode ? 10 : (compactMode ? 12 : 16)
+
     // Forecast data model
     property var forecastData: []
     property var hourlyData: []
     property bool forecastLoading: true
     property int maxHourlyBars: 5
+
     property var filteredHourlyData: {
         const now = new Date();
         const currentHr = now.getHours();
@@ -79,7 +96,7 @@ StyledPopup {
 
     ColumnLayout {
         anchors.centerIn: parent
-        spacing: 16
+        spacing: root.mainSpacing
 
         Item {
             width: 0
@@ -111,7 +128,7 @@ StyledPopup {
         // hero card
         Rectangle {
             Layout.fillWidth: true
-            implicitHeight: heroRow.implicitHeight + 48
+            implicitHeight: heroRow.implicitHeight + root.heroMargins * 2
             Layout.minimumWidth: 360
             color: Appearance.colors.colPrimaryContainer
             radius: Appearance.rounding.normal
@@ -119,12 +136,12 @@ StyledPopup {
             RowLayout {
                 id: heroRow
                 anchors.fill: parent
-                anchors.margins: 24
+                anchors.margins: root.heroMargins
                 spacing: 20
 
                 MaterialShape {
                     shapeString: "Cookie9Sided"
-                    implicitSize: 110
+                    implicitSize: root.heroIconSize
                     color: Appearance.colors.colPrimary
 
                     MaterialSymbol {
@@ -211,13 +228,13 @@ StyledPopup {
         }
 
         // hourly forecast chart
-        // Bar height calculation: (dont know how it works but it does)
+        // Bar height calculation:
         //   normalized = (temp - rangeMin) / rangeSpan  -> value between 0 and 1
-        //   barHeight = 50 + normalized * 90            -> height between 50px and 140px
+        //   barHeight = barMin + normalized * (barMax - barMin)
         Rectangle {
             Layout.fillWidth: true
             Layout.minimumWidth: 360
-            implicitHeight: hourlyColumn.implicitHeight + 24
+            implicitHeight: hourlyColumn.implicitHeight + root.cardMargins + 8
             color: Appearance.colors.colSurfaceContainerHigh
             radius: Appearance.rounding.normal
 
@@ -226,7 +243,7 @@ StyledPopup {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
-                anchors.margins: 16
+                anchors.margins: root.cardMargins
                 spacing: 6
 
                 RowLayout {
@@ -266,7 +283,7 @@ StyledPopup {
                 // Bar chart
                 Item {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 160
+                    Layout.preferredHeight: root.hourlyChartHeight
                     visible: !root.forecastLoading && root.filteredHourlyData.length > 0
 
                     property var tempRange: root.getHourlyTempRange()
@@ -287,84 +304,77 @@ StyledPopup {
                                 required property int index
 
                                 property int hourValue: Math.floor(parseInt(modelData.time) / 100)
-                                // First bar is always the current/closest time slot
                                 property bool isCurrentHour: index === 0
                                 property real temp: Weather.useUSCS ? parseInt(modelData.tempF) : parseInt(modelData.tempC)
                                 property var parentTempRange: root.getHourlyTempRange()
                                 property real parentTempSpan: Math.max(parentTempRange.max - parentTempRange.min, 1)
-                                // Normalize temp to 0-1 range based on visible data min/max
                                 property real normalized: (temp - parentTempRange.min) / parentTempSpan
-                                // Bar height: 50px (coldest) to 140px (hottest)
-                                property real barHeight: 50 + normalized * 90
+                                // Bar height: 45% min to 100% max for better visual contrast
+                                property real availableBarSpace: parent.height - timeLabel.height + 10
+                                property real barHeight: availableBarSpace * (0.45 + normalized * 0.55)
 
-                                // Bar container
-                                ColumnLayout {
-                                    anchors.fill: parent
-                                    spacing: 4
+                                // Time label at bottom
+                                StyledText {
+                                    id: timeLabel
+                                    anchors.bottom: parent.bottom
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    text: root.formatHour(modelData.time)
+                                    font.pixelSize: Appearance.font.pixelSize.smaller
+                                    font.weight: isCurrentHour ? Font.Bold : Font.Normal
+                                    color: isCurrentHour ? Appearance.colors.colPrimary : Appearance.colors.colOnSurfaceVariant
+                                }
 
-                                    // Spacer to push bar down based on temp
-                                    Item {
-                                        Layout.fillWidth: true
-                                        Layout.fillHeight: true
+                                // Bar above time label
+                                Rectangle {
+                                    anchors.bottom: timeLabel.top
+                                    anchors.bottomMargin: 4
+                                    anchors.horizontalCenter: parent.horizontalCenter
+                                    width: parent.width
+                                    height: barHeight
+                                    radius: Appearance.rounding.normal
+                                    color: isCurrentHour ? Appearance.colors.colPrimaryContainer : Appearance.colors.colSecondaryContainer
+
+                                    ColumnLayout {
+                                        anchors.top: parent.top
+                                        anchors.left: parent.left
+                                        anchors.right: parent.right
+                                        anchors.topMargin: 8
+                                        spacing: 2
+
+                                        MaterialSymbol {
+                                            Layout.alignment: Qt.AlignHCenter
+                                            text: Icons.getWeatherIcon(modelData.code)
+                                            iconSize: Appearance.font.pixelSize.large
+                                            color: isCurrentHour ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnSecondaryContainer
+                                        }
+
+                                        StyledText {
+                                            Layout.alignment: Qt.AlignHCenter
+                                            text: temp + "°"
+                                            font.pixelSize: Appearance.font.pixelSize.normal
+                                            font.weight: Font.Bold
+                                            color: isCurrentHour ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnSecondaryContainer
+                                        }
                                     }
 
+                                    // Highlight indicator for current hour
                                     Rectangle {
-                                        Layout.fillWidth: true
-                                        Layout.preferredHeight: barHeight
-                                        Layout.maximumHeight: 130
-                                        radius: Appearance.rounding.normal
-                                        color: isCurrentHour ? Appearance.colors.colPrimaryContainer : Appearance.colors.colSecondaryContainer
+                                        visible: isCurrentHour
+                                        anchors.horizontalCenter: parent.horizontalCenter
+                                        anchors.bottom: parent.bottom
+                                        anchors.bottomMargin: 6
+                                        width: 20
+                                        height: 20
+                                        radius: 10
+                                        color: Appearance.colors.colPrimary
 
-                                        ColumnLayout {
-                                            anchors.top: parent.top
-                                            anchors.left: parent.left
-                                            anchors.right: parent.right
-                                            anchors.topMargin: 8
-                                            spacing: 2
-
-                                            MaterialSymbol {
-                                                Layout.alignment: Qt.AlignHCenter
-                                                text: Icons.getWeatherIcon(modelData.code)
-                                                iconSize: Appearance.font.pixelSize.large
-                                                color: isCurrentHour ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnSecondaryContainer
-                                            }
-
-                                            StyledText {
-                                                Layout.alignment: Qt.AlignHCenter
-                                                text: temp + "°"
-                                                font.pixelSize: Appearance.font.pixelSize.normal
-                                                font.weight: Font.Bold
-                                                color: isCurrentHour ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnSecondaryContainer
-                                            }
-                                        }
-
-                                        // Highlight indicator for current hour
                                         Rectangle {
-                                            visible: isCurrentHour
-                                            anchors.horizontalCenter: parent.horizontalCenter
-                                            anchors.bottom: parent.bottom
-                                            anchors.bottomMargin: 6
-                                            width: 20
-                                            height: 20
-                                            radius: 10
-                                            color: Appearance.colors.colPrimary
-
-                                            Rectangle {
-                                                anchors.centerIn: parent
-                                                width: 8
-                                                height: 8
-                                                radius: 4
-                                                color: Appearance.colors.colOnPrimary
-                                            }
+                                            anchors.centerIn: parent
+                                            width: 8
+                                            height: 8
+                                            radius: 4
+                                            color: Appearance.colors.colOnPrimary
                                         }
-                                    }
-
-                                    StyledText {
-                                        Layout.alignment: Qt.AlignHCenter
-                                        text: root.formatHour(modelData.time)
-                                        font.pixelSize: Appearance.font.pixelSize.smaller
-                                        font.weight: isCurrentHour ? Font.Bold : Font.Normal
-                                        color: isCurrentHour ? Appearance.colors.colPrimary : Appearance.colors.colOnSurfaceVariant
                                     }
                                 }
                             }
@@ -375,7 +385,7 @@ StyledPopup {
                 // Loading placeholder
                 Rectangle {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 160
+                    Layout.preferredHeight: root.hourlyChartHeight
                     visible: root.forecastLoading || root.filteredHourlyData.length === 0
                     color: "transparent"
                     
@@ -404,8 +414,8 @@ StyledPopup {
         GridLayout {
             Layout.fillWidth: true
             columns: 2
-            rowSpacing: 12
-            columnSpacing: 12
+            rowSpacing: root.compactMode ? 8 : 12
+            columnSpacing: root.compactMode ? 8 : 12
             uniformCellWidths: true
 
             WeatherCard {
@@ -414,6 +424,7 @@ StyledPopup {
                 value: Weather.data.uv
                 accentColor: Appearance.colors.colTertiaryContainer
                 onAccentColor: Appearance.colors.colOnTertiaryContainer
+                compact: root.compactMode
             }
             WeatherCard {
                 title: Translation.tr("Wind")
@@ -421,6 +432,7 @@ StyledPopup {
                 value: `(${Weather.data.windDir}) ${Weather.data.wind}`
                 accentColor: Appearance.colors.colSecondaryContainer
                 onAccentColor: Appearance.colors.colOnSecondaryContainer
+                compact: root.compactMode
             }
             WeatherCard {
                 title: Translation.tr("Precipitation")
@@ -428,6 +440,7 @@ StyledPopup {
                 value: Weather.data.precip
                 accentColor: Appearance.colors.colPrimaryContainer
                 onAccentColor: Appearance.colors.colOnPrimaryContainer
+                compact: root.compactMode
             }
             WeatherCard {
                 title: Translation.tr("Humidity")
@@ -435,6 +448,7 @@ StyledPopup {
                 value: Weather.data.humidity
                 accentColor: Appearance.colors.colTertiaryContainer
                 onAccentColor: Appearance.colors.colOnTertiaryContainer
+                compact: root.compactMode
             }
         }
 
@@ -443,7 +457,7 @@ StyledPopup {
         Rectangle {
             Layout.fillWidth: true
             Layout.minimumWidth: 360
-            implicitHeight: forecastColumn.implicitHeight + 32
+            implicitHeight: forecastColumn.implicitHeight + root.cardMargins * 2
             color: Appearance.colors.colSurfaceContainerHigh
             radius: Appearance.rounding.normal
 
@@ -452,8 +466,8 @@ StyledPopup {
                 anchors.left: parent.left
                 anchors.right: parent.right
                 anchors.top: parent.top
-                anchors.margins: 16
-                spacing: 12
+                anchors.margins: root.cardMargins
+                spacing: root.compactMode ? 8 : 12
 
                 // Section Header
                 RowLayout {
@@ -495,7 +509,7 @@ StyledPopup {
                         Rectangle {
                             id: dayCard
                             Layout.fillWidth: true
-                            Layout.preferredHeight: 140
+                            Layout.preferredHeight: root.forecastCardHeight
                             radius: Appearance.rounding.normal
                             
                             // tried a gradient-like effect, but dont know if i should switch secondary and tertiary colors
@@ -520,8 +534,8 @@ StyledPopup {
                             ColumnLayout {
                                 id: dayColumn
                                 anchors.fill: parent
-                                anchors.margins: 12
-                                spacing: 8
+                                anchors.margins: root.compactMode ? 8 : 12
+                                spacing: root.compactMode ? 4 : 8
 
                                 StyledText {
                                     Layout.alignment: Qt.AlignHCenter
@@ -535,13 +549,13 @@ StyledPopup {
                                 MaterialShape {
                                     Layout.alignment: Qt.AlignHCenter
                                     shapeString: index === 0 ? "Cookie9Sided" : (index === 1 ? "Flower" : "Clover4Leaf")
-                                    implicitSize: 52
+                                    implicitSize: root.forecastIconSize
                                     color: Qt.rgba(dayCard.textColor.r, dayCard.textColor.g, dayCard.textColor.b, 0.15)
 
                                     MaterialSymbol {
                                         anchors.centerIn: parent
                                         text: Icons.getWeatherIcon(modelData.code)
-                                        iconSize: Appearance.font.pixelSize.large * 1.2
+                                        iconSize: root.compactMode ? Appearance.font.pixelSize.large : Appearance.font.pixelSize.large * 1.2
                                         color: dayCard.textColor
                                     }
                                 }
@@ -576,7 +590,7 @@ StyledPopup {
                 // Loading placeholder
                 Rectangle {
                     Layout.fillWidth: true
-                    Layout.preferredHeight: 140
+                    Layout.preferredHeight: root.forecastCardHeight
                     visible: root.forecastLoading || root.forecastData.length === 0
                     color: "transparent"
                     
