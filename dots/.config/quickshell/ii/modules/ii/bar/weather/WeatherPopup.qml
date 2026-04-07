@@ -12,19 +12,8 @@ StyledPopup {
     id: root
     popupRadius: Appearance.rounding.large
 
-    // Compact mode from settings
     property bool compactMode: Config.options.bar.tooltips.compactPopups
-
-    // Adaptive spacing and margins
-    property int mainSpacing: compactMode ? 12 : 16
-    property int heroMargins: compactMode ? 20 : 24
-    property int heroIconSize: compactMode ? 100 : 110
-    property int hourlyChartHeight: compactMode ? 145 : 160
-    property int hourlyBarMin: compactMode ? 45 : 50
-    property int hourlyBarMax: compactMode ? 120 : 140
-    property int forecastCardHeight: compactMode ? 125 : 140
-    property int forecastIconSize: compactMode ? 48 : 52
-    property int cardMargins: compactMode ? 14 : 16
+    property int cardMargins: 14
 
     // Forecast data model
     property var forecastData: []
@@ -98,9 +87,10 @@ StyledPopup {
 
     Component.onCompleted: fetchForecast()
 
-    ColumnLayout {
+    contentItem: ColumnLayout {
+        id: contentLayout
         anchors.centerIn: parent
-        spacing: root.mainSpacing
+        spacing: 12
 
         Process {
             id: forecastFetcher
@@ -123,12 +113,11 @@ StyledPopup {
             }
         }
 
-        // Hero card — uses icon, title, subtitle, pill properties
         HeroCard {
             id: weatherHero
             Layout.minimumWidth: 320
-            margins: root.heroMargins
-            iconSize: root.heroIconSize
+            margins: 20
+            iconSize: 100
             icon: Icons.getWeatherIcon(Weather.data.wCode)
             pillText: Weather.data.city || "--"
             pillIcon: Weather.data.city ? "location_on" : ""
@@ -143,8 +132,7 @@ StyledPopup {
             radius: 1
         }
 
-        // Hourly forecast — uses icon property + headerExtra
-        SectionCard {
+        HourlyForecast {
             Layout.minimumWidth: 360
             margins: root.cardMargins
             spacing: 6
@@ -155,254 +143,26 @@ StyledPopup {
             title: Translation.tr("Hourly")
             icon: "schedule"
             headerExtraText: Translation.tr("Last refresh: %1").arg(Weather.data.lastRefresh || "--").slice(0, 20)
-
-            // Bar chart
-            Item {
-                Layout.fillWidth: true
-                Layout.preferredHeight: root.hourlyChartHeight
-                visible: !root.forecastLoading && root.filteredHourlyData.length > 0
-
-                property var tempRange: root.getHourlyTempRange()
-                property real tempSpan: Math.max(tempRange.max - tempRange.min, 1)
-
-                RowLayout {
-                    anchors.fill: parent
-                    spacing: 6
-
-                    Repeater {
-                        model: root.filteredHourlyData
-
-                        Item {
-                            Layout.fillWidth: true
-                            Layout.fillHeight: true
-
-                            required property var modelData
-                            required property int index
-
-                            property int hourValue: Math.floor(parseInt(modelData.time) / 100)
-                            property bool isCurrentHour: index === 0
-                            property real temp: Weather.useUSCS ? parseInt(modelData.tempF) : parseInt(modelData.tempC)
-                            property var parentTempRange: root.getHourlyTempRange()
-                            property real parentTempSpan: Math.max(parentTempRange.max - parentTempRange.min, 1)
-                            property real normalized: (temp - parentTempRange.min) / parentTempSpan
-                            // Bar height: 45% min to 100% max for better visual contrast
-                            property real availableBarSpace: parent.height - timeLabel.height + 10
-                            property real barHeight: availableBarSpace * (0.45 + normalized * 0.55)
-
-                            StyledText {
-                                id: timeLabel
-                                anchors.bottom: parent.bottom
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                text: root.formatHour(modelData.time)
-                                font.pixelSize: Appearance.font.pixelSize.smaller
-                                font.weight: isCurrentHour ? Font.Bold : Font.Normal
-                                color: isCurrentHour ? Appearance.colors.colPrimary : Appearance.colors.colOnSurfaceVariant
-                            }
-
-                            Rectangle {
-                                anchors.bottom: timeLabel.top
-                                anchors.bottomMargin: 4
-                                anchors.horizontalCenter: parent.horizontalCenter
-                                width: parent.width
-                                height: barHeight
-                                radius: Appearance.rounding.normal
-                                color: isCurrentHour ? Appearance.colors.colPrimaryContainer : Appearance.colors.colSecondaryContainer
-
-                                ColumnLayout {
-                                    anchors.top: parent.top
-                                    anchors.left: parent.left
-                                    anchors.right: parent.right
-                                    anchors.topMargin: 8
-                                    spacing: 2
-
-                                    MaterialSymbol {
-                                        Layout.alignment: Qt.AlignHCenter
-                                        text: Icons.getWeatherIcon(modelData.code)
-                                        iconSize: Appearance.font.pixelSize.large
-                                        color: isCurrentHour ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnSecondaryContainer
-                                    }
-
-                                    StyledText {
-                                        Layout.alignment: Qt.AlignHCenter
-                                        text: temp + "°"
-                                        font.pixelSize: Appearance.font.pixelSize.normal
-                                        font.weight: Font.Bold
-                                        color: isCurrentHour ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnSecondaryContainer
-                                    }
-                                }
-
-                                Rectangle {
-                                    visible: isCurrentHour
-                                    anchors.horizontalCenter: parent.horizontalCenter
-                                    anchors.bottom: parent.bottom
-                                    anchors.bottomMargin: 6
-                                    width: 20
-                                    height: 20
-                                    radius: 10
-                                    color: Appearance.colors.colPrimary
-
-                                    Rectangle {
-                                        anchors.centerIn: parent
-                                        width: 8
-                                        height: 8
-                                        radius: 4
-                                        color: Appearance.colors.colOnPrimary
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            LoadingPlaceholder {
-                Layout.preferredHeight: root.hourlyChartHeight
-                visible: root.forecastLoading || root.filteredHourlyData.length === 0
-                loading: root.forecastLoading
-                loadingText: Translation.tr("Loading forecast...")
-                emptyText: Translation.tr("No forecast data")
-            }
         }
 
-        // Metrics grid — uses symbolColor instead of onAccentColor
-        GridLayout {
+        MetricsGrid {
             Layout.fillWidth: true
             columns: 2
-            rowSpacing: root.compactMode ? 8 : 12
-            columnSpacing: root.compactMode ? 8 : 12
+            rowSpacing: 8
+            columnSpacing: 8
             uniformCellWidths: true
-
-            MetricCard {
-                title: Translation.tr("UV Index")
-                symbol: "wb_sunny"
-                value: Weather.data.uv
-                accentColor: Appearance.colors.colTertiaryContainer
-                symbolColor: Appearance.colors.colOnTertiaryContainer
-                compact: root.compactMode
-            }
-            MetricCard {
-                title: Translation.tr("Wind")
-                symbol: "air"
-                value: `(${Weather.data.windDir}) ${Weather.data.wind}`
-                accentColor: Appearance.colors.colSecondaryContainer
-                symbolColor: Appearance.colors.colOnSecondaryContainer
-                compact: root.compactMode
-            }
-            MetricCard {
-                title: Translation.tr("Precipitation")
-                symbol: "rainy_light"
-                value: Weather.data.precip
-                accentColor: Appearance.colors.colPrimaryContainer
-                symbolColor: Appearance.colors.colOnPrimaryContainer
-                compact: root.compactMode
-            }
-            MetricCard {
-                title: Translation.tr("Humidity")
-                symbol: "humidity_low"
-                value: Weather.data.humidity
-                accentColor: Appearance.colors.colTertiaryContainer
-                symbolColor: Appearance.colors.colOnTertiaryContainer
-                compact: root.compactMode
-            }
         }
 
-        // 3-day forecast — uses icon property instead of shapeContent
-        SectionCard {
+        InDayForecast {
             Layout.minimumWidth: 360
             margins: root.cardMargins
-            spacing: root.compactMode ? 8 : 12
+            spacing: 8
             shapeString: "Cookie6Sided"
             shapeColor: Appearance.colors.colSecondaryContainer
             symbolColor: Appearance.colors.colOnSecondaryContainer
             showDivider: false
             title: Translation.tr("Forecast")
             icon: "calendar_month"
-
-            // Forecast Days Row
-            RowLayout {
-                Layout.fillWidth: true
-                spacing: 12
-                visible: !root.forecastLoading && root.forecastData.length > 0
-
-                Repeater {
-                    model: root.forecastData
-
-                    Rectangle {
-                        id: dayCard
-                        Layout.fillWidth: true
-                        Layout.preferredHeight: root.forecastCardHeight
-                        radius: Appearance.rounding.normal
-
-                        color: {
-                            const colors = [Appearance.colors.colPrimaryContainer, Appearance.colors.colSecondaryContainer, Appearance.colors.colTertiaryContainer];
-                            return colors[index % 3];
-                        }
-
-                        property color textColor: {
-                            const colors = [Appearance.colors.colOnPrimaryContainer, Appearance.colors.colOnSecondaryContainer, Appearance.colors.colOnTertiaryContainer];
-                            return colors[index % 3];
-                        }
-
-                        ColumnLayout {
-                            id: dayColumn
-                            anchors.fill: parent
-                            anchors.margins: root.compactMode ? 8 : 12
-                            spacing: root.compactMode ? 4 : 8
-
-                            StyledText {
-                                Layout.alignment: Qt.AlignHCenter
-                                text: root.getDayName(modelData.date, index)
-                                font.pixelSize: Appearance.font.pixelSize.small
-                                font.weight: Font.Bold
-                                color: dayCard.textColor
-                            }
-
-                            MaterialShape {
-                                Layout.alignment: Qt.AlignHCenter
-                                shapeString: index === 0 ? "Cookie9Sided" : (index === 1 ? "Flower" : "Clover4Leaf")
-                                implicitSize: root.forecastIconSize
-                                color: Qt.rgba(dayCard.textColor.r, dayCard.textColor.g, dayCard.textColor.b, 0.15)
-
-                                MaterialSymbol {
-                                    anchors.centerIn: parent
-                                    text: Icons.getWeatherIcon(modelData.code)
-                                    iconSize: root.compactMode ? Appearance.font.pixelSize.large : Appearance.font.pixelSize.large * 1.2
-                                    color: dayCard.textColor
-                                }
-                            }
-
-                            ColumnLayout {
-                                Layout.alignment: Qt.AlignHCenter
-                                spacing: 0
-
-                                StyledText {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    text: Weather.useUSCS ? modelData.maxF + "°" : modelData.maxC + "°"
-                                    font.pixelSize: Appearance.font.pixelSize.normal
-                                    font.weight: Font.Bold
-                                    color: dayCard.textColor
-                                }
-
-                                StyledText {
-                                    Layout.alignment: Qt.AlignHCenter
-                                    text: Weather.useUSCS ? modelData.minF + "°" : modelData.minC + "°"
-                                    font.pixelSize: Appearance.font.pixelSize.smaller
-                                    font.weight: Font.DemiBold
-                                    color: Qt.rgba(dayCard.textColor.r, dayCard.textColor.g, dayCard.textColor.b, 0.7)
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-
-            LoadingPlaceholder {
-                Layout.preferredHeight: root.forecastCardHeight
-                visible: root.forecastLoading || root.forecastData.length === 0
-                loading: root.forecastLoading
-                loadingText: Translation.tr("Loading forecast...")
-                emptyText: Translation.tr("No forecast data")
-            }
         }
     }
 }
