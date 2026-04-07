@@ -12,22 +12,19 @@ StyledPopup {
     id: root
     popupRadius: Appearance.rounding.large
 
-    // Adaptive layout properties based on screen height
-    property real availableHeight: Screen.height
-    property bool semiCompactMode: availableHeight < 1000
-    property bool compactMode: availableHeight < 900
-    property bool veryCompactMode: availableHeight < 750
+    // Compact mode from settings
+    property bool compactMode: Config.options.bar.tooltips.compactPopups
 
     // Adaptive spacing and margins
-    property int mainSpacing: veryCompactMode ? 8 : (compactMode ? 10 : (semiCompactMode ? 12 : 16))
-    property int heroMargins: veryCompactMode ? 12 : (compactMode ? 16 : (semiCompactMode ? 20 : 24))
-    property int heroIconSize: veryCompactMode ? 80 : (compactMode ? 90 : (semiCompactMode ? 100 : 110))
-    property int hourlyChartHeight: veryCompactMode ? 120 : (compactMode ? 130 : (semiCompactMode ? 145 : 160))
-    property int hourlyBarMin: veryCompactMode ? 35 : (compactMode ? 40 : (semiCompactMode ? 45 : 50))
-    property int hourlyBarMax: veryCompactMode ? 85 : (compactMode ? 100 : (semiCompactMode ? 120 : 140))
-    property int forecastCardHeight: veryCompactMode ? 100 : (compactMode ? 120 : (semiCompactMode ? 125 : 140))
-    property int forecastIconSize: veryCompactMode ? 40 : (compactMode ? 44 : (semiCompactMode ? 48 : 52))
-    property int cardMargins: veryCompactMode ? 10 : (compactMode ? 12 : (semiCompactMode ? 14 : 16))
+    property int mainSpacing: compactMode ? 12 : 16
+    property int heroMargins: compactMode ? 20 : 24
+    property int heroIconSize: compactMode ? 100 : 110
+    property int hourlyChartHeight: compactMode ? 145 : 160
+    property int hourlyBarMin: compactMode ? 45 : 50
+    property int hourlyBarMax: compactMode ? 120 : 140
+    property int forecastCardHeight: compactMode ? 125 : 140
+    property int forecastIconSize: compactMode ? 48 : 52
+    property int cardMargins: compactMode ? 14 : 16
 
     // Forecast data model
     property var forecastData: []
@@ -271,8 +268,8 @@ StyledPopup {
         GridLayout {
             Layout.fillWidth: true
             columns: 2
-            rowSpacing: root.semiCompactMode ? 8 : 12
-            columnSpacing: root.semiCompactMode ? 8 : 12
+            rowSpacing: root.compactMode ? 8 : 12
+            columnSpacing: root.compactMode ? 8 : 12
             uniformCellWidths: true
 
             MetricCard {
@@ -281,7 +278,7 @@ StyledPopup {
                 value: Weather.data.uv
                 accentColor: Appearance.colors.colTertiaryContainer
                 symbolColor: Appearance.colors.colOnTertiaryContainer
-                compact: root.semiCompactMode
+                compact: root.compactMode
             }
             MetricCard {
                 title: Translation.tr("Wind")
@@ -289,7 +286,7 @@ StyledPopup {
                 value: `(${Weather.data.windDir}) ${Weather.data.wind}`
                 accentColor: Appearance.colors.colSecondaryContainer
                 symbolColor: Appearance.colors.colOnSecondaryContainer
-                compact: root.semiCompactMode
+                compact: root.compactMode
             }
             MetricCard {
                 title: Translation.tr("Precipitation")
@@ -297,7 +294,7 @@ StyledPopup {
                 value: Weather.data.precip
                 accentColor: Appearance.colors.colPrimaryContainer
                 symbolColor: Appearance.colors.colOnPrimaryContainer
-                compact: root.semiCompactMode
+                compact: root.compactMode
             }
             MetricCard {
                 title: Translation.tr("Humidity")
@@ -305,7 +302,7 @@ StyledPopup {
                 value: Weather.data.humidity
                 accentColor: Appearance.colors.colTertiaryContainer
                 symbolColor: Appearance.colors.colOnTertiaryContainer
-                compact: root.semiCompactMode
+                compact: root.compactMode
             }
         }
 
@@ -313,7 +310,7 @@ StyledPopup {
         SectionCard {
             Layout.minimumWidth: 360
             margins: root.cardMargins
-            spacing: root.semiCompactMode ? 8 : 12
+            spacing: root.compactMode ? 8 : 12
             shapeString: "Cookie6Sided"
             shapeColor: Appearance.colors.colSecondaryContainer
             symbolColor: Appearance.colors.colOnSecondaryContainer
@@ -349,8 +346,8 @@ StyledPopup {
                         ColumnLayout {
                             id: dayColumn
                             anchors.fill: parent
-                            anchors.margins: root.semiCompactMode ? 8 : 12
-                            spacing: root.semiCompactMode ? 4 : 8
+                            anchors.margins: root.compactMode ? 8 : 12
+                            spacing: root.compactMode ? 4 : 8
 
                             StyledText {
                                 Layout.alignment: Qt.AlignHCenter
@@ -369,7 +366,7 @@ StyledPopup {
                                 MaterialSymbol {
                                     anchors.centerIn: parent
                                     text: Icons.getWeatherIcon(modelData.code)
-                                    iconSize: root.semiCompactMode ? Appearance.font.pixelSize.large : Appearance.font.pixelSize.large * 1.2
+                                    iconSize: root.compactMode ? Appearance.font.pixelSize.large : Appearance.font.pixelSize.large * 1.2
                                     color: dayCard.textColor
                                 }
                             }
