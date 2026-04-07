@@ -13,7 +13,6 @@ GridLayout {
         value: Weather.data.uv
         accentColor: Appearance.colors.colTertiaryContainer
         symbolColor: Appearance.colors.colOnTertiaryContainer
-        compact: root.compactMode
     }
     MetricCard {
         title: Translation.tr("Wind")
@@ -21,7 +20,6 @@ GridLayout {
         value: `(${Weather.data.windDir}) ${Weather.data.wind}`
         accentColor: Appearance.colors.colSecondaryContainer
         symbolColor: Appearance.colors.colOnSecondaryContainer
-        compact: root.compactMode
     }
     MetricCard {
         title: Translation.tr("Precipitation")
@@ -29,7 +27,6 @@ GridLayout {
         value: Weather.data.precip
         accentColor: Appearance.colors.colPrimaryContainer
         symbolColor: Appearance.colors.colOnPrimaryContainer
-        compact: root.compactMode
     }
     MetricCard {
         title: Translation.tr("Humidity")
@@ -37,6 +34,5 @@ GridLayout {
         value: Weather.data.humidity
         accentColor: Appearance.colors.colTertiaryContainer
         symbolColor: Appearance.colors.colOnTertiaryContainer
-        compact: root.compactMode
     }
 }
