@@ -47,7 +47,6 @@ StyledPopup {
         anchors.centerIn: parent
         spacing: 12
 
-        // Hero card — uses icon, title, subtitle
         HeroCard {
             id: clockHero
             icon: "schedule"
@@ -59,7 +58,6 @@ StyledPopup {
             Layout.fillWidth: true
             spacing: 12
 
-            // Uptime pill — uses shapeContent for CustomIcon (non-MaterialSymbol)
             InfoPill {
                 text: root.formattedUptime
 
@@ -73,7 +71,6 @@ StyledPopup {
                 }
             }
 
-            // Timer pill — uses icon property instead of shapeContent
             InfoPill {
                 text: TimerService.pomodoroRunning ? root.formatTimerDisplay(TimerService.pomodoroSecondsLeft) : (TimerService.stopwatchRunning ? root.formatTimerDisplay(TimerService.stopwatchTime) : Translation.tr("Timer Off"))
                 containerColor: TimerService.pomodoroBreak ? Appearance.colors.colTertiaryContainer : (TimerService.pomodoroRunning || TimerService.stopwatchRunning ? Appearance.colors.colPrimaryContainer : Appearance.colors.colSecondaryContainer)
@@ -85,7 +82,6 @@ StyledPopup {
             }
         }
 
-        // To-Do section — uses icon, title, subtitle
         SectionCard {
             title: Translation.tr("To-Do Tasks")
             icon: "checklist"
