@@ -9,7 +9,7 @@ Rectangle {
 
     Layout.fillWidth: true
     implicitHeight: 64
-    radius: 32
+    radius: Appearance.rounding.full
 
     color: containerColor
 

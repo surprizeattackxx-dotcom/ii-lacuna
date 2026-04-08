@@ -71,7 +71,7 @@ Rectangle {
                 Layout.alignment: Qt.AlignRight
                 implicitHeight: cityRow.implicitHeight + 12
                 implicitWidth: cityRow.implicitWidth + 20
-                radius: 100
+                radius: Appearance.rounding.full
                 color: Appearance.colors.colSecondaryContainer
 
                 RowLayout {
