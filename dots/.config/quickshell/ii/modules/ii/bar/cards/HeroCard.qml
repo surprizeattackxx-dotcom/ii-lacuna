@@ -117,6 +117,8 @@ Rectangle {
                 color: heroCardRoot.textColor
                 horizontalAlignment: Text.AlignRight
                 Layout.alignment: Qt.AlignRight
+                elide: Text.ElideRight
+                Layout.maximumWidth: 160
             }
         }
     }
