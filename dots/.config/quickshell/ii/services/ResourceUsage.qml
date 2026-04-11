@@ -103,7 +103,18 @@ Singleton {
             const textCpu = fileCpuInfo.text()
             if (root.cpuModel === "Unknown CPU" && textCpu.length > 0) {
                 const modelMatch = textCpu.match(/model name\s+:\s+(.*)/)
-                if (modelMatch) root.cpuModel = modelMatch[1].trim()
+                if (!modelMatch) return
+                // i hope these are enough to shorten the string
+                root.cpuModel = modelMatch[1]
+                    .replace(/\(.*?\)/g, "")              // (R), (TM) vs
+                    .replace(/with.*$/i, "")              // with Radeon...
+                    .replace(/@\s*[\d.]+\s*GHz/i, "")     // @ 2.60GHz
+                    .replace(/\b\d+-Core\b/gi, "")        // 6-Core
+                    .replace(/\b\d+\s*Cores?\b/gi, "")    // 6 Cores
+                    .replace(/\bCPU\b/gi, "")
+                    .replace(/\bProcessor\b/gi, "")
+                    .replace(/\s+/g, " ")
+                    .trim() 
             }
             const freqMatch = textCpu.match(/cpu MHz\s+:\s+([\d.]+)/)
             if (freqMatch) root.cpuFreq = parseInt(freqMatch[1]) + " MHz"
