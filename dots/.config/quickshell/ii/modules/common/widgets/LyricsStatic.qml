@@ -4,7 +4,6 @@ import qs.modules.common
 import qs.modules.common.widgets
 
 StyledText {
-
     Component.onCompleted: {
         LyricsService.initiliazeLyrics()
     }

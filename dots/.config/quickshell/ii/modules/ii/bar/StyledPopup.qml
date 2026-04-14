@@ -43,7 +43,8 @@ LazyLoader {
         margins {
             left: {
                 if (!Config.options.bar.vertical) {
-                    if (!root.hoverTarget || !root.QsWindow) return 0;
+                    if (!root.hoverTarget || !root.QsWindow)
+                        return 0;
                     var targetPos = root.QsWindow.mapFromItem(root.hoverTarget, 0, 0);
                     var centeredX = targetPos.x + (root.hoverTarget.width - popupWindow.implicitWidth) / 2;
                     return Math.max(0, Math.min(screenWidth - popupWindow.implicitWidth, centeredX));

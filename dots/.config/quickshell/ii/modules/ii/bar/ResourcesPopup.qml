@@ -1,5 +1,6 @@
 import qs.modules.common
 import qs.modules.common.widgets
+import "./cards"
 import qs.services
 import QtQuick
 import QtQuick.Layouts
@@ -8,6 +9,7 @@ import Quickshell.Io
 
 StyledPopup {
     id: root
+    popupRadius: Appearance.rounding.large
 
     // Fixed-size Item drives popup shell size; ColumnLayout fills it
     Item {

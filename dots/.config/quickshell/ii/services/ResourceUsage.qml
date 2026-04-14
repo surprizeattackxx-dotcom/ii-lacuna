@@ -19,8 +19,14 @@ Singleton {
 	property real swapFree: 0
 	property real swapUsed: swapTotal - swapFree
     property real swapUsedPercentage: swapTotal > 0 ? (swapUsed / swapTotal) : 0
+    property real diskTotal: 1
+    property real diskUsed: 0
+    property real diskUsedPercentage: diskTotal > 0 ? (diskUsed / diskTotal) : 0
     property real cpuUsage: 0
     property var previousCpuStats
+    property string cpuModel: "Unknown CPU"
+    property string cpuFreq: "-- MHz"
+    property string cpuTemp: "--°C"
 
     // Disk I/O rates in KB/s
     property real diskReadRate: 0
@@ -148,5 +154,52 @@ Singleton {
                 root.maxAvailableCpuString = (parseFloat(outputCollector.text) / 1000).toFixed(0) + " GHz"
             }
         }
+    }
+    
+    Process {
+        id: diskProc
+        command: ["bash", "-c", "df -k / | awk 'NR==2{print $2, $3}'"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                if (text.length > 0) {
+                    var parts = text.trim().split(/\s+/);
+                    if (parts.length === 2) {
+                        root.diskTotal = parseInt(parts[0]); // KB
+                        root.diskUsed = parseInt(parts[1]);  // KB
+                    }
+                }
+            }
+        }
+    }
+
+    Timer {
+        interval: 60000
+        running: true
+        repeat: true
+        onTriggered: diskProc.running = true
+    }
+
+    Process {
+        id: tempProc
+        command: ["bash", "-c", "sensors | awk '/Tctl:/ {print $2}; /Package id 0:/ {print $4}' | head -1 | tr -d '+' | cut -d'.' -f1"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                if (text.length > 0) {
+                    root.cpuTemp = text.trim() + "°C";
+                }
+            }
+        }
+    }
+
+    Timer {
+        interval: 3000
+        running: true
+        repeat: true
+        onTriggered: tempProc.running = true
+    }
+
+    Component.onCompleted: {
+        diskProc.running = true
+        tempProc.running = true
     }
 }

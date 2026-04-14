@@ -63,6 +63,17 @@ Run the setup script:
 ./setup-ii-lacuna.sh
 ```
 
+Run the cli (if it's installed):
+  
+```bash
+vynx update
+```
+
+Use the update button:
+  
+<img width="354" height="78" alt="image" src="https://github.com/user-attachments/assets/77d9d962-00b3-48a4-b9d5-1d3d0c053e86" />
+
+
 <div align="center">
     <h2>• documentation •</h2>
 </div>
