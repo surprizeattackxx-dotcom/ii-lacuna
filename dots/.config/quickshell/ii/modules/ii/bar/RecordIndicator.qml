@@ -112,7 +112,6 @@ MouseArea {
     }
     
     component PopupContent: HeroCard {
-        id: mediaHero
         anchors.centerIn: parent
         compactMode: true
         icon: "screen_record"

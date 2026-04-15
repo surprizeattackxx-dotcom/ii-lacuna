@@ -82,6 +82,7 @@ Rectangle {
                 text: heroCardRoot.pillIcon
                 iconSize: Appearance.font.pixelSize.small
                 color: Appearance.colors.colOnSecondaryContainer
+                Layout.bottomMargin: 1
             }
             StyledText {
                 text: heroCardRoot.pillText
