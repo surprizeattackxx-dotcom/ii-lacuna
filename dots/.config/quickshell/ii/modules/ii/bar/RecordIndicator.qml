@@ -4,6 +4,7 @@ import qs.modules.common.widgets
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import "./cards"
 
 
 MouseArea {
@@ -110,26 +111,22 @@ MouseArea {
         }
     }
     
-    component PopupContent: ColumnLayout {
+    component PopupContent: HeroCard {
+        id: mediaHero
+        Layout.fillWidth: true
         anchors.centerIn: parent
-        RowLayout {
-            MaterialSymbol {
-                Layout.bottomMargin: 2
-                text: "screen_record"
-            }
-            StyledText {
-                text: Translation.tr("Recording...   %1").arg(indicator.formatTime(Persistent.states.screenRecord.seconds))
-            }
-        }
-        RowLayout {
-            MaterialSymbol {
-                Layout.bottomMargin: 2
-                text: "ads_click"
-            }
-            StyledText {
-                text: Translation.tr("Click to stop the recording")
-            }
-        }  
+        icon: "screen_record"
+
+        implicitHeight: 150
+
+        titleSize: Appearance.font.pixelSize.huge
+        subtitleSize: Appearance.font.pixelSize.large
+
+        title: Translation.tr("Recording...")
+        subtitle: Translation.tr("Click to stop recording")
+
+        pillText: indicator.formatTime(Persistent.states.screenRecord.seconds)
+        pillIcon: "timer"
     }
     
 }
