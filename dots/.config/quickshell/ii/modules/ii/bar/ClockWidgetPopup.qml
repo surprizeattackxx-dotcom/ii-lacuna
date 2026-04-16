@@ -15,6 +15,8 @@ StyledPopup {
     property string todosSection: getUpcomingTodos(Todo.list)
     property bool todosEmpty: todosSection === ""
 
+    property bool stopwatchPaused: !TimerService.stopwatchRunning && TimerService.stopwatchTime > 0
+
     function getUpcomingTodos(todos) {
         const unfinishedTodos = todos.filter(function (item) {
             return !item.done;
@@ -73,7 +75,7 @@ StyledPopup {
             InfoPill {
                 text: root.formattedUptime
 
-                CustomIcon {
+                shapeContent: CustomIcon {
                     anchors.centerIn: parent
                     width: 24
                     height: 24
@@ -84,13 +86,17 @@ StyledPopup {
             }
 
             InfoPill {
-                text: TimerService.pomodoroRunning ? root.formatTimerDisplay(TimerService.pomodoroSecondsLeft) : (TimerService.stopwatchRunning ? root.formatTimerDisplay(TimerService.stopwatchTime) : Translation.tr("Timer Off"))
+                text: TimerService.pomodoroRunning ? root.formatTimerDisplay(TimerService.pomodoroSecondsLeft) : (TimerService.stopwatchTime > 0 ? "" : Translation.tr("Timer Off"))
+                textContent: StopwatchText {
+                    visible: TimerService.stopwatchTime > 0
+                }
+                
                 containerColor: TimerService.pomodoroBreak ? Appearance.colors.colTertiaryContainer : (TimerService.pomodoroRunning || TimerService.stopwatchRunning ? Appearance.colors.colPrimaryContainer : Appearance.colors.colSecondaryContainer)
                 color: containerColor
                 shapeColor: TimerService.pomodoroBreak ? Appearance.colors.colTertiary : (TimerService.pomodoroRunning || TimerService.stopwatchRunning ? Appearance.colors.colPrimary : Appearance.colors.colSecondary)
                 symbolColor: TimerService.pomodoroBreak ? Appearance.colors.colOnTertiary : (TimerService.pomodoroRunning || TimerService.stopwatchRunning ? Appearance.colors.colOnPrimary : Appearance.colors.colOnSecondary)
                 textColor: TimerService.pomodoroBreak ? Appearance.colors.colOnTertiaryContainer : (TimerService.pomodoroRunning || TimerService.stopwatchRunning ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colOnSecondaryContainer)
-                icon: TimerService.pomodoroBreak ? "coffee" : "timer"
+                icon: TimerService.pomodoroBreak ? "coffee" : root.stopwatchPaused ? "timer_pause" : TimerService.stopwatchRunning ? "timer_play" : "timer"
             }
         }
 
@@ -104,6 +110,54 @@ StyledPopup {
                 visible: root.todosEmpty
                 loading: false
                 emptyText: Translation.tr("No pending tasks")
+            }
+        }
+    }
+
+    component StopwatchText: RowLayout {
+        id: textLayout
+        width: 70 // To prevent shakiness
+        anchors.centerIn: parent
+        spacing: 0
+
+        SequentialAnimation {
+            running: root.stopwatchPaused
+            loops: Animation.Infinite
+
+            ScriptAction { script: textLayout.visible = true }
+            PauseAnimation { duration: 700 }
+            ScriptAction { script: textLayout.visible = false }
+            PauseAnimation { duration: 700 }
+
+            onStopped: {
+                if (TimerService.stopwatchTime <= 0) return
+                textLayout.visible = true
+            }
+        }
+
+        StyledText {
+            color: Appearance.m3colors.m3onSurface
+            font.pixelSize: Appearance.font.pixelSize.large
+            font.family: Appearance.font.family.title
+            font.weight: Font.Bold
+
+            text: {
+                let totalSeconds = Math.floor(TimerService.stopwatchTime) / 100
+                let minutes = Math.floor(totalSeconds / 60).toString().padStart(2, '0')
+                let seconds = Math.floor(totalSeconds % 60).toString().padStart(2, '0')
+                return `${minutes}:${seconds}`
+            }
+        }
+
+        StyledText {
+            Layout.fillWidth: true
+            color: Appearance.colors.colSubtext
+            font.pixelSize: Appearance.font.pixelSize.large
+            font.family: Appearance.font.family.title
+            font.weight: Font.Bold
+
+            text: {
+                return `:<sub>${(Math.floor(TimerService.stopwatchTime) % 100).toString().padStart(2, '0')}</sub>`
             }
         }
     }
