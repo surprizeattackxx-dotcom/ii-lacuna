@@ -57,6 +57,7 @@ StyledPopup {
         HeroCard {
             id: clockHero
             icon: "schedule"
+            adaptiveWidth: true
 
             title: root.formattedTime
             subtitle: root.formattedDate
