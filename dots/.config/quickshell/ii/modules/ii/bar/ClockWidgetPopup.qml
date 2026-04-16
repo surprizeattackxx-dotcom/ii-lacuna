@@ -42,11 +42,11 @@ StyledPopup {
         return m + ":" + (s < 10 ? "0" : "") + s;
     }
 
-    function getDayProgressPercent(hour, minute) {
+    function getDayProgressPercent() {
+        const date = DateTime.clock.date
+        const secondsPassed = date.getHours() * 3600 + date.getMinutes() * 60 +date.getSeconds()
 
-        const secondsPassed = hour * 3600 + minute * 60 
-        const totalSeconds = 24 * 3600
-        return Math.floor((secondsPassed / totalSeconds) * 100)
+        return Math.floor((secondsPassed / 86400) * 100)
     }
 
     ColumnLayout {
@@ -62,7 +62,7 @@ StyledPopup {
             title: root.formattedTime
             subtitle: root.formattedDate
 
-            pillText: getDayProgressPercent(DateTime.time.substring(0, 2), DateTime.time.substring(3, 5)) + "%"
+            pillText: getDayProgressPercent() + "%"
             pillIcon: "clock_loader_60"
         }
 
