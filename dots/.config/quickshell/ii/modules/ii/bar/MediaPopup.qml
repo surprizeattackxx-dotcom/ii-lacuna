@@ -18,6 +18,7 @@ StyledPopup {
     contentItem: HeroCard {
         id: mediaHero
         compactMode: true
+        adaptiveWidth: true
         anchors.centerIn: parent
         icon: "music_note"
 

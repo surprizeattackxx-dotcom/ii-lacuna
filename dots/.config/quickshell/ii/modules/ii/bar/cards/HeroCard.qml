@@ -10,13 +10,14 @@ Rectangle {
     Layout.fillWidth: true
     Layout.preferredHeight: implicitHeight
     Layout.preferredWidth: implicitWidth
-    implicitWidth: 380  // fixed sizes to keep consistency
+    implicitWidth: adaptiveWidth ? Math.max(180 + subtitleMetrics.width, 380) : 380  // fixed sizes to keep consistency
     implicitHeight: compactMode ? 150 : 180
 
     radius: Appearance.rounding.normal
     color: Appearance.colors.colPrimaryContainer
 
     property bool compactMode: false
+    property bool adaptiveWidth: false
 
     property int margins: 24
     property int iconSize: 110
@@ -39,6 +40,12 @@ Rectangle {
 
     property alias shapeContent: shapeItem.data
     property int spacing: 16
+
+    TextMetrics {
+        id: subtitleMetrics
+        text: heroCardRoot.subtitle
+        font.pixelSize: heroCardRoot.subtitleSize
+    }
 
     MaterialShape {
         id: shapeItem
@@ -129,6 +136,6 @@ Rectangle {
         color: heroCardRoot.textColor
         horizontalAlignment: Text.AlignRight
         elide: Text.ElideRight
-        width: 200
+        width: adaptiveWidth ? heroCardRoot.width : 200
     }
 }
