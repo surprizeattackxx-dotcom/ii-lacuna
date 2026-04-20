@@ -47,6 +47,7 @@ Scope {
         running: false
         onTriggered: {
             GlobalStates.osdVolumeOpen = false;
+            GlobalStates.osdVolumeOverride = -1;
             root.protectionMessage = "";
         }
     }
@@ -221,15 +222,22 @@ Scope {
     IpcHandler {
         target: "osdVolume"
 
-        function trigger() {
+        function trigger(): void {
+            root.currentIndicator = "volume";
             root.triggerOsd();
         }
 
-        function hide() {
+        function triggerWithVolume(vol: real): void {
+            GlobalStates.osdVolumeOverride = vol;
+            root.currentIndicator = "volume";
+            root.triggerOsd();
+        }
+
+        function hide(): void {
             GlobalStates.osdVolumeOpen = false;
         }
 
-        function toggle() {
+        function toggle(): void {
             GlobalStates.osdVolumeOpen = !GlobalStates.osdVolumeOpen;
         }
     }

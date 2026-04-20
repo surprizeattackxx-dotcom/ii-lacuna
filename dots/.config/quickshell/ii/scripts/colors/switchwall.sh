@@ -539,10 +539,15 @@ main() {
         imgpath="$(kdialog --getopenfilename . --title 'Choose wallpaper')"
     fi
 
-    if [[ -n "$imgpath" && -z "$noswitch_flag" ]]; then
-        set_accent_color ""
-        color_flag=""
-        color=""
+    if [[ -n "$imgpath" ]]; then
+        # Clear accent color so wallpaper-derived colors take effect.
+        # Without this, --noswitch (palette-only change) would keep a stale
+        # accentColor that permanently overrides wallpaper extraction.
+        if [[ -z "$noswitch_flag" || -z "$color_flag" ]]; then
+            set_accent_color ""
+            color_flag=""
+            color=""
+        fi
     fi
 
     # If type_flag is 'auto', detect scheme type from image (after imgpath is set)

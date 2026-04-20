@@ -1,0 +1,6 @@
+[Unit]
+Description=Check ii-lacuna upstream for updates
+
+[Service]
+Type=oneshot
+ExecStart=/home/donnie/projects/ii-lacuna/scripts/check-upstream.sh

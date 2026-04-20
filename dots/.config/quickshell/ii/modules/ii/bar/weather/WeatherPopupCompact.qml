@@ -10,7 +10,6 @@ import qs.modules.ii.bar
 
 StyledPopup {
     id: root
-    popupRadius: Appearance.rounding.large
     contentItem: HeroCard {
         id: weatherHero
         anchors.centerIn: parent

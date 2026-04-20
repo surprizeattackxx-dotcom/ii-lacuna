@@ -345,6 +345,8 @@ Singleton {
                     property bool showDarkModeToggle: true
                     property bool showPerformanceProfileToggle: false
                     property bool showScreenRecord: false
+                    property bool showClipboard: true
+                    property bool showAlarms: true
                 }
                 property JsonObject workspaces: JsonObject {
                     property bool monochromeIcons: true
@@ -540,6 +542,11 @@ Singleton {
                 // Automatically sets the active player to a newly detected player if its identifier matches the value specified in the priorityPlayer property like "spotify" or "google-chrome"
                 // This comparison uses the desktopEntry property of MprisPlayer (which is the name of the app casting the media)
                 property string priorityPlayer: ""
+
+                // Like/dislike: no portable MPRIS — see scripts/media-like.sh and optional scripts/media-like-user.sh
+                property JsonObject likeDislike: JsonObject {
+                    property bool enable: true
+                }
             }
 
             property JsonObject networking: JsonObject {
@@ -786,6 +793,7 @@ Singleton {
                 property int checkInterval: 120 // minutes
                 property int adviseUpdateThreshold: 75 // packages
                 property int stronglyAdviseUpdateThreshold: 200 // packages
+                property bool hideWhenZero: false
             }
 
             property JsonObject wallpaperSelector: JsonObject {

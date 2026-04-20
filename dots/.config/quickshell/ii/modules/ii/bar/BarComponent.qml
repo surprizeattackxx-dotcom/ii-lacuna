@@ -26,6 +26,13 @@ Item {
     // live service data). These should NEVER persist a false state to config,
     // because they may be empty for a moment on startup before data arrives.
     readonly property list<string> selfManagedVisibility: ["system_tray"]
+    readonly property bool hideSystemUpdatesWhenZero:
+        modelData.id === "system_updates"
+        && (Config.options.updates?.hideWhenZero ?? false)
+    readonly property bool systemUpdatesShouldBeVisible:
+        !hideSystemUpdatesWhenZero || Updates.count > 0
+
+    visible: (modelData.visible !== false) && systemUpdatesShouldBeVisible
 
     function toggleVisible(visibility) {
         if (selfManagedVisibility.includes(modelData.id)) {

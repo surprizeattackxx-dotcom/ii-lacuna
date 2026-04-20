@@ -1,6 +1,7 @@
 import QtQuick
 import qs.modules.common
 import qs.modules.common.widgets
+import qs.services
 
 ButtonGroup {
     id: root
@@ -73,5 +74,37 @@ ButtonGroup {
             root.player?.next()
         }
 
+    }
+
+    GroupButton {
+        visible: MediaLikeService.supportsPlayer(root.player)
+        baseWidth: baseButtonWidth * 0.72
+        baseHeight: baseButtonHeight
+
+        MaterialSymbol {
+            anchors.centerIn: parent
+            iconSize: 22
+            fill: 1
+            color: Appearance.colors.colPrimary
+            text: "thumb_up"
+        }
+
+        onClicked: MediaLikeService.like(root.player)
+    }
+
+    GroupButton {
+        visible: MediaLikeService.supportsPlayer(root.player)
+        baseWidth: baseButtonWidth * 0.72
+        baseHeight: baseButtonHeight
+
+        MaterialSymbol {
+            anchors.centerIn: parent
+            iconSize: 22
+            fill: 1
+            color: Appearance.colors.colPrimary
+            text: "thumb_down"
+        }
+
+        onClicked: MediaLikeService.dislike(root.player)
     }
 }

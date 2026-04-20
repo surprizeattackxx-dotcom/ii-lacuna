@@ -198,6 +198,7 @@ Variants {
             if (!mediaModeOpen) {
                 Wallpapers.apply(Config.options.background.wallpaperPath)
             }
+            Persistent.states.background.mediaMode.enabled = false // we use this persistent to access this from outside of this script, cannot be toggled
         }
 
         Item {
@@ -431,10 +432,6 @@ Variants {
                     }
                 }
             }
-        }
-
-        Component.onCompleted: {
-            Persistent.states.background.mediaMode.enabled = false // we use this persistent to access this from outside of this script, cannot be toggled
         }
 
         GlobalShortcut {

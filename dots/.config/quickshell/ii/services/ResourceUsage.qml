@@ -26,7 +26,6 @@ Singleton {
     property var previousCpuStats
     property string cpuModel: "Unknown CPU"
     property string cpuFreq: "-- MHz"
-    property string cpuTemp: "--°C"
 
     // Disk I/O rates in KB/s
     property real diskReadRate: 0
@@ -179,27 +178,9 @@ Singleton {
         onTriggered: diskProc.running = true
     }
 
-    Process {
-        id: tempProc
-        command: ["bash", "-c", "sensors | awk '/Tctl:/ {print $2}; /Package id 0:/ {print $4}' | head -1 | tr -d '+' | cut -d'.' -f1"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                if (text.length > 0) {
-                    root.cpuTemp = text.trim() + "°C";
-                }
-            }
-        }
-    }
-
-    Timer {
-        interval: 3000
-        running: true
-        repeat: true
-        onTriggered: tempProc.running = true
-    }
 
     Component.onCompleted: {
         diskProc.running = true
-        tempProc.running = true
+        
     }
 }

@@ -51,6 +51,8 @@ parser.add_argument("--blend_bg_fg",    action="store_true", default=False, help
 parser.add_argument("--cache",    type=str, default=None, help="File path to cache the dominant color hex")
 parser.add_argument("--json-out", type=str, default=None, help="Write colors as JSON to this path (for MaterialThemeLoader)")
 parser.add_argument("--debug",    action="store_true", default=False, help="Print debug info instead of SCSS")
+parser.add_argument("--preview-all", action="store_true", default=False,
+                    help="Output compact JSON with primary/primaryContainer/secondary for every scheme")
 args = parser.parse_args()
 
 # ---------------------------------------------------------------------------
@@ -139,6 +141,26 @@ elif args.color is not None:
     color_hex = args.color if args.color.startswith("#") else f"#{args.color}"
     argb = hex_to_argb(color_hex)
     hct  = Hct.from_int(argb)
+
+# ---------------------------------------------------------------------------
+# --preview-all: generate just 3 colors per scheme and exit early
+# ---------------------------------------------------------------------------
+if args.preview_all:
+    preview = {}
+    for scheme_name in SCHEME_MAP:
+        SchemeClass = load_scheme_class(scheme_name)
+        s = SchemeClass(hct, darkmode, 0.0)
+        colors = {}
+        for c in ("primary", "primaryContainer", "secondary"):
+            attr = getattr(MaterialDynamicColors, c, None)
+            if attr and hasattr(attr, "get_hct"):
+                colors[c] = rgba_to_hex(attr.get_hct(s).to_rgba())
+        preview[scheme_name] = colors
+    # Also add scheme-auto (same as tonal-spot)
+    if "scheme-tonal-spot" in preview:
+        preview["scheme-auto"] = preview["scheme-tonal-spot"]
+    print(json.dumps(preview))
+    sys.exit(0)
 
 # ---------------------------------------------------------------------------
 # Scheme generation

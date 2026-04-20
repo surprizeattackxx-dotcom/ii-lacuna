@@ -22,17 +22,12 @@ Item {
 
     property list<var> pinnedItems: TrayService.pinnedItems
     property list<var> unpinnedItems: TrayService.unpinnedItems
-    onPinnedItemsChanged: updateVisibility()
-    onUnpinnedItemsChanged: updateVisibility()
-
     onUnpinnedItemsChanged: {
         if (unpinnedItems.length == 0) root.closeOverflowMenu();
-        // Use total item count across both lists so the tray isn't hidden
-        // just because one half is temporarily empty.
-        rootItem.toggleVisible(pinnedItems.length > 0 || unpinnedItems.length > 0);
+        root.visible = (pinnedItems.length > 0 || unpinnedItems.length > 0);
     }
     onPinnedItemsChanged: {
-        rootItem.toggleVisible(pinnedItems.length > 0 || unpinnedItems.length > 0);
+        root.visible = (pinnedItems.length > 0 || unpinnedItems.length > 0);
     }
 
     function grabFocus() {

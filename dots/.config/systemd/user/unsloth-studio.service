@@ -1,0 +1,28 @@
+[Unit]
+Description=Unsloth Studio (HTTP API / UI on port 8889)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# User units sometimes get an empty/wrong HOME early at boot — HF/Unsloth need real XDG paths.
+WorkingDirectory=%h
+Environment=HOME=%h
+Environment=XDG_CONFIG_HOME=%h/.config
+Environment=XDG_CACHE_HOME=%h/.cache
+Environment=XDG_DATA_HOME=%h/.local/share
+Environment=XDG_STATE_HOME=%h/.local/state
+Environment=HF_HOME=%h/.cache/huggingface
+Environment=TRANSFORMERS_CACHE=%h/.cache/huggingface/hub
+Environment=HUGGINGFACE_HUB_CACHE=%h/.cache/huggingface/hub
+EnvironmentFile=-%h/.config/unsloth/studio.env
+
+ExecStart=%h/.unsloth/studio/unsloth_studio/bin/unsloth studio -H 0.0.0.0 -p 8889
+Restart=on-failure
+RestartSec=10
+
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

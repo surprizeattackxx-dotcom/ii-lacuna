@@ -167,7 +167,7 @@ Singleton {
     Connections {
         target: Config.options.light.night
         function onColorTemperatureChanged() {
-            if (!root.active) return;
+            if (!root.temperatureActive) return;
             Quickshell.execDetached(["hyprctl", "hyprsunset", "temperature", `${Config.options.light.night.colorTemperature}`]);
         }
     }
@@ -182,7 +182,8 @@ Singleton {
     function runNightLightThemeSync() {
         if (!Persistent.ready || !Persistent.states.followNightLight)
             return;
-        const wantDark = root.active;
+        // Night light on (warm filter) → dark shell; off → light. Matches temperatureActive, not time-of-day alone.
+        const wantDark = root.temperatureActive;
         if (wantDark === Appearance.m3colors.darkmode) {
             MaterialThemeLoader.reloadAfterExternalColorChange();
             return;
@@ -200,7 +201,7 @@ Singleton {
 
     Connections {
         target: root
-        function onActiveChanged() {
+        function onTemperatureActiveChanged() {
             if (Persistent.ready && Persistent.states.followNightLight)
                 nightLightThemeDebounce.restart();
         }

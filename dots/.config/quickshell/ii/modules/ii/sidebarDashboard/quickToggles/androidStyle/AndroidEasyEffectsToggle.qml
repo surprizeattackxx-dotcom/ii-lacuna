@@ -6,6 +6,8 @@ import QtQuick
 import Quickshell
 
 AndroidQuickToggleButton {
-    toggleModel: EasyEffectsToggle {}
+    toggleModel: EasyEffectsToggle {
+        rightClickOnlyAlt: true
+    }
 }
 

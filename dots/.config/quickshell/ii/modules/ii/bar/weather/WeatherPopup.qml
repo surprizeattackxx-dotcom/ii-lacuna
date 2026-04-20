@@ -8,7 +8,6 @@ import qs.modules.ii.bar
 
 StyledPopup {
     id: root
-    popupRadius: Appearance.rounding.large
 
     Item {
         implicitWidth:  300

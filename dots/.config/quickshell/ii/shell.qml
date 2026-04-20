@@ -28,7 +28,7 @@ ShellRoot {
     Process {
         id: listProcess
         running: true
-        command: [Quickshell.env("HOME") + "/.config/hypr/scripts/Animations.sh", "list"]
+        command: [Quickshell.env("HOME") + "/.config/hypr/scripts/Animations.sh", "preview"]
         stdout: StdioCollector {
             id: animListStdout
             onStreamFinished: {
@@ -37,10 +37,30 @@ ShellRoot {
                     return
                 presetsModel.clear()
                 raw.split("\n").forEach(line => {
-                    const name = line.trim()
-                    if (name.length > 0)
-                        presetsModel.append({ "name": name })
+                    const parts = line.trim().split("|")
+                    if (parts.length >= 7)
+                        presetsModel.append({
+                            "name": parts[0],
+                            "bx1": parseFloat(parts[1]), "by1": parseFloat(parts[2]),
+                            "bx2": parseFloat(parts[3]), "by2": parseFloat(parts[4]),
+                            "speed": parseFloat(parts[5]),
+                            "style": parts[6]
+                        })
                 })
+            }
+        }
+    }
+
+    Process {
+        id: activeProcess
+        running: true
+        command: [Quickshell.env("HOME") + "/.config/hypr/scripts/Animations.sh", "active"]
+        stdout: StdioCollector {
+            id: activeStdout
+            onStreamFinished: {
+                const name = activeStdout.text.trim()
+                if (name.length > 0)
+                    root.activePreset = name
             }
         }
     }
@@ -54,8 +74,10 @@ ShellRoot {
         applyProcess.command = [Quickshell.env("HOME") + "/.config/hypr/scripts/Animations.sh", "apply", preset]
         applyProcess.running = true
         root.activePreset = preset
-        animationsWindow.visible = false
+        notifyProcess.command = ["notify-send", "-a", "Quickshell", "-i", "preferences-desktop-animation", "Animations", "Applied: " + preset]
+        notifyProcess.running = true
     }
+    Process { id: notifyProcess }
 
     FloatingWindow {
         id: animationsWindow
@@ -252,11 +274,20 @@ ShellRoot {
                         clip: true
 
                         delegate: Item {
+                            id: delegateItem
                             width: presetsList.width
-                            height: visible ? 46 : 0
+                            height: visible ? (cardMa.containsMouse ? 120 : 46) : 0
                             visible: root.searchQuery === "" || model.name.toLowerCase().indexOf(root.searchQuery) !== -1
                             clip: true
-                            Behavior on height { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
+                            Behavior on height { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+
+                            // Preview animation properties from model
+                            property real bx1: model.bx1 ?? 0.25
+                            property real by1: model.by1 ?? 0.1
+                            property real bx2: model.bx2 ?? 0.25
+                            property real by2: model.by2 ?? 1.0
+                            property real speed: model.speed ?? 4
+                            property string style: model.style ?? "slide"
 
                             Rectangle {
                                 id: card
@@ -283,8 +314,13 @@ ShellRoot {
                                     visible: root.activePreset === model.name
                                 }
 
+                                // --- Title row ---
                                 RowLayout {
-                                    anchors.fill: parent
+                                    id: titleRow
+                                    anchors.top: parent.top
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    height: 46
                                     anchors.leftMargin: root.activePreset === model.name ? 16 : 14
                                     anchors.rightMargin: 14
                                     Behavior on anchors.leftMargin { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this) }
@@ -302,6 +338,14 @@ ShellRoot {
                                     }
 
                                     StyledText {
+                                        text: delegateItem.style
+                                        color: Appearance.m3colors.m3onSurfaceVariant
+                                        font.pixelSize: Appearance.font.pixelSize.smallest
+                                        opacity: cardMa.containsMouse ? 0.7 : 0
+                                        Behavior on opacity { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this) }
+                                    }
+
+                                    StyledText {
                                         text: root.activePreset === model.name ? "✓ active" : (cardMa.containsMouse ? "apply →" : "")
                                         color: root.activePreset === model.name
                                             ? Appearance.m3colors.m3success
@@ -309,6 +353,182 @@ ShellRoot {
                                         font.pixelSize: Appearance.font.pixelSize.smallest
                                         opacity: (root.activePreset === model.name || cardMa.containsMouse) ? 1 : 0
                                         Behavior on opacity { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this) }
+                                    }
+                                }
+
+                                // --- Animation preview stage ---
+                                Rectangle {
+                                    id: previewStage
+                                    anchors.top: titleRow.bottom
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.bottom: parent.bottom
+                                    anchors.margins: 6
+                                    anchors.topMargin: 0
+                                    radius: Appearance.rounding.unsharpenmore
+                                    color: Appearance.m3colors.m3surfaceContainerLowest
+                                    opacity: cardMa.containsMouse ? 1 : 0
+                                    visible: opacity > 0
+                                    clip: true
+                                    Behavior on opacity { NumberAnimation { duration: 150 } }
+
+                                    // Mock window
+                                    Rectangle {
+                                        id: mockWindow
+                                        width: 50
+                                        height: 36
+                                        radius: 4
+                                        color: Appearance.colors.colPrimary
+                                        opacity: 0
+
+                                        // Title bar
+                                        Rectangle {
+                                            anchors.top: parent.top
+                                            anchors.left: parent.left
+                                            anchors.right: parent.right
+                                            height: 10
+                                            radius: 4
+                                            color: Qt.darker(Appearance.colors.colPrimary, 1.2)
+                                            Rectangle {
+                                                anchors.bottom: parent.bottom
+                                                anchors.left: parent.left
+                                                anchors.right: parent.right
+                                                height: 4
+                                                color: parent.color
+                                            }
+                                            // Dots
+                                            Row {
+                                                anchors.verticalCenter: parent.verticalCenter
+                                                anchors.left: parent.left
+                                                anchors.leftMargin: 4
+                                                spacing: 2
+                                                Repeater {
+                                                    model: 3
+                                                    Rectangle {
+                                                        width: 3; height: 3; radius: 1.5
+                                                        color: Appearance.colors.colOnPrimary
+                                                        opacity: 0.6
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    // Preview animation loop
+                                    property bool animRunning: false
+                                    property int durationMs: Math.max(200, delegateItem.speed * 100)
+
+                                    SequentialAnimation {
+                                        id: previewAnim
+                                        loops: Animation.Infinite
+                                        running: false
+
+                                        // Reset to start position
+                                        ScriptAction {
+                                            script: {
+                                                const stage = previewStage
+                                                const cx = (stage.width - mockWindow.width) / 2
+                                                const cy = (stage.height - mockWindow.height) / 2
+                                                const s = delegateItem.style
+                                                if (s === "slide" || s === "slidefade") {
+                                                    mockWindow.x = -mockWindow.width
+                                                    mockWindow.y = cy
+                                                    mockWindow.scale = 1.0
+                                                } else if (s === "slidevert" || s === "slidefadevert") {
+                                                    mockWindow.x = cx
+                                                    mockWindow.y = stage.height
+                                                    mockWindow.scale = 1.0
+                                                } else if (s === "popin") {
+                                                    mockWindow.x = cx
+                                                    mockWindow.y = cy
+                                                    mockWindow.scale = 0.3
+                                                } else {
+                                                    mockWindow.x = cx
+                                                    mockWindow.y = cy
+                                                    mockWindow.scale = 1.0
+                                                }
+                                                mockWindow.opacity = 0
+                                            }
+                                        }
+                                        PauseAnimation { duration: 200 }
+                                        // Animate in
+                                        ParallelAnimation {
+                                            NumberAnimation {
+                                                target: mockWindow; property: "x"
+                                                to: (previewStage.width - mockWindow.width) / 2
+                                                duration: previewStage.durationMs
+                                                easing.type: Easing.BezierSpline
+                                                easing.bezierCurve: [delegateItem.bx1, delegateItem.by1, delegateItem.bx2, delegateItem.by2, 1, 1]
+                                            }
+                                            NumberAnimation {
+                                                target: mockWindow; property: "y"
+                                                to: (previewStage.height - mockWindow.height) / 2
+                                                duration: previewStage.durationMs
+                                                easing.type: Easing.BezierSpline
+                                                easing.bezierCurve: [delegateItem.bx1, delegateItem.by1, delegateItem.bx2, delegateItem.by2, 1, 1]
+                                            }
+                                            NumberAnimation {
+                                                target: mockWindow; property: "scale"
+                                                to: 1.0
+                                                duration: previewStage.durationMs
+                                                easing.type: Easing.BezierSpline
+                                                easing.bezierCurve: [delegateItem.bx1, delegateItem.by1, delegateItem.bx2, delegateItem.by2, 1, 1]
+                                            }
+                                            NumberAnimation {
+                                                target: mockWindow; property: "opacity"
+                                                to: 1.0
+                                                duration: previewStage.durationMs * 0.5
+                                                easing.type: Easing.OutQuad
+                                            }
+                                        }
+                                        // Hold
+                                        PauseAnimation { duration: 600 }
+                                        // Animate out (reverse)
+                                        ParallelAnimation {
+                                            NumberAnimation {
+                                                target: mockWindow; property: "x"
+                                                to: {
+                                                    const s = delegateItem.style
+                                                    return (s === "slide" || s === "slidefade")
+                                                        ? previewStage.width
+                                                        : (previewStage.width - mockWindow.width) / 2
+                                                }
+                                                duration: previewStage.durationMs * 0.7
+                                                easing.type: Easing.BezierSpline
+                                                easing.bezierCurve: [delegateItem.bx2, delegateItem.by2, delegateItem.bx1, delegateItem.by1, 1, 1]
+                                            }
+                                            NumberAnimation {
+                                                target: mockWindow; property: "y"
+                                                to: {
+                                                    const s = delegateItem.style
+                                                    return (s === "slidevert" || s === "slidefadevert")
+                                                        ? -mockWindow.height
+                                                        : (previewStage.height - mockWindow.height) / 2
+                                                }
+                                                duration: previewStage.durationMs * 0.7
+                                                easing.type: Easing.BezierSpline
+                                                easing.bezierCurve: [delegateItem.bx2, delegateItem.by2, delegateItem.bx1, delegateItem.by1, 1, 1]
+                                            }
+                                            NumberAnimation {
+                                                target: mockWindow; property: "scale"
+                                                to: delegateItem.style === "popin" ? 0.3 : 1.0
+                                                duration: previewStage.durationMs * 0.7
+                                                easing.type: Easing.BezierSpline
+                                                easing.bezierCurve: [delegateItem.bx2, delegateItem.by2, delegateItem.bx1, delegateItem.by1, 1, 1]
+                                            }
+                                            NumberAnimation {
+                                                target: mockWindow; property: "opacity"
+                                                to: 0
+                                                duration: previewStage.durationMs * 0.5
+                                                easing.type: Easing.InQuad
+                                            }
+                                        }
+                                        PauseAnimation { duration: 300 }
+                                    }
+
+                                    onVisibleChanged: {
+                                        if (visible) previewAnim.start()
+                                        else previewAnim.stop()
                                     }
                                 }
 

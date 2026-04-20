@@ -1,9 +1,11 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import Quickshell.Io
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
+import qs.modules.common.functions
 
 /*
  *    Almost all of the custom color schemes (latte.json, samurai.json etc.) are gotten from https://github.com/snowarch/quickshell-ii-niri/blob/main/modules/common/ThemePresets.qml
@@ -41,6 +43,49 @@ ColumnLayout {
     )
 
     property int loadedCount: 0
+
+    // Batch color preview data for wallpaper schemes (keyed by scheme name)
+    property var batchPreviewColors: ({})
+    readonly property string configWallpaperPath: Config.options.background.wallpaperPath
+    property string resolvedWallpaperPath: ""
+    readonly property string wallpaperPath: configWallpaperPath || resolvedWallpaperPath
+    readonly property string scriptPath: FileUtils.trimFileProtocol(`${Directories.scriptPath}/colors/generate_colors_material.py`)
+    readonly property string venvPython: `${FileUtils.trimFileProtocol(Directories.home)}/.local/state/quickshell/.venv/bin/python3`
+
+    // Resolve wallpaper path from per-monitor state when config path is empty
+    Process {
+        id: wallpaperPathResolver
+        running: false
+        command: ["bash", "-c", `jq -r '.path // empty' "${Wallpapers.monitorStateDir}/"$(hyprctl monitors -j | jq -r '.[0].name')".json" 2>/dev/null`]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const path = text.trim()
+                if (path.length > 0) root.resolvedWallpaperPath = path
+            }
+        }
+    }
+
+    // Batch fetch all wallpaper scheme previews in one Python call
+    Process {
+        id: batchColorFetch
+        running: false
+        command: ["bash", "-c", `${root.venvPython} ${root.scriptPath} --path '${root.wallpaperPath}' --preview-all 2>/dev/null`]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    root.batchPreviewColors = JSON.parse(this.text)
+                } catch (e) {
+                    console.log("[ColorPreviewGrid] Batch parse error:", this.text)
+                }
+            }
+        }
+    }
+
+    onWallpaperPathChanged: {
+        if (wallpaperPath && !customTheme && !builtInTheme) {
+            batchColorFetch.running = true
+        }
+    }
 
     function formatText(text) {
         if (customTheme || builtInTheme) return text.charAt(0).toUpperCase() + text.slice(1).replace(/_/g, " ");
@@ -108,6 +153,10 @@ ColumnLayout {
                 customTheme: root.customTheme
                 builtInTheme: root.builtInTheme
 
+                batchColors: (!root.customTheme && !root.builtInTheme)
+                    ? root.batchPreviewColors[modelData] ?? null
+                    : null
+
                 shouldLoad: {
                     const realIndex = root.colorSchemes.indexOf(modelData)
                     return realIndex < root.loadedCount
@@ -130,11 +179,22 @@ ColumnLayout {
     }
 
     Component.onCompleted: {
-        Qt.callLater(() => loadTimer.start())
+        if (root.customTheme || root.builtInTheme) {
+            // Staggered loading for custom/builtIn themes (individual process per button)
+            Qt.callLater(() => loadTimer.start())
+        } else if (!root.configWallpaperPath) {
+            // Need to resolve wallpaper path first, then batch fetch triggers via onWallpaperPathChanged
+            wallpaperPathResolver.running = true
+        } else {
+            // Wallpaper path known — batch fetch all scheme previews
+            batchColorFetch.running = true
+        }
     }
 
     onColorSchemesChanged: {
         root.loadedCount = 0
-        Qt.callLater(() => loadTimer.start())
+        if (root.customTheme || root.builtInTheme) {
+            Qt.callLater(() => loadTimer.start())
+        }
     }
 }

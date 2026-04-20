@@ -36,3 +36,5 @@ UtilButtons 1.0 UtilButtons.qml
 VerticalDashboardPanelButton 1.0 VerticalDashboardPanelButton.qml
 WorkspacePreviewPopup 1.0 WorkspacePreviewPopup.qml
 Workspaces 1.0 Workspaces.qml
+ClockWidgetPopupCompact 1.0 ClockWidgetPopupCompact.qml
+MediaPopup 1.0 MediaPopup.qml

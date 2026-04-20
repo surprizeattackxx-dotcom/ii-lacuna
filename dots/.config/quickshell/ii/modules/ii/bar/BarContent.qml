@@ -43,19 +43,25 @@ Item { // Bar content region
     property var centerList: []
     property var rightList: []
 
-    onFullModelChanged: {
-        const idx = fullModel.findIndex(item => item.centered)
+    // JSON snapshot to detect deep changes that QML reference comparison misses
+    property string _centerSnapshot: JSON.stringify(Config.options.bar.layouts.center)
+    on_CenterSnapshotChanged: _splitCenter()
+    onFullModelChanged: _splitCenter()
+
+    function _splitCenter() {
+        const model = Config.options.bar.layouts.center
+        const idx = model.findIndex(item => item.centered)
 
         if (idx === -1) {
             leftList = []
-            centerList = fullModel
+            centerList = model
             rightList = []
             return
         }
 
-        leftList = fullModel.slice(0, idx)
-        centerList = [fullModel[idx]]
-        rightList = fullModel.slice(idx + 1)
+        leftList = model.slice(0, idx)
+        centerList = [model[idx]]
+        rightList = model.slice(idx + 1)
     }
 
     // Background shadow
@@ -145,18 +151,21 @@ Item { // Bar content region
         }
     }
 
-    RowLayout { // Middle section
+    Row { // Middle section
         id: middleSection
         anchors {
             top: parent.top
             bottom: parent.bottom
             horizontalCenter: parent.horizontalCenter
         }
-        spacing: 4
 
         RowLayout {
-            Layout.fillHeight: true
-            spacing: 4
+            anchors {
+                top: parent.top
+                bottom: parent.bottom
+                right: centerCenter.left
+                rightMargin: 4
+            }
             Repeater {
                 id: middleLeftRepeater
                 model: root.leftList
@@ -170,8 +179,11 @@ Item { // Bar content region
 
         RowLayout { // center
             id: centerCenter
-            Layout.fillHeight: true
-            spacing: 4
+            anchors {
+                top: parent.top
+                bottom: parent.bottom
+                horizontalCenter: parent.horizontalCenter
+            }
             Repeater {
                 model: root.centerList
                 delegate: BarComponent {
@@ -183,8 +195,12 @@ Item { // Bar content region
         }
 
         RowLayout {
-            Layout.fillHeight: true
-            spacing: 4
+            anchors {
+                top: parent.top
+                bottom: parent.bottom
+                left: centerCenter.right
+                leftMargin: 4
+            }
             Repeater {
                 id: middleRightRepeater
                 model: root.rightList

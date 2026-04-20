@@ -1242,7 +1242,7 @@ ContentPage {
             ConfigSelectionArray {
                 currentValue: Config.options.overview.style
                 onSelected: newValue => {
-                    Config.options.overview.style = newValue
+                    Config.options.overview.style = "classic"
                 }
                 options: [
                     {

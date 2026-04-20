@@ -66,16 +66,16 @@ Rectangle {
     }
 
     function toggleCenter(idx, currentList) {
-        if (currentList[idx].centered) {
-            currentList[idx].centered = false
-            root.updated(currentList)
-            return
-        }
-        for (let i = 0; i < currentList.length; i++) {
-            currentList[i].centered = (i === idx);
-        }
-
-        root.updated(currentList)
+        // Deep copy to ensure QML detects the change
+        let newList = currentList.map((item, i) => {
+            let copy = Object.assign({}, item)
+            if (idx === i)
+                copy.centered = !currentList[idx].centered
+            else
+                copy.centered = false
+            return copy
+        })
+        root.updated(newList)
     }
 
     DelegateModel {

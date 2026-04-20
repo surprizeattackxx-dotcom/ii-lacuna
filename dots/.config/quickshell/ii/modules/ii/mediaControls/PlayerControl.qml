@@ -214,6 +214,26 @@ Item { // Player instance
                     animationDistanceX: 6
                     animationDistanceY: 0
                 }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 6
+                    visible: MediaLikeService.supportsPlayer(root.player)
+                    height: visible ? implicitHeight : 0
+
+                    TrackChangeButton {
+                        iconName: "thumb_up"
+                        buttonSize: 22
+                        downAction: () => MediaLikeService.like(root.player)
+                    }
+                    TrackChangeButton {
+                        iconName: "thumb_down"
+                        buttonSize: 22
+                        downAction: () => MediaLikeService.dislike(root.player)
+                    }
+                    Item { Layout.fillWidth: true }
+                }
+
                 Item { Layout.fillHeight: true }
                 Item {
                     Layout.fillWidth: true

@@ -15,33 +15,95 @@ DockButton {
     property int delegateIndex: -1
     property int lastFocused: -1
 
-    readonly property bool isSeparator: appToplevel.appId === "SEPARATOR"
-    property var desktopEntry: DesktopEntries.heuristicLookup(appToplevel.appId)
+    readonly property real dockHeight: Config.options?.dock.height ?? 60
+    property int dotMargin: Math.round(dockHeight * 0.2)
 
-    Timer {
-        // Retry looking up the desktop entry if it failed (e.g. database not loaded yet)
-        property int retryCount: 5
-        interval: 1000
-        running: !root.isSeparator && root.desktopEntry === null && retryCount > 0
-        repeat: true
-        onTriggered: {
-            retryCount--;
-            root.desktopEntry = DesktopEntries.heuristicLookup(root.appToplevel.appId);
+    readonly property var desktopEntry: appToplevel ? TaskbarApps.getCachedDesktopEntry(appToplevel.appId) : null
+    property bool isVertical: dockContent?.isVertical ?? false
+
+
+    readonly property bool appIsActive: focusedWindowIndex >= 0
+    readonly property int focusedWindowIndex: { // this is computed every frame, we have to somehow cache this
+        if (!appToplevel || !appToplevel.toplevels) return -1
+        for (let i = 0; i < appToplevel.toplevels.length; i++) {
+            if (appToplevel.toplevels[i].activated) return i
+        }
+        return -1
+    }
+
+    readonly property bool isDragging: dockContent?.draggedAppId === appToplevel?.appId
+    readonly property string dockPos: dock.dockEffectivePosition
+    readonly property bool appIsRunning: appToplevel && appToplevel.toplevels && appToplevel.toplevels.length > 0
+
+    pointingHandCursor: false
+
+    width: buttonSize + dotMargin * 2
+    height: buttonSize + dotMargin * 2
+
+    opacity: isDragging ? 0.0 : 1.0
+
+    Behavior on opacity {
+        enabled: !isDragging && !(dockContent?.suppressAnimation ?? false)
+        animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+    }
+
+    z: isDragging ? 100 : 0
+
+    // Computes how much this delegate should shift to make room for the dragged item
+    readonly property real shiftOffset: {
+        if (!dockContent || !dockContent.dragActive) return 0
+        if (delegateIndex === dockContent.draggedIndex) return 0
+
+        const step = buttonSize + dotMargin * 2
+        const isThisPinned = TaskbarApps.isPinned(appToplevel?.appId ?? "")
+        const isDraggedPinned = TaskbarApps.isPinned(dockContent.draggedAppId)
+        const intent = dockContent.dragIntent
+
+        // Case 1: reordering among pinned apps
+        if (isThisPinned && isDraggedPinned) {
+            const d = dockContent.draggedIndex
+
+            if (intent === "unpin") {
+                if (delegateIndex > d) return step
+                return 0
+            }
+
+            if (intent === "reorder") {
+                const t = dockContent.dropTargetIndex
+                if (t > d && delegateIndex > d && delegateIndex <= t) return step
+                if (t < d && delegateIndex >= t && delegateIndex < d) return -step
+            }
+            return 0
+        }
+
+        // Case 2: pinning a running app — shift running delegates out of the way
+        if (!isDraggedPinned && !isThisPinned && intent === "pin") {
+            if (delegateIndex > dockContent.draggedIndex) return -step
+        }
+
+        return 0
+    }
+
+    transform: Translate {
+        x: root.isVertical ? 0 : root.shiftOffset
+        y: root.isVertical ? root.shiftOffset : 0
+
+        Behavior on x {
+            enabled: !root.isDragging && !(dockContent?.suppressAnimation ?? false)
+            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+        }
+        Behavior on y {
+            enabled: !root.isDragging && !(dockContent?.suppressAnimation ?? false)
+            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
         }
     }
 
-    enabled: !isSeparator
-    implicitWidth: isSeparator ? 1 : implicitHeight - topInset - bottomInset
-
-    Loader {
-        active: isSeparator
-        anchors {
-            fill: parent
-            topMargin: dockVisualBackground.margin + dockRow.padding + Appearance.rounding.normal
-            bottomMargin: dockVisualBackground.margin + dockRow.padding + Appearance.rounding.normal
-        }
-        sourceComponent: DockSeparator {}
-    }
+    MouseArea {
+        id: mainMouseArea
+        width: root.buttonSize
+        height: root.buttonSize
+        anchors.centerIn: parent
+        cursorShape: Qt.PointingHandCursor
 
         hoverEnabled: true
         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton

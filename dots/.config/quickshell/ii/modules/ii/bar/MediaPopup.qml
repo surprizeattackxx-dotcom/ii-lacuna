@@ -10,7 +10,6 @@ import Qt5Compat.GraphicalEffects
 
 StyledPopup {
     id: root
-    popupRadius: Appearance.rounding.large
 
     readonly property MprisPlayer activePlayer: MprisController.activePlayer
     readonly property string cleanedTitle: StringUtils.cleanMusicTitle(activePlayer?.trackTitle) || Translation.tr("No media")

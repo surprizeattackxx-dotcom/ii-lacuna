@@ -675,8 +675,7 @@ ContentPage {
             text: Translation.tr("Hide when no updates")
             checked: Config.options.updates?.hideWhenZero ?? false
             onCheckedChanged: {
-                if (!Config.options.updates) Config.options.updates = {};
-                Config.options.updates.hideWhenZero = checked;
+                Config.setNestedValue("updates.hideWhenZero", checked);
             }
         }
     }
