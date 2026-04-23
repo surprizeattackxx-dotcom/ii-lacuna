@@ -59,7 +59,7 @@ post_process() {
     "$SCRIPT_DIR/code/material-code-set-color.sh" &
     
     # Generate YouTube Music theme
-    "$SCRIPT_DIR/../ytmusic/generate-ytmusic-theme.sh" "$wallpaper_path" > /dev/null 2>&1 &
+    "$SCRIPT_DIR/../ytmusic/generate-ytmusic-theme.sh" > /dev/null 2>&1 &
 }
 
 check_and_prompt_upscale() {
