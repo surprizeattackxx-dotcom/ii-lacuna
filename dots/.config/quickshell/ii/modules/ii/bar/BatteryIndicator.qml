@@ -55,8 +55,16 @@ MouseArea {
         }
     }
 
-    BatteryPopup {
-        id: batteryPopup
-        hoverTarget: root
+    Loader {
+        active: true
+        sourceComponent: Config.options.bar.tooltips.compactPopups ? batteryPopupCompact : batteryPopupFull
+    }
+    Component {
+        id: batteryPopupFull
+        BatteryPopup { hoverTarget: root }
+    }
+    Component {
+        id: batteryPopupCompact
+        BatteryPopupCompact { hoverTarget: root }
     }
 }

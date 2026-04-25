@@ -417,9 +417,9 @@ ContentPage {
             icon: "av_timer"
             text: Translation.tr("Polling interval (m)")
             value: Config.options.bar.weather.fetchInterval
-            from: 5
-            to: 50
-            stepSize: 5
+            from: 1
+            to: 60
+            stepSize: 1
             onValueChanged: {
                 Config.options.bar.weather.fetchInterval = value;
             }

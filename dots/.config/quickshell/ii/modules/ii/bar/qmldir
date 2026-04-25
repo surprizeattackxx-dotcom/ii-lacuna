@@ -1,5 +1,6 @@
 module qs.modules.ii.bar
 AlarmsPopup 1.0 AlarmsPopup.qml
+AlarmsPopupCompact 1.0 AlarmsPopupCompact.qml
 ActiveWindow 1.0 ActiveWindow.qml
 Bar 1.0 Bar.qml
 BarComponent 1.0 BarComponent.qml
@@ -7,8 +8,10 @@ BarContent 1.0 BarContent.qml
 BarGroup 1.0 BarGroup.qml
 BatteryIndicator 1.0 BatteryIndicator.qml
 BatteryPopup 1.0 BatteryPopup.qml
+BatteryPopupCompact 1.0 BatteryPopupCompact.qml
 CircleUtilButton 1.0 CircleUtilButton.qml
 ClipboardPopup 1.0 ClipboardPopup.qml
+ClipboardPopupCompact 1.0 ClipboardPopupCompact.qml
 ClockWidget 1.0 ClockWidget.qml
 ClockWidgetPopup 1.0 ClockWidgetPopup.qml
 DashboardPanelButton 1.0 DashboardPanelButton.qml
@@ -21,6 +24,7 @@ RecordIndicator 1.0 RecordIndicator.qml
 Resource 1.0 Resource.qml
 Resources 1.0 Resources.qml
 ResourcesPopup 1.0 ResourcesPopup.qml
+ResourcesPopupCompact 1.0 ResourcesPopupCompact.qml
 ScreenShareIndicator 1.0 ScreenShareIndicator.qml
 ScrollHint 1.0 ScrollHint.qml
 StyledPopup 1.0 StyledPopup.qml

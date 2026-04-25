@@ -28,7 +28,7 @@ ApplicationWindow {
         Quickshell.execDetached(["notify-send", Translation.tr("Welcome app"), Translation.tr("Enjoy! You can reopen the welcome app any time with <tt>Super+Shift+Alt+/</tt>. To open the settings app, hit <tt>Super+I</tt>"), "-a", "Shell"]);
         Qt.quit();
     }
-    title: Translation.tr("illogical-impulse Welcome")
+    title: Translation.tr("ii-lacuna Welcome")
 
     Component.onCompleted: {
         MaterialThemeLoader.reapplyTheme();
@@ -470,7 +470,7 @@ ApplicationWindow {
                             nerdIcon: "󰊤"
                             mainText: Translation.tr("GitHub")
                             onClicked: {
-                                Qt.openUrlExternally("https://github.com/end-4/dots-hyprland");
+                                Qt.openUrlExternally("https://github.com/surprizeattackxx-dotcom/ii-lacuna");
                             }
                         }
                         RippleButtonWithIcon {

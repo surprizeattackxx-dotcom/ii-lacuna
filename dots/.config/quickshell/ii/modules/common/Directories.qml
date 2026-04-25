@@ -48,6 +48,7 @@ Singleton {
     property string notesPath: FileUtils.trimFileProtocol(`${Directories.state}/user/notes.json`)
     property string conflictCachePath: FileUtils.trimFileProtocol(`${Directories.cache}/conflict-killer`)
     property string notificationsPath: FileUtils.trimFileProtocol(`${Directories.cache}/notifications/notifications.json`)
+    property string notificationsHistoryPath: FileUtils.trimFileProtocol(`${Directories.cache}/notifications/history.json`)
     property string lyricsPath: FileUtils.trimFileProtocol(`${Directories.cache}/lyrics/lyrics.json`)
     property string pinnedClipboardPath: FileUtils.trimFileProtocol(`${Directories.state}/user/pinned_clipboard.json`)
     property string alarmsPath: FileUtils.trimFileProtocol(`${Directories.state}/user/alarms.json`)

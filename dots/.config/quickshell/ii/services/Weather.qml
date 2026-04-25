@@ -16,6 +16,7 @@ Singleton {
     property bool gpsActive: Config.options.bar.weather.enableGPS
 
     property bool ready: false
+    property real lastRefreshMs: 0
 
     onUseUSCSChanged: { if (root.ready) root.getData(); }
     onCityChanged:    { if (root.ready) root.getData(); }
@@ -184,6 +185,7 @@ Singleton {
         }
 
         temp.lastRefresh = DateTime.time + " • " + DateTime.date;
+        root.lastRefreshMs = Date.now();
         root.data = temp;
         root.generateAlerts(cur);
     }
@@ -347,5 +349,19 @@ curl -sf "https://api.open-meteo.com/v1/forecast?latitude=$LAT&longitude=$LON&${
         interval: root.fetchInterval
         triggeredOnStart: !root.gpsActive
         onTriggered: root.getData()
+    }
+
+    // Watchdog: fires every minute to catch stale data after sleep/wake,
+    // since Qt timers don't account for system sleep time.
+    Timer {
+        running: root.ready && !root.gpsActive
+        repeat: true
+        interval: 60000
+        onTriggered: {
+            if (root.lastRefreshMs > 0 && !root.isLoading) {
+                const elapsed = Date.now() - root.lastRefreshMs;
+                if (elapsed > root.fetchInterval) root.getData();
+            }
+        }
     }
 }

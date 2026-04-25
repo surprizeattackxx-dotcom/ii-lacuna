@@ -9,7 +9,7 @@ import qs
 Singleton {
     id: root
 
-    readonly property string hyprlandConfigPath: Directories.home.replace("file://", "") + "/.local/share/ii-vynx/hyprland.conf"
+    readonly property string hyprlandConfigPath: Directories.home.replace("file://", "") + "/.local/share/hyprland/hyprland.conf"
     
     Process {
         id: configWriter

@@ -55,10 +55,25 @@ Item {
                     }
                 }
 
-                ClipboardPopup {
-                    hoverTarget: clipBtn
-                    clipboardActive: clipboardButtonItem.clipboardOpen
-                    onCloseRequested: clipboardButtonItem.clipboardOpen = false
+                Loader {
+                    active: true
+                    sourceComponent: Config.options.bar.tooltips.compactPopups ? clipCompact : clipFull
+                }
+                Component {
+                    id: clipFull
+                    ClipboardPopup {
+                        hoverTarget: clipBtn
+                        clipboardActive: clipboardButtonItem.clipboardOpen
+                        onCloseRequested: clipboardButtonItem.clipboardOpen = false
+                    }
+                }
+                Component {
+                    id: clipCompact
+                    ClipboardPopupCompact {
+                        hoverTarget: clipBtn
+                        clipboardActive: clipboardButtonItem.clipboardOpen
+                        onCloseRequested: clipboardButtonItem.clipboardOpen = false
+                    }
                 }
             }
         }
@@ -86,10 +101,25 @@ Item {
                     }
                 }
 
-                AlarmsPopup {
-                    hoverTarget: alarmBtn
-                    alarmsActive: alarmButtonItem.alarmsOpen
-                    onCloseRequested: alarmButtonItem.alarmsOpen = false
+                Loader {
+                    active: true
+                    sourceComponent: Config.options.bar.tooltips.compactPopups ? alarmCompact : alarmFull
+                }
+                Component {
+                    id: alarmFull
+                    AlarmsPopup {
+                        hoverTarget: alarmBtn
+                        alarmsActive: alarmButtonItem.alarmsOpen
+                        onCloseRequested: alarmButtonItem.alarmsOpen = false
+                    }
+                }
+                Component {
+                    id: alarmCompact
+                    AlarmsPopupCompact {
+                        hoverTarget: alarmBtn
+                        alarmsActive: alarmButtonItem.alarmsOpen
+                        onCloseRequested: alarmButtonItem.alarmsOpen = false
+                    }
                 }
             }
         }

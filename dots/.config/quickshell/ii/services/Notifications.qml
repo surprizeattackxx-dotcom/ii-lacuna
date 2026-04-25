@@ -129,7 +129,9 @@ Singleton {
     property bool silent: false
     property int unread: 0
     property var filePath: Directories.notificationsPath
+    property var historyFilePath: Directories.notificationsHistoryPath
     property list<Notif> list: []
+    property var historyList: []
 
     property var popupList: list
     .filter((notif) => notif.popup)
@@ -265,6 +267,9 @@ Singleton {
         const index = root.list.findIndex((notif) => notif.notificationId === id);
         const notifServerIndex = notifServer.trackedNotifications.values.findIndex((notif) => notif.id + root.idOffset === id);
         if (index !== -1) {
+            const notifObject = root.list[index];
+            root.historyList = [notifToJSON(notifObject), ...root.historyList].slice(0, 100);
+            historyFileView.setText(JSON.stringify(root.historyList, null, 2));
             root.list.splice(index, 1);
             notifFileView.setText(stringifyList(root.list));
             triggerListChange()
@@ -278,6 +283,9 @@ Singleton {
     }
 
     function discardAllNotifications() {
+        const allJSON = root.list.map((n) => notifToJSON(n));
+        root.historyList = [...allJSON, ...root.historyList].slice(0, 100);
+        historyFileView.setText(JSON.stringify(root.historyList, null, 2));
         root.list = []
         triggerListChange()
         notifFileView.setText(stringifyList(root.list));
@@ -286,6 +294,16 @@ Singleton {
         })
         root.cancelReply();
         root.discardAll();
+    }
+
+    function clearHistory() {
+        root.historyList = [];
+        historyFileView.setText("[]");
+    }
+
+    function removeFromHistory(id) {
+        root.historyList = root.historyList.filter((n) => n.notificationId !== id);
+        historyFileView.setText(JSON.stringify(root.historyList, null, 2));
     }
 
     function cancelTimeout(id) {
@@ -406,9 +424,29 @@ Singleton {
 
     Component.onCompleted: {
         refresh()
+        historyFileView.reload()
     }
 
     // ── Persistence ───────────────────────────────────────────────────────────
+
+    FileView {
+        id: historyFileView
+        path: Qt.resolvedUrl(historyFilePath)
+        onLoaded: {
+            const fileContents = historyFileView.text()
+            try {
+                const parsed = JSON.parse(fileContents);
+                if (Array.isArray(parsed)) root.historyList = parsed;
+            } catch (e) {
+                root.historyList = [];
+            }
+        }
+        onLoadFailed: (error) => {
+            root.historyList = [];
+            if (error == FileViewError.FileNotFound)
+                historyFileView.setText("[]");
+        }
+    }
 
     FileView {
         id: notifFileView

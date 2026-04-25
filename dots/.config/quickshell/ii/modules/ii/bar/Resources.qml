@@ -108,7 +108,16 @@ MouseArea {
         }
     }
 
-    ResourcesPopup {
-        hoverTarget: root
+    Loader {
+        active: true
+        sourceComponent: Config.options.bar.tooltips.compactPopups ? resourcesPopupCompact : resourcesPopupFull
+    }
+    Component {
+        id: resourcesPopupFull
+        ResourcesPopup { hoverTarget: root }
+    }
+    Component {
+        id: resourcesPopupCompact
+        ResourcesPopupCompact { hoverTarget: root }
     }
 }

@@ -290,15 +290,11 @@ PanelWindow {
             screenshotAction, //
             screenshotDir
         )
-        snipProc.command = command;
-
-        // Image post-processing
-        snipProc.startDetached();
+        // Image post-processing — use execDetached so the process is fully
+        // independent of the QML component lifecycle (dismiss() destroys this
+        // component, which would kill snipProc before wl-copy could serve data)
+        Quickshell.execDetached(command);
         root.dismiss();
-    }
-
-    Process {
-        id: snipProc
     }
 
     ScreencopyView { // For freezing

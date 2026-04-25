@@ -5,6 +5,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
+import "./cards"
 
 MouseArea {
     id: root
@@ -239,11 +240,37 @@ MouseArea {
     }
 
     // ── Popup ─────────────────────────────────────────────────────────────────
-    StyledPopup {
-        id: popup
-        hoverTarget: root
-        open: root.popupOpen || popup.popupHovered
-        onPopupHoveredChanged: popupHovered ? root.openPopup() : root.closePopup()
+    Loader {
+        active: true
+        sourceComponent: Config.options.bar.tooltips.compactPopups ? updatesPopupCompact : updatesPopupFull
+    }
+    Component {
+        id: updatesPopupCompact
+        StyledPopup {
+            id: compactPopup
+            hoverTarget: root
+            open: root.popupOpen || compactPopup.popupHovered
+            onPopupHoveredChanged: popupHovered ? root.openPopup() : root.closePopup()
+            contentItem: HeroCard {
+                anchors.centerIn: parent
+                adaptiveWidth: true
+                margins: 20
+                iconSize: 100
+                icon: Updates.checking ? "autorenew" : Updates.count === 0 ? "check_circle" : "update"
+                title: Updates.checking ? "…" : Updates.count.toString()
+                subtitle: Updates.checking ? Translation.tr("Checking…")
+                        : Updates.count === 0 ? Translation.tr("Up to date")
+                        : Updates.count + " " + Translation.tr("updates available")
+            }
+        }
+    }
+    Component {
+        id: updatesPopupFull
+        StyledPopup {
+            id: popup
+            hoverTarget: root
+            open: root.popupOpen || popup.popupHovered
+            onPopupHoveredChanged: popupHovered ? root.openPopup() : root.closePopup()
 
         ColumnLayout {
             anchors.centerIn: parent
@@ -456,6 +483,7 @@ MouseArea {
             }
         }
     }
+    } // Component updatesPopupFull
 
     // ── Updater process ───────────────────────────────────────────────────────
     Process {

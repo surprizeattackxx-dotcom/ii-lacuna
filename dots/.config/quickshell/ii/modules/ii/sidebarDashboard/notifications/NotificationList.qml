@@ -55,11 +55,7 @@ Item {
         spacing: 3
         ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 
-        model: {
-            const sorted = Notifications.list.slice()
-            sorted.sort((a, b) => b.time - a.time)
-            return sorted
-        }
+        model: Notifications.historyList
 
         delegate: Rectangle {
             required property var modelData
@@ -97,7 +93,7 @@ Item {
                     RippleButton {
                         implicitWidth: 18; implicitHeight: 18
                         buttonRadius: implicitWidth / 2
-                        onClicked: Notifications.discardNotification(modelData.notificationId)
+                        onClicked: Notifications.removeFromHistory(modelData.notificationId)
                         MaterialSymbol {
                             anchors.centerIn: parent
                             text: "close"
@@ -130,7 +126,7 @@ Item {
 
     // Placeholder when list is empty
     PagePlaceholder {
-        shown: Notifications.list.length === 0
+        shown: root.showHistory ? Notifications.historyList.length === 0 : Notifications.list.length === 0
         icon: "notifications_active"
         description: Translation.tr("Nothing")
         shape: MaterialShape.Shape.Ghostish
@@ -313,7 +309,8 @@ Item {
             Layout.fillWidth: false
             buttonIcon: "delete_sweep"
             onClicked: () => {
-                Notifications.discardAllNotifications()
+                if (root.showHistory) Notifications.clearHistory()
+                else Notifications.discardAllNotifications()
             }
         }
     }

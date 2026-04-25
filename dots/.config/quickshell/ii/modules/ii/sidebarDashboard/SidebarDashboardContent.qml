@@ -322,7 +322,7 @@ Item {
                     
                 }
                 StyledToolTip {
-                    text: Translation.tr("Update the ii-vynx, make sure you have the vynx-cli installed")
+                    text: Translation.tr("Update ii-lacuna")
                 }
             }
             QuickToggleButton {

@@ -76,7 +76,7 @@ ApplicationWindow {
 
     visible: true
     onClosing: Qt.quit()
-    title: "illogical-impulse Settings"
+    title: "ii-lacuna Settings"
 
     Component.onCompleted: {
         MaterialThemeLoader.reapplyTheme()

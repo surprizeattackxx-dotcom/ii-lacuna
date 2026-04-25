@@ -39,7 +39,16 @@ MouseArea {
 
     }
 
-    Bar.ResourcesPopup {
-        hoverTarget: root
+    Loader {
+        active: true
+        sourceComponent: Config.options.bar.tooltips.compactPopups ? resourcesPopupCompact : resourcesPopupFull
+    }
+    Component {
+        id: resourcesPopupFull
+        Bar.ResourcesPopup { hoverTarget: root }
+    }
+    Component {
+        id: resourcesPopupCompact
+        Bar.ResourcesPopupCompact { hoverTarget: root }
     }
 }

@@ -85,7 +85,9 @@ Item {
     }
 
     MouseArea {
+        id: mouseArea
         anchors.fill: parent
+        hoverEnabled: true
         acceptedButtons: Qt.MiddleButton | Qt.BackButton | Qt.ForwardButton | Qt.RightButton | Qt.LeftButton
         cursorShape: Qt.PointingHandCursor
         onPressed: (event) => {
@@ -197,6 +199,13 @@ Item {
                         gradientDensity: 0.25
                 }
             }
+        }
+    }
+
+    Loader {
+        active: Config.options.bar.tooltips.compactPopups
+        sourceComponent: Component {
+            MediaPopup { hoverTarget: mouseArea }
         }
     }
 
