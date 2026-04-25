@@ -192,6 +192,40 @@ ContentPage {
                     }
                 }
             }
+            ContentSubsection {
+                title: Translation.tr("Translation engine")
+
+                MaterialTextArea {
+                    Layout.fillWidth: true
+                    placeholderText: Translation.tr("Engine (e.g. google, deepl)")
+                    text: Config.options.language.translator.engine
+                    wrapMode: TextEdit.NoWrap
+                    onTextChanged: {
+                        Config.options.language.translator.engine = text;
+                    }
+                }
+                ConfigRow {
+                    uniform: true
+                    MaterialTextArea {
+                        Layout.fillWidth: true
+                        placeholderText: Translation.tr("Source language (e.g. auto, en)")
+                        text: Config.options.language.translator.sourceLanguage
+                        wrapMode: TextEdit.NoWrap
+                        onTextChanged: {
+                            Config.options.language.translator.sourceLanguage = text;
+                        }
+                    }
+                    MaterialTextArea {
+                        Layout.fillWidth: true
+                        placeholderText: Translation.tr("Target language (e.g. fr, de, ja)")
+                        text: Config.options.language.translator.targetLanguage
+                        wrapMode: TextEdit.NoWrap
+                        onTextChanged: {
+                            Config.options.language.translator.targetLanguage = text;
+                        }
+                    }
+                }
+            }
         }
 
         ContentSection {
@@ -336,6 +370,13 @@ ContentPage {
                     }
                 }
             }
+            MaterialTextArea {
+                Layout.fillWidth: true
+                placeholderText: Translation.tr("Sound theme (e.g. freedesktop)")
+                text: Config.options.sounds.theme
+                wrapMode: TextEdit.NoWrap
+                onTextChanged: { Config.options.sounds.theme = text; }
+            }
         }
 
         ContentSection {
@@ -385,6 +426,53 @@ ContentPage {
                     ]
                 }
             }
+
+            ContentSubsection {
+                title: Translation.tr("Pomodoro")
+
+                ConfigRow {
+                    uniform: true
+                    ConfigSpinBox {
+                        icon: "timer"
+                        text: Translation.tr("Focus (s)")
+                        value: Config.options.time.pomodoro.focus
+                        from: 60
+                        to: 7200
+                        stepSize: 60
+                        onValueChanged: { Config.options.time.pomodoro.focus = value; }
+                    }
+                    ConfigSpinBox {
+                        icon: "coffee"
+                        text: Translation.tr("Break (s)")
+                        value: Config.options.time.pomodoro.breakTime
+                        from: 60
+                        to: 3600
+                        stepSize: 60
+                        onValueChanged: { Config.options.time.pomodoro.breakTime = value; }
+                    }
+                }
+                ConfigRow {
+                    uniform: true
+                    ConfigSpinBox {
+                        icon: "hotel"
+                        text: Translation.tr("Long break (s)")
+                        value: Config.options.time.pomodoro.longBreak
+                        from: 60
+                        to: 7200
+                        stepSize: 60
+                        onValueChanged: { Config.options.time.pomodoro.longBreak = value; }
+                    }
+                    ConfigSpinBox {
+                        icon: "repeat"
+                        text: Translation.tr("Cycles before long break")
+                        value: Config.options.time.pomodoro.cyclesBeforeLongBreak
+                        from: 1
+                        to: 10
+                        stepSize: 1
+                        onValueChanged: { Config.options.time.pomodoro.cyclesBeforeLongBreak = value; }
+                    }
+                }
+            }
         }
 
         ContentSection {
@@ -410,6 +498,123 @@ ContentPage {
                             value: "ddd MM/dd"
                         }
                     ]
+                }
+            }
+
+            ConfigSpinBox {
+                icon: "event"
+                text: Translation.tr("First day of week (0=Mon, 6=Sun)")
+                value: Config.options.time.firstDayOfWeek
+                from: 0
+                to: 6
+                stepSize: 1
+                onValueChanged: { Config.options.time.firstDayOfWeek = value; }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Date string formats")
+                tooltip: Translation.tr("Qt date format strings, see Qt documentation")
+
+                MaterialTextArea {
+                    Layout.fillWidth: true
+                    placeholderText: Translation.tr("Short date (e.g. dd/MM)")
+                    text: Config.options.time.shortDateFormat
+                    wrapMode: TextEdit.NoWrap
+                    onTextChanged: { Config.options.time.shortDateFormat = text; }
+                }
+                MaterialTextArea {
+                    Layout.fillWidth: true
+                    placeholderText: Translation.tr("Long date (e.g. dd/MM/yyyy)")
+                    text: Config.options.time.longDateFormat
+                    wrapMode: TextEdit.NoWrap
+                    onTextChanged: { Config.options.time.longDateFormat = text; }
+                }
+                MaterialTextArea {
+                    Layout.fillWidth: true
+                    placeholderText: Translation.tr("Date with year (e.g. dd/MM/yyyy)")
+                    text: Config.options.time.dateWithYearFormat
+                    wrapMode: TextEdit.NoWrap
+                    onTextChanged: { Config.options.time.dateWithYearFormat = text; }
+                }
+            }
+
+            MaterialTextArea {
+                Layout.fillWidth: true
+                placeholderText: Translation.tr("Calendar locale (e.g. en-GB)")
+                text: Config.options.calendar.locale
+                wrapMode: TextEdit.NoWrap
+                onTextChanged: { Config.options.calendar.locale = text; }
+            }
+        }
+
+        ContentSection {
+            icon: "nights_stay"
+            title: Translation.tr("Light")
+
+            ConfigSwitch {
+                buttonIcon: "flare"
+                text: Translation.tr("Anti-flashbang (reduce brightness on startup)")
+                checked: Config.options.light.antiFlashbang.enable
+                onCheckedChanged: { Config.options.light.antiFlashbang.enable = checked; }
+            }
+
+            ContentSubsection {
+                title: Translation.tr("Night light")
+
+                ConfigSwitch {
+                    buttonIcon: "schedule"
+                    text: Translation.tr("Automatic (use schedule)")
+                    checked: Config.options.light.night.automatic
+                    onCheckedChanged: { Config.options.light.night.automatic = checked; }
+                }
+
+                ConfigSpinBox {
+                    icon: "thermostat"
+                    text: Translation.tr("Color temperature (K)")
+                    value: Config.options.light.night.colorTemperature
+                    from: 1000
+                    to: 10000
+                    stepSize: 100
+                    onValueChanged: { Config.options.light.night.colorTemperature = value; }
+                }
+
+                ConfigRow {
+                    uniform: true
+                    MaterialTextArea {
+                        Layout.fillWidth: true
+                        placeholderText: Translation.tr("From (HH:mm)")
+                        text: Config.options.light.night.from
+                        wrapMode: TextEdit.NoWrap
+                        onTextChanged: { Config.options.light.night.from = text; }
+                    }
+                    MaterialTextArea {
+                        Layout.fillWidth: true
+                        placeholderText: Translation.tr("To (HH:mm)")
+                        text: Config.options.light.night.to
+                        wrapMode: TextEdit.NoWrap
+                        onTextChanged: { Config.options.light.night.to = text; }
+                    }
+                }
+            }
+        }
+
+        ContentSection {
+            icon: "security"
+            title: Translation.tr("Conflict killer")
+
+            ConfigRow {
+                uniform: true
+                ConfigSwitch {
+                    buttonIcon: "notifications_off"
+                    text: Translation.tr("Auto-kill notification daemons")
+                    checked: Config.options.conflictKiller.autoKillNotificationDaemons
+                    onCheckedChanged: { Config.options.conflictKiller.autoKillNotificationDaemons = checked; }
+                }
+                ConfigSwitch {
+                    buttonIcon: "close"
+                    text: Translation.tr("Auto-kill tray apps")
+                    checked: Config.options.conflictKiller.autoKillTrays
+                    onCheckedChanged: { Config.options.conflictKiller.autoKillTrays = checked; }
                 }
             }
         }

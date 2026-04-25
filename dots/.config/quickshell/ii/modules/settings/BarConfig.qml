@@ -155,6 +155,44 @@ ContentPage {
                         }
                     ]
                 }
+
+                ConfigSwitch {
+                    enabled: Config.options.bar.autoHide.enable
+                    buttonIcon: "push_pin"
+                    text: Translation.tr("Push windows away")
+                    checked: Config.options.bar.autoHide.pushWindows
+                    onCheckedChanged: { Config.options.bar.autoHide.pushWindows = checked; }
+                }
+
+                ConfigSpinBox {
+                    enabled: Config.options.bar.autoHide.enable
+                    icon: "width_normal"
+                    text: Translation.tr("Hover region width (px)")
+                    value: Config.options.bar.autoHide.hoverRegionWidth
+                    from: 1
+                    to: 20
+                    stepSize: 1
+                    onValueChanged: { Config.options.bar.autoHide.hoverRegionWidth = value; }
+                }
+
+                ConfigSwitch {
+                    enabled: Config.options.bar.autoHide.enable
+                    buttonIcon: "keyboard_command_key"
+                    text: Translation.tr("Show when pressing Super")
+                    checked: Config.options.bar.autoHide.showWhenPressingSuper.enable
+                    onCheckedChanged: { Config.options.bar.autoHide.showWhenPressingSuper.enable = checked; }
+                }
+
+                ConfigSpinBox {
+                    enabled: Config.options.bar.autoHide.enable && Config.options.bar.autoHide.showWhenPressingSuper.enable
+                    icon: "timer"
+                    text: Translation.tr("Super show delay (ms)")
+                    value: Config.options.bar.autoHide.showWhenPressingSuper.delay
+                    from: 0
+                    to: 1000
+                    stepSize: 20
+                    onValueChanged: { Config.options.bar.autoHide.showWhenPressingSuper.delay = value; }
+                }
             }
         }
 
@@ -230,23 +268,49 @@ ContentPage {
                 onSelected: newValue => {
                     Config.options.bar.barBackgroundStyle = newValue;
                 }
-                options: [ 
+                options: [
                     {
                         displayName: Translation.tr("Visible"),
                         icon: "visibility",
                         value: 1
-                    }, 
+                    },
                     {
                         displayName: Translation.tr("Adaptive"),
                         icon: "masked_transitions",
                         value: 2
-                    },        
+                    },
                     {
                         displayName: Translation.tr("Transparent"),
                         icon: "opacity",
                         value: 0
                     }
                 ]
+            }
+        }
+
+        ConfigRow {
+            uniform: true
+            ConfigSwitch {
+                buttonIcon: "shadow"
+                text: Translation.tr("Float style shadow")
+                enabled: Config.options.bar.cornerStyle === 1
+                checked: Config.options.bar.floatStyleShadow
+                onCheckedChanged: { Config.options.bar.floatStyleShadow = checked; }
+            }
+            ConfigSwitch {
+                buttonIcon: "record_voice_over"
+                text: Translation.tr("Verbose mode")
+                checked: Config.options.bar.verbose
+                onCheckedChanged: { Config.options.bar.verbose = checked; }
+            }
+        }
+        MaterialTextArea {
+            Layout.fillWidth: true
+            placeholderText: Translation.tr("Top-left icon (e.g. spark, distro, or icon name)")
+            text: Config.options.bar.topLeftIcon
+            wrapMode: TextEdit.NoWrap
+            onTextChanged: {
+                Config.options.bar.topLeftIcon = text;
             }
         }
     }
@@ -297,6 +361,26 @@ ContentPage {
                 onValueChanged: {
                     Config.options.bar.mediaPlayer.lyrics.customSize = value;
                 }
+            }
+        }
+
+        ConfigRow {
+            uniform: true
+            ConfigSwitch {
+                buttonIcon: "lock"
+                text: Translation.tr("Use fixed size")
+                checked: Config.options.bar.mediaPlayer.useFixedSize
+                onCheckedChanged: { Config.options.bar.mediaPlayer.useFixedSize = checked; }
+            }
+            ConfigSpinBox {
+                enabled: Config.options.bar.mediaPlayer.useFixedSize
+                icon: "width_wide"
+                text: Translation.tr("Max size")
+                value: Config.options.bar.mediaPlayer.maxSize
+                from: 100
+                to: 800
+                stepSize: 25
+                onValueChanged: { Config.options.bar.mediaPlayer.maxSize = value; }
             }
         }
 
@@ -405,6 +489,22 @@ ContentPage {
             checked: Config.options.tray.monochromeIcons
             onCheckedChanged: {
                 Config.options.tray.monochromeIcons = checked;
+            }
+        }
+
+        ConfigRow {
+            uniform: true
+            ConfigSwitch {
+                buttonIcon: "filter_alt"
+                text: Translation.tr("Filter passive items")
+                checked: Config.options.tray.filterPassive
+                onCheckedChanged: { Config.options.tray.filterPassive = checked; }
+            }
+            ConfigSwitch {
+                buttonIcon: "label"
+                text: Translation.tr("Show item ID")
+                checked: Config.options.tray.showItemId
+                onCheckedChanged: { Config.options.tray.showItemId = checked; }
             }
         }
     }
@@ -636,6 +736,32 @@ ContentPage {
             }
         }
 
+        ConfigRow {
+            uniform: true
+            ConfigSwitch {
+                buttonIcon: "dynamic_feed"
+                text: Translation.tr("Dynamic workspaces")
+                checked: Config.options.bar.workspaces.dynamicWorkspaces
+                onCheckedChanged: { Config.options.bar.workspaces.dynamicWorkspaces = checked; }
+            }
+            ConfigSwitch {
+                buttonIcon: "font_download"
+                text: Translation.tr("Use Nerd Font icons")
+                checked: Config.options.bar.workspaces.useNerdFont
+                onCheckedChanged: { Config.options.bar.workspaces.useNerdFont = checked; }
+            }
+        }
+
+        ConfigSpinBox {
+            icon: "brightness_1"
+            text: Translation.tr("Active indicator opacity (%)")
+            value: Config.options.bar.workspaces.activeIndicatorOpacity
+            from: 0
+            to: 100
+            stepSize: 5
+            onValueChanged: { Config.options.bar.workspaces.activeIndicatorOpacity = value; }
+        }
+
         ContentSubsection {
             title: Translation.tr("Number style")
 
@@ -676,6 +802,64 @@ ContentPage {
             checked: Config.options.updates?.hideWhenZero ?? false
             onCheckedChanged: {
                 Config.setNestedValue("updates.hideWhenZero", checked);
+            }
+        }
+
+        ConfigRow {
+            uniform: true
+            ConfigSpinBox {
+                icon: "info"
+                text: Translation.tr("Advise update threshold")
+                value: Config.options.updates?.adviseUpdateThreshold ?? 1
+                from: 1
+                to: 100
+                stepSize: 1
+                onValueChanged: { Config.setNestedValue("updates.adviseUpdateThreshold", value); }
+            }
+            ConfigSpinBox {
+                icon: "warning"
+                text: Translation.tr("Strongly advise threshold")
+                value: Config.options.updates?.stronglyAdviseUpdateThreshold ?? 1
+                from: 1
+                to: 100
+                stepSize: 1
+                onValueChanged: { Config.setNestedValue("updates.stronglyAdviseUpdateThreshold", value); }
+            }
+        }
+    }
+
+    ContentSection {
+        icon: "monitor_heart"
+        title: Translation.tr("Resources")
+
+        ConfigRow {
+            uniform: true
+            ConfigSpinBox {
+                icon: "memory"
+                text: Translation.tr("CPU warning (%)")
+                value: Config.options.bar.resources.cpuWarningThreshold
+                from: 0
+                to: 100
+                stepSize: 5
+                onValueChanged: { Config.options.bar.resources.cpuWarningThreshold = value; }
+            }
+            ConfigSpinBox {
+                icon: "memory_alt"
+                text: Translation.tr("Memory warning (%)")
+                value: Config.options.bar.resources.memoryWarningThreshold
+                from: 0
+                to: 100
+                stepSize: 5
+                onValueChanged: { Config.options.bar.resources.memoryWarningThreshold = value; }
+            }
+            ConfigSpinBox {
+                icon: "swap_horiz"
+                text: Translation.tr("Swap warning (%)")
+                value: Config.options.bar.resources.swapWarningThreshold
+                from: 0
+                to: 100
+                stepSize: 5
+                onValueChanged: { Config.options.bar.resources.swapWarningThreshold = value; }
             }
         }
     }

@@ -58,6 +58,13 @@ ContentPage {
             }
         }
 
+        ConfigSwitch {
+            buttonIcon: "thumb_up"
+            text: Translation.tr("Enable like/dislike buttons")
+            checked: Config.options.media.likeDislike.enable
+            onCheckedChanged: { Config.options.media.likeDislike.enable = checked; }
+        }
+
     }
 
     ContentSection {
@@ -118,7 +125,18 @@ ContentPage {
                 Config.options.resources.updateInterval = value;
             }
         }
-        
+        ConfigSpinBox {
+            icon: "history"
+            text: Translation.tr("History length (samples)")
+            value: Config.options.resources.historyLength
+            from: 10
+            to: 500
+            stepSize: 10
+            onValueChanged: {
+                Config.options.resources.historyLength = value;
+            }
+        }
+
     }
 
 
@@ -281,6 +299,23 @@ ContentPage {
                     }
                 }
             }
+
+            ConfigRow {
+                uniform: true
+                MaterialTextArea {
+                    Layout.fillWidth: true
+                    placeholderText: Translation.tr("App")
+                    text: Config.options.search.prefix.app
+                    wrapMode: TextEdit.Wrap
+                    onTextChanged: { Config.options.search.prefix.app = text; }
+                }
+                ConfigSwitch {
+                    buttonIcon: "apps"
+                    text: Translation.tr("Show default actions without prefix")
+                    checked: Config.options.search.prefix.showDefaultActionsWithoutPrefix
+                    onCheckedChanged: { Config.options.search.prefix.showDefaultActionsWithoutPrefix = checked; }
+                }
+            }
         }
         ContentSubsection {
             title: Translation.tr("Web search")
@@ -292,6 +327,35 @@ ContentPage {
                 onTextChanged: {
                     Config.options.search.engineBaseUrl = text;
                 }
+            }
+            MaterialTextArea {
+                Layout.fillWidth: true
+                placeholderText: Translation.tr("Image search engine URL")
+                text: Config.options.search.imageSearch.imageSearchEngineBaseUrl
+                wrapMode: TextEdit.Wrap
+                onTextChanged: { Config.options.search.imageSearch.imageSearchEngineBaseUrl = text; }
+            }
+        }
+
+        ConfigRow {
+            uniform: true
+            ConfigSwitch {
+                buttonIcon: "tune"
+                text: Translation.tr("Sloppy search")
+                checked: Config.options.search.sloppy
+                onCheckedChanged: { Config.options.search.sloppy = checked; }
+                StyledToolTip {
+                    text: Translation.tr("Less strict fuzzy matching")
+                }
+            }
+            ConfigSpinBox {
+                icon: "timer"
+                text: Translation.tr("Non-app result delay (ms)")
+                value: Config.options.search.nonAppResultDelay
+                from: 0
+                to: 2000
+                stepSize: 50
+                onValueChanged: { Config.options.search.nonAppResultDelay = value; }
             }
         }
         ContentSubsection {
@@ -351,6 +415,116 @@ ContentPage {
                 Config.options.wallpapers.paths.download = text;
             }
         }
+        MaterialTextArea {
+            Layout.fillWidth: true
+            placeholderText: Translation.tr("NSFW save path")
+            text: Config.options.wallpapers.paths.nsfw
+            wrapMode: TextEdit.Wrap
+            onTextChanged: {
+                Config.options.wallpapers.paths.nsfw = text;
+            }
+        }
+        MaterialTextArea {
+            Layout.fillWidth: true
+            placeholderText: Translation.tr("Service (e.g. wallhaven)")
+            text: Config.options.wallpapers.service
+            wrapMode: TextEdit.NoWrap
+            onTextChanged: {
+                Config.options.wallpapers.service = text;
+            }
+        }
+        ConfigRow {
+            uniform: true
+            MaterialTextArea {
+                Layout.fillWidth: true
+                placeholderText: Translation.tr("Sort (e.g. relevance, date_added)")
+                text: Config.options.wallpapers.sort
+                wrapMode: TextEdit.NoWrap
+                onTextChanged: {
+                    Config.options.wallpapers.sort = text;
+                }
+            }
+            ConfigSwitch {
+                buttonIcon: "auto_awesome"
+                text: Translation.tr("Show anime results")
+                checked: Config.options.wallpapers.showAnimeResults
+                onCheckedChanged: {
+                    Config.options.wallpapers.showAnimeResults = checked;
+                }
+            }
+        }
+    }
+
+    ContentSection {
+        icon: "image_search"
+        title: Translation.tr("Sidebar: Booru")
+
+        ConfigSwitch {
+            buttonIcon: "no_adult_content"
+            text: Translation.tr("Allow NSFW")
+            checked: Config.options.sidebar.booru.allowNsfw
+            onCheckedChanged: {
+                Config.options.sidebar.booru.allowNsfw = checked;
+            }
+        }
+        ConfigRow {
+            uniform: true
+            MaterialTextArea {
+                Layout.fillWidth: true
+                placeholderText: Translation.tr("Default provider (e.g. danbooru, gelbooru)")
+                text: Config.options.sidebar.booru.defaultProvider
+                wrapMode: TextEdit.NoWrap
+                onTextChanged: {
+                    Config.options.sidebar.booru.defaultProvider = text;
+                }
+            }
+            ConfigSpinBox {
+                icon: "format_list_numbered"
+                text: Translation.tr("Result limit")
+                value: Config.options.sidebar.booru.limit
+                from: 1
+                to: 100
+                stepSize: 1
+                onValueChanged: {
+                    Config.options.sidebar.booru.limit = value;
+                }
+            }
+        }
+        MaterialTextArea {
+            Layout.fillWidth: true
+            placeholderText: Translation.tr("Zerochan username")
+            text: Config.options.sidebar.booru.zerochan.username
+            wrapMode: TextEdit.NoWrap
+            onTextChanged: {
+                Config.options.sidebar.booru.zerochan.username = text;
+            }
+        }
+    }
+
+    ContentSection {
+        icon: "translate"
+        title: Translation.tr("Sidebar: Translator")
+
+        ConfigSwitch {
+            buttonIcon: "check"
+            text: Translation.tr("Enable translator")
+            checked: Config.options.sidebar.translator.enable
+            onCheckedChanged: {
+                Config.options.sidebar.translator.enable = checked;
+            }
+        }
+        ConfigSpinBox {
+            enabled: Config.options.sidebar.translator.enable
+            icon: "timer"
+            text: Translation.tr("Translation delay (ms)")
+            value: Config.options.sidebar.translator.delay
+            from: 0
+            to: 2000
+            stepSize: 50
+            onValueChanged: {
+                Config.options.sidebar.translator.delay = value;
+            }
+        }
     }
 
     // There's no update indicator in ii for now so we shouldn't show this yet
@@ -382,6 +556,14 @@ ContentPage {
     ContentSection {
         icon: "weather_mix"
         title: Translation.tr("Weather")
+        ConfigSwitch {
+            buttonIcon: "cloud"
+            text: Translation.tr("Enable weather")
+            checked: Config.options.bar.weather.enable
+            onCheckedChanged: {
+                Config.options.bar.weather.enable = checked;
+            }
+        }
         ConfigRow {
             ConfigSwitch {
                 buttonIcon: "assistant_navigation"

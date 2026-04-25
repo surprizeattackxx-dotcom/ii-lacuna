@@ -266,14 +266,27 @@ ContentPage {
             onCheckedChanged: { Config.options.dock.enableMediaWidget = checked; }
         }
 
-        ConfigSpinBox {
-            icon: "height"
-            text: Translation.tr("Dock height")
-            value: Config.options.dock.height
-            from: 40
-            to: 80
-            stepSize: 1
-            onValueChanged: { Config.options.dock.height = value; }
+        ConfigRow {
+            uniform: true
+            ConfigSpinBox {
+                icon: "height"
+                text: Translation.tr("Dock height")
+                value: Config.options.dock.height
+                from: 40
+                to: 80
+                stepSize: 1
+                onValueChanged: { Config.options.dock.height = value; }
+            }
+            ConfigSpinBox {
+                enabled: Config.options.dock.hoverToReveal
+                icon: "swipe_up"
+                text: Translation.tr("Hover region height")
+                value: Config.options.dock.hoverRegionHeight
+                from: 1
+                to: 40
+                stepSize: 1
+                onValueChanged: { Config.options.dock.hoverRegionHeight = value; }
+            }
         }
         
         ConfigRow {
@@ -307,7 +320,15 @@ ContentPage {
             onCheckedChanged: {
                 Config.options.sidebar.ai.showProviderAndModelButtons = checked;
             }
-        }    
+        }
+        ConfigSwitch {
+            buttonIcon: "text_fields"
+            text: Translation.tr("AI text fade-in effect")
+            checked: Config.options.sidebar.ai.textFadeIn
+            onCheckedChanged: {
+                Config.options.sidebar.ai.textFadeIn = checked;
+            }
+        }
     }
 
     ContentSection {
@@ -415,6 +436,17 @@ ContentPage {
                 onValueChanged: {
                     Config.options.lock.blur.extraZoom = value / 100;
                 }
+            }
+
+            ConfigSpinBox {
+                enabled: Config.options.lock.blur.enable
+                icon: "blur_circular"
+                text: Translation.tr("Blur radius")
+                value: Config.options.lock.blur.radius
+                from: 0
+                to: 300
+                stepSize: 10
+                onValueChanged: { Config.options.lock.blur.radius = value; }
             }
         }
 
@@ -650,6 +682,16 @@ ContentPage {
                 Config.options.overlay.darkenScreen = checked;
             }
         }
+
+        ConfigSpinBox {
+            icon: "opacity"
+            text: Translation.tr("Clickthrough opacity (%)")
+            value: Math.round(Config.options.overlay.clickthroughOpacity * 100)
+            from: 0
+            to: 100
+            stepSize: 5
+            onValueChanged: { Config.options.overlay.clickthroughOpacity = value / 100; }
+        }
     }
 
     ContentSection {
@@ -703,6 +745,16 @@ ContentPage {
             onTextChanged: {
                 Config.options.overlay.floatingImage.imageSource = text;
             }
+        }
+
+        ConfigSpinBox {
+            icon: "zoom_in"
+            text: Translation.tr("Scale (%)")
+            value: Math.round(Config.options.overlay.floatingImage.scale * 100)
+            from: 10
+            to: 500
+            stepSize: 10
+            onValueChanged: { Config.options.overlay.floatingImage.scale = value / 100; }
         }
     }
 
@@ -1242,7 +1294,7 @@ ContentPage {
             ConfigSelectionArray {
                 currentValue: Config.options.overview.style
                 onSelected: newValue => {
-                    Config.options.overview.style = "classic"
+                    Config.options.overview.style = newValue
                 }
                 options: [
                     {
@@ -1436,6 +1488,106 @@ ContentPage {
         }
     }
 
-    
+    ContentSection {
+        icon: "window"
+        title: Translation.tr("Windows")
+
+        ConfigRow {
+            uniform: true
+            ConfigSwitch {
+                buttonIcon: "title"
+                text: Translation.tr("Show titlebar")
+                checked: Config.options.windows.showTitlebar
+                onCheckedChanged: { Config.options.windows.showTitlebar = checked; }
+            }
+            ConfigSwitch {
+                buttonIcon: "format_align_center"
+                text: Translation.tr("Center title")
+                enabled: Config.options.windows.showTitlebar
+                checked: Config.options.windows.centerTitle
+                onCheckedChanged: { Config.options.windows.centerTitle = checked; }
+            }
+        }
+    }
+
+    ContentSection {
+        icon: "keyboard"
+        title: Translation.tr("On-screen keyboard")
+
+        ConfigRow {
+            uniform: true
+            ConfigSwitch {
+                buttonIcon: "push_pin"
+                text: Translation.tr("Pinned on startup")
+                checked: Config.options.osk.pinnedOnStartup
+                onCheckedChanged: { Config.options.osk.pinnedOnStartup = checked; }
+            }
+            MaterialTextArea {
+                Layout.fillWidth: true
+                placeholderText: Translation.tr("Layout (e.g. us)")
+                text: Config.options.osk.layout
+                wrapMode: TextEdit.NoWrap
+                onTextChanged: { Config.options.osk.layout = text; }
+            }
+        }
+    }
+
+    ContentSection {
+        icon: "scroll"
+        title: Translation.tr("Scrolling")
+
+        ConfigRow {
+            uniform: true
+            ConfigSwitch {
+                buttonIcon: "speed"
+                text: Translation.tr("Faster touchpad scroll")
+                checked: Config.options.interactions.scrolling.fasterTouchpadScroll
+                onCheckedChanged: { Config.options.interactions.scrolling.fasterTouchpadScroll = checked; }
+            }
+            ConfigSwitch {
+                buttonIcon: "bug_report"
+                text: Translation.tr("Dead pixel workaround")
+                checked: Config.options.interactions.deadPixelWorkaround.enable
+                onCheckedChanged: { Config.options.interactions.deadPixelWorkaround.enable = checked; }
+                StyledToolTip {
+                    text: Translation.tr("Hyprland leaves 1px on the right for interactions")
+                }
+            }
+        }
+
+        ConfigRow {
+            uniform: true
+            ConfigSpinBox {
+                icon: "mouse"
+                text: Translation.tr("Mouse scroll factor")
+                value: Math.round(Config.options.interactions.scrolling.mouseScrollFactor * 100)
+                from: 10
+                to: 500
+                stepSize: 10
+                onValueChanged: { Config.options.interactions.scrolling.mouseScrollFactor = value / 100; }
+            }
+            ConfigSpinBox {
+                icon: "touch_app"
+                text: Translation.tr("Touchpad scroll factor")
+                value: Math.round(Config.options.interactions.scrolling.touchpadScrollFactor * 100)
+                from: 10
+                to: 500
+                stepSize: 10
+                onValueChanged: { Config.options.interactions.scrolling.touchpadScrollFactor = value / 100; }
+            }
+        }
+
+        ConfigSpinBox {
+            icon: "tune"
+            text: Translation.tr("Mouse scroll delta threshold")
+            value: Config.options.interactions.scrolling.mouseScrollDeltaThreshold
+            from: 1
+            to: 50
+            stepSize: 1
+            onValueChanged: { Config.options.interactions.scrolling.mouseScrollDeltaThreshold = value; }
+        }
+    }
+
+
 
 }
