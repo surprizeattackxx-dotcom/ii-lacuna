@@ -606,7 +606,7 @@ ContentPage {
                 uniform: true
                 ConfigSwitch {
                     buttonIcon: "notifications_off"
-                    text: Translation.tr("Auto-kill notification daemons")
+                    text: Translation.tr("Kill notif. daemons")
                     checked: Config.options.conflictKiller.autoKillNotificationDaemons
                     onCheckedChanged: { Config.options.conflictKiller.autoKillNotificationDaemons = checked; }
                 }

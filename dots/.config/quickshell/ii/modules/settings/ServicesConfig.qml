@@ -300,21 +300,18 @@ ContentPage {
                 }
             }
 
-            ConfigRow {
-                uniform: true
-                MaterialTextArea {
-                    Layout.fillWidth: true
-                    placeholderText: Translation.tr("App")
-                    text: Config.options.search.prefix.app
-                    wrapMode: TextEdit.Wrap
-                    onTextChanged: { Config.options.search.prefix.app = text; }
-                }
-                ConfigSwitch {
-                    buttonIcon: "apps"
-                    text: Translation.tr("Show default actions without prefix")
-                    checked: Config.options.search.prefix.showDefaultActionsWithoutPrefix
-                    onCheckedChanged: { Config.options.search.prefix.showDefaultActionsWithoutPrefix = checked; }
-                }
+            MaterialTextArea {
+                Layout.fillWidth: true
+                placeholderText: Translation.tr("App")
+                text: Config.options.search.prefix.app
+                wrapMode: TextEdit.Wrap
+                onTextChanged: { Config.options.search.prefix.app = text; }
+            }
+            ConfigSwitch {
+                buttonIcon: "apps"
+                text: Translation.tr("Show default actions without prefix")
+                checked: Config.options.search.prefix.showDefaultActionsWithoutPrefix
+                onCheckedChanged: { Config.options.search.prefix.showDefaultActionsWithoutPrefix = checked; }
             }
         }
         ContentSubsection {
@@ -471,7 +468,7 @@ ContentPage {
             uniform: true
             MaterialTextArea {
                 Layout.fillWidth: true
-                placeholderText: Translation.tr("Default provider (e.g. danbooru, gelbooru)")
+                placeholderText: Translation.tr("Default provider (e.g. danbooru)")
                 text: Config.options.sidebar.booru.defaultProvider
                 wrapMode: TextEdit.NoWrap
                 onTextChanged: {
