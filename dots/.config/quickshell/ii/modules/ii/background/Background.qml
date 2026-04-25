@@ -42,9 +42,19 @@ Variants {
         property int firstWorkspaceId: relevantWindows[0]?.workspace.id || 1
         property int lastWorkspaceId: relevantWindows[relevantWindows.length - 1]?.workspace.id || 10
 
-        // Wallpaper
-        property bool wallpaperIsVideo: Config.options.background.wallpaperPath.endsWith(".mp4") || Config.options.background.wallpaperPath.endsWith(".webm") || Config.options.background.wallpaperPath.endsWith(".mkv") || Config.options.background.wallpaperPath.endsWith(".avi") || Config.options.background.wallpaperPath.endsWith(".mov")
-        property string wallpaperPath: wallpaperIsVideo ? Config.options.background.thumbnailPath : Config.options.background.wallpaperPath
+        // Wallpaper — per-monitor path from awww state, falls back to global config
+        readonly property string perMonitorWallpaperPath: {
+            const raw = wallpaperStateFile?.text() ?? "";
+            try {
+                const parsed = JSON.parse(raw);
+                const p = parsed?.path ?? "";
+                return p !== "" ? p : Config.options.background.wallpaperPath;
+            } catch (e) {
+                return Config.options.background.wallpaperPath;
+            }
+        }
+        property bool wallpaperIsVideo: perMonitorWallpaperPath.endsWith(".mp4") || perMonitorWallpaperPath.endsWith(".webm") || perMonitorWallpaperPath.endsWith(".mkv") || perMonitorWallpaperPath.endsWith(".avi") || perMonitorWallpaperPath.endsWith(".mov")
+        property string wallpaperPath: wallpaperIsVideo ? Config.options.background.thumbnailPath : perMonitorWallpaperPath
         property bool wallpaperSafetyTriggered: {
             const enabled = Config.options.workSafety.enable.wallpaper;
             const sensitiveWallpaper = (CF.StringUtils.stringListContainsSubstring(wallpaperPath.toLowerCase(), Config.options.workSafety.triggerCondition.fileKeywords));
@@ -170,6 +180,21 @@ Variants {
             } catch (e) {
                 return {};
             }
+        }
+
+        // ── Per-monitor wallpaper path (awww state) ──────────────────────────
+        // Reads from wallpaper/monitors/{monitorName}.json written by fetchwall.sh
+        // Falls back to global Config wallpaperPath when file is missing.
+        readonly property string wallpaperStatePath: {
+            const stateDir = CF.FileUtils.trimFileProtocol(Directories.state).replace(/\/$/, "");
+            return `${stateDir}/user/generated/wallpaper/monitors/${bgRoot.monitor.name}.json`;
+        }
+        FileView {
+            id: wallpaperStateFile
+            path: bgRoot.wallpaperStatePath
+            blockLoading: true
+            watchChanges: true
+            onFileChanged: reload()
         }
 
         // Helpers — return per-monitor x/y if available, otherwise fall back to Config

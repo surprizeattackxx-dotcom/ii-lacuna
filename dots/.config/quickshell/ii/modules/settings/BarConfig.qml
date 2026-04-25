@@ -852,15 +852,15 @@ ContentPage {
                 stepSize: 5
                 onValueChanged: { Config.options.bar.resources.memoryWarningThreshold = value; }
             }
-            ConfigSpinBox {
-                icon: "swap_horiz"
-                text: Translation.tr("Swap warning (%)")
-                value: Config.options.bar.resources.swapWarningThreshold
-                from: 0
-                to: 100
-                stepSize: 5
-                onValueChanged: { Config.options.bar.resources.swapWarningThreshold = value; }
-            }
+        }
+        ConfigSpinBox {
+            icon: "swap_horiz"
+            text: Translation.tr("Swap warning (%)")
+            value: Config.options.bar.resources.swapWarningThreshold
+            from: 0
+            to: 100
+            stepSize: 5
+            onValueChanged: { Config.options.bar.resources.swapWarningThreshold = value; }
         }
     }
 

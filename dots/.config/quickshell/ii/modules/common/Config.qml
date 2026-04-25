@@ -153,6 +153,13 @@ Singleton {
                         property real termFgBoost: 0.35
                         property bool forceDarkMode: false
                     }
+                    property JsonObject schemeThresholds: JsonObject {
+                        property real t1: 20
+                        property real t2: 40
+                        property real t3: 70
+                        property real t4: 100
+                        property real brightnessMid: 128
+                    }
                 }
                 property JsonObject palette: JsonObject {
                     property string type: "auto" // Allowed: auto, scheme-content, scheme-expressive, scheme-fidelity, scheme-fruit-salad, scheme-monochrome, scheme-neutral, scheme-rainbow, scheme-tonal-spot
@@ -361,6 +368,7 @@ Singleton {
                     property bool useNerdFont: false
                     property int activeIndicatorOpacity: 100 // 0-100
                     property bool dynamicWorkspaces: false
+                    property bool showPreviewOnHover: true
                 }
                 property JsonObject weather: JsonObject {
                     property bool enable: false
@@ -607,6 +615,12 @@ Singleton {
                 property bool useWorkspaceMap: true
                 property list<var> workspaceMap: [0, 10]
                 property bool showOpeningAnimation: true
+                property string style: "classic" // Options: classic, scrolling
+                property int centerTopPaddingRatio: 3
+
+                property JsonObject hyprscrollingImplementation: JsonObject {
+                    property int maxWorkspaceWidth: 800
+                }
 
                 property JsonObject scrollingStyle: JsonObject {
 
@@ -690,6 +704,10 @@ Singleton {
                     property string imageSearchEngineBaseUrl: "https://lens.google.com/uploadbyurl?url="
                     property bool useCircleSelection: false
                 }
+            }
+
+            property JsonObject todo: JsonObject {
+                property bool showDueDates: true
             }
 
             property JsonObject sidebar: JsonObject {

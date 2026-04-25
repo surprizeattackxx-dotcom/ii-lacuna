@@ -14,15 +14,54 @@ ContentPage {
         Component.onCompleted: Qt.callLater(() => page.allowHeavyLoads = true)
 
         ContentSection {
+            icon: "tune"
+            title: Translation.tr("General")
+
+            ConfigRow {
+                uniform: true
+                ConfigSwitch {
+                    buttonIcon: "fullscreen_exit"
+                    text: Translation.tr("Hide when fullscreen")
+                    checked: Config.options.background.hideWhenFullscreen
+                    onCheckedChanged: {
+                        Config.options.background.hideWhenFullscreen = checked;
+                    }
+                }
+                ConfigSwitch {
+                    buttonIcon: "animation"
+                    text: Translation.tr("Animate wallpaper changes")
+                    checked: Config.options.background.animateWallpaperChanges
+                    onCheckedChanged: {
+                        Config.options.background.animateWallpaperChanges = checked;
+                    }
+                }
+            }
+        }
+
+        ContentSection {
             icon: "sync_alt"
             title: Translation.tr("Parallax")
 
-            ConfigSwitch {
-                buttonIcon: "unfold_more_double"
-                text: Translation.tr("Vertical")
-                checked: Config.options.background.parallax.vertical
-                onCheckedChanged: {
-                    Config.options.background.parallax.vertical = checked;
+            ConfigRow {
+                uniform: true
+                ConfigSwitch {
+                    buttonIcon: "unfold_more_double"
+                    text: Translation.tr("Vertical")
+                    checked: Config.options.background.parallax.vertical
+                    onCheckedChanged: {
+                        Config.options.background.parallax.vertical = checked;
+                    }
+                }
+                ConfigSwitch {
+                    buttonIcon: "screen_rotation"
+                    text: Translation.tr("Auto vertical")
+                    checked: Config.options.background.parallax.autoVertical
+                    onCheckedChanged: {
+                        Config.options.background.parallax.autoVertical = checked;
+                    }
+                    StyledToolTip {
+                        text: Translation.tr("Automatically switch to vertical parallax based on screen orientation")
+                    }
                 }
             }
 
@@ -48,12 +87,23 @@ ContentPage {
             ConfigSpinBox {
                 icon: "loupe"
                 text: Translation.tr("Preferred wallpaper zoom (%)")
-                value: Config.options.background.parallax.workspaceZoom * 100
-                from: 0
-                to: 150
-                stepSize: 20
+                value: Math.round(Config.options.background.parallax.workspaceZoom * 100)
+                from: 100
+                to: 200
+                stepSize: 5
                 onValueChanged: {
                     Config.options.background.parallax.workspaceZoom = value / 100;
+                }
+            }
+            ConfigSpinBox {
+                icon: "layers"
+                text: Translation.tr("Widget depth factor (%)")
+                value: Math.round(Config.options.background.parallax.widgetsFactor * 100)
+                from: 100
+                to: 200
+                stepSize: 5
+                onValueChanged: {
+                    Config.options.background.parallax.widgetsFactor = value / 100;
                 }
             }
         }
@@ -187,6 +237,28 @@ ContentPage {
                             value: 1
                         }
                     ]
+                }
+            }
+
+            ConfigSlider {
+                text: Translation.tr("Background opacity (%)")
+                buttonIcon: "opacity"
+                usePercentTooltip: false
+                from: 0; to: 100
+                value: Config.options.background.mediaMode.backgroundOpacity
+                onValueChanged: {
+                    Config.options.background.mediaMode.backgroundOpacity = value;
+                }
+            }
+            ConfigSlider {
+                text: Translation.tr("Blur radius")
+                buttonIcon: "blur_on"
+                usePercentTooltip: false
+                from: 0; to: 300
+                stopIndicatorValues: [120]
+                value: Config.options.background.mediaMode.backgroundBlurRadius
+                onValueChanged: {
+                    Config.options.background.mediaMode.backgroundBlurRadius = value;
                 }
             }
 
@@ -358,6 +430,26 @@ ContentPage {
                     }
                 }
 
+                ConfigRow {
+                    uniform: true
+                    ConfigSwitch {
+                        buttonIcon: "palette"
+                        text: Translation.tr("Colorful")
+                        checked: Config.options.background.widgets.clock.digital.colorful
+                        onCheckedChanged: {
+                            Config.options.background.widgets.clock.digital.colorful = checked;
+                        }
+                    }
+                    ConfigSwitch {
+                        buttonIcon: "schedule"
+                        text: Translation.tr("Show colon")
+                        checked: Config.options.background.widgets.clock.digital.showColon
+                        onCheckedChanged: {
+                            Config.options.background.widgets.clock.digital.showColon = checked;
+                        }
+                    }
+                }
+
                 MaterialTextArea {
                     Layout.fillWidth: true
                     placeholderText: Translation.tr("Font family")
@@ -445,6 +537,15 @@ ContentPage {
                     }
                     StyledToolTip {
                         text: "Makes the clock always rotate. This is extremely expensive\n(expect 50% usage on Intel UHD Graphics) and thus impractical."
+                    }
+                }
+
+                ConfigSwitch {
+                    buttonIcon: "calendar_today"
+                    text: Translation.tr("Show date in clock")
+                    checked: Config.options.background.widgets.clock.cookie.dateInClock
+                    onCheckedChanged: {
+                        Config.options.background.widgets.clock.cookie.dateInClock = checked;
                     }
                 }
 
