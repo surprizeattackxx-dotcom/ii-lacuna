@@ -25,6 +25,13 @@ ShellRoot {
 
     Process { id: applyProcess }
 
+    // Recompute widget positions on shell startup to ensure they persist across boots
+    Process {
+        id: updateWidgetPositionsProcess
+        running: true
+        command: [Quickshell.env("HOME") + "/.config/quickshell/ii/scripts/images/update_widget_positions.sh"]
+    }
+
     Process {
         id: listProcess
         running: true

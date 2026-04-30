@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import QtQuick.Controls
 import Qt5Compat.GraphicalEffects
 import Quickshell
 import Quickshell.Io
@@ -35,6 +36,90 @@ ContentPage {
                 console.log("[osuwall] exited code=" + code)
                 monitorPreviewsContainer.refreshCount++
             }
+        }
+
+        // WPE picker state
+        property bool wpePickerOpen: false
+        property string wpeSelectedMonitor: ""
+        property string wpeApplyingPath: ""
+        property var wpeWallpapers: []
+
+        // WPE property editor state
+        property string wpeExpandedPath: ""
+        property string wpeExpandedTitle: ""
+        property var wpeExpandedProps: []
+        property var wpeExpandedValues: ({})
+
+        Process {
+            id: wpeEnumProc
+            command: ["python3", "-c",
+                "import os,json\n" +
+                "base='/mnt/wwn-0x50014ee65ea3c55b-part1/SteamLibrary/steamapps/workshop/content/431960'\n" +
+                "rows=[]\n" +
+                "try:\n" +
+                "  for name in os.listdir(base):\n" +
+                "    d=os.path.join(base,name)\n" +
+                "    pj=os.path.join(d,'project.json')\n" +
+                "    if not os.path.isfile(pj): continue\n" +
+                "    try: t=json.load(open(pj)).get('title',name)\n" +
+                "    except: t=name\n" +
+                "    rows.append((t,name,d))\n" +
+                "except Exception as e: print('ERR:'+str(e))\n" +
+                "rows.sort()\n" +
+                "for t,name,d in rows: print(name+'|'+d+'|'+t)\n"
+            ]
+            stdout: SplitParser {
+                onRead: data => {
+                    if (data.startsWith("ERR:")) {
+                        console.log("[wpeEnum]", data)
+                        return
+                    }
+                    const idx = data.indexOf("|")
+                    const idx2 = data.indexOf("|", idx + 1)
+                    if (idx < 0 || idx2 < 0) return
+                    const id = data.slice(0, idx)
+                    const path = data.slice(idx + 1, idx2)
+                    const title = data.slice(idx2 + 1)
+                    page.wpeWallpapers = [...page.wpeWallpapers, { id: id, path: path, title: title }]
+                }
+            }
+            stderr: SplitParser { onRead: data => console.log("[wpeEnum err]", data) }
+        }
+
+        Process {
+            id: wpeApplyProc
+            stdout: SplitParser { onRead: data => console.log("[wpeApply]", data) }
+            stderr: SplitParser { onRead: data => console.log("[wpeApply err]", data) }
+            onExited: (code, status) => {
+                page.wpeApplyingPath = ""
+                monitorPreviewsContainer.refreshCount++
+            }
+        }
+
+        Process {
+            id: wpePropsProc
+            stdout: SplitParser {
+                onRead: data => {
+                    // format: key|type|label|defaultValue|min|max|options(pipe-separated)
+                    const parts = data.split("|")
+                    if (parts.length < 4) return
+                    const key = parts[0], type = parts[1], label = parts[2], defVal = parts[3]
+                    const min = parseFloat(parts[4]) || 0
+                    const max = parseFloat(parts[5]) || 1
+                    const options = (parts[6] || "").length > 0 ? parts[6].split(";;") : []
+                    // Seed value map with default if not already set
+                    if (!(key in page.wpeExpandedValues)) {
+                        const m = Object.assign({}, page.wpeExpandedValues)
+                        m[key] = defVal
+                        page.wpeExpandedValues = m
+                    }
+                    page.wpeExpandedProps = [...page.wpeExpandedProps, {
+                        key: key, type: type, label: label,
+                        defaultValue: defVal, min: min, max: max, options: options
+                    }]
+                }
+            }
+            stderr: SplitParser { onRead: data => console.log("[wpeProps err]", data) }
         }
 
         component SmallLightDarkPreferenceButton: RippleButton {
@@ -457,6 +542,417 @@ ContentPage {
                     }
                 }
             }
+            // ── Wallpaper Engine picker ──────────────────────────────────
+            RippleButtonWithIcon {
+                Layout.fillWidth: true
+                buttonRadius: Appearance.rounding.small
+                materialIcon: "animated_images"
+                mainText: Translation.tr("Wallpaper Engine")
+                onClicked: {
+                    page.wpePickerOpen = !page.wpePickerOpen
+                    if (page.wpePickerOpen && page.wpeWallpapers.length === 0 && !wpeEnumProc.running) {
+                        wpeEnumProc.running = true
+                    }
+                }
+            }
+
+            Revealer {
+                id: wpeRevealer
+                reveal: page.wpePickerOpen
+                vertical: true
+                Layout.fillWidth: true
+
+                ColumnLayout {
+                    width: wpeRevealer.width
+                    spacing: 8
+
+                    // Monitor selector
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 6
+
+                        StyledText {
+                            text: Translation.tr("Monitor:")
+                            font.pixelSize: Appearance.font.pixelSize.smaller
+                            color: Appearance.colors.colOnLayer1
+                        }
+
+                        Repeater {
+                            model: monitorPreviewsContainer.monitorNames
+                            delegate: RippleButton {
+                                required property string modelData
+                                required property int index
+
+                                Component.onCompleted: {
+                                    if (index === 0 && page.wpeSelectedMonitor === "")
+                                        page.wpeSelectedMonitor = modelData
+                                }
+
+                                toggled: page.wpeSelectedMonitor === modelData
+                                colBackground: Appearance.colors.colLayer2
+                                colBackgroundToggled: Appearance.colors.colPrimary
+                                buttonRadius: Appearance.rounding.full
+                                padding: 0
+                                implicitWidth: _monLabel.implicitWidth + 20
+                                implicitHeight: 28
+                                onClicked: page.wpeSelectedMonitor = modelData
+
+                                contentItem: StyledText {
+                                    id: _monLabel
+                                    anchors.centerIn: parent
+                                    text: modelData
+                                    color: parent.toggled
+                                        ? Appearance.colors.colOnPrimary
+                                        : Appearance.colors.colOnLayer2
+                                    font.pixelSize: Appearance.font.pixelSize.smaller
+                                }
+                            }
+                        }
+
+                        RippleButton {
+                            toggled: page.wpeSelectedMonitor === "__all__"
+                            colBackground: Appearance.colors.colLayer2
+                            colBackgroundToggled: Appearance.colors.colPrimary
+                            buttonRadius: Appearance.rounding.full
+                            padding: 0
+                            implicitWidth: _allLabel.implicitWidth + 20
+                            implicitHeight: 28
+                            onClicked: page.wpeSelectedMonitor = "__all__"
+                            contentItem: StyledText {
+                                id: _allLabel
+                                anchors.centerIn: parent
+                                text: Translation.tr("All")
+                                color: parent.toggled
+                                    ? Appearance.colors.colOnPrimary
+                                    : Appearance.colors.colOnLayer2
+                                font.pixelSize: Appearance.font.pixelSize.smaller
+                            }
+                        }
+
+                        Item { Layout.fillWidth: true }
+                    }
+
+                    // Loading / empty state
+                    StyledText {
+                        Layout.fillWidth: true
+                        visible: wpeEnumProc.running || (!wpeEnumProc.running && page.wpeWallpapers.length === 0)
+                        horizontalAlignment: Text.AlignHCenter
+                        text: wpeEnumProc.running
+                            ? Translation.tr("Loading wallpapers...")
+                            : Translation.tr("No Wallpaper Engine wallpapers found.\nIs the Steam library mounted?")
+                        font.pixelSize: Appearance.font.pixelSize.smaller
+                        color: Appearance.colors.colOnLayer1
+                        wrapMode: Text.WordWrap
+                    }
+
+                    // Wallpaper grid
+                    Flow {
+                        id: wpeGrid
+                        Layout.fillWidth: true
+                        spacing: 8
+                        visible: page.wpeWallpapers.length > 0
+
+                        Repeater {
+                            model: page.wpeWallpapers
+
+                            delegate: Item {
+                                required property var modelData
+                                width: 118
+                                height: 104
+
+                                Rectangle {
+                                    anchors.fill: parent
+                                    color: Appearance.colors.colLayer2
+                                    radius: Appearance.rounding.small
+                                }
+
+                                Image {
+                                    id: _wpeThumb
+                                    anchors.top: parent.top
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    height: 76
+                                    fillMode: Image.PreserveAspectCrop
+                                    source: "file://" + modelData.path + "/preview.gif"
+                                    asynchronous: true
+                                    cache: true
+                                    clip: true
+                                }
+
+                                StyledText {
+                                    anchors.top: _wpeThumb.bottom
+                                    anchors.left: parent.left
+                                    anchors.right: parent.right
+                                    anchors.topMargin: 3
+                                    leftPadding: 4
+                                    rightPadding: 4
+                                    text: modelData.title
+                                    font.pixelSize: Appearance.font.pixelSize.smallie
+                                    color: Appearance.colors.colOnLayer2
+                                    elide: Text.ElideRight
+                                    horizontalAlignment: Text.AlignHCenter
+                                }
+
+                                // "applying" overlay
+                                Rectangle {
+                                    anchors.fill: parent
+                                    radius: Appearance.rounding.small
+                                    color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.65)
+                                    visible: page.wpeApplyingPath === modelData.path
+
+                                    MaterialSymbol {
+                                        anchors.centerIn: parent
+                                        text: "hourglass_top"
+                                        color: Appearance.colors.colOnPrimary
+                                        iconSize: 22
+                                    }
+                                }
+
+                                RippleButton {
+                                    anchors.fill: parent
+                                    colBackground: "transparent"
+                                    colBackgroundHover: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.75)
+                                    colRipple: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.5)
+                                    buttonRadius: Appearance.rounding.small
+                                    enabled: !wpeApplyProc.running && page.wpeSelectedMonitor.length > 0
+
+                                    onClicked: {
+                                        page.wpeApplyingPath = modelData.path
+                                        {
+                                            const _fw = FileUtils.trimFileProtocol(Directories.scriptPath) + "/colors/fetchwall.sh"
+                                            if (page.wpeSelectedMonitor === "__all__") {
+                                                const _mons = monitorPreviewsContainer.monitorNames
+                                                const _cmds = _mons.map(m => `bash '${_fw}' --monitor '${m}' '${modelData.path}'`).join(" && ")
+                                                wpeApplyProc.exec(["bash", "-c", _cmds])
+                                            } else {
+                                                wpeApplyProc.exec(["bash", _fw, "--monitor", page.wpeSelectedMonitor, modelData.path])
+                                            }
+                                        }
+                                        // Load properties for this wallpaper
+                                        if (page.wpeExpandedPath !== modelData.path) {
+                                            page.wpeExpandedPath = modelData.path
+                                            page.wpeExpandedTitle = modelData.title
+                                            page.wpeExpandedProps = []
+                                            page.wpeExpandedValues = ({})
+                                            wpePropsProc.exec(["python3", "-c",
+                                                "import json,sys,re\n" +
+                                                "try:\n" +
+                                                "  pj=json.load(open(sys.argv[1]+'/project.json'))\n" +
+                                                "  props=pj.get('general',{}).get('properties',{})\n" +
+                                                "  for key,v in props.items():\n" +
+                                                "    if not isinstance(v,dict): continue\n" +
+                                                "    t=v.get('type','')\n" +
+                                                "    if t not in ('color','slider','combo','checkbox','textinput'): continue\n" +
+                                                "    raw_label=v.get('text',key)\n" +
+                                                "    for pfx in ('ui_browse_properties_','ui_browse_','ui_'):\n" +
+                                                "      if raw_label.startswith(pfx): raw_label=raw_label[len(pfx):]; break\n" +
+                                                "    label=re.sub(r'([A-Z])',r' \\1',raw_label.replace('_',' ')).strip().title()\n" +
+                                                "    val=str(v.get('value',''))\n" +
+                                                "    mn=str(v.get('min',0))\n" +
+                                                "    mx=str(v.get('max',1))\n" +
+                                                "    opts=v.get('options',[])\n" +
+                                                "    if opts and isinstance(opts[0],dict): opts=[str(o.get('label',o.get('value',''))) for o in opts]\n" +
+                                                "    else: opts=[str(o) for o in opts]\n" +
+                                                "    print(key+'|'+t+'|'+label+'|'+val+'|'+mn+'|'+mx+'|'+';;'.join(opts))\n" +
+                                                "except Exception as e: import sys; print('ERR:'+str(e),file=sys.stderr)\n",
+                                                modelData.path
+                                            ])
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // WPE property editor panel
+                    Revealer {
+                        id: wpePropsRevealer
+                        reveal: page.wpeExpandedPath.length > 0 && page.wpeExpandedProps.length > 0
+                        vertical: true
+                        Layout.fillWidth: true
+
+                        ColumnLayout {
+                            width: wpePropsRevealer.width
+                            spacing: 6
+
+                            Item { implicitHeight: 2 }
+
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: Translation.tr("Settings: ") + page.wpeExpandedTitle
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                color: Appearance.colors.colOnLayer1
+                                elide: Text.ElideRight
+                            }
+
+                            Repeater {
+                                model: page.wpeExpandedProps
+
+                                delegate: RowLayout {
+                                    id: wpePropsRepeaterDelegate
+                                    required property var modelData
+                                    Layout.fillWidth: true
+                                    spacing: 8
+
+                                    StyledText {
+                                        text: modelData.label
+                                        font.pixelSize: Appearance.font.pixelSize.smaller
+                                        color: Appearance.colors.colOnLayer1
+                                        Layout.preferredWidth: 120
+                                        elide: Text.ElideRight
+                                    }
+
+                                    // color type
+                                    Rectangle {
+                                        visible: modelData.type === "color"
+                                        Layout.preferredWidth: visible ? 28 : 0
+                                        Layout.preferredHeight: visible ? 28 : 0
+                                        radius: Appearance.rounding.small
+                                        color: {
+                                            const v = page.wpeExpandedValues[modelData.key] || modelData.defaultValue
+                                            return (v && v.length > 0) ? v : "#888888"
+                                        }
+                                        border.color: Appearance.colors.colOnLayer2
+                                        border.width: 1
+                                    }
+                                    MaterialTextField {
+                                        visible: modelData.type === "color"
+                                        Layout.preferredWidth: 90
+                                        text: page.wpeExpandedValues[modelData.key] !== undefined
+                                            ? page.wpeExpandedValues[modelData.key]
+                                            : modelData.defaultValue
+                                        font.pixelSize: Appearance.font.pixelSize.smaller
+                                        onEditingFinished: {
+                                            const m = Object.assign({}, page.wpeExpandedValues)
+                                            m[modelData.key] = text
+                                            page.wpeExpandedValues = m
+                                        }
+                                    }
+
+                                    // slider type
+                                    StyledSlider {
+                                        visible: modelData.type === "slider"
+                                        Layout.fillWidth: true
+                                        from: modelData.min
+                                        to: modelData.max
+                                        value: parseFloat(page.wpeExpandedValues[modelData.key] !== undefined
+                                            ? page.wpeExpandedValues[modelData.key]
+                                            : modelData.defaultValue) || modelData.min
+                                        onMoved: {
+                                            const m = Object.assign({}, page.wpeExpandedValues)
+                                            m[modelData.key] = value.toFixed(3)
+                                            page.wpeExpandedValues = m
+                                        }
+                                    }
+                                    StyledText {
+                                        visible: modelData.type === "slider"
+                                        text: page.wpeExpandedValues[modelData.key] !== undefined
+                                            ? parseFloat(page.wpeExpandedValues[modelData.key]).toFixed(2)
+                                            : modelData.defaultValue
+                                        font.pixelSize: Appearance.font.pixelSize.smaller
+                                        color: Appearance.colors.colOnLayer1
+                                        Layout.preferredWidth: 36
+                                        horizontalAlignment: Text.AlignRight
+                                    }
+
+                                    // combo type
+                                    Flow {
+                                        visible: modelData.type === "combo"
+                                        Layout.fillWidth: true
+                                        spacing: 4
+                                        Repeater {
+                                            model: modelData.options
+                                            delegate: RippleButton {
+                                                required property string modelData
+                                                required property int index
+                                                padding: 4
+                                                toggled: page.wpeExpandedValues[wpePropsRepeaterDelegate.modelData.key] === modelData
+                                                colBackground: toggled ? Appearance.colors.colPrimary : Appearance.colors.colLayer2
+                                                buttonRadius: Appearance.rounding.small
+                                                onClicked: {
+                                                    const m = Object.assign({}, page.wpeExpandedValues)
+                                                    m[wpePropsRepeaterDelegate.modelData.key] = modelData
+                                                    page.wpeExpandedValues = m
+                                                }
+                                                StyledText {
+                                                    text: parent.modelData
+                                                    font.pixelSize: Appearance.font.pixelSize.smaller
+                                                    color: parent.toggled
+                                                        ? Appearance.colors.colOnPrimary
+                                                        : Appearance.colors.colOnLayer2
+                                                }
+                                            }
+                                        }
+                                    }
+
+                                    // checkbox type
+                                    CheckBox {
+                                        visible: modelData.type === "checkbox"
+                                        checked: {
+                                            const v = page.wpeExpandedValues[modelData.key]
+                                            return v !== undefined ? (v === "true" || v === "1") : (modelData.defaultValue === "true" || modelData.defaultValue === "1")
+                                        }
+                                        onToggled: {
+                                            const m = Object.assign({}, page.wpeExpandedValues)
+                                            m[modelData.key] = checked ? "1" : "0"
+                                            page.wpeExpandedValues = m
+                                        }
+                                    }
+
+                                    // textinput type
+                                    MaterialTextField {
+                                        visible: modelData.type === "textinput"
+                                        Layout.fillWidth: true
+                                        text: page.wpeExpandedValues[modelData.key] !== undefined
+                                            ? page.wpeExpandedValues[modelData.key]
+                                            : modelData.defaultValue
+                                        font.pixelSize: Appearance.font.pixelSize.smaller
+                                        onEditingFinished: {
+                                            const m = Object.assign({}, page.wpeExpandedValues)
+                                            m[modelData.key] = text
+                                            page.wpeExpandedValues = m
+                                        }
+                                    }
+
+                                    Item { Layout.fillWidth: true; visible: modelData.type !== "slider" && modelData.type !== "combo" && modelData.type !== "textinput" && modelData.type !== "checkbox" }
+                                }
+                            }
+
+                            RippleButtonWithIcon {
+                                id: wpeReapplyBtn
+                                Layout.fillWidth: true
+                                buttonRadius: Appearance.rounding.small
+                                materialIcon: "check"
+                                mainText: Translation.tr("Apply with these settings")
+                                enabled: !wpeApplyProc.running && page.wpeSelectedMonitor.length > 0
+                                onClicked: {
+                                    const fetchwall = FileUtils.trimFileProtocol(Directories.scriptPath) + "/colors/fetchwall.sh"
+                                    const vals = page.wpeExpandedValues
+                                    page.wpeApplyingPath = page.wpeExpandedPath
+                                    if (page.wpeSelectedMonitor === "__all__") {
+                                        const mons = monitorPreviewsContainer.monitorNames
+                                        const propStr = Object.keys(vals).map(k => `--wpe-property '${k}' '${vals[k]}'`).join(" ")
+                                        const cmds = mons.map(m => `bash '${fetchwall}' --monitor '${m}' ${propStr} '${page.wpeExpandedPath}'`).join(" && ")
+                                        wpeApplyProc.exec(["bash", "-c", cmds])
+                                    } else {
+                                        const args = ["bash", fetchwall, "--monitor", page.wpeSelectedMonitor]
+                                        for (const key of Object.keys(vals)) {
+                                            args.push("--wpe-property", key, vals[key])
+                                        }
+                                        args.push(page.wpeExpandedPath)
+                                        wpeApplyProc.exec(args)
+                                    }
+                                }
+                            }
+
+                            Item { implicitHeight: 4 }
+                        }
+                    }
+
+                    Item { implicitHeight: 4 }
+                }
+            }
+
             ConfigSwitch {
                 buttonIcon: "ev_shadow"
                 text: Translation.tr("Transparency")

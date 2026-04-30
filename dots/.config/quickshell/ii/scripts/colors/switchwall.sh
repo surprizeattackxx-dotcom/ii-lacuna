@@ -124,6 +124,11 @@ is_video() {
     [[ "$extension" == "mp4" || "$extension" == "webm" || "$extension" == "mkv" || "$extension" == "avi" || "$extension" == "mov" ]] && return 0 || return 1
 }
 
+# A WPE wallpaper is a directory containing a project.json
+is_wpe_wallpaper() {
+    [[ -d "$1" && -f "$1/project.json" ]]
+}
+
 kill_existing_mpvpaper() {
     pkill -f -9 mpvpaper || true
 }
@@ -230,6 +235,15 @@ switch() {
         if [[ -z "$imgpath" ]]; then
             echo 'Aborted'
             exit 0
+        fi
+
+        # If this is a WPE workshop dir, hand off to fetchwall instead of overwriting
+        if is_wpe_wallpaper "$imgpath"; then
+            echo "[switchwall] WPE path detected — delegating to fetchwall.sh"
+            local _fw_args=("--image" "$imgpath" "--mode" "${mode_flag:-dark}")
+            [[ -n "$monitor_flag" ]] && _fw_args+=("--monitor" "$monitor_flag")
+            bash "$(dirname "${BASH_SOURCE[0]}")/fetchwall.sh" "${_fw_args[@]}"
+            return $?
         fi
 
         [[ -z "$noswitch_flag" ]] && check_and_prompt_upscale "$imgpath" &
@@ -341,15 +355,6 @@ switch() {
         fi
     fi
 
-    # enforce dark mode for terminal
-    if [[ -n "$mode_flag" ]]; then
-        matugen_args+=(--mode "$mode_flag")
-        if [[ $(jq -r '.appearance.wallpaperTheming.terminalGenerationProps.forceDarkMode' "$SHELL_CONFIG_FILE") == "true" ]]; then
-            generate_colors_material_args+=(--mode "dark")
-        else
-            generate_colors_material_args+=(--mode "$mode_flag")
-        fi
-    fi
     [[ -n "$type_flag" ]] && matugen_args+=(--type "$type_flag") && generate_colors_material_args+=(--scheme "$type_flag")
     generate_colors_material_args+=(--termscheme "$terminalscheme" --blend_bg_fg)
     generate_colors_material_args+=(--cache "$STATE_DIR/user/generated/color.txt")

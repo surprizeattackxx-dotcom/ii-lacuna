@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell.Io
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
@@ -12,6 +13,14 @@ ContentPage {
 
         property bool allowHeavyLoads: false
         Component.onCompleted: Qt.callLater(() => page.allowHeavyLoads = true)
+
+        Process {
+            id: updateWidgetPositionsProc
+            command: ["bash", Directories.scriptPath + "/images/update_widget_positions.sh"]
+        }
+        function runWidgetPositionUpdate() {
+            updateWidgetPositionsProc.running = true;
+        }
 
         ContentSection {
             icon: "tune"
@@ -302,6 +311,7 @@ ContentPage {
                     currentValue: Config.options.background.widgets.clock.placementStrategy
                     onSelected: newValue => {
                         Config.options.background.widgets.clock.placementStrategy = newValue;
+                        if (newValue === "leastBusy" || newValue === "mostBusy") page.runWidgetPositionUpdate();
                     }
                     options: [
                         {
@@ -944,6 +954,7 @@ ContentPage {
                     currentValue: Config.options.background.widgets.weather.placementStrategy
                     onSelected: newValue => {
                         Config.options.background.widgets.weather.placementStrategy = newValue;
+                        if (newValue === "leastBusy" || newValue === "mostBusy") page.runWidgetPositionUpdate();
                     }
                     options: [
                         {
@@ -1006,6 +1017,7 @@ ContentPage {
                     currentValue: Config.options.background.widgets.media.placementStrategy
                     onSelected: newValue => {
                         Config.options.background.widgets.media.placementStrategy = newValue;
+                        if (newValue === "leastBusy" || newValue === "mostBusy") page.runWidgetPositionUpdate();
                     }
                     options: [
                         {

@@ -53,6 +53,14 @@ Variants {
                 return Config.options.background.wallpaperPath;
             }
         }
+        readonly property bool wallpaperIsWpe: {
+            const raw = wallpaperStateFile?.text() ?? "";
+            try {
+                return JSON.parse(raw)?.wpe === true;
+            } catch (e) {
+                return false;
+            }
+        }
         property bool wallpaperIsVideo: perMonitorWallpaperPath.endsWith(".mp4") || perMonitorWallpaperPath.endsWith(".webm") || perMonitorWallpaperPath.endsWith(".mkv") || perMonitorWallpaperPath.endsWith(".avi") || perMonitorWallpaperPath.endsWith(".mov")
         property string wallpaperPath: wallpaperIsVideo ? Config.options.background.thumbnailPath : perMonitorWallpaperPath
         property bool wallpaperSafetyTriggered: {
@@ -114,7 +122,7 @@ Variants {
             right: true
         }
         color: {
-            if (!bgRoot.wallpaperSafetyTriggered || bgRoot.wallpaperIsVideo)
+            if (!bgRoot.wallpaperSafetyTriggered || bgRoot.wallpaperIsVideo || bgRoot.wallpaperIsWpe)
                 return "transparent";
             return CF.ColorUtils.mix(Appearance.colors.colLayer0, Appearance.colors.colPrimary, 0.75);
         }
@@ -244,8 +252,8 @@ Variants {
             // Wallpaper
             TransitionImage {
                 id: wallpaper
-                visible: opacity > 0 && !blurLoader.active && !bgRoot.wallpaperIsVideo
-                opacity: (status === Image.Ready && !bgRoot.wallpaperIsVideo) ? 1 : 0
+                visible: opacity > 0 && !blurLoader.active && !bgRoot.wallpaperIsVideo && !bgRoot.wallpaperIsWpe
+                opacity: (status === Image.Ready && !bgRoot.wallpaperIsVideo && !bgRoot.wallpaperIsWpe) ? 1 : 0
                 // Range = groups that workspaces span on
                 property int chunkSize: Config?.options.bar.workspaces.shown ?? 10
                 property int lower: Math.floor(bgRoot.firstWorkspaceId / chunkSize) * chunkSize
@@ -335,70 +343,28 @@ Variants {
 
             WidgetCanvas {
                 id: widgetCanvas
+                visible: !bgRoot.wallpaperIsWpe
+                z: 1
                 scale: 1 - (defaultRatio - 1)
                 Behavior on scale {
                     animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
                 }
-                anchors {
-                    left: wallpaper.left
-                    right: wallpaper.right
-                    top: wallpaper.top
-                    bottom: wallpaper.bottom
-                    horizontalCenter: undefined
-                    verticalCenter: undefined
-                    readonly property real parallaxFactor: Config.options.background.parallax.widgetsFactor
-                    leftMargin: {
-                        const xOnWallpaper = bgRoot.movableXSpace;
-                        const extraMove = (wallpaper.effectiveValueX * 2 * bgRoot.movableXSpace) * (parallaxFactor - 1);
-                        return xOnWallpaper - extraMove;
-                    }
-                    topMargin: {
-                        const yOnWallpaper = bgRoot.movableYSpace;
-                        const extraMove = (wallpaper.effectiveValueY * 2 * bgRoot.movableYSpace) * (parallaxFactor - 1);
-                        return yOnWallpaper - extraMove;
-                    }
-                    Behavior on leftMargin {
-                        animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
-                    }
-                    Behavior on topMargin {
-                        animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
-                    }
-                }
-                width: wallpaper.width
-                height: wallpaper.height
-                states: State {
-                    name: "centered"
-                    when: GlobalStates.screenLocked || bgRoot.wallpaperSafetyTriggered
-                    PropertyChanges {
-                        target: widgetCanvas
-                        width: parent.width
-                        height: parent.height
-                    }
-                    AnchorChanges {
-                        target: widgetCanvas
-                        anchors {
-                            left: undefined
-                            right: undefined
-                            top: undefined
-                            bottom: undefined
-                            horizontalCenter: parent.horizontalCenter
-                            verticalCenter: parent.verticalCenter
-                        }
-                    }
-                }
 
-                transitions: Transition {
-                    PropertyAnimation {
-                        properties: "width,height"
-                        duration: Appearance.animation.elementMove.duration
-                        easing.type: Appearance.animation.elementMove.type
-                        easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
-                    }
-                    AnchorAnimation {
-                        duration: Appearance.animation.elementMove.duration
-                        easing.type: Appearance.animation.elementMove.type
-                        easing.bezierCurve: Appearance.animation.elementMove.bezierCurve
-                    }
+                readonly property bool useParallax: !bgRoot.wallpaperIsWpe && !GlobalStates.screenLocked && !bgRoot.wallpaperSafetyTriggered
+                readonly property real parallaxFactor: Config.options.background.parallax.widgetsFactor
+
+                // No anchors — drive position and size manually so we can switch
+                // between parallax-follow-wallpaper mode and full-screen mode (WPE/lock/safety).
+                x: useParallax ? wallpaper.x : 0
+                y: useParallax ? wallpaper.y : 0
+                width: useParallax ? wallpaper.width : parent.width
+                height: useParallax ? wallpaper.height : parent.height
+
+                Behavior on x {
+                    animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
+                }
+                Behavior on y {
+                    animation: Appearance.animation.elementMove.numberAnimation.createObject(this)
                 }
 
                 FadeLoader {

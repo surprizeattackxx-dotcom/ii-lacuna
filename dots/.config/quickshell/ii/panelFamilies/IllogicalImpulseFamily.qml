@@ -45,6 +45,7 @@ Scope {
 
     PanelLoader { extraCondition: !Config.options.bar.vertical && barExtraCondition; component: Bar {} }
     PanelLoader { component: Background {} }
+    PanelLoader { component: WpeWidgetOverlay {} }
     PanelLoader { component: Cheatsheet {} }
     PanelLoader { extraCondition: Config.options.dock.enable; component: Dock {} }
     PanelLoader { component: Lock {} }

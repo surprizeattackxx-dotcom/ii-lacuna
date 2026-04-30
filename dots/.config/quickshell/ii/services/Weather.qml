@@ -354,12 +354,12 @@ curl -sf "https://api.open-meteo.com/v1/forecast?latitude=$LAT&longitude=$LON&${
     // Watchdog: fires every minute to catch stale data after sleep/wake,
     // since Qt timers don't account for system sleep time.
     Timer {
-        running: root.ready && !root.gpsActive
+        running: root.ready
         repeat: true
         interval: 60000
         onTriggered: {
-            if (root.lastRefreshMs > 0 && !root.isLoading) {
-                const elapsed = Date.now() - root.lastRefreshMs;
+            if (!root.isLoading) {
+                const elapsed = root.lastRefreshMs > 0 ? Date.now() - root.lastRefreshMs : root.fetchInterval + 1;
                 if (elapsed > root.fetchInterval) root.getData();
             }
         }

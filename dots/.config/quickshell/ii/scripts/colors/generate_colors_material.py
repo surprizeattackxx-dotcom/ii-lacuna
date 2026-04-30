@@ -192,15 +192,33 @@ if args.termscheme is not None:
             continue
 
         if args.blend_bg_fg and color == "term0":
-            result = boost_chroma_tone(
-                hex_to_argb(material_colors["surfaceContainerLow"]), 1.2, 0.95
-            )
+            if darkmode:
+                # dark mode: term0 = bg-like color (dark surface)
+                result = boost_chroma_tone(
+                    hex_to_argb(material_colors["surfaceContainerLow"]), 1.2, 0.95
+                )
+            else:
+                # light mode: term0 = ANSI black — must be dark, not near-white
+                result = boost_chroma_tone(
+                    hex_to_argb(material_colors["onSurface"]), 1.2, 1.05
+                )
         elif args.blend_bg_fg and color == "term15":
-            result = boost_chroma_tone(hex_to_argb(material_colors["onSurface"]), 3, 1)
+            if darkmode:
+                # dark mode: term15 = ANSI bright white — should be light
+                result = boost_chroma_tone(hex_to_argb(material_colors["onSurface"]), 3, 1)
+            else:
+                # light mode: term15 = ANSI bright white — bg-like light color
+                result = boost_chroma_tone(
+                    hex_to_argb(material_colors["surfaceContainerLow"]), 3, 0.98
+                )
         else:
+            # In light mode, use a much lower harmony factor so the base
+            # scheme-base.json light colors keep their light/dark character
+            # instead of being pulled deep into the M3 wallpaper palette.
+            effective_harmony = args.harmony if darkmode else args.harmony * 0.2
             result = harmonize(
                 hex_to_argb(val), primary_argb,
-                args.harmonize_threshold, args.harmony
+                args.harmonize_threshold, effective_harmony
             )
             result = boost_chroma_tone(
                 result, 1, 1 + args.term_fg_boost * (1 if darkmode else -1)

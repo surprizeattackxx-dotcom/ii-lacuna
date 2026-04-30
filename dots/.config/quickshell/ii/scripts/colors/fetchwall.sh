@@ -10,6 +10,7 @@ STATE_DIR="$XDG_STATE_HOME/quickshell"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SHELL_CONFIG_FILE="$XDG_CONFIG_HOME/illogical-impulse/config.json"
 MATUGEN_DIR="$XDG_CONFIG_HOME/matugen"
+WPE_ASSETS_DIR="/mnt/wwn-0x50014ee65ea3c55b-part1/SteamLibrary/steamapps/common/wallpaper_engine/assets"
 terminalscheme="$SCRIPT_DIR/terminal/scheme-base.json"
 
 handle_kde_material_you_colors() {
@@ -34,21 +35,6 @@ handle_kde_material_you_colors() {
     "$XDG_CONFIG_HOME"/matugen/templates/kde/kde-material-you-colors-wrapper.sh --scheme-variant "$kde_scheme_variant"
 }
 
-pre_process() {
-    local mode_flag="$1"
-    # Set GNOME color-scheme if mode_flag is dark or light
-    if [[ "$mode_flag" == "dark" ]]; then
-        gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
-        gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark'
-    elif [[ "$mode_flag" == "light" ]]; then
-        gsettings set org.gnome.desktop.interface color-scheme 'prefer-light'
-        gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3'
-    fi
-
-    if [ ! -d "$CACHE_DIR"/user/generated ]; then
-        mkdir -p "$CACHE_DIR"/user/generated
-    fi
-}
 
 post_process() {
     local screen_width="$1"
@@ -111,6 +97,10 @@ is_video() {
     [[ "$extension" == "mp4" || "$extension" == "webm" || "$extension" == "mkv" || "$extension" == "avi" || "$extension" == "mov" ]] && return 0 || return 1
 }
 
+is_wpe_wallpaper() {
+    [[ -d "$1" && -f "$1/project.json" ]]
+}
+
 kill_existing_mpvpaper() {
     pkill -f -9 mpvpaper || true
 }
@@ -158,6 +148,66 @@ set_thumbnail_path() {
     fi
 }
 
+detect_brightness_mode() {
+    local img="$1"
+
+    # Handle Wallpaper Engine (folder)
+    if is_wpe_wallpaper "$img"; then
+        if [[ -f "$img/preview.png" ]]; then
+            img="$img/preview.png"
+        elif [[ -f "$img/preview.jpg" ]]; then
+            img="$img/preview.jpg"
+        else
+            echo "dark"
+            return
+        fi
+    fi
+
+    # Skip videos
+    if is_video "$img"; then
+        echo "dark"
+        return
+    fi
+
+    local brightness=""
+    if command -v magick &>/dev/null; then
+        brightness=$(magick "$img" -colorspace Gray -format "%[fx:mean]" info: 2>/dev/null)
+    else
+        echo "dark"
+        return
+    fi
+
+    awk -v b="$brightness" 'BEGIN {
+        if (b < 0.5) print "dark";
+        else print "light";
+    }'
+}
+
+    # Skip videos
+    if is_video "$img"; then
+        echo ""
+        return
+    fi
+
+    local brightness=""
+
+    if command -v magick &>/dev/null; then
+        brightness=$(magick "$img" -colorspace Gray -format "%[fx:mean]" info: 2>/dev/null)
+    elif command -v convert &>/dev/null; then
+        brightness=$(convert "$img" -colorspace Gray -format "%[fx:mean]" info: 2>/dev/null)
+    else
+        echo ""
+        return
+    fi
+
+    # Default threshold (tweak if needed)
+    local threshold=0.5
+
+    awk -v b="$brightness" -v t="$threshold" 'BEGIN {
+        if (b < t) print "dark";
+        else print "light";
+    }'
+}
 
 switch() {
     imgpath="$1"
@@ -170,7 +220,7 @@ switch() {
     # Start Gemini auto-categorization if enabled
     aiStylingEnabled=$(jq -r '.background.widgets.clock.cookie.aiStyling' "$SHELL_CONFIG_FILE")
     aiStylingModel=$(jq -r '.background.widgets.clock.cookie.aiStylingModel' "$SHELL_CONFIG_FILE")
-    if [[ "$aiStylingEnabled" == "true" ]]; then
+    if [[ "$aiStylingEnabled" == "true" && -f "$imgpath" ]]; then
         if [[ "$aiStylingModel" == "gemini" ]]; then
             "$SCRIPT_DIR/../ai/gemini-categorize-wallpaper.sh" "$imgpath" > "$STATE_DIR/user/generated/wallpaper/category.txt" &
         fi
@@ -194,10 +244,63 @@ switch() {
             exit 0
         fi
 
-        check_and_prompt_upscale "$imgpath" &
         kill_existing_mpvpaper
 
-        if is_video "$imgpath"; then
+        if is_wpe_wallpaper "$imgpath"; then
+            local wpe_id
+            wpe_id="$(basename "$imgpath")"
+            local wpe_thumbnail="$THUMBNAIL_DIR/wpe_${wpe_id}.png"
+            mkdir -p "$THUMBNAIL_DIR"
+
+            # Determine output monitor(s)
+            local _wpe_output
+            if [[ -n "$monitor_flag" ]]; then
+                _wpe_output="$monitor_flag"
+            else
+                _wpe_output=$(hyprctl monitors -j | jq -r '.[] | select(.focused) | .name' 2>/dev/null)
+            fi
+
+            # Use WPE preview image for color gen (clean, no desktop windows)
+            if [[ -f "$imgpath/preview.gif" ]]; then
+                magick "$imgpath/preview.gif[0]" "$wpe_thumbnail" 2>/dev/null || \
+                    grim ${_wpe_output:+-o "$_wpe_output"} "$wpe_thumbnail" 2>/dev/null || true
+            elif [[ -f "$imgpath/preview.jpg" ]]; then
+                cp "$imgpath/preview.jpg" "$wpe_thumbnail" 2>/dev/null || true
+            elif [[ -f "$imgpath/preview.png" ]]; then
+                cp "$imgpath/preview.png" "$wpe_thumbnail" 2>/dev/null || true
+            else
+                sleep 1.5
+                grim ${_wpe_output:+-o "$_wpe_output"} "$wpe_thumbnail" 2>/dev/null || true
+            fi
+
+            set_thumbnail_path "$wpe_thumbnail"
+            [[ -z "$no_save_flag" && -z "$noswitch_flag" ]] && set_wallpaper_path "$imgpath"
+
+            if [[ -f "$wpe_thumbnail" ]]; then
+                matugen_args=(image "$wpe_thumbnail")
+                generate_colors_material_args=(--path "$wpe_thumbnail")
+            else
+                echo "WPE: could not get thumbnail for color gen, skipping"
+                return
+            fi
+
+            # Write per-monitor state file with wpe flag
+            if [[ -n "$_wpe_output" ]]; then
+                mkdir -p "$STATE_DIR/user/generated/wallpaper/monitors"
+                local _state_file="$STATE_DIR/user/generated/wallpaper/monitors/${_wpe_output}.json"
+                printf '{
+    "monitor": "%s",
+    "path": "%s",
+    "wpe": true,
+    "wpe_id": "%s",
+    "wpe_path": "%s"
+}
+' "$_wpe_output" "$wpe_thumbnail" "$wpe_id" "$imgpath" > "${_state_file}.tmp"
+                mv "${_state_file}.tmp" "$_state_file"
+            fi
+
+        elif is_video "$imgpath"; then
+            check_and_prompt_upscale "$imgpath" &
             mkdir -p "$THUMBNAIL_DIR"
 
             missing_deps=()
@@ -285,30 +388,31 @@ switch() {
 }
 ' "$_awww_output" "$imgpath" > "${_state_file}.tmp"
                     mv "${_state_file}.tmp" "$_state_file"
+                    
+                    # Stop any existing WPE service for this monitor when setting a regular wallpaper
+                    systemctl --user stop "wpe-${_awww_output}.service" 2>/dev/null || true
                 fi
             fi
         fi
     fi
 
-    # Determine mode if not set
-    if [[ -z "$mode_flag" ]]; then
-        current_mode=$(gsettings get org.gnome.desktop.interface color-scheme 2>/dev/null | tr -d "'")
-        if [[ "$current_mode" == "prefer-dark" ]]; then
-            mode_flag="dark"
-        else
-            mode_flag="light"
-        fi
-    fi
+    # Auto-detect mode from wallpaper brightness
+if [[ -z "$mode_flag" && -n "$imgpath" ]]; then
+    detected_mode=$(detect_brightness_mode "$imgpath")
 
-    # enforce dark mode for terminal
-    if [[ -n "$mode_flag" ]]; then
-        matugen_args+=(--mode "$mode_flag")
-        if [[ $(jq -r '.appearance.wallpaperTheming.terminalGenerationProps.forceDarkMode' "$SHELL_CONFIG_FILE") == "true" ]]; then
-            generate_colors_material_args+=(--mode "dark")
-        else
-            generate_colors_material_args+=(--mode "$mode_flag")
-        fi
+    if [[ -n "$detected_mode" ]]; then
+        mode_flag="$detected_mode"
+    else
+        # fallback (safe default)
+        mode_flag="dark"
     fi
+fi
+
+    # Apply detected mode consistently (no forcing)
+if [[ -n "$mode_flag" ]]; then
+    matugen_args+=(--mode "$mode_flag")
+    generate_colors_material_args+=(--mode "$mode_flag")
+fi
     [[ -n "$type_flag" ]] && matugen_args+=(--type "$type_flag") && generate_colors_material_args+=(--scheme "$type_flag")
     generate_colors_material_args+=(--termscheme "$terminalscheme" --blend_bg_fg)
     generate_colors_material_args+=(--cache "$STATE_DIR/user/generated/color.txt")
@@ -356,6 +460,7 @@ main() {
     noswitch_flag=""
     no_save_flag=""
     monitor_flag=""
+    wpe_property_args=()
 
     get_type_from_config() {
         jq -r '.appearance.palette.type' "$SHELL_CONFIG_FILE" 2>/dev/null || echo "auto"
@@ -411,12 +516,10 @@ main() {
                         [[ -f "$_state_file" ]] || continue
                         _mon=$(jq -r '.monitor // empty' "$_state_file" 2>/dev/null)
                         _path=$(jq -r '.path // empty' "$_state_file" 2>/dev/null)
-                        if [[ -n "$_mon" && -n "$_path" && -f "$_path" ]]; then
-                        awww img "$_path" --outputs "$_mon" --transition-type none 2>/dev/null &
-                            _restored=1
-                        fi
-                    done
-                fi
+                        _is_wpe=$(jq -r '.wpe // false' "$_state_file" 2>/dev/null)
+                        _wpe_id=$(jq -r '.wpe_id // empty' "$_state_file" 2>/dev/null)
+                        if [[ "$_is_wpe" == "true" && -n "$_mon" ]]; then
+                            _wpe_path=$(jq -r '.wpe_path // .wpe_id // empty' "$_state_file" 2>/dev/null)
                 [[ $_restored -eq 0 ]] && awww restore 2>/dev/null || true
                 # Get imgpath for color regeneration from focused monitor state file
                 _focused_mon=$(hyprctl monitors -j | jq -r '.[] | select(.focused==true) | .name' 2>/dev/null)
@@ -446,6 +549,10 @@ main() {
             --no-save)
                 no_save_flag="1"
                 shift
+                ;;
+            --wpe-property)
+                wpe_property_args+=(--property "$2" "$3")
+                shift 3
                 ;;
             --monitor)
                 monitor_flag="$2"
