@@ -65,7 +65,8 @@ Singleton {
 
     function openFallbackPicker(darkMode = Appearance.m3colors.darkmode) {
         applyProc.exec([
-            Directories.wallpaperSwitchScriptPath
+            Directories.wallpaperSwitchScriptPath,
+            "--mode", (darkMode ? "dark" : "light")
         ])
     }
 
@@ -74,7 +75,8 @@ Singleton {
             root.aboutToChange(path)
             const args = [
                 Directories.wallpaperSwitchScriptPath,
-                "--image", path
+                "--image", path,
+                "--mode", (darkMode ? "dark" : "light")
             ]
             if (monitor && monitor.length > 0) {
                 args.push("--monitor", monitor)
@@ -87,7 +89,8 @@ Singleton {
     // Fetch a unique random wallpaper for every connected monitor
     function fetchPerMonitor(darkMode = Appearance.m3colors.darkmode) {
         applyProc.exec([
-            "bash", root.fetchwallScriptPath
+            "bash", root.fetchwallScriptPath,
+            "--mode", (darkMode ? "dark" : "light")
         ])
         root.changed()
     }
