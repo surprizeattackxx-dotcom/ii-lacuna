@@ -63,8 +63,7 @@ Item {
             "bash",
             StandardPaths.locate(StandardPaths.HomeLocation, "")
                 + "/.config/quickshell/ii/scripts/../switchwall.sh",
-            "--image", root.pendingPath,
-            "--mode",  root.pendingMode
+            "--image", root.pendingPath
         ]
         running: false
     }
