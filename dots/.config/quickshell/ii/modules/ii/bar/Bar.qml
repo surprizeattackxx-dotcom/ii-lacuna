@@ -51,7 +51,7 @@ Scope {
                         barRoot.hasActiveWindows = hasWindow
                     }
                 }
-                
+
 
                 Timer {
                     id: showBarTimer
@@ -125,7 +125,7 @@ Scope {
 
                     BarContent {
                         id: barContent
-                        
+
                         implicitHeight: Appearance.sizes.barHeight
                         anchors {
                             right: parent.right

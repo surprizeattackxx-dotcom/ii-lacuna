@@ -68,21 +68,21 @@ post_process() {
 
 check_and_prompt_upscale() {
     local img="$1"
-    min_width_desired="$(hyprctl monitors -j | jq '([.[].width] | max)' | xargs)" # max monitor width
-    min_height_desired="$(hyprctl monitors -j | jq '([.[].height] | max)' | xargs)" # max monitor height
+    max_screen_width="$(hyprctl monitors -j | jq '([.[].width] | max)' | xargs)"
+    max_screen_height="$(hyprctl monitors -j | jq '([.[].height] | max)' | xargs)"
 
     if command -v identify &>/dev/null && [ -f "$img" ]; then
         local img_width img_height
         if is_video "$img"; then # Not check resolution for videos, just let em pass
-            img_width=$min_width_desired
-            img_height=$min_height_desired
+            img_width=$max_screen_width
+            img_height=$max_screen_height
         else
             img_width=$(identify -format "%w" "$img" 2>/dev/null)
             img_height=$(identify -format "%h" "$img" 2>/dev/null)
         fi
-        if [[ "$img_width" -lt "$min_width_desired" || "$img_height" -lt "$min_height_desired" ]]; then
+        if [[ "$img_width" -lt "$max_screen_width" || "$img_height" -lt "$max_screen_height" ]]; then
             action=$(notify-send "Upscale?" \
-                "Image resolution (${img_width}x${img_height}) is lower than screen resolution (${min_width_desired}x${min_height_desired})" \
+                "Image resolution (${img_width}x${img_height}) is lower than screen resolution (${max_screen_width}x${max_screen_height})" \
                 -A "open_upscayl=Open Upscayl")
             if [[ "$action" == "open_upscayl" ]]; then
                 if command -v upscayl &>/dev/null; then
@@ -389,9 +389,9 @@ switch() {
     deactivate
 
     # Pass screen width, height, and wallpaper path to post_process
-    max_width_desired="$(hyprctl monitors -j | jq '([.[].width] | min)' | xargs)"
-    max_height_desired="$(hyprctl monitors -j | jq '([.[].height] | min)' | xargs)"
-    post_process "$max_width_desired" "$max_height_desired" "$imgpath"
+    max_screen_width="$(hyprctl monitors -j | jq '([.[].width] | max)' | xargs)"
+    max_screen_height="$(hyprctl monitors -j | jq '([.[].height] | max)' | xargs)"
+    post_process "$max_screen_width" "$max_screen_height" "$imgpath"
 }
 
 main() {
