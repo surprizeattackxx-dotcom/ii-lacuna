@@ -59,7 +59,7 @@ Singleton {
         target: Config
         function onReadyChanged() { // Apply wallpaper on config ready if it's a video
             if (!Config.ready || !root.isVideoFile(Config.options.background.wallpaperPath.toLowerCase())) return;
-            root.apply(Config.options.background.wallpaperPath, Appearance.m3colors.darkmode);
+            root.apply(Config.options.background.wallpaperPath);
         }
     }
 
@@ -70,14 +70,16 @@ Singleton {
         ])
     }
 
-    function apply(path, darkMode = Appearance.m3colors.darkmode, monitor = "") {
+    function apply(path, darkMode = null, monitor = "") {
         if (!path || path.length === 0) return
             root.aboutToChange(path)
             const args = [
                 Directories.wallpaperSwitchScriptPath,
-                "--image", path,
-                "--mode", (darkMode ? "dark" : "light")
+                "--image", path
             ]
+            if (darkMode !== null) {
+                args.push("--mode", (darkMode ? "dark" : "light"))
+            }
             if (monitor && monitor.length > 0) {
                 args.push("--monitor", monitor)
                 args.push("--no-save")
@@ -98,9 +100,9 @@ Singleton {
     Process {
         id: selectProc
         property string filePath: ""
-        property bool darkMode: Appearance.m3colors.darkmode
+        property var darkMode: null
         property string monitor: ""
-        function select(filePath, darkMode = Appearance.m3colors.darkmode, monitor = "") {
+        function select(filePath, darkMode = null, monitor = "") {
             selectProc.filePath = filePath
             selectProc.darkMode = darkMode
             selectProc.monitor = monitor
@@ -111,15 +113,15 @@ Singleton {
                 setDirectory(selectProc.filePath);
                 return;
             }
-            root.apply(selectProc.filePath, selectProc.darkMode, selectProc.monitor);
+            root.apply(selectProc.filePath, null, selectProc.monitor);
         }
     }
 
-    function select(filePath, darkMode = Appearance.m3colors.darkmode, monitor = "") {
+    function select(filePath, darkMode = null, monitor = "") {
         selectProc.select(filePath, darkMode, monitor);
     }
 
-    function randomFromCurrentFolder(darkMode = Appearance.m3colors.darkmode) {
+    function randomFromCurrentFolder(darkMode = null) {
         if (folderModel.count === 0) return;
         const randomIndex = Math.floor(Math.random() * folderModel.count);
         const filePath = folderModel.get(randomIndex, "filePath");
@@ -271,7 +273,7 @@ Singleton {
             root.apply(path);
         }
         function applyToMonitor(path: string, monitor: string): void {
-            root.apply(path, Appearance.m3colors.darkmode, monitor);
+            root.apply(path, null, monitor);
         }
         function fetchPerMonitor(): void {
             root.fetchPerMonitor();
