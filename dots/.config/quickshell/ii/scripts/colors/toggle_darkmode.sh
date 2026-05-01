@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 
-# Toggle or set dark/light mode - syncs all KDE Plasma apps to the active mode
+# Toggle or set dark/light mode - syncs all KDE Plasma apps to Material You colors
 # Usage: toggle_darkmode.sh [dark|light]
 
 XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
+XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SHELL_CONFIG_FILE="$XDG_CONFIG_HOME/illogical-impulse/config.json"
 
@@ -21,45 +22,46 @@ else
 fi
 
 # ============================================================================
-# KDE Plasma Theme Settings
+# Generate Material You KDE color scheme based on current wallpaper
 # ============================================================================
-if [[ "$mode" == "dark" ]]; then
-    # Set Plasma theme (ColloidDark - no hyphen!)
-    kwriteconfig5 --file kdeglobals --group General --key ColorScheme "ColloidDark"
-    kwriteconfig5 --file kdeglobals --group General --key PlasmaTheme "default"
-else
-    # Set Plasma theme (ColloidLight - no hyphen!)
-    kwriteconfig5 --file kdeglobals --group General --key ColorScheme "ColloidLight"
-    kwriteconfig5 --file kdeglobals --group General --key PlasmaTheme "default"
-fi
-
-# Broadcast kdeglobals change to all KDE apps
-dbus-send --session --noreply --print-reply /KGlobalSettings org.kde.KGlobalSettings.notifyChange 4 0 2>/dev/null || true
-
-# ============================================================================
-# VS Code / Cursor Editor Themes
-# ============================================================================
-update_code_theme() {
-    local code_config="$1"
-    local target_theme="$2"
+generate_material_you_scheme() {
+    local target_mode="$1"
+    local color_file="$XDG_STATE_HOME/quickshell/user/generated/color.txt"
     
-    if [[ -f "$code_config" ]]; then
-        jq --arg theme "$target_theme" '.["workbench.colorTheme"] = $theme' "$code_config" > "$code_config.tmp" && mv "$code_config.tmp" "$code_config"
+    if [[ ! -f "$color_file" ]]; then
+        return
+    fi
+    
+    local color=$(cat "$color_file")
+    
+    # Activate venv and run kde-material-you-colors to generate the color scheme
+    if [[ -n "$ILLOGICAL_IMPULSE_VIRTUAL_ENV" ]]; then
+        source "$(eval echo $ILLOGICAL_IMPULSE_VIRTUAL_ENV)/bin/activate" 2>/dev/null || true
+        
+        if [[ "$target_mode" == "dark" ]]; then
+            kde-material-you-colors -d --color "$color" 2>/dev/null &
+        else
+            kde-material-you-colors -l --color "$color" 2>/dev/null &
+        fi
+        
+        deactivate 2>/dev/null || true
     fi
 }
 
-# Determine color theme names based on mode
+# ============================================================================
+# Apply Material You color scheme via KDE
+# ============================================================================
 if [[ "$mode" == "dark" ]]; then
-    CODE_THEME="Colloid Dark"
+    color_scheme="MaterialYouDark"
 else
-    CODE_THEME="Colloid Light"
+    color_scheme="MaterialYouLight"
 fi
 
-# Update Cursor settings
-[[ -f "$XDG_CONFIG_HOME/Cursor/User/settings.json" ]] && update_code_theme "$XDG_CONFIG_HOME/Cursor/User/settings.json" "$CODE_THEME"
+# Set the color scheme
+kwriteconfig5 --file kdeglobals --group General --key ColorScheme "$color_scheme"
 
-# Update VS Code settings (if installed)
-[[ -f "$XDG_CONFIG_HOME/Code/User/settings.json" ]] && update_code_theme "$XDG_CONFIG_HOME/Code/User/settings.json" "$CODE_THEME"
+# Generate the Material You scheme from current wallpaper
+generate_material_you_scheme "$mode"
 
 # ============================================================================
 # Illogical Impulse Shell Config
@@ -84,8 +86,7 @@ fi
 # ============================================================================
 # Restart KDE Plasma Shell to apply changes
 # ============================================================================
-# This ensures all running KDE apps pick up the theme change
-sleep 0.5
+sleep 1
 kquitapp5 plasmashell 2>/dev/null
 sleep 1
 kstart5 plasmashell > /dev/null 2>&1 &
@@ -93,4 +94,4 @@ kstart5 plasmashell > /dev/null 2>&1 &
 # ============================================================================
 # Notify user
 # ============================================================================
-notify-send -i "preferences-system-display" "Theme Updated" "Switched to $mode mode (Colloid)" 2>/dev/null || true
+notify-send -i "preferences-system-display" "Theme Updated" "Switched to $mode mode (Material You)" 2>/dev/null || true
