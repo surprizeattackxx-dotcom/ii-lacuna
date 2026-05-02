@@ -359,7 +359,7 @@ Singleton {
                     property bool monochromeIcons: true
                     property int shown: 10
                     property bool showAppIcons: true
-                    property bool pillStyle: false // ActivSpot-style numbered square pills per workspace
+                    property bool pillStyle: true // ActivSpot-style numbered square pills per workspace
                     property bool alwaysShowNumbers: false
                     property int showNumberDelay: 300 // milliseconds
                     property list<string> numberMap: ["1", "2"] // Characters to show instead of numbers on workspace indicator

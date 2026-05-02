@@ -452,8 +452,8 @@ Item {
     GridLayout {
         id: contentLayout
         anchors.centerIn: parent
-        columnSpacing: 0
-        rowSpacing: 0
+        columnSpacing: root.pillStyle ? 4 : 0
+        rowSpacing: root.pillStyle ? 4 : 0
         z: 3
 
         columns: root.vertical ? 1 : 99
@@ -553,22 +553,59 @@ Item {
                     }
                 }
                 Rectangle {
+                    id: pillRect
                     visible: root.pillStyle
                     anchors.centerIn: parent
-                    width: 28; height: 28
-                    radius: 8
-                    color: pillIsActive ? Appearance.colors.colPrimary
-                        : pillIsOccupied ? Qt.rgba(Appearance.m3colors.m3secondaryContainer.r,
-                            Appearance.m3colors.m3secondaryContainer.g,
-                            Appearance.m3colors.m3secondaryContainer.b, 0.7)
-                        : "transparent"
-                    Behavior on color { ColorAnimation { duration: 200 } }
+                    width: 32; height: 32
+                    radius: 10
+
+                    property bool isHovered: !pillIsActive && interactionMouseArea.hoverIndex === index && interactionMouseArea.containsMouse
+
+                    color: pillIsActive
+                        ? Appearance.colors.colPrimary
+                        : isHovered
+                            ? Qt.rgba(Appearance.m3colors.m3surfaceContainerHigh.r,
+                                Appearance.m3colors.m3surfaceContainerHigh.g,
+                                Appearance.m3colors.m3surfaceContainerHigh.b, 0.9)
+                            : pillIsOccupied
+                                ? Qt.rgba(Appearance.m3colors.m3surfaceContainer.r,
+                                    Appearance.m3colors.m3surfaceContainer.g,
+                                    Appearance.m3colors.m3surfaceContainer.b, 0.9)
+                                : "transparent"
+
+                    scale: isHovered ? 1.08 : 1.0
+                    Behavior on scale { NumberAnimation { duration: 250; easing.type: Easing.OutBack } }
+                    Behavior on color { ColorAnimation { duration: 250 } }
+
+                    // Staggered entrance
+                    property bool _shown: false
+                    opacity: _shown ? 1 : 0
+                    transform: Translate {
+                        y: pillRect._shown ? 0 : 15
+                        Behavior on y { NumberAnimation { duration: 500; easing.type: Easing.OutBack } }
+                    }
+                    Behavior on opacity { NumberAnimation { duration: 500; easing.type: Easing.OutCubic } }
+                    Timer {
+                        running: root.pillStyle && !pillRect._shown
+                        interval: Math.max(10, index * 60)
+                        onTriggered: pillRect._shown = true
+                    }
+
                     StyledText {
                         anchors.centerIn: parent
                         text: pillWsId.toString()
-                        color: pillIsActive ? Appearance.m3colors.m3onPrimary : Appearance.colors.colOnLayer1
-                        font.pixelSize: 12
-                        font.bold: true
+                        color: pillIsActive
+                            ? Appearance.m3colors.m3onPrimary
+                            : pillRect.isHovered
+                                ? Appearance.colors.colOnLayer1
+                                : pillIsOccupied
+                                    ? Appearance.colors.colOnLayer1
+                                    : Qt.rgba(Appearance.colors.colOnLayer1.r,
+                                        Appearance.colors.colOnLayer1.g,
+                                        Appearance.colors.colOnLayer1.b, 0.4)
+                        font.pixelSize: 13
+                        font.weight: pillIsActive ? Font.Black : (pillIsOccupied ? Font.Bold : Font.Medium)
+                        Behavior on color { ColorAnimation { duration: 250 } }
                     }
                 }
             }
