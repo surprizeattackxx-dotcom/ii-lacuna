@@ -91,6 +91,16 @@ Item { // Bar content region
         }
     }
 
+    MouseArea { // Right-click to open Bar Applets overlay
+        anchors.fill: parent
+        z: -5
+        acceptedButtons: Qt.RightButton
+        onClicked: event => {
+            if (event.button === Qt.RightButton)
+                GlobalStates.barAppletsOpen = !GlobalStates.barAppletsOpen
+        }
+    }
+
     FocusedScrollMouseArea { // Left side | scroll to change brightness
         id: barLeftSideMouseArea
 

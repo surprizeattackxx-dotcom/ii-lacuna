@@ -279,4 +279,6 @@ Scope {
             GlobalStates.barOpen = false;
         }
     }
+
+    BarAppletsOverlay {}
 }
