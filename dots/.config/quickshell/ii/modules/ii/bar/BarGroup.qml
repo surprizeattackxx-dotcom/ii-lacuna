@@ -13,6 +13,7 @@ Item {
     property var endRadius // right - bottom
 
     property color colBackground: Appearance.m3colors.m3surfaceContainerLow
+    property real backgroundAlpha: 1.0
 
     Rectangle {
         id: background
@@ -23,7 +24,7 @@ Item {
             leftMargin: root.vertical ? 4 : 0
             rightMargin: root.vertical ? 4 : 0
         }
-        color: root.colBackground
+        color: Qt.rgba(root.colBackground.r, root.colBackground.g, root.colBackground.b, root.backgroundAlpha)
         topLeftRadius: startRadius
         bottomLeftRadius: root.vertical ? endRadius: startRadius
         topRightRadius: root.vertical ? startRadius: endRadius

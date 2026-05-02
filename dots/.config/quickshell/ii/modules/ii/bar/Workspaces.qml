@@ -44,6 +44,7 @@ Item {
     property int maxWindowCount: isScrollingLayout ? Config.options.bar.workspaces.maxWindowCount : 1
 
     readonly property bool dynamicWorkspaces: Config.options.bar.workspaces.dynamicWorkspaces ?? false
+    readonly property bool pillStyle: Config.options.bar.workspaces.pillStyle ?? false
 
     function isWorkspaceVisible(wsIndex) {
         const wsId = workspaceGroup * workspacesShown + wsIndex + 1 + workspaceOffset
@@ -143,6 +144,7 @@ Item {
 
     // Active workspace indicator
     Rectangle {
+        visible: !root.pillStyle
         z: 2
         anchors.horizontalCenter: root.vertical ? parent.horizontalCenter : undefined
         anchors.verticalCenter: root.vertical ? undefined : parent.verticalCenter
@@ -221,7 +223,7 @@ Item {
         color: "transparent"
         radius: Appearance.rounding.full
 
-        visible: interactionMouseArea.containsMouse
+        visible: !root.pillStyle && interactionMouseArea.containsMouse
         opacity: visible ? 1 : 0
 
         property int hoverIdx: interactionMouseArea.hoverIndex
@@ -377,7 +379,10 @@ Item {
 
                 implicitWidth: root.vertical ? root.iconBoxWrapperSize : (wsBg.wsVisible ? itemSize : 0)
                 implicitHeight: root.vertical ? (wsBg.wsVisible ? itemSize : 0) : root.iconBoxWrapperSize
-                property bool wsVisible: root.isWorkspaceVisible(index)
+                property bool wsVisible: root.pillStyle ? true : root.isWorkspaceVisible(index)
+                property int pillWsId: workspaceOffset + workspaceGroup * workspacesShown + index + 1
+                property bool pillIsActive: monitor?.activeWorkspace?.id === pillWsId
+                property bool pillIsOccupied: root.workspaceOccupied[index]
 
 
                 Pill {
@@ -432,6 +437,7 @@ Item {
 
     MultiEffect {
         id: occupiedIndicatorsMultiEffect
+        visible: !root.pillStyle
         z: 1
         anchors.centerIn: parent
         implicitWidth: occupiedIndicatorsLayout.implicitWidth
@@ -462,12 +468,15 @@ Item {
                 Layout.alignment: Qt.AlignCenter
 
                 visible: wsVisible
-                property bool wsVisible: root.isWorkspaceVisible(index)
+                property bool wsVisible: root.pillStyle ? true : root.isWorkspaceVisible(index)
+                property int pillWsId: workspaceOffset + workspaceGroup * workspacesShown + index + 1
+                property bool pillIsActive: monitor?.activeWorkspace?.id === pillWsId
+                property bool pillIsOccupied: root.workspaceOccupied[index]
                 implicitWidth: root.vertical
                 ? root.iconBoxWrapperSize
-                : (Math.max(layout.implicitWidth + 8, root.iconBoxWrapperSize))
+                : (root.pillStyle ? 32 : Math.max(layout.implicitWidth + 8, root.iconBoxWrapperSize))
                 implicitHeight: root.vertical
-                ? (Math.max(layout.implicitHeight + 8, root.iconBoxWrapperSize))
+                ? (root.pillStyle ? 32 : Math.max(layout.implicitHeight + 8, root.iconBoxWrapperSize))
                 : root.iconBoxWrapperSize
 
                 Behavior on implicitWidth {
@@ -479,12 +488,14 @@ Item {
 
 
                 WorkspaceBackgroundIndicator {
+                    visible: !root.pillStyle
                     workspaceValue: workspaceOffset + workspaceGroup * workspacesShown + index + 1
                     activeWorkspace: monitor?.activeWorkspace?.id === workspaceValue
                 }
 
                 GridLayout {
                     id: layout
+                    visible: !root.pillStyle
                     anchors.centerIn: parent
                     columnSpacing: 0
                     rowSpacing: 0
@@ -539,6 +550,25 @@ Item {
                                 }
                             }
                         }
+                    }
+                }
+                Rectangle {
+                    visible: root.pillStyle
+                    anchors.centerIn: parent
+                    width: 28; height: 28
+                    radius: 8
+                    color: pillIsActive ? Appearance.colors.colPrimary
+                        : pillIsOccupied ? Qt.rgba(Appearance.m3colors.m3secondaryContainer.r,
+                            Appearance.m3colors.m3secondaryContainer.g,
+                            Appearance.m3colors.m3secondaryContainer.b, 0.7)
+                        : "transparent"
+                    Behavior on color { ColorAnimation { duration: 200 } }
+                    StyledText {
+                        anchors.centerIn: parent
+                        text: pillWsId.toString()
+                        color: pillIsActive ? Appearance.m3colors.m3onPrimary : Appearance.colors.colOnLayer1
+                        font.pixelSize: 12
+                        font.bold: true
                     }
                 }
             }

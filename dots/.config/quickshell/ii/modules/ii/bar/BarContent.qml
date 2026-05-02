@@ -134,6 +134,14 @@ Item { // Bar content region
 
     RowLayout { // Left section
         id: leftSection
+        property bool _shown: false
+        opacity: _shown ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: 600; easing.type: Easing.OutCubic } }
+        transform: Translate {
+            x: leftSection._shown ? 0 : -20
+            Behavior on x { NumberAnimation { duration: 800; easing.type: Easing.OutBack; easing.overshoot: 1.1 } }
+        }
+        Timer { running: true; interval: 10; onTriggered: leftSection._shown = true }
         anchors {
             top: parent.top
             bottom: parent.bottom
@@ -216,6 +224,14 @@ Item { // Bar content region
 
     RowLayout { // Right section
         id: rightSection
+        property bool _shown: false
+        opacity: _shown ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: 600; easing.type: Easing.OutCubic } }
+        transform: Translate {
+            x: rightSection._shown ? 0 : 20
+            Behavior on x { NumberAnimation { duration: 800; easing.type: Easing.OutBack; easing.overshoot: 1.1 } }
+        }
+        Timer { running: true; interval: 250; onTriggered: rightSection._shown = true }
         anchors {
             top: parent.top
             bottom: parent.bottom
