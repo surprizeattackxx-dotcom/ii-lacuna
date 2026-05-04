@@ -229,7 +229,7 @@ Variants {
 
         Component.onCompleted: {
             if (!mediaModeOpen) {
-                Wallpapers.apply(Config.options.background.wallpaperPath)
+                Wallpapers.restore()
             }
             Persistent.states.background.mediaMode.enabled = false // we use this persistent to access this from outside of this script, cannot be toggled
         }

@@ -95,6 +95,18 @@ Singleton {
         root.changed()
     }
 
+    // Restore wallpapers from per-monitor state (used on QS reload / boot)
+    Process {
+        id: restoreProc
+    }
+    function restore() {
+        restoreProc.exec([
+            Directories.wallpaperSwitchScriptPath,
+            "--restore"
+        ])
+        root.changed()
+    }
+
     Process {
         id: selectProc
         property string filePath: ""
