@@ -68,21 +68,21 @@ post_process() {
 
 check_and_prompt_upscale() {
     local img="$1"
-    max_screen_width="$(hyprctl monitors -j | jq '([.[].width] | max)' | xargs)"
-    max_screen_height="$(hyprctl monitors -j | jq '([.[].height] | max)' | xargs)"
+    min_width_desired="$(hyprctl monitors -j | jq '([.[].width] | max)' | xargs)" # max monitor width
+    min_height_desired="$(hyprctl monitors -j | jq '([.[].height] | max)' | xargs)" # max monitor height
 
     if command -v identify &>/dev/null && [ -f "$img" ]; then
         local img_width img_height
         if is_video "$img"; then # Not check resolution for videos, just let em pass
-            img_width=$max_screen_width
-            img_height=$max_screen_height
+            img_width=$min_width_desired
+            img_height=$min_height_desired
         else
             img_width=$(identify -format "%w" "$img" 2>/dev/null)
             img_height=$(identify -format "%h" "$img" 2>/dev/null)
         fi
-        if [[ "$img_width" -lt "$max_screen_width" || "$img_height" -lt "$max_screen_height" ]]; then
+        if [[ "$img_width" -lt "$min_width_desired" || "$img_height" -lt "$min_height_desired" ]]; then
             action=$(notify-send "Upscale?" \
-                "Image resolution (${img_width}x${img_height}) is lower than screen resolution (${max_screen_width}x${max_screen_height})" \
+                "Image resolution (${img_width}x${img_height}) is lower than screen resolution (${min_width_desired}x${min_height_desired})" \
                 -A "open_upscayl=Open Upscayl")
             if [[ "$action" == "open_upscayl" ]]; then
                 if command -v upscayl &>/dev/null; then
@@ -290,8 +290,8 @@ switch() {
             done
 
             # Extract first frame for color generation
-            thumbnail="$THUMBNAIL_DIR/$(basename "$imgpath").jpg"
-            ffmpeg -y -i "$imgpath" -vframes 1 "$thumbnail" 2>/dev/null
+            thumbnail="$THUMBNAIL_DIR/$(basename "$imgpath").png"
+            ffmpeg -y -i "$imgpath" -vframes 1 -f png "$thumbnail" 2>/dev/null
 
             # Set thumbnail path
             set_thumbnail_path "$thumbnail"
@@ -355,6 +355,9 @@ switch() {
         fi
     fi
 
+    matugen_prefer="darkness"
+    [[ "$mode_flag" == "light" ]] && matugen_prefer="lightness"
+    matugen_args+=(--mode "$mode_flag" --prefer "$matugen_prefer")
     [[ -n "$type_flag" ]] && matugen_args+=(--type "$type_flag") && generate_colors_material_args+=(--scheme "$type_flag")
     generate_colors_material_args+=(--termscheme "$terminalscheme" --blend_bg_fg)
     generate_colors_material_args+=(--cache "$STATE_DIR/user/generated/color.txt")
@@ -389,9 +392,9 @@ switch() {
     deactivate
 
     # Pass screen width, height, and wallpaper path to post_process
-    max_screen_width="$(hyprctl monitors -j | jq '([.[].width] | max)' | xargs)"
-    max_screen_height="$(hyprctl monitors -j | jq '([.[].height] | max)' | xargs)"
-    post_process "$max_screen_width" "$max_screen_height" "$imgpath"
+    max_width_desired="$(hyprctl monitors -j | jq '([.[].width] | min)' | xargs)"
+    max_height_desired="$(hyprctl monitors -j | jq '([.[].height] | min)' | xargs)"
+    post_process "$max_width_desired" "$max_height_desired" "$imgpath"
 }
 
 main() {

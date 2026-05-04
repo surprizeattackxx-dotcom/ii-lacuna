@@ -76,13 +76,16 @@ if [[ -f "$SHELL_CONFIG_FILE" ]]; then
     (
         color_source=$(jq -r '.background.thumbnailPath // .background.wallpaperPath // empty' "$SHELL_CONFIG_FILE" 2>/dev/null)
         if [[ -n "$color_source" && -f "$color_source" ]]; then
-            # Use mode_flag that matches the color generation mode
-            mode_flag=""
-            [[ "$mode" == "dark" ]] && mode_flag="-d" || mode_flag="-l"
-            
+            terminalscheme="$SCRIPT_DIR/terminal/scheme-base.json"
+
             # Regenerate material colors from wallpaper with correct mode
             source "$(eval echo $ILLOGICAL_IMPULSE_VIRTUAL_ENV)/bin/activate" 2>/dev/null || true
-            python3 "$SCRIPT_DIR/generate_colors_material.py" $mode_flag --path "$color_source" \
+            python3 "$SCRIPT_DIR/generate_colors_material.py" \
+                --mode "$mode" \
+                --path "$color_source" \
+                --termscheme "$terminalscheme" \
+                --blend_bg_fg \
+                --cache "$XDG_STATE_HOME/quickshell/user/generated/color.txt" \
                 > "$XDG_STATE_HOME/quickshell/user/generated/material_colors.scss" 2>/dev/null || true
             deactivate 2>/dev/null || true
         fi
@@ -105,4 +108,4 @@ fi
 # ============================================================================
 # Notify user
 # ============================================================================
-notify-send -i "preferences-system-display" "Theme Updated" "Switched to $mode mode (Material You)" 2>/dev/null || true
+notify-send -i "preferences-system-display" "Theme Updated" "Switched to $mode mode" 2>/dev/null || true

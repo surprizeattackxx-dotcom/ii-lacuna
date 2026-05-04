@@ -224,6 +224,22 @@ Item {
         }
 
         Loader {
+            active: true
+            visible: true
+            sourceComponent: CircleUtilButton {
+                Layout.alignment: Qt.AlignVCenter
+                onClicked: Quickshell.execDetached(["sddm-we-pick"])
+                MaterialSymbol {
+                    horizontalAlignment: Qt.AlignHCenter
+                    fill: 1
+                    text: "login"
+                    iconSize: Appearance.font.pixelSize.large
+                    color: Appearance.m3colors.m3onSurface
+                }
+            }
+        }
+
+        Loader {
             active: Config.options.bar.utilButtons.showPerformanceProfileToggle
             visible: Config.options.bar.utilButtons.showPerformanceProfileToggle
             sourceComponent: CircleUtilButton {

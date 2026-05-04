@@ -238,6 +238,7 @@ Variants {
             id: wallpaperItem
             anchors.fill: parent
             clip: true
+            visible: !bgRoot.wallpaperIsWpe
             scale: showOpeningAnimation && overviewOpen && Config.options.overview.style === "scrolling" ? zoomedRatio : defaultRatio
             opacity: mediaModeOpen ? 0 : 1
 

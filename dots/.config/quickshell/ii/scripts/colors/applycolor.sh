@@ -73,13 +73,25 @@ apply_term() {
     sed_expr+="s/\$alpha/$term_alpha/g"
 
     sed -i "$sed_expr" "$dest"
+    # Convert literal \e and \\ notation to actual ESC bytes so terminals interpret them
+    printf '%b' "$(cat "$dest")" > "${dest}.tmp" && mv "${dest}.tmp" "$dest"
+
+    # Build set of PTYs belonging to kitty (apply_kitty handles those via SIGUSR1)
+    declare -A _kitty_pts
+    while IFS= read -r line; do
+        ppid="${line%% *}"; tty="${line##* }"
+        [[ "$tty" =~ pts/([0-9]+) ]] || continue
+        [[ "$(cat "/proc/$ppid/comm" 2>/dev/null)" == "kitty" ]] || continue
+        _kitty_pts["${BASH_REMATCH[1]}"]=1
+    done < <(ps -eo ppid=,tty= 2>/dev/null)
 
     # Push sequences to every open terminal PTY we actually own
     local pushed=0
     for file in /dev/pts/*; do
-        [[ "$file" =~ ^/dev/pts/[0-9]+$ ]] || continue
-        # Only write to PTYs we have write permission to (avoids Permission denied)
+        [[ "$file" =~ ^/dev/pts/([0-9]+)$ ]] || continue
         [[ -w "$file" ]] || continue
+        # Skip kitty PTYs — apply_kitty() handles those cleanly via SIGUSR1
+        [[ "${_kitty_pts[${BASH_REMATCH[1]}]+_}" ]] && continue
         { cat "$dest" > "$file"; } 2>/dev/null & disown $! 2>/dev/null || true
         (( pushed++ )) || true
     done
@@ -231,6 +243,7 @@ apply_gtk4() {
     local surface_container="" surface_container_high="" surface_container_low=""
     local error="" on_error="" error_container="" on_error_container=""
     local outline="" outline_variant="" inverse_surface="" inverse_on_surface=""
+    local tertiary="" on_tertiary="" tertiary_container="" on_tertiary_container=""
 
     for i in "${!colorlist[@]}"; do
         case "${colorlist[$i]}" in
@@ -242,6 +255,10 @@ apply_gtk4() {
             '$onSecondary')             on_secondary="${colorvalues[$i]}"            ;;
             '$secondaryContainer')      secondary_container="${colorvalues[$i]}"     ;;
             '$onSecondaryContainer')    on_secondary_container="${colorvalues[$i]}"  ;;
+            '$tertiary')                tertiary="${colorvalues[$i]}"                ;;
+            '$onTertiary')              on_tertiary="${colorvalues[$i]}"             ;;
+            '$tertiaryContainer')       tertiary_container="${colorvalues[$i]}"      ;;
+            '$onTertiaryContainer')     on_tertiary_container="${colorvalues[$i]}"   ;;
             '$surface')                 surface="${colorvalues[$i]}"                 ;;
             '$onSurface')               on_surface="${colorvalues[$i]}"              ;;
             '$surfaceVariant')          surface_variant="${colorvalues[$i]}"         ;;
@@ -270,13 +287,13 @@ apply_gtk4() {
 @define-color destructive_bg_color ${error_container};
 @define-color destructive_fg_color ${on_error_container};
 
-@define-color success_color #4F6354;
-@define-color success_bg_color #D1E8D5;
-@define-color success_fg_color #0C1F13;
+@define-color success_color ${tertiary};
+@define-color success_bg_color ${tertiary_container};
+@define-color success_fg_color ${on_tertiary_container};
 
-@define-color warning_color #E6B800;
-@define-color warning_bg_color #FFF3CD;
-@define-color warning_fg_color #664D00;
+@define-color warning_color ${tertiary};
+@define-color warning_bg_color ${tertiary_container};
+@define-color warning_fg_color ${on_tertiary_container};
 
 @define-color error_color ${error};
 @define-color error_bg_color ${error_container};
@@ -470,11 +487,11 @@ apply_cava() {
     local gradient_block
     gradient_block=$(grep -v '^\[color\]' "$cava_colors" | grep -v '^$')
 
-    # Use awk to replace the gradient section in the config
+    # Use awk to replace the gradient section in the config.
+    # Skip every line starting with "gradient" (gradient =, gradient_count, gradient_color_N)
+    # and emit the new block exactly once at the first match.
     awk -v new="$gradient_block" '
-        /^gradient = / { print new; skip=1; next }
-        skip && /^gradient_color_/ { next }
-        skip && !/^gradient_color_/ { skip=0 }
+        /^gradient/ { if (!p) { print new; p=1 }; next }
         { print }
     ' "$cava_conf" > "${cava_conf}.tmp" && mv "${cava_conf}.tmp" "$cava_conf"
 
@@ -581,6 +598,7 @@ apply_icons() {
     # xsettingsd
     sed -i "s|Net/IconThemeName \".*\"|Net/IconThemeName \"$icon_theme\"|" \
         "$HOME/.config/xsettingsd/xsettingsd.conf" 2>/dev/null
+    pkill -HUP xsettingsd 2>/dev/null || true
     # KDE
     sed -i "s/^Theme=.*/Theme=$icon_theme/" \
         "$HOME/.config/kdeglobals" 2>/dev/null

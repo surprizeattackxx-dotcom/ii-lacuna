@@ -1,13 +1,16 @@
 import QtQuick
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 import qs.modules.common
 
-DropShadow {
+MultiEffect {
     required property var target
     source: target
     anchors.fill: source
-    radius: 8
-    samples: radius * 2 + 1
-    color: Appearance.colors.colShadow
-    transparentBorder: true
+    autoPaddingEnabled: true
+    shadowEnabled: true
+    shadowColor: Appearance.colors.colShadow
+    shadowBlur: 0.65
+    shadowHorizontalOffset: 0
+    shadowVerticalOffset: 0
+    shadowScale: 1.0
 }

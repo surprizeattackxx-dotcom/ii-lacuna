@@ -22,6 +22,15 @@ MouseArea {
     property bool useThumbnail: (Images.isValidImageByName(fileModelData.fileName) || root.isVideo) && !root.isApi
     property bool showLoadingIndicator: false
 
+    // WPE preview state — inline image updates these
+    property int wpeFallbackIdx: 0
+    property bool wpePreviewLoaded: false
+    property bool wpePreviewFailed: false
+
+    property string wpePath0: isDirectory ? (fileModelData.filePath + "/preview.jpg") : ""
+    property string wpePath1: isDirectory ? (fileModelData.filePath + "/preview.png") : ""
+    property string wpePath2: isDirectory ? (fileModelData.filePath + "/preview.gif") : ""
+
     property alias colBackground: background.color
     property alias colText: wallpaperItemName.color
     property alias radius: background.radius
@@ -43,7 +52,6 @@ MouseArea {
             root.moreOptionsRequested(fileModelData)
         }
     }
-    
 
     function getWallhavenId(url) {
         const urlStr = url.toString();
@@ -142,7 +150,7 @@ MouseArea {
                     z: 1
                     id: moreOptionsButtonLoader
                     active: root.containsMouse && !root.isDirectory && root.shouldLoad
-                    
+
                     anchors.top: parent.top
                     anchors.right: parent.right
                     anchors.margins: 8
@@ -159,9 +167,70 @@ MouseArea {
                     }
                 }
 
+                // WPE preview — inline Image (no Loader) so root/fileModelData stay in scope.
+                // Tries preview.jpg → preview.png → preview.gif. On all-fail, folder icon shows.
+                Image {
+                    id: wpePreviewImg
+                    anchors.fill: parent
+                    visible: root.isDirectory && root.shouldLoad
+                    opacity: root.wpePreviewLoaded ? 1 : 0
+                    source: {
+                        if (!root.isDirectory || !root.shouldLoad) return ""
+                        if (root.wpeFallbackIdx === 0) return "file://" + root.wpePath0
+                        if (root.wpeFallbackIdx === 1) return "file://" + root.wpePath1
+                        return "file://" + root.wpePath2
+                    }
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                    cache: false
+                    onStatusChanged: {
+                        if (status === Image.Ready) {
+                            root.wpePreviewLoaded = true
+                        } else if (status === Image.Error) {
+                            if (root.wpeFallbackIdx < 2) {
+                                root.wpeFallbackIdx++
+                            } else {
+                                root.wpePreviewFailed = true
+                            }
+                        }
+                    }
+                    layer.enabled: root.wpePreviewLoaded
+                    layer.effect: OpacityMask {
+                        maskSource: Rectangle {
+                            width: wallpaperItemImageContainer.width
+                            height: wallpaperItemImageContainer.height
+                            radius: Appearance.rounding.small
+                        }
+                    }
+                }
+
+                // WPE badge — only shown when preview loaded
+                Rectangle {
+                    z: 1
+                    visible: root.isDirectory && root.wpePreviewLoaded
+                    anchors.top: parent.top
+                    anchors.left: parent.left
+                    anchors.topMargin: 5
+                    anchors.leftMargin: 5
+                    width: wpeBadge.implicitWidth + 8
+                    height: wpeBadge.implicitHeight + 4
+                    radius: 4
+                    color: Qt.rgba(0.1, 0.1, 0.6, 0.85)
+                    StyledText {
+                        id: wpeBadge
+                        anchors.centerIn: parent
+                        text: "WPE"
+                        font.pixelSize: Appearance.font.pixelSize.small - 1
+                        font.weight: Font.Bold
+                        color: "white"
+                    }
+                }
+
+                // Folder icon — only when not a directory or WPE preview failed to load
                 Loader {
                     id: iconLoader
                     active: !root.useThumbnail && !root.isApi && root.shouldLoad
+                    visible: !root.isDirectory || !root.wpePreviewLoaded
                     anchors.fill: parent
                     sourceComponent: DirectoryIcon {
                         fileModelData: root.fileModelData
@@ -233,6 +302,5 @@ MouseArea {
             color: Appearance.colors.colPrimary
             font.pixelSize: Appearance.font.pixelSize.large
         }
-
     }
 }

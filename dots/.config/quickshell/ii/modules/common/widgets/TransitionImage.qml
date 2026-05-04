@@ -7,6 +7,7 @@ import qs.modules.common.functions
 Item {
     id: root
 
+    readonly property int status: imgAIsBack ? imgB.status : imgA.status
     required property string imageSource
 
     property int animationDuration: 1000

@@ -2,7 +2,7 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 import QtQuick
 import Quickshell
 import Quickshell.Widgets
@@ -25,10 +25,10 @@ Item {
         }
     }
 
-    Desaturate {
+    MultiEffect {
         anchors.fill: parent
         source: baseIcon
-        desaturation: 0.8
+        saturation: -0.8
         visible: !root.isRunning && !Config.options.dock.monochromeIcons && Config.options.dock.dimInactiveIcons
         opacity: baseIcon.opacity
     }
@@ -36,19 +36,12 @@ Item {
     Loader {
         active: Config.options.dock.monochromeIcons
         anchors.fill: parent
-        sourceComponent: Item {
-            Desaturate {
-                id: monoDesat
-                anchors.fill: parent
-                source: baseIcon
-                desaturation: 0.8
-                visible: false
-            }
-            ColorOverlay {
-                anchors.fill: parent
-                source: monoDesat
-                color: ColorUtils.transparentize(Appearance.colors.colPrimary, 0.9)
-            }
+        sourceComponent: MultiEffect {
+            source: baseIcon
+            anchors.fill: parent
+            saturation: -0.8
+            colorization: 0.1
+            colorizationColor: Appearance.colors.colPrimary
         }
     }
 }

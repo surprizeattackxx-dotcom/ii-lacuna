@@ -183,30 +183,19 @@ detect_brightness_mode() {
     }'
 }
 
-    # Skip videos
-    if is_video "$img"; then
-        echo ""
-        return
+pre_process() {
+    local mode_flag="$1"
+    if [[ "$mode_flag" == "dark" ]]; then
+        gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
+        gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark'
+    elif [[ "$mode_flag" == "light" ]]; then
+        gsettings set org.gnome.desktop.interface color-scheme 'prefer-light'
+        gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3'
     fi
 
-    local brightness=""
-
-    if command -v magick &>/dev/null; then
-        brightness=$(magick "$img" -colorspace Gray -format "%[fx:mean]" info: 2>/dev/null)
-    elif command -v convert &>/dev/null; then
-        brightness=$(convert "$img" -colorspace Gray -format "%[fx:mean]" info: 2>/dev/null)
-    else
-        echo ""
-        return
+    if [ ! -d "$CACHE_DIR"/user/generated ]; then
+        mkdir -p "$CACHE_DIR"/user/generated
     fi
-
-    # Default threshold (tweak if needed)
-    local threshold=0.5
-
-    awk -v b="$brightness" -v t="$threshold" 'BEGIN {
-        if (b < t) print "dark";
-        else print "light";
-    }'
 }
 
 switch() {
@@ -297,6 +286,7 @@ switch() {
 }
 ' "$_wpe_output" "$wpe_thumbnail" "$wpe_id" "$imgpath" > "${_state_file}.tmp"
                 mv "${_state_file}.tmp" "$_state_file"
+                systemctl --user restart "wpe@${_wpe_output}.service" 2>/dev/null || true
             fi
 
         elif is_video "$imgpath"; then
@@ -390,7 +380,7 @@ switch() {
                     mv "${_state_file}.tmp" "$_state_file"
                     
                     # Stop any existing WPE service for this monitor when setting a regular wallpaper
-                    systemctl --user stop "wpe-${_awww_output}.service" 2>/dev/null || true
+                    systemctl --user stop "wpe@${_awww_output}.service" 2>/dev/null || true
                 fi
             fi
         fi
@@ -410,12 +400,15 @@ fi
 
     # Apply detected mode consistently (no forcing)
 if [[ -n "$mode_flag" ]]; then
-    matugen_args+=(--mode "$mode_flag")
+    matugen_prefer="darkness"
+    [[ "$mode_flag" == "light" ]] && matugen_prefer="lightness"
+    matugen_args+=(--mode "$mode_flag" --prefer "$matugen_prefer")
     generate_colors_material_args+=(--mode "$mode_flag")
 fi
     [[ -n "$type_flag" ]] && matugen_args+=(--type "$type_flag") && generate_colors_material_args+=(--scheme "$type_flag")
     generate_colors_material_args+=(--termscheme "$terminalscheme" --blend_bg_fg)
     generate_colors_material_args+=(--cache "$STATE_DIR/user/generated/color.txt")
+    generate_colors_material_args+=(--json-out "$STATE_DIR/user/generated/colors.json")
 
     pre_process "$mode_flag"
 
@@ -517,9 +510,15 @@ main() {
                         _mon=$(jq -r '.monitor // empty' "$_state_file" 2>/dev/null)
                         _path=$(jq -r '.path // empty' "$_state_file" 2>/dev/null)
                         _is_wpe=$(jq -r '.wpe // false' "$_state_file" 2>/dev/null)
-                        _wpe_id=$(jq -r '.wpe_id // empty' "$_state_file" 2>/dev/null)
                         if [[ "$_is_wpe" == "true" && -n "$_mon" ]]; then
-                            _wpe_path=$(jq -r '.wpe_path // .wpe_id // empty' "$_state_file" 2>/dev/null)
+                            systemctl --user start "wpe@${_mon}.service" 2>/dev/null || true
+                            _restored=1
+                        elif [[ -n "$_mon" && -n "$_path" && -f "$_path" ]]; then
+                            awww img "$_path" --outputs "$_mon" --transition-type none 2>/dev/null &
+                            _restored=1
+                        fi
+                    done
+                fi
                 [[ $_restored -eq 0 ]] && awww restore 2>/dev/null || true
                 # Get imgpath for color regeneration from focused monitor state file
                 _focused_mon=$(hyprctl monitors -j | jq -r '.[] | select(.focused==true) | .name' 2>/dev/null)

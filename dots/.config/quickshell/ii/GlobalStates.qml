@@ -33,6 +33,7 @@ Singleton {
     property bool superDown: false
     property bool superReleaseMightTrigger: true
     property bool wallpaperSelectorOpen: false
+    property bool wallpaperChangerOpen: false
     property bool workspaceShowNumbers: true
     property bool isScrollingLayout: false
 

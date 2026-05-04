@@ -1,0 +1,21 @@
+[Unit]
+Description=Linux Wallpaper Engine (%i)
+After=graphical-session-pre.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+Restart=on-failure
+RestartSec=5
+ExecStart=/bin/bash -c '\
+  STATE="%h/.local/state/quickshell/user/generated/wallpaper/monitors/%i.json"; \
+  ASSETS="/mnt/wwn-0x50014ee65ea3c55b-part1/SteamLibrary/steamapps/common/wallpaper_engine/assets"; \
+  WPE=$(jq -r ".wpe_path // empty" "$STATE" 2>/dev/null); \
+  [ -z "$WPE" ] && exit 0; \
+  exec linux-wallpaperengine \
+    --screen-root %i --bg "$WPE" --scaling default \
+    --silent --fps 60 \
+    --assets-dir "$ASSETS"'
+
+[Install]
+WantedBy=graphical-session.target

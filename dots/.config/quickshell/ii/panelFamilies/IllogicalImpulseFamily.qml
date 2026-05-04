@@ -23,6 +23,7 @@ import qs.modules.ii.sidebarDashboard
 import qs.modules.ii.overlay
 import qs.modules.ii.verticalBar
 import qs.modules.ii.wallpaperSelector
+import qs.modules.ii.wallpaperChanger
 import qs.modules.ii.wrappedFrame
 
 Scope {
@@ -66,4 +67,5 @@ Scope {
     PanelLoader { extraCondition: Config.options.bar.vertical && barExtraCondition; component: VerticalBar {} }
     PanelLoader { component: WallpaperSelector {} }
     PanelLoader { component: WrappedFrame {} }
+    PanelLoader { component: WallpaperChanger {} }
 }

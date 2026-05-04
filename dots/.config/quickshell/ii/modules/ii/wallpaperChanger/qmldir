@@ -1,0 +1,4 @@
+module qs.modules.ii.wallpaperChanger
+WallpaperChanger 1.0 WallpaperChanger.qml
+WallpaperChangerContent 1.0 WallpaperChangerContent.qml
+WallpaperThumb 1.0 WallpaperThumb.qml

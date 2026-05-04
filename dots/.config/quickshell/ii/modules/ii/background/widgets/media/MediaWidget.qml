@@ -166,7 +166,7 @@ AbstractBackgroundWidget {
                 animation: Appearance.animation.elementResize.numberAnimation.createObject(this)
             }
 
-            layer.enabled: true
+            layer.enabled: Config.options.background.widgets.media.glow.enable
             layer.effect: StyledBlurEffect {
                 source: blurredArt
                 brightness: 0.002 * Config.options.background.widgets.media.glow.brightness

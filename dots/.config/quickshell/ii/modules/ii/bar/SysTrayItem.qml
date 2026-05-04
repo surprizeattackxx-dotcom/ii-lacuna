@@ -3,7 +3,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Services.SystemTray
 import Quickshell.Widgets
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
@@ -112,19 +112,12 @@ MouseArea {
     Loader {
         active: Config.options.tray.monochromeIcons
         anchors.fill: trayIcon
-        sourceComponent: Item {
-            Desaturate {
-                id: desaturatedIcon
-                visible: false // There's already color overlay
-                anchors.fill: parent
-                source: trayIcon
-                desaturation: 0.8 // 1.0 means fully grayscale
-            }
-            ColorOverlay {
-                anchors.fill: desaturatedIcon
-                source: desaturatedIcon
-                color: ColorUtils.transparentize(Appearance.colors.colOnLayer0, 0.9)
-            }
+        sourceComponent: MultiEffect {
+            source: trayIcon
+            anchors.fill: parent
+            saturation: -0.8
+            colorization: 0.1
+            colorizationColor: Appearance.colors.colOnLayer0
         }
     }
 

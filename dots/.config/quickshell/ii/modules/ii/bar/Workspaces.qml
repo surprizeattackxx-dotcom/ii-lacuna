@@ -12,7 +12,6 @@ import Quickshell
 import Quickshell.Wayland
 import Quickshell.Hyprland
 import Quickshell.Widgets
-import Qt5Compat.GraphicalEffects
 
 Item {
     id: root
@@ -534,19 +533,12 @@ Item {
                             Loader {
                                 active: Config.options.bar.workspaces.monochromeIcons
                                 anchors.fill: mainAppIcon
-                                sourceComponent: Item {
-                                    Desaturate {
-                                        id: desaturatedIcon
-                                        visible: false
-                                        anchors.fill: parent
-                                        source: mainAppIcon
-                                        desaturation: 0.8
-                                    }
-                                    ColorOverlay {
-                                        anchors.fill: desaturatedIcon
-                                        source: desaturatedIcon
-                                        color: ColorUtils.transparentize(Appearance.colors.colOnLayer1, 0.9)
-                                    }
+                                sourceComponent: MultiEffect {
+                                    source: mainAppIcon
+                                    anchors.fill: parent
+                                    saturation: -0.8
+                                    colorization: 0.1
+                                    colorizationColor: Appearance.colors.colOnLayer1
                                 }
                             }
                         }

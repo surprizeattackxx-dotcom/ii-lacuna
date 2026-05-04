@@ -50,7 +50,18 @@ Variants {
             path: perScreen.wallpaperStatePath
             blockLoading: true
             watchChanges: true
-            onFileChanged: reload()
+            onFileChanged: {
+                reload()
+                // When the state file changes while WPE is already active, WPE
+                // restarted and its new surface is now above ours. Reset wpeReady
+                // so the overlay window is destroyed and recreated after WPE settles.
+                Qt.callLater(() => {
+                    if (perScreen.wallpaperIsWpe && perScreen.wpeReady) {
+                        perScreen.wpeReady = false
+                        wpeDelayTimer.restart()
+                    }
+                })
+            }
         }
 
         readonly property bool wallpaperIsWpe: {
