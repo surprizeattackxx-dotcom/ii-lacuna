@@ -595,4 +595,5 @@ ShellRoot {
     }
 
     GlobalShortcut { name: "panelFamilyCycle"; onPressed: root.cyclePanelFamily() }
+    GlobalShortcut { name: "animations"; onPressed: animationsWindow.visible = !animationsWindow.visible }
 }

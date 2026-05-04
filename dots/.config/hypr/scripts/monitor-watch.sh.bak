@@ -1,0 +1,87 @@
+#!/bin/bash
+TV="HDMI-A-1"
+TV_CONFIG="3840x2160@60,3840x471,1.0"
+FALLBACK_WS="1"
+STATE_FILE="/tmp/hypr-tv-state.json"
+DISABLED_MONITORS_FILE="${XDG_STATE_HOME:-$HOME/.local/state}/quickshell/user/generated/wallpaper/monitors_disabled.txt"
+MONITOR_OVERRIDES_CONF="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/monitor-overrides.conf"
+SOCKET="$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock"
+
+if [[ ! -S "$SOCKET" ]]; then
+  echo "Error: Could not find socket at $SOCKET"
+  exit 1
+fi
+
+echo "Using socket: $SOCKET"
+
+save_and_evacuate() {
+  echo "TV disconnected — saving state and rescuing windows from workspaces 21–30"
+  echo "$TV" >> "$DISABLED_MONITORS_FILE"
+  # Persist disabled state so hyprctl keyword calls don't re-enable the TV
+  sed -i "/^monitor=$TV/d" "$MONITOR_OVERRIDES_CONF" 2>/dev/null || true
+  echo "monitor=$TV,disabled" >> "$MONITOR_OVERRIDES_CONF"
+
+  # Save address→workspace mapping for all windows on TV workspaces
+  hyprctl clients -j | \
+    jq '[.[] | select(.workspace.id >= 21 and .workspace.id <= 30) | {address, workspace: .workspace.id}]' \
+    > "$STATE_FILE"
+
+  echo "Saved state: $(cat $STATE_FILE)"
+
+  # Move them all to fallback
+  hyprctl clients -j | \
+    jq -r '.[] | select(.workspace.id >= 21 and .workspace.id <= 30) | .address' | \
+    while read -r addr; do
+      hyprctl dispatch movetoworkspacesilent "$FALLBACK_WS,address:$addr"
+    done
+}
+
+restore_state() {
+  echo "TV reconnected — restoring windows to their original workspaces"
+
+  if [[ ! -f "$STATE_FILE" ]]; then
+    echo "No saved state found, nothing to restore"
+    return
+  fi
+
+  # Small delay to let Hyprland fully register the monitor
+  sleep 1
+
+  jq -c '.[]' "$STATE_FILE" | while read -r entry; do
+    addr=$(echo "$entry" | jq -r '.address')
+    ws=$(echo "$entry"   | jq -r '.workspace')
+    echo "Restoring $addr → workspace $ws"
+    hyprctl dispatch movetoworkspacesilent "$ws,address:$addr"
+  done
+
+  rm -f "$STATE_FILE"
+  sed -i "/^${TV}$/d" "$DISABLED_MONITORS_FILE"
+  sed -i "/^monitor=$TV/d" "$MONITOR_OVERRIDES_CONF" 2>/dev/null || true
+}
+
+handle_event() {
+  local event="$1"
+
+  if [[ "$event" == "monitorremoved>>HDMI-A-1" ]]; then
+    # Skip if already in disabled list — means we just re-disabled a spurious re-add
+    if grep -qx "$TV" "$DISABLED_MONITORS_FILE" 2>/dev/null; then
+      echo "TV removed — already in disabled list, skipping state save"
+      return
+    fi
+    save_and_evacuate
+  elif [[ "$event" == "monitoradded>>HDMI-A-1" ]]; then
+    # If TV is in the disabled list, immediately re-disable it (suppress spurious re-enables
+    # caused by hyprctl keyword calls triggering Hyprland config re-apply)
+    if grep -qx "$TV" "$DISABLED_MONITORS_FILE" 2>/dev/null; then
+      echo "TV appeared but is in disabled list — re-disabling"
+      hyprctl keyword monitor "$TV,disabled"
+    else
+      restore_state
+    fi
+  fi
+}
+
+socat -u "UNIX-CONNECT:$SOCKET" - | \
+  while read -r line; do
+    handle_event "$line"
+  done

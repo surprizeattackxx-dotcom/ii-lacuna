@@ -248,7 +248,8 @@ ContentPage {
                                                 var p = d.path || ""
                                                 if (p.length > 0) {
                                                     if (!p.startsWith("file://")) p = "file://" + p
-                                                        monitorTile.wallpaperPath = p
+                                                    monitorTile.wallpaperPath = ""
+                                                    monitorTile.wallpaperPath = p
                                                 }
                                             } catch(e) {}
                                         }
@@ -267,7 +268,8 @@ ContentPage {
                                             var p = d.path || ""
                                             if (p.length > 0) {
                                                 if (!p.startsWith("file://")) p = "file://" + p
-                                                    monitorTile.wallpaperPath = p
+                                                monitorTile.wallpaperPath = ""
+                                                monitorTile.wallpaperPath = p
                                             }
                                         } catch(e) {}
                                     }

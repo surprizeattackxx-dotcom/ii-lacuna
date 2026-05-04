@@ -28,7 +28,7 @@ Variants {
         screen: modelData
         exclusionMode: ExclusionMode.Ignore
         WlrLayershell.layer: WlrLayer.Bottom
-        WlrLayershell.namespace: "quickshell:background"
+        WlrLayershell.namespace: "quickshell:overlayer"
         anchors {
             top: true
             bottom: true

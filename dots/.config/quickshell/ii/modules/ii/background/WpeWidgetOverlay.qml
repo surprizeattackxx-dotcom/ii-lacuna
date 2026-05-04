@@ -20,9 +20,9 @@ import qs.modules.ii.background.widgets.weather
 import qs.modules.ii.background.widgets.media
 
 // WpeWidgetOverlay — renders background widgets at WlrLayer.Bottom so they sit
-// above WPE (also Bottom) but below xdg-toplevel windows (normal apps).
+// above WPE (which is at Bottom) but below xdg-toplevel windows (normal apps).
 //
-// Layer stack (bottom → top): awww-daemon | background | WPE | wpe-widgets | [windows] | bar | overlay
+// Layer stack (bottom → top): awww-daemon | background | WPE | wpe-widgets | [windows] | overlay
 //
 // KEY: The PanelWindow is only CREATED when WPE is detected active on a monitor.
 // This ensures wpe-widgets is registered AFTER WPE in the compositor's bottom layer,
@@ -139,90 +139,96 @@ Variants {
         // The PanelWindow is only INSTANTIATED when wpeReady = true.
         // When wpeReady goes false (WPE stopped), the window is destroyed and
         // will be re-created after the delay next time WPE starts.
-        Loader {
-            id: overlayLoader
-            active: perScreen.wpeReady
+        PanelWindow {
+            id: overlayRoot
 
-            sourceComponent: PanelWindow {
-                id: overlayRoot
+            screen: perScreen.modelData
 
-                // ── Layer setup ─────────────────────────────────────────────
-                screen: perScreen.modelData
-                WlrLayershell.layer: WlrLayer.Bottom
-                WlrLayershell.namespace: "quickshell:wpe-widgets"
-                WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
-                exclusionMode: ExclusionMode.Ignore
-                color: "transparent"
+            WlrLayershell.layer: WlrLayer.Bottom
+            WlrLayershell.namespace: "quickshell:wpe-widgets"
+            WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
+            exclusionMode: ExclusionMode.Ignore
+            color: "transparent"
 
-                // Fullscreen, no exclusion zone — sits above WPE, below windows
-                anchors {
-                    top: true
-                    bottom: true
-                    left: true
-                    right: true
+            anchors {
+                top: true
+                bottom: true
+                left: true
+                right: true
+            }
+
+            visible: perScreen.wpeReady
+
+            // ── Widget canvas ───────────────────────────────────────────
+            WidgetCanvas {
+                id: widgetCanvas
+                anchors.fill: parent
+                z: 1
+
+                FadeLoader {
+                    shown: Config.options.background.widgets.weather.enable
+                    sourceComponent: WeatherWidget {
+                        screenWidth: perScreen.modelData.width
+                        screenHeight: perScreen.modelData.height
+                        scaledScreenWidth: perScreen.modelData.width
+                        scaledScreenHeight: perScreen.modelData.height
+                        wallpaperScale: 1
+                        overrideX: perScreen.widgetX("weather")
+                        overrideY: perScreen.widgetY("weather")
+                    }
                 }
 
-                // ── Widget canvas ───────────────────────────────────────────
-                WidgetCanvas {
-                    id: widgetCanvas
-                    anchors.fill: parent
-                    z: 1
+                FadeLoader {
+                    shown: Config.options.background.widgets.clock.enable
+                    sourceComponent: ClockWidget {
+                        screenWidth: perScreen.modelData.width
+                        screenHeight: perScreen.modelData.height
+                        scaledScreenWidth: perScreen.modelData.width
+                        scaledScreenHeight: perScreen.modelData.height
+                        wallpaperScale: 1
+                        wallpaperSafetyTriggered: false
+                        overrideX: perScreen.widgetX("clock")
+                        overrideY: perScreen.widgetY("clock")
+                    }
+                }
 
-                    FadeLoader {
-                        shown: Config.options.background.widgets.weather.enable
-                        sourceComponent: WeatherWidget {
-                            screenWidth: perScreen.modelData.width
-                            screenHeight: perScreen.modelData.height
-                            scaledScreenWidth: perScreen.modelData.width
-                            scaledScreenHeight: perScreen.modelData.height
-                            wallpaperScale: 1
-                            overrideX: perScreen.widgetX("weather")
-                            overrideY: perScreen.widgetY("weather")
+                Timer {
+                    interval: 1000
+                    running: true
+                    repeat: true
+                    onTriggered: {
+                        console.log("wallpaperIsWpe =", wallpaperIsWpe)
+                        console.log("wpeReady =", wpeReady)
+                    }
+                }
+
+                FadeLoader {
+                    id: mediaLoader
+                    property bool enableLoading: true
+                    shown: Config.options.background.widgets.media.enable && enableLoading
+                    sourceComponent: MediaWidget {
+                        screenWidth: perScreen.modelData.width
+                        screenHeight: perScreen.modelData.height
+                        scaledScreenWidth: perScreen.modelData.width
+                        scaledScreenHeight: perScreen.modelData.height
+                        wallpaperScale: 1
+                        overrideX: perScreen.widgetX("media")
+                        overrideY: perScreen.widgetY("media")
+                    }
+                    onLoaded: {
+                        if (item && item.requestReset) {
+                            item.requestReset.connect(() => {
+                                mediaLoader.enableLoading = false
+                                mediaResetTimer.running = true
+                            })
                         }
                     }
+                }
 
-                    FadeLoader {
-                        shown: Config.options.background.widgets.clock.enable
-                        sourceComponent: ClockWidget {
-                            screenWidth: perScreen.modelData.width
-                            screenHeight: perScreen.modelData.height
-                            scaledScreenWidth: perScreen.modelData.width
-                            scaledScreenHeight: perScreen.modelData.height
-                            wallpaperScale: 1
-                            wallpaperSafetyTriggered: false
-                            overrideX: perScreen.widgetX("clock")
-                            overrideY: perScreen.widgetY("clock")
-                        }
-                    }
-
-                    FadeLoader {
-                        id: mediaLoader
-                        property bool enableLoading: true
-                        shown: Config.options.background.widgets.media.enable && enableLoading
-                        sourceComponent: MediaWidget {
-                            screenWidth: perScreen.modelData.width
-                            screenHeight: perScreen.modelData.height
-                            scaledScreenWidth: perScreen.modelData.width
-                            scaledScreenHeight: perScreen.modelData.height
-                            wallpaperScale: 1
-                            overrideX: perScreen.widgetX("media")
-                            overrideY: perScreen.widgetY("media")
-                        }
-                        onLoaded: {
-                            if (item && item.requestReset) {
-                                item.requestReset.connect(() => {
-                                    mediaLoader.enableLoading = false
-                                    mediaResetTimer.running = true
-                                })
-                            }
-                        }
-                    }
-
-                    Timer {
-                        id: mediaResetTimer
-                        interval: 200
-                        onTriggered: mediaLoader.enableLoading = true
-                    }
+                Timer {
+                    id: mediaResetTimer
+                    interval: 200
+                    onTriggered: mediaLoader.enableLoading = true
                 }
             }
         }

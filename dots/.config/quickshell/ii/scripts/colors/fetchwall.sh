@@ -254,7 +254,7 @@ switch() {
                 magick "$imgpath/preview.gif[0]" "$wpe_thumbnail" 2>/dev/null || \
                     grim ${_wpe_output:+-o "$_wpe_output"} "$wpe_thumbnail" 2>/dev/null || true
             elif [[ -f "$imgpath/preview.jpg" ]]; then
-                cp "$imgpath/preview.jpg" "$wpe_thumbnail" 2>/dev/null || true
+                magick "$imgpath/preview.jpg" "$wpe_thumbnail" 2>/dev/null || cp "$imgpath/preview.jpg" "$wpe_thumbnail" 2>/dev/null || true
             elif [[ -f "$imgpath/preview.png" ]]; then
                 cp "$imgpath/preview.png" "$wpe_thumbnail" 2>/dev/null || true
             else

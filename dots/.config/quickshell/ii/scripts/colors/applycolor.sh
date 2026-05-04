@@ -604,6 +604,8 @@ apply_icons() {
         "$HOME/.config/kdeglobals" 2>/dev/null
     # Hyprland env (runtime)
     hyprctl keyword env GTK_ICON_THEME,"$icon_theme" 2>/dev/null
+    # GNOME/GTK settings daemon — this is what actually sticks across apps
+    gsettings set org.gnome.desktop.interface icon-theme "$icon_theme" 2>/dev/null
 
     echo "[applycolor] Icon theme set to $icon_theme"
 }

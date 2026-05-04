@@ -1,0 +1,30 @@
+# See https://vexp.dev/docs for options
+[index]
+exclude_patterns = [
+  # Non-quickshell dotfiles
+  "dots/.config/hypr/**",
+  "dots/.config/fish/**",
+  "dots/.config/kitty/**",
+  "dots/.config/foot/**",
+  "dots/.config/fuzzel/**",
+  "dots/.config/fontconfig/**",
+  "dots/.config/kde-material-you-colors/**",
+  "dots/.config/khal/**",
+  "dots/.config/Kvantum/**",
+  "dots/.config/matugen/**",
+  "dots/.config/mpv/**",
+  "dots/.config/systemd/**",
+  "dots/.config/unsloth/**",
+  "dots/.config/wlogout/**",
+  "dots/.config/xdg-desktop-portal/**",
+  "dots/.config/zshrc.d/**",
+  # Root-level AI training data / generated files
+  "_gen_*.py",
+  # Other unrelated root dirs
+  "dots-extra/**",
+  "sdata/**",
+  "src/**",
+  "scripts/**",
+  "setup/**",
+  "diagnose/**",
+]

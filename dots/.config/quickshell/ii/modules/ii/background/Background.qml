@@ -114,13 +114,16 @@ Variants {
         exclusionMode: ExclusionMode.Ignore
         WlrLayershell.layer: (GlobalStates.screenLocked && !scaleAnim.running) ? WlrLayer.Top : WlrLayer.Bottom
         // WlrLayershell.layer: WlrLayer.Bottom
-        WlrLayershell.namespace: "quickshell:background"
-        anchors {
+        WlrLayershell.namespace: "quickshell"
+        WlrLayershell.anchors {
             top: true
             bottom: true
             left: true
             right: true
         }
+
+        WlrLayershell.exclusionMode: ExclusionMode.Ignore
+        WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
         color: {
             if (!bgRoot.wallpaperSafetyTriggered || bgRoot.wallpaperIsVideo || bgRoot.wallpaperIsWpe)
                 return "transparent";
