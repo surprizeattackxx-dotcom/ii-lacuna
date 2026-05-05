@@ -6,5 +6,15 @@ A modular dotfile + system bootstrap framework.
 - dots/          → base configs
 - dots-extra/    → optional configs
 - sdata/         → command modules
-- scripts/       → helper scripts
-- setup-*.sh     → installers
+## Updating
+To synchronize your local installation with the latest changes from the upstream repository, run:
+
+```bash
+./scripts/pull-updates.sh
+```
+
+Ensure the script has execution permissions:
+```bash
+chmod +x scripts/pull-updates.sh
+```
+
