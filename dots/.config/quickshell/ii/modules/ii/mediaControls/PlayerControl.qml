@@ -26,6 +26,18 @@ Item { // Player instance
     property int visualizerSmoothing: 2 // Number of points to average for smoothing
     property real radius
 
+    property var localLikedOverride: null
+    property var localDislikedOverride: null
+
+    Connections {
+        target: root.player
+        ignoreUnknownSignals: true
+        function onTrackChanged() {
+            root.localLikedOverride = null;
+            root.localDislikedOverride = null;
+        }
+    }
+
     property string displayedArtFilePath: root.downloaded ? Qt.resolvedUrl(artFilePath) : ""
 
     component TrackChangeButton: RippleButton {
@@ -224,12 +236,24 @@ Item { // Player instance
                     TrackChangeButton {
                         iconName: "thumb_up"
                         buttonSize: 22
-                        downAction: () => MediaLikeService.like(root.player)
+                        fill: root.localLikedOverride !== null ? root.localLikedOverride : (root.player?.metadata["xesam:userRating"] ?? 0) >= 0.5
+                        downAction: () => {
+                            MediaLikeService.like(root.player);
+                            const current = root.localLikedOverride !== null ? root.localLikedOverride : (root.player?.metadata["xesam:userRating"] ?? 0) >= 0.5;
+                            root.localLikedOverride = !current;
+                            root.localDislikedOverride = false;
+                        }
                     }
                     TrackChangeButton {
                         iconName: "thumb_down"
                         buttonSize: 22
-                        downAction: () => MediaLikeService.dislike(root.player)
+                        fill: root.localDislikedOverride !== null ? root.localDislikedOverride : false
+                        downAction: () => {
+                            MediaLikeService.dislike(root.player);
+                            const current = root.localDislikedOverride !== null ? root.localDislikedOverride : false;
+                            root.localDislikedOverride = !current;
+                            root.localLikedOverride = false;
+                        }
                     }
                     Item { Layout.fillWidth: true }
                 }
