@@ -7,7 +7,7 @@ A modular dotfile + system bootstrap framework.
 - dots-extra/    → optional configs
 - sdata/         → command modules
 ## Updating
-To synchronize your local installation with the latest changes from the upstream repository, run:
+To synchronize your local installation with the latest changes from the upstream repository, run the following from the **root** of the ii-lacuna directory:
 
 ```bash
 ./scripts/pull-updates.sh
