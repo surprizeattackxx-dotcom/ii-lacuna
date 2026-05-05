@@ -91,14 +91,14 @@ Variants {
         function widgetX(name) {
             const pos = monitorWidgetPositions[name];
             return (pos !== undefined && pos.x !== undefined)
-                ? pos.x
-                : Config.options.background.widgets[name].x;
+            ? pos.x
+            : Config.options.background.widgets[name].x;
         }
         function widgetY(name) {
             const pos = monitorWidgetPositions[name];
             return (pos !== undefined && pos.y !== undefined)
-                ? pos.y
-                : Config.options.background.widgets[name].y;
+            ? pos.y
+            : Config.options.background.widgets[name].y;
         }
 
         // Colors — match Background.qml logic for WPE mode

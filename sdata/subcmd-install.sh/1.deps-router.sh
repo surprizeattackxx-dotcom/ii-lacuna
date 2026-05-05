@@ -2,6 +2,9 @@
 # It's not for directly running.
 printf "${STY_CYAN}[$0]: 1. Install dependencies\n${STY_RST}"
 
+# Pre-dependency checks for core system tools
+ensure_cmds git rsync curl wget
+
 function outdate_detect(){
   # Shallow clone prevent latest_commit_timestamp() from working.
   x git_auto_unshallow 2>&1>/dev/null

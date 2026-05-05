@@ -208,6 +208,9 @@ Item {
             active: Config.options.bar.utilButtons.showDarkModeToggle
             visible: Config.options.bar.utilButtons.showDarkModeToggle
             sourceComponent: CircleUtilButton {
+                property bool currentDarkMode: (Config.ready && Config.options.appearance.colorMode.length > 0)
+                    ? Config.options.appearance.colorMode === "dark"
+                    : Appearance.m3colors.darkmode
                 Layout.alignment: Qt.AlignVCenter
                 onClicked: event => {
                     Quickshell.execDetached([Directories.darkModeToggleScriptPath]);
@@ -216,7 +219,7 @@ Item {
                 MaterialSymbol {
                     horizontalAlignment: Qt.AlignHCenter
                     fill: 0
-                    text: Appearance.m3colors.darkmode ? "light_mode" : "dark_mode"
+                    text: parent.currentDarkMode ? "light_mode" : "dark_mode"
                     iconSize: Appearance.font.pixelSize.large
                     color: Appearance.m3colors.m3onSurface
                 }

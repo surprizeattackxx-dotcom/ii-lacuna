@@ -107,8 +107,9 @@ check_and_prompt_upscale() {
 }
 
 DISABLED_MONITORS_FILE="$STATE_DIR/user/generated/wallpaper/monitors_disabled.txt"
+MONITOR_STATE_DIR="$STATE_DIR/user/generated/wallpaper/monitors"
 
-Returns 0 (true) if the given monitor name is in the disabled list
+# Returns 0 (true) if the given monitor name is in the disabled list.
 monitor_is_disabled() {
     [[ -f "$DISABLED_MONITORS_FILE" ]] && grep -qx "$1" "$DISABLED_MONITORS_FILE"
 }
@@ -177,6 +178,54 @@ set_thumbnail_path() {
     if [ -f "$SHELL_CONFIG_FILE" ]; then
         jq --indent 4 --arg path "$path" '.background.thumbnailPath = $path' "$SHELL_CONFIG_FILE" > "$SHELL_CONFIG_FILE.tmp" && mv "$SHELL_CONFIG_FILE.tmp" "$SHELL_CONFIG_FILE"
     fi
+}
+
+get_config_wallpaper_path() {
+    jq -r '.background.wallpaperPath // empty' "$SHELL_CONFIG_FILE" 2>/dev/null || true
+}
+
+get_focused_monitor_name() {
+    hyprctl monitors -j | jq -r '.[] | select(.focused == true) | .name' 2>/dev/null
+}
+
+get_monitor_state_path() {
+    local monitor="$1"
+    [[ -z "$monitor" ]] && return
+
+    local state_file="$MONITOR_STATE_DIR/${monitor}.json"
+    [[ -f "$state_file" ]] || return
+
+    jq -r '.path // empty' "$state_file" 2>/dev/null || true
+}
+
+get_any_monitor_state_path() {
+    [[ -d "$MONITOR_STATE_DIR" ]] || return
+
+    local state_file
+    state_file="$(find "$MONITOR_STATE_DIR" -name "*.json" 2>/dev/null | sort | head -1)"
+    [[ -n "$state_file" ]] || return
+
+    jq -r '.path // empty' "$state_file" 2>/dev/null || true
+}
+
+resolve_matugen_source_path() {
+    local imgpath=""
+    local focused_monitor=""
+
+    focused_monitor="$(get_focused_monitor_name)"
+    if [[ -n "$focused_monitor" ]]; then
+        imgpath="$(get_monitor_state_path "$focused_monitor")"
+    fi
+
+    if [[ -z "$imgpath" || "$imgpath" == "null" || "$imgpath" == "--restore" ]]; then
+        imgpath="$(get_config_wallpaper_path)"
+    fi
+
+    if [[ -z "$imgpath" || "$imgpath" == "null" || "$imgpath" == "--restore" ]]; then
+        imgpath="$(get_any_monitor_state_path)"
+    fi
+
+    printf '%s\n' "$imgpath"
 }
 
 save_wallpaper_copy() {
@@ -384,10 +433,12 @@ switch() {
         [[ "$term_fg_boost" != "null" && -n "$term_fg_boost" ]] && generate_colors_material_args+=(--term_fg_boost "$term_fg_boost")
     fi
 
-    matugen "${matugen_args[@]}" 2>/dev/null || true
+    echo "1" | matugen "${matugen_args[@]}" 2>/dev/null || true
     source "${ILLOGICAL_IMPULSE_VIRTUAL_ENV/#\~/$HOME}/bin/activate"
     python3 "$SCRIPT_DIR/generate_colors_material.py" "${generate_colors_material_args[@]}" \
         > "$STATE_DIR"/user/generated/material_colors.scss
+    sleep 1
+    touch "$STATE_DIR/user/generated/colors.json"
     "$SCRIPT_DIR"/applycolor.sh
     deactivate
 
@@ -463,7 +514,7 @@ main() {
             --restore)
                 noswitch_flag="1"
                 # Restore per-monitor wallpapers from state files, fall back to awww restore
-                _monitors_dir="$STATE_DIR/user/generated/wallpaper/monitors"
+                _monitors_dir="$MONITOR_STATE_DIR"
                 _restored=0
                 if [[ -d "$_monitors_dir" ]]; then
                     for _state_file in "$_monitors_dir"/*.json; do
@@ -482,24 +533,12 @@ main() {
                     done
                 fi
                 [[ $_restored -eq 0 ]] && awww restore 2>/dev/null || true
-                # Get imgpath for color regeneration from focused monitor state file
-                imgpath=$(jq -r '.background.wallpaperPath' "$SHELL_CONFIG_FILE" 2>/dev/null || echo "")
-                if [[ -z "$imgpath" || "$imgpath" == "null" || "$imgpath" == "--restore" ]]; then
-                    _focused_mon=$(hyprctl monitors -j | jq -r '.[] | select(.focused==true) | .name' 2>/dev/null)
-                    _state="$STATE_DIR/user/generated/wallpaper/monitors/${_focused_mon}.json"
-                    [[ -f "$_state" ]] && imgpath=$(jq -r '.path // empty' "$_state" 2>/dev/null)
-                fi
+                imgpath="$(resolve_matugen_source_path)"
                 shift
                 ;;
             --noswitch)
                 noswitch_flag="1"
-                imgpath=$(jq -r '.background.wallpaperPath' "$SHELL_CONFIG_FILE" 2>/dev/null || echo "")
-                # Fall back to focused monitor state file if global wallpaperPath is empty, null, or --restore
-                if [[ -z "$imgpath" || "$imgpath" == "null" || "$imgpath" == "--restore" ]]; then
-                    _focused_mon=$(hyprctl monitors -j | jq -r '.[] | select(.focused==true) | .name' 2>/dev/null)
-                    _state="$STATE_DIR/user/generated/wallpaper/monitors/${_focused_mon}.json"
-                    [[ -f "$_state" ]] && imgpath=$(jq -r '.path // empty' "$_state" 2>/dev/null)
-                fi
+                imgpath="$(resolve_matugen_source_path)"
                 shift
                 ;;
             --no-save)

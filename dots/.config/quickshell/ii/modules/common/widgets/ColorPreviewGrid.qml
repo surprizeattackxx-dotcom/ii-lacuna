@@ -56,7 +56,15 @@ ColumnLayout {
     Process {
         id: wallpaperPathResolver
         running: false
-        command: ["bash", "-c", `jq -r '.path // empty' "${Wallpapers.monitorStateDir}/"$(hyprctl monitors -j | jq -r '.[0].name')".json" 2>/dev/null`]
+        command: ["bash", "-c", `
+focused_monitor="$(hyprctl monitors -j | jq -r '.[] | select(.focused == true) | .name' 2>/dev/null)"
+if [[ -n "$focused_monitor" && -f "${Wallpapers.monitorStateDir}/$focused_monitor.json" ]]; then
+    jq -r '.path // empty' "${Wallpapers.monitorStateDir}/$focused_monitor.json" 2>/dev/null
+else
+    first_state="$(find "${Wallpapers.monitorStateDir}" -name "*.json" 2>/dev/null | sort | head -1)"
+    [[ -n "$first_state" ]] && jq -r '.path // empty' "$first_state" 2>/dev/null
+fi
+`]
         stdout: StdioCollector {
             onStreamFinished: {
                 const path = text.trim()

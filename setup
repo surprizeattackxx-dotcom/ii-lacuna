@@ -7,6 +7,9 @@ source ./sdata/lib/functions.sh
 source ./sdata/lib/package-installers.sh
 source ./sdata/lib/dist-determine.sh
 
+# Run pre-flight checks
+bash ./scripts/check-preconditions.sh
+
 prevent_sudo_or_root
 set -e
 
