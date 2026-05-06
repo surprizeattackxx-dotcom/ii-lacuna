@@ -95,17 +95,7 @@ Item {
         function onWallpapersChanged() { root.rebuildCombinedModel() }
     }
 
-    // Quick preview process — awww for images
-    Process {
-        id: previewProc
-        property string focusedMonitor: Hyprland.focusedMonitor?.name ?? ""
-    }
-
-    // WPE preview process — writes state file + restarts wpe service
-    Process {
-        id: wpePreviewProc
-        property string focusedMonitor: Hyprland.focusedMonitor?.name ?? ""
-    }
+    readonly property string focusedMonitor: Hyprland.focusedMonitor?.name ?? ""
 
     Rectangle {
         id: bgRect
@@ -212,67 +202,22 @@ Item {
     function doPreview() {
         const entry = root.combinedModel[root.selectedIndex]
         if (!entry) return
-        const mon = previewProc.focusedMonitor
-        if (entry.isWpe) {
-            doWpePreview(entry.path, mon)
-        } else {
-            previewProc.exec(["awww", "img", entry.path,
-                "--outputs", mon,
-                "--transition-type", "grow",
-                "--transition-pos", "center",
-                "--transition-duration", "0.5",
-                "--transition-fps", "60",
-                "--transition-step", "90"
-            ])
-        }
-    }
-
-    function doWpePreview(wpePath, monitor) {
-        if (!monitor || monitor.length === 0) return
-        const wpeId = wpePath.split("/").pop()
-        const stateDir = FileUtils.trimFileProtocol(Directories.state) + "/user/generated/wallpaper/monitors"
-        const stateFile = stateDir + "/" + monitor + ".json"
-        // Preserve existing "path" thumbnail if present; fall back to preview image in WPE dir
-        // Use jq to merge so we don't nuke the path field that the settings panel needs
-        const previewFallback = [
-            wpePath + "/preview.jpg",
-            wpePath + "/preview.png",
-            wpePath + "/preview.gif"
-        ].map(p => `[ -f '${p}' ] && echo '${p}'`).join(" || ")
-        const script = `
-mkdir -p '${stateDir}'
-EXISTING_PATH=$(jq -r '.path // empty' '${stateFile}' 2>/dev/null)
-PREVIEW_PATH=$(${previewFallback} 2>/dev/null | head -1)
-THUMB_PATH=\${EXISTING_PATH:-\$PREVIEW_PATH}
-jq -n --arg m '${monitor}' --arg id '${wpeId}' --arg wp '${wpePath}' --arg tp "\$THUMB_PATH" \
-  '{monitor:$m, wpe:true, wpe_id:$id, wpe_path:$wp} + (if $tp != "" then {path:$tp} else {} end)' \
-  > '${stateFile}.tmp' && mv '${stateFile}.tmp' '${stateFile}'
-systemctl --user restart 'wpe@${monitor}.service'`
-        wpePreviewProc.exec(["bash", "-c", script])
-    }
-
-    function doWpeStop(monitor) {
-        if (!monitor || monitor.length === 0) return
-        wpePreviewProc.exec(["systemctl", "--user", "stop", "wpe@" + monitor + ".service"])
+        const mon = root.focusedMonitor
+        if (!mon || mon.length === 0) return
+        Wallpapers.apply(entry.path, Wallpapers.preferredDarkMode, mon, false)
     }
 
     function confirmSelected() {
         const entry = root.combinedModel[root.selectedIndex]
-        if (entry) Wallpapers.apply(entry.path, Appearance.m3colors.darkmode)
+        const mon = root.focusedMonitor
+        if (entry) Wallpapers.apply(entry.path, Wallpapers.preferredDarkMode, mon, true)
         GlobalStates.wallpaperChangerOpen = false
     }
 
     function revertAndClose() {
-        const mon = previewProc.focusedMonitor
-        if (root.originalWallpaper.length > 0) {
-            if (root.originalIsWpe) {
-                doWpePreview(root.originalWallpaper, mon)
-            } else {
-                // Stop any running WPE service first, then restore image
-                previewProc.exec(["bash", "-c",
-                    `systemctl --user stop 'wpe@${mon}.service' 2>/dev/null; awww img '${root.originalWallpaper}' --outputs '${mon}' --transition-type none`
-                ])
-            }
+        const mon = root.focusedMonitor
+        if (root.originalWallpaper.length > 0 && mon && mon.length > 0) {
+            Wallpapers.apply(root.originalWallpaper, Wallpapers.preferredDarkMode, mon, false)
         }
         GlobalStates.wallpaperChangerOpen = false
     }

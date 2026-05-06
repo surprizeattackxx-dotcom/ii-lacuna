@@ -91,6 +91,8 @@ RESTORE_SCRIPT_DIR="$CUSTOM_DIR/scripts"
 RESTORE_SCRIPT="$RESTORE_SCRIPT_DIR/__restore_video_wallpaper.sh"
 THUMBNAIL_DIR="$RESTORE_SCRIPT_DIR/mpvpaper_thumbnails"
 VIDEO_OPTS="no-audio loop hwdec=auto scale=bilinear interpolation=no video-sync=display-resample panscan=1.0 video-scale-x=1.0 video-scale-y=1.0 video-align-x=0.5 video-align-y=0.5 load-scripts=no"
+PREFERRED_MATUGEN_MONITOR="${PREFERRED_MATUGEN_MONITOR:-DP-1}"
+MATUGEN_WALLPAPER_PATH_FILE="$STATE_DIR/user/generated/wallpaper/path.txt"
 MONITOR_STATE_DIR="$STATE_DIR/user/generated/wallpaper/monitors"
 
 is_video() {
@@ -153,6 +155,14 @@ get_config_wallpaper_path() {
     jq -r '.background.wallpaperPath // empty' "$SHELL_CONFIG_FILE" 2>/dev/null || true
 }
 
+get_config_thumbnail_path() {
+    jq -r '.background.thumbnailPath // empty' "$SHELL_CONFIG_FILE" 2>/dev/null || true
+}
+
+get_config_color_mode() {
+    jq -r '.appearance.colorMode // empty' "$SHELL_CONFIG_FILE" 2>/dev/null || true
+}
+
 get_focused_monitor_name() {
     hyprctl monitors -j | jq -r '.[] | select(.focused == true) | .name' 2>/dev/null
 }
@@ -164,7 +174,7 @@ get_monitor_state_path() {
     local state_file="$MONITOR_STATE_DIR/${monitor}.json"
     [[ -f "$state_file" ]] || return
 
-    jq -r '.path // empty' "$state_file" 2>/dev/null || true
+    jq -r '.matugenPath // .thumbnailPath // .previewPath // .path // empty' "$state_file" 2>/dev/null || true
 }
 
 get_any_monitor_state_path() {
@@ -174,20 +184,36 @@ get_any_monitor_state_path() {
     state_file="$(find "$MONITOR_STATE_DIR" -name "*.json" 2>/dev/null | sort | head -1)"
     [[ -n "$state_file" ]] || return
 
-    jq -r '.path // empty' "$state_file" 2>/dev/null || true
+    jq -r '.matugenPath // .thumbnailPath // .previewPath // .path // empty' "$state_file" 2>/dev/null || true
 }
 
 resolve_matugen_source_path() {
     local imgpath=""
+    local preferred_monitor=""
     local focused_monitor=""
+    local config_wallpaper=""
+    local config_thumbnail=""
 
-    focused_monitor="$(get_focused_monitor_name)"
-    if [[ -n "$focused_monitor" ]]; then
+    preferred_monitor="$PREFERRED_MATUGEN_MONITOR"
+    if [[ -n "$preferred_monitor" ]]; then
+        imgpath="$(get_monitor_state_path "$preferred_monitor")"
+    fi
+
+    if [[ -z "$imgpath" || "$imgpath" == "null" || "$imgpath" == "--restore" ]]; then
+        focused_monitor="$(get_focused_monitor_name)"
+    fi
+    if [[ -z "$imgpath" || "$imgpath" == "null" || "$imgpath" == "--restore" ]] && [[ -n "$focused_monitor" ]]; then
         imgpath="$(get_monitor_state_path "$focused_monitor")"
     fi
 
     if [[ -z "$imgpath" || "$imgpath" == "null" || "$imgpath" == "--restore" ]]; then
-        imgpath="$(get_config_wallpaper_path)"
+        config_wallpaper="$(get_config_wallpaper_path)"
+        config_thumbnail="$(get_config_thumbnail_path)"
+        if [[ -n "$config_thumbnail" && -f "$config_thumbnail" ]] && [[ -n "$config_wallpaper" ]] && is_video "$config_wallpaper"; then
+            imgpath="$config_thumbnail"
+        else
+            imgpath="$config_wallpaper"
+        fi
     fi
 
     if [[ -z "$imgpath" || "$imgpath" == "null" || "$imgpath" == "--restore" ]]; then
@@ -195,6 +221,53 @@ resolve_matugen_source_path() {
     fi
 
     printf '%s\n' "$imgpath"
+}
+
+set_matugen_wallpaper_path_file() {
+    local path="$1"
+    [[ -z "$path" || "$path" == "null" || "$path" == "--restore" ]] && return
+
+    mkdir -p "$(dirname "$MATUGEN_WALLPAPER_PATH_FILE")"
+    printf '%s\n' "$path" > "${MATUGEN_WALLPAPER_PATH_FILE}.tmp"
+    mv "${MATUGEN_WALLPAPER_PATH_FILE}.tmp" "$MATUGEN_WALLPAPER_PATH_FILE"
+}
+
+write_monitor_state() {
+    local monitor="$1"
+    local wallpaper_path="$2"
+    local preview_path="$3"
+    local matugen_path="$4"
+    local kind="${5:-image}"
+    local wpe_id="$6"
+    local wpe_path="$7"
+
+    [[ -z "$monitor" ]] && return
+
+    mkdir -p "$MONITOR_STATE_DIR"
+
+    jq -n \
+        --arg monitor "$monitor" \
+        --arg path "$wallpaper_path" \
+        --arg previewPath "$preview_path" \
+        --arg thumbnailPath "$preview_path" \
+        --arg matugenPath "$matugen_path" \
+        --arg kind "$kind" \
+        --arg wpeId "$wpe_id" \
+        --arg wpePath "$wpe_path" \
+        '{
+            monitor: $monitor,
+            path: $path,
+            previewPath: $previewPath,
+            thumbnailPath: $thumbnailPath,
+            matugenPath: $matugenPath,
+            kind: $kind
+        }
+        + (if $kind == "wpe" then {
+            wpe: true,
+            wpe_id: $wpeId,
+            wpe_path: $wpePath
+        } else {} end)' > "${MONITOR_STATE_DIR}/${monitor}.tmp" &&
+        mv "${MONITOR_STATE_DIR}/${monitor}.tmp" "${MONITOR_STATE_DIR}/${monitor}.json"
 }
 
 detect_brightness_mode() {
@@ -322,19 +395,9 @@ switch() {
                 return
             fi
 
-            # Write per-monitor state file with wpe flag
+            # Write per-monitor state file with real wallpaper path plus preview/matugen sources
             if [[ -n "$_wpe_output" ]]; then
-                mkdir -p "$STATE_DIR/user/generated/wallpaper/monitors"
-                local _state_file="$STATE_DIR/user/generated/wallpaper/monitors/${_wpe_output}.json"
-                printf '{
-    "monitor": "%s",
-    "path": "%s",
-    "wpe": true,
-    "wpe_id": "%s",
-    "wpe_path": "%s"
-}
-' "$_wpe_output" "$wpe_thumbnail" "$wpe_id" "$imgpath" > "${_state_file}.tmp"
-                mv "${_state_file}.tmp" "$_state_file"
+                write_monitor_state "$_wpe_output" "$imgpath" "$wpe_thumbnail" "$wpe_thumbnail" "wpe" "$wpe_id" "$imgpath"
                 systemctl --user restart "wpe@${_wpe_output}.service" 2>/dev/null || true
             fi
 
@@ -368,7 +431,7 @@ switch() {
             fi
 
             # Set wallpaper path
-            [[ -z "$no_save_flag" && -z "$monitor_flag" && -z "$noswitch_flag" ]] && set_wallpaper_path "$imgpath"
+            [[ -z "$no_save_flag" && -z "$noswitch_flag" ]] && set_wallpaper_path "$imgpath"
 
             # Set video wallpaper
             local video_path="$imgpath"
@@ -384,6 +447,9 @@ switch() {
 
             # Set thumbnail path
             set_thumbnail_path "$thumbnail"
+            for monitor in $monitors; do
+                write_monitor_state "$monitor" "$imgpath" "$thumbnail" "$thumbnail" "video"
+            done
 
             if [ -f "$thumbnail" ]; then
                 matugen_args=(image "$thumbnail")
@@ -398,7 +464,7 @@ switch() {
             matugen_args=(image "$imgpath")
             generate_colors_material_args=(--path "$imgpath")
             # Update wallpaper path in config
-            [[ -z "$no_save_flag" && -z "$monitor_flag" && -z "$noswitch_flag" ]] && set_wallpaper_path "$imgpath"
+            [[ -z "$no_save_flag" && -z "$noswitch_flag" ]] && set_wallpaper_path "$imgpath"
             remove_restore
 
             # Iris-close transition — skipped when --noswitch (palette-only change)
@@ -419,14 +485,7 @@ switch() {
 
                 # Write per-monitor state file
                 if [[ -n "$_awww_output" ]]; then
-                    mkdir -p "$STATE_DIR/user/generated/wallpaper/monitors"
-                    local _state_file="$STATE_DIR/user/generated/wallpaper/monitors/${_awww_output}.json"
-                    printf '{
-    "monitor": "%s",
-    "path": "%s"
-}
-' "$_awww_output" "$imgpath" > "${_state_file}.tmp"
-                    mv "${_state_file}.tmp" "$_state_file"
+                    write_monitor_state "$_awww_output" "$imgpath" "$imgpath" "$imgpath" "image"
 
                     # Stop any existing WPE service for this monitor when setting a regular wallpaper
                     systemctl --user stop "wpe@${_awww_output}.service" 2>/dev/null || true
@@ -435,7 +494,14 @@ switch() {
         fi
     fi
 
-    # Auto-detect mode from wallpaper brightness
+    if [[ -z "$mode_flag" ]]; then
+        config_mode="$(get_config_color_mode)"
+        if [[ "$config_mode" == "dark" || "$config_mode" == "light" ]]; then
+            mode_flag="$config_mode"
+        fi
+    fi
+
+    # Auto-detect mode from wallpaper brightness only if config did not set it
 if [[ -z "$mode_flag" && -n "$imgpath" ]]; then
     detected_mode=$(detect_brightness_mode "$imgpath")
 
@@ -451,6 +517,14 @@ fi
 if [[ -n "$mode_flag" ]]; then
     matugen_prefer="darkness"
     [[ "$mode_flag" == "light" ]] && matugen_prefer="lightness"
+    if [[ "$color_flag" != "1" ]]; then
+        matugen_source_path="$(resolve_matugen_source_path)"
+        if [[ -n "$matugen_source_path" && "$matugen_source_path" != "null" && "$matugen_source_path" != "--restore" ]]; then
+            set_matugen_wallpaper_path_file "$matugen_source_path"
+            matugen_args=(image "$matugen_source_path")
+            generate_colors_material_args=(--path "$matugen_source_path")
+        fi
+    fi
     matugen_args+=(--mode "$mode_flag" --prefer "$matugen_prefer")
     generate_colors_material_args+=(--mode "$mode_flag")
 fi
@@ -557,13 +631,19 @@ main() {
                 _monitors_dir="$MONITOR_STATE_DIR"
                 _restored=0
                 if [[ -d "$_monitors_dir" ]]; then
+                    _video_restored=0
                     for _state_file in "$_monitors_dir"/*.json; do
                         [[ -f "$_state_file" ]] || continue
                         _mon=$(jq -r '.monitor // empty' "$_state_file" 2>/dev/null)
                         _path=$(jq -r '.path // empty' "$_state_file" 2>/dev/null)
                         _is_wpe=$(jq -r '.wpe // false' "$_state_file" 2>/dev/null)
+                        _kind=$(jq -r '.kind // empty' "$_state_file" 2>/dev/null)
                         if [[ "$_is_wpe" == "true" && -n "$_mon" ]]; then
                             systemctl --user start "wpe@${_mon}.service" 2>/dev/null || true
+                            _restored=1
+                        elif [[ "$_kind" == "video" && $_video_restored -eq 0 && -x "$RESTORE_SCRIPT" ]]; then
+                            "$RESTORE_SCRIPT" >/dev/null 2>&1 &
+                            _video_restored=1
                             _restored=1
                         elif [[ -n "$_mon" && -n "$_path" && -f "$_path" ]]; then
                             awww img "$_path" --outputs "$_mon" --transition-type none 2>/dev/null &
@@ -641,8 +721,16 @@ main() {
 
     # If type_flag is 'auto', detect scheme type from image (after imgpath is set)
     if [[ "$type_flag" == "auto" ]]; then
-        if [[ -n "$imgpath" && -f "$imgpath" ]]; then
-            detected_type="$(detect_scheme_type_from_image "$imgpath")"
+        type_detection_path="$imgpath"
+        effective_monitor="${monitor_flag:-$(get_focused_monitor_name)}"
+        if [[ -n "$PREFERRED_MATUGEN_MONITOR" && "$effective_monitor" != "$PREFERRED_MATUGEN_MONITOR" ]]; then
+            preferred_detection_path="$(get_monitor_state_path "$PREFERRED_MATUGEN_MONITOR")"
+            if [[ -n "$preferred_detection_path" && -f "$preferred_detection_path" ]]; then
+                type_detection_path="$preferred_detection_path"
+            fi
+        fi
+        if [[ -n "$type_detection_path" && -f "$type_detection_path" ]]; then
+            detected_type="$(detect_scheme_type_from_image "$type_detection_path")"
             # Only use detected_type if it's valid
             valid_detected=0
             for t in "${allowed_types[@]}"; do

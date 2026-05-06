@@ -7,6 +7,25 @@ XDG_CONFIG_HOME="${XDG_CONFIG_HOME:-$HOME/.config}"
 XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SHELL_CONFIG_FILE="$XDG_CONFIG_HOME/illogical-impulse/config.json"
+PREFERRED_MATUGEN_MONITOR="${PREFERRED_MATUGEN_MONITOR:-DP-1}"
+
+get_monitor_state_path() {
+    local monitor="$1"
+    local state_file="$XDG_STATE_HOME/quickshell/user/generated/wallpaper/monitors/${monitor}.json"
+    [[ -f "$state_file" ]] || return
+    jq -r '.matugenPath // .thumbnailPath // .previewPath // .path // empty' "$state_file" 2>/dev/null || true
+}
+
+resolve_color_source() {
+    local source_path=""
+    source_path="$(get_monitor_state_path "$PREFERRED_MATUGEN_MONITOR")"
+    if [[ -n "$source_path" && -f "$source_path" ]]; then
+        printf '%s\n' "$source_path"
+        return
+    fi
+
+    jq -r '.background.thumbnailPath // .background.wallpaperPath // empty' "$SHELL_CONFIG_FILE" 2>/dev/null || true
+}
 
 # Determine the target mode
 if [[ -n "$1" && "$1" =~ ^(dark|light)$ ]]; then
@@ -74,7 +93,7 @@ if [[ -f "$SHELL_CONFIG_FILE" ]]; then
     
     # Regenerate material colors with correct mode flag
     (
-        color_source=$(jq -r '.background.thumbnailPath // .background.wallpaperPath // empty' "$SHELL_CONFIG_FILE" 2>/dev/null)
+        color_source="$(resolve_color_source)"
         if [[ -n "$color_source" && -f "$color_source" ]]; then
             terminalscheme="$SCRIPT_DIR/terminal/scheme-base.json"
 

@@ -115,10 +115,13 @@ for monitor in "${MONITORS[@]}"; do
     entry=$(jq -n \
         --arg monitor "$monitor" \
         --arg path "$imgpath" \
+        --arg previewPath "$imgpath" \
+        --arg thumbnailPath "$imgpath" \
+        --arg matugenPath "$imgpath" \
         --arg color "#888888" \
         --arg ts "$timestamp" \
         --arg mode "$MODE" \
-        '{monitor:$monitor,path:$path,dominantColor:$color,timestamp:$ts,mode:$mode}')
+        '{monitor:$monitor,path:$path,previewPath:$previewPath,thumbnailPath:$thumbnailPath,matugenPath:$matugenPath,kind:"image",dominantColor:$color,timestamp:$ts,mode:$mode}')
 
     echo "$entry" > "$MONITOR_STATE_DIR/${monitor}.json"
 

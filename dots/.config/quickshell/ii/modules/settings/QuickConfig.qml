@@ -245,7 +245,7 @@ ContentPage {
                                         onStreamFinished: {
                                             try {
                                                 var d = JSON.parse(text)
-                                                var p = d.path || ""
+                                                var p = d.previewPath || d.thumbnailPath || d.path || ""
                                                 if (p.length > 0) {
                                                     if (!p.startsWith("file://")) p = "file://" + p
                                                     monitorTile.wallpaperPath = ""
@@ -265,7 +265,7 @@ ContentPage {
                                     onTextChanged: {
                                         try {
                                             var d = JSON.parse(text)
-                                            var p = d.path || ""
+                                            var p = d.previewPath || d.thumbnailPath || d.path || ""
                                             if (p.length > 0) {
                                                 if (!p.startsWith("file://")) p = "file://" + p
                                                 monitorTile.wallpaperPath = ""
