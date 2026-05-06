@@ -1,23 +1,24 @@
 #!/usr/bin/env bash
-# ii-lacuna: Sync Script for Manual Quickshell Copies
-# Use this if you have manually copied the quickshell directory and want to sync with upstream.
+# ii-lacuna: Sync script for manual Quickshell copies.
+# Mirrors dots/.config/quickshell into a target quickshell directory.
 
-set -e
+set -euo pipefail
 
-# Path to your local quickshell directory (default: ~/.config/quickshell)
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+SOURCE_DIR="$REPO_ROOT/dots/.config/quickshell"
 TARGET_DIR="${1:-$HOME/.config/quickshell}"
 
-# Path to the source in the ii-lacuna repo
-SOURCE_DIR="$(dirname "$0")/../dots/.config/quickshell"
-
-if [ ! -d "$SOURCE_DIR" ]; then
-    echo "Error: Source directory not found: $SOURCE_DIR"
+if [[ ! -d "$SOURCE_DIR" ]]; then
+    echo "Error: source directory not found: $SOURCE_DIR"
     exit 1
 fi
 
+mkdir -p "$TARGET_DIR"
+
 echo "Syncing $SOURCE_DIR -> $TARGET_DIR"
 
-# Perform the sync
-rsync -avP "$SOURCE_DIR/" "$TARGET_DIR/"
+# Match the repo copy, including deletions, so manual installs stay in sync.
+rsync -av --delete "$SOURCE_DIR/" "$TARGET_DIR/"
 
 echo "Sync complete."
