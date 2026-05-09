@@ -58,10 +58,7 @@ Item {
         combinedModel = list
         const idx = list.findIndex(e => e.path === root.originalWallpaper)
         if (idx >= 0) {
-            Qt.callLater(() => {
-                view.currentIndex = idx
-                root.selectedIndex = idx
-            })
+            Qt.callLater(() => { view.currentIndex = idx })
         }
     }
 
