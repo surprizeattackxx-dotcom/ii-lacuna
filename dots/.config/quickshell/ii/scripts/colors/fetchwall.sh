@@ -29,7 +29,7 @@ handle_kde_material_you_colors() {
             kde_scheme_variant="$type_flag"
             ;;
         *)
-            kde_scheme_variant="scheme-tonal-spot" # default
+            kde_scheme_variant="scheme-content" # default
             ;;
     esac
     "$XDG_CONFIG_HOME"/matugen/templates/kde/kde-material-you-colors-wrapper.sh --scheme-variant "$kde_scheme_variant"
@@ -309,10 +309,10 @@ pre_process() {
     local mode_flag="$1"
     if [[ "$mode_flag" == "dark" ]]; then
         gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
-        gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark'
+        gsettings set org.gnome.desktop.interface gtk-theme 'Colloid-Dark-Gruvbox'
     elif [[ "$mode_flag" == "light" ]]; then
         gsettings set org.gnome.desktop.interface color-scheme 'prefer-light'
-        gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3'
+        gsettings set org.gnome.desktop.interface gtk-theme 'Colloid-Light-Gruvbox'
     fi
 
     if [ ! -d "$CACHE_DIR"/user/generated ]; then
@@ -402,7 +402,7 @@ switch() {
             fi
 
         elif is_video "$imgpath"; then
-            check_and_prompt_upscale "$imgpath" &
+            [[ -z "$no_save_flag" ]] && check_and_prompt_upscale "$imgpath" &
             mkdir -p "$THUMBNAIL_DIR"
 
             missing_deps=()
@@ -509,7 +509,7 @@ if [[ -z "$mode_flag" && -n "$imgpath" ]]; then
         mode_flag="$detected_mode"
     else
         # fallback (safe default)
-        mode_flag="dark"
+        mode_flag="light"
     fi
 fi
 
@@ -743,11 +743,11 @@ main() {
                 type_flag="$detected_type"
             else
                 echo "[switchwall] Warning: Could not auto-detect a valid scheme, defaulting to 'scheme-tonal-spot'" >&2
-                type_flag="scheme-tonal-spot"
+                type_flag="scheme-content"
             fi
         else
             echo "[switchwall] Warning: No image to auto-detect scheme from, defaulting to 'scheme-tonal-spot'" >&2
-            type_flag="scheme-tonal-spot"
+            type_flag="scheme-content"
         fi
     fi
 

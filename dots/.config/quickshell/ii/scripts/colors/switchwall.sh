@@ -28,7 +28,7 @@ handle_kde_material_you_colors() {
             kde_scheme_variant="$type_flag"
             ;;
         *)
-            kde_scheme_variant="scheme-tonal-spot" # default
+            kde_scheme_variant="scheme-content" # default
             ;;
     esac
     "$XDG_CONFIG_HOME"/matugen/templates/kde/kde-material-you-colors-wrapper.sh --scheme-variant "$kde_scheme_variant"
@@ -39,10 +39,10 @@ pre_process() {
     # Set GNOME color-scheme if mode_flag is dark or light
     if [[ "$mode_flag" == "dark" ]]; then
         gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark'
-        gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark'
+        gsettings set org.gnome.desktop.interface gtk-theme 'Colloid-Dark-Gruvbox'
     elif [[ "$mode_flag" == "light" ]]; then
         gsettings set org.gnome.desktop.interface color-scheme 'prefer-light'
-        gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3'
+        gsettings set org.gnome.desktop.interface gtk-theme 'Colloid-Light-Gruvbox'
     fi
 
     if [ ! -d "$CACHE_DIR"/user/generated ]; then
@@ -57,6 +57,7 @@ post_process() {
 
     handle_kde_material_you_colors &
     "$SCRIPT_DIR/code/material-code-set-color.sh" &
+    qs ipc -c ii call theme reload 2>/dev/null || true &
 
     # Update leastBusy / mostBusy widget positions for the new wallpaper.
     # Runs in background so it doesn't block the wallpaper switch.
@@ -368,7 +369,7 @@ switch() {
             return $?
         fi
 
-        [[ -z "$noswitch_flag" ]] && check_and_prompt_upscale "$imgpath" &
+        [[ -z "$noswitch_flag" && -z "$no_save_flag" ]] && check_and_prompt_upscale "$imgpath" &
         kill_existing_mpvpaper
 
         if is_video "$imgpath"; then
@@ -448,6 +449,7 @@ switch() {
                 else
                     _awww_output=$(hyprctl monitors -j | jq -r '.[] | select(.focused) | .name' 2>/dev/null)
                 fi
+                qs ipc -c ii call wallpaper transition 2>/dev/null || true
                 awww img "$imgpath" \
                     ${_awww_output:+--outputs "$_awww_output"} \
                     --transition-type grow \
@@ -518,9 +520,6 @@ switch() {
     source "${ILLOGICAL_IMPULSE_VIRTUAL_ENV/#\~/$HOME}/bin/activate"
     python3 "$SCRIPT_DIR/generate_colors_material.py" "${generate_colors_material_args[@]}" \
         > "$STATE_DIR"/user/generated/material_colors.scss
-    sleep 1
-    touch "$STATE_DIR/user/generated/colors.json"
-    "$SCRIPT_DIR"/applycolor.sh
     deactivate
 
     # Pass screen width, height, and wallpaper path to post_process
@@ -712,11 +711,11 @@ main() {
                 type_flag="$detected_type"
             else
                 echo "[switchwall] Warning: Could not auto-detect a valid scheme, defaulting to 'scheme-tonal-spot'" >&2
-                type_flag="scheme-tonal-spot"
+                type_flag="scheme-content"
             fi
         else
             echo "[switchwall] Warning: No image to auto-detect scheme from, defaulting to 'scheme-tonal-spot'" >&2
-            type_flag="scheme-tonal-spot"
+            type_flag="scheme-content"
         fi
     fi
 
