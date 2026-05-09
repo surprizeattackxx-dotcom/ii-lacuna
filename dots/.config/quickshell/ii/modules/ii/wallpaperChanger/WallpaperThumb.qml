@@ -174,6 +174,10 @@ Item {
         }
     }
 
+    onSelectedChanged: {
+        if (selected) revealing = true
+    }
+
     NumberAnimation {
         id: circleAnim
         target: circleMask
@@ -186,6 +190,9 @@ Item {
         }
         duration: 480
         easing.type: Easing.OutCubic
-        onFinished: revealLayer.visible = false
+        onFinished: {
+            revealLayer.visible = false
+            root.revealing = false
+        }
     }
 }

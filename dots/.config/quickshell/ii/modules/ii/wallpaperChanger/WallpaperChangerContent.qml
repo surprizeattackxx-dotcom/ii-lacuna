@@ -58,8 +58,10 @@ Item {
         combinedModel = list
         const idx = list.findIndex(e => e.path === root.originalWallpaper)
         if (idx >= 0) {
-            selectedIndex = idx
-            view.currentIndex = idx
+            Qt.callLater(() => {
+                view.currentIndex = idx
+                root.selectedIndex = idx
+            })
         }
     }
 
@@ -94,7 +96,6 @@ Item {
     function navigatePrev() {
         if (view.currentIndex > 0) {
             view.currentIndex--
-            root.selectedIndex = view.currentIndex
             root.doPreview()
         }
     }
@@ -102,7 +103,6 @@ Item {
     function navigateNext() {
         if (view.currentIndex < root.combinedModel.length - 1) {
             view.currentIndex++
-            root.selectedIndex = view.currentIndex
             root.doPreview()
         }
     }
@@ -110,10 +110,10 @@ Item {
     Keys.onLeftPressed: root.navigatePrev()
     Keys.onRightPressed: root.navigateNext()
     Keys.onReturnPressed: root.confirmSelected()
+    Keys.onEnterPressed: root.confirmSelected()
     Keys.onEscapePressed: root.revertAndClose()
 
     WheelHandler {
-        target: view
         onWheel: (event) => {
             if (event.angleDelta.y < 0) root.navigateNext()
             else root.navigatePrev()
@@ -166,6 +166,8 @@ Item {
                 clip: false
                 interactive: false  // wheel handled by WheelHandler above
 
+                onCurrentIndexChanged: root.selectedIndex = currentIndex
+
                 delegate: Item {
                     id: del
                     width: root.delegateW
@@ -192,7 +194,6 @@ Item {
 
                         onClicked: {
                             view.currentIndex = index
-                            root.selectedIndex = index
                             root.doPreview()
                         }
                         onDoubleClicked: root.confirmSelected()
@@ -224,12 +225,13 @@ Item {
         // ── Wallpaper name ────────────────────────────────────────────
         StyledText {
             Layout.alignment: Qt.AlignHCenter
+            Layout.fillWidth: true
+            Layout.maximumWidth: parent.width - 32
             text: root.wallpaperName(root.combinedModel[root.selectedIndex])
             font.pixelSize: Appearance.font.pixelSize.normal
             color: _theme.blue
             font.weight: Font.Medium
             elide: Text.ElideMiddle
-            Layout.maximumWidth: parent.width - 32
         }
 
         // ── Action row ────────────────────────────────────────────────
