@@ -22,3 +22,4 @@ __pycache__/
 # IDE / editor tool configs (local-only)
 /.cursor/
 /.vscode/
+.superpowers/
