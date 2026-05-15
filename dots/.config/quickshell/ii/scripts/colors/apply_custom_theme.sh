@@ -2,7 +2,21 @@
 # Apply a custom or built-in theme JSON, theming GTK4, Kitty, Rofi, Hyprland, and terminal.
 # Usage: apply_custom_theme.sh <theme.json>
 THEME_FILE="$1"
+THEME_NAME="${2:-}"
 [[ -z "$THEME_FILE" || ! -f "$THEME_FILE" ]] && { echo "Usage: apply_custom_theme.sh <theme.json>" >&2; exit 1; }
+
+declare -A KDE_SCHEME=(
+    [Mocha]="CatppuccinMochaMauve"
+    [Frappe]="CatppuccinFrappeMauve"
+    [Latte]="CatppuccinLatteMauve"
+    [Macchiato]="CatppuccinMacchiatoMauve"
+    [Dracula]="Dracula-kde"
+    [Nord]="Nordic"
+    [Rose_pine]="RosePineMoon"
+    [Gruvbox]="GruvboxColors"
+    [Glass]="kvGlass"
+    [Kanagawa]="KanagawaWave"
+)
 
 XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
@@ -59,15 +73,19 @@ fi
 # Apply all colors: GTK4, Kitty, Rofi, Hyprland borders, terminal sequences
 "$SCRIPT_DIR/applycolor.sh"
 
-# Theme Qt/KDE apps (Dolphin, etc.) via kde-material-you-colors
-COLOR_TXT="$STATE_DIR/user/generated/color.txt"
-printf '%s' "${PRIMARY#\#}" > "$COLOR_TXT"
+# Theme Qt/KDE apps via color scheme (non-Matugen) or dynamic kde-material-you-colors (Matugen)
+if [[ "$THEME_NAME" == "Matugen" || -z "$THEME_NAME" ]]; then
+    COLOR_TXT="$STATE_DIR/user/generated/color.txt"
+    printf '%s' "${PRIMARY#\#}" > "$COLOR_TXT"
 
-VENV_DIR="${ILLOGICAL_IMPULSE_VIRTUAL_ENV:-$HOME/.local/state/quickshell/.venv}"
-KDE_BIN="$VENV_DIR/bin/kde-material-you-colors"
-if [[ -x "$KDE_BIN" ]]; then
-    [[ "$MODE" == "dark" ]] && KDE_MODE_FLAG="-d" || KDE_MODE_FLAG="-l"
-    source "$VENV_DIR/bin/activate" 2>/dev/null
-    "$KDE_BIN" "$KDE_MODE_FLAG" --color "${PRIMARY#\#}" -sv 5 &
-    deactivate 2>/dev/null
+    VENV_DIR="${ILLOGICAL_IMPULSE_VIRTUAL_ENV:-$HOME/.local/state/quickshell/.venv}"
+    KDE_BIN="$VENV_DIR/bin/kde-material-you-colors"
+    if [[ -x "$KDE_BIN" ]]; then
+        [[ "$MODE" == "dark" ]] && KDE_MODE_FLAG="-d" || KDE_MODE_FLAG="-l"
+        source "$VENV_DIR/bin/activate" 2>/dev/null
+        "$KDE_BIN" "$KDE_MODE_FLAG" --color "${PRIMARY#\#}" -sv 5 &
+        deactivate 2>/dev/null
+    fi
+elif [[ -n "${KDE_SCHEME[$THEME_NAME]+_}" ]]; then
+    plasma-apply-colorscheme "${KDE_SCHEME[$THEME_NAME]}"
 fi
