@@ -89,3 +89,10 @@ if [[ "$THEME_NAME" == "Matugen" || -z "$THEME_NAME" ]]; then
 elif [[ -n "${KDE_SCHEME[$THEME_NAME]+_}" ]]; then
     plasma-apply-colorscheme "${KDE_SCHEME[$THEME_NAME]}"
 fi
+
+# Generate and reload Chrome theme
+CHROME_THEME_DIR="$HOME/.local/share/ii-lacuna-chrome-theme"
+if [[ -d "$CHROME_THEME_DIR" ]]; then
+    python3 "$SCRIPT_DIR/generate_chrome_theme.py" "$THEME_FILE" "$CHROME_THEME_DIR" 2>/dev/null
+    "$VENV_PYTHON" "$SCRIPT_DIR/reload_chrome_theme.py" "$CHROME_THEME_DIR" &
+fi
