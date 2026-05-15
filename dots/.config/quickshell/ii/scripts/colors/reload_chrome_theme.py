@@ -14,8 +14,6 @@ from pathlib import Path
 
 
 async def reload(theme_dir: str) -> None:
-    import websockets
-
     # Get CDP WebSocket URL from Chrome's debug endpoint
     try:
         with urllib.request.urlopen("http://localhost:9222/json/version", timeout=2) as r:
@@ -24,6 +22,7 @@ async def reload(theme_dir: str) -> None:
         return  # Chrome not running or --remote-debugging-port not set
 
     try:
+        import websockets
         async with websockets.connect(ws_url, open_timeout=3) as ws:
             await ws.send(json.dumps({
                 "id": 1,
