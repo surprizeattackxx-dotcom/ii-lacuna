@@ -258,9 +258,11 @@ PanelWindow {
                             font.letterSpacing: 1.2
                         }
 
-                        Flow {
+                        GridLayout {
                             Layout.fillWidth: true
-                            spacing: 6
+                            columns: 3
+                            columnSpacing: 6
+                            rowSpacing: 6
 
                             Repeater {
                                 model: root.themeNames
@@ -269,8 +271,8 @@ PanelWindow {
                                     required property string modelData
                                     readonly property bool isActive: GlobalStates.activeTheme === modelData
 
+                                    Layout.fillWidth: true
                                     height: 30
-                                    width: themeChipText.implicitWidth + 22
                                     radius: Appearance.rounding.full
                                     color: isActive
                                     ? Appearance.colors.colPrimary
