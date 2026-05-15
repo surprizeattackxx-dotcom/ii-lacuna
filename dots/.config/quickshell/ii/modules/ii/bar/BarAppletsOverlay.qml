@@ -48,6 +48,11 @@ PanelWindow {
     anchors.top: true
     anchors.bottom: true
 
+    Component.onCompleted: {
+        if (GlobalStates.activeTheme !== "Matugen")
+            applyTheme(GlobalStates.activeTheme)
+    }
+
     onVisibleChanged: {
         if (visible) {
             panel._shown = false
@@ -70,8 +75,7 @@ PanelWindow {
         return BarComponentRegistry.allComponents.filter(c => !usedIds.includes(c.id))
     }
 
-    readonly property var themeNames: ["Mocha", "Glass", "Matugen", "Gruvbox", "Apple", "Nord"]
-    property string activeTheme: "Matugen"
+    readonly property var themeNames: ["Mocha", "Glass", "Matugen", "Gruvbox", "Apple", "Nord", "Angel", "Ayu", "Cobalt2", "Cursor", "Dracula", "Flexoki", "Frappe", "Github", "Kanagawa", "Latte", "Macchiato", "Material_ocean", "Matrix", "Mercury", "Open_code", "Orng", "Osaka_jade", "Rose_pine", "Sakura", "Samurai", "Synthwave84", "Vercel", "Vesper", "Zen_burn", "Zen_garden"]
 
     function moveUp(section, index) {
         if (index === 0) return
@@ -263,7 +267,7 @@ PanelWindow {
                                 delegate: Rectangle {
                                     id: themeChip
                                     required property string modelData
-                                    readonly property bool isActive: root.activeTheme === modelData
+                                    readonly property bool isActive: GlobalStates.activeTheme === modelData
 
                                     height: 30
                                     width: themeChipText.implicitWidth + 22
@@ -292,7 +296,7 @@ PanelWindow {
                                     MouseArea {
                                         anchors.fill: parent
                                         cursorShape: Qt.PointingHandCursor
-                                        onClicked: { root.activeTheme = themeChip.modelData; root.applyTheme(themeChip.modelData) }
+                                        onClicked: { GlobalStates.activeTheme = themeChip.modelData; root.applyTheme(themeChip.modelData) }
                                     }
                                 }
                             }
