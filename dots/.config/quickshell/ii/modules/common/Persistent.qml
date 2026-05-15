@@ -61,6 +61,8 @@ Singleton {
             /** When true, shell light/dark (bar, sidebars, notifications) tracks Night Light (hyprsunset): on → dark theme, off → light. Toggle via right‑click the right dashboard button. */
             property bool followNightLight: false
 
+            property string activeTheme: "Matugen"
+
             property JsonObject ai: JsonObject {
                 property string provider: "google" // AI providers such as google, open router, mistral
                 property string model: "gemini-2.5-flash" // The model of the ai such as 2.5-flash
