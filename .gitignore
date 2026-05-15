@@ -23,3 +23,9 @@ __pycache__/
 /.cursor/
 /.vscode/
 .superpowers/
+
+# User-specific monitor config (auto-generated, machine-dependent)
+/dots/.config/hypr/monitors.lua
+/dots/.config/hypr/monitors.lua.bak
+/dots/.config/hypr/monitor-state.lua
+/dots/.config/hypr/hyprgamma.json

@@ -104,7 +104,7 @@ Item {
         
         
         // 3. AUTO-REVIVE COMMAND: Ensure daemon is alive before sending IPC commands
-        const switchScript = '/home/donnie/.config/quickshell/ii/scripts/colors/switchwall.sh';
+        const switchScript = Directories.wallpaperSwitchScriptPath;
         
         if (window.currentFilter === "Search" && window.hasSearched) {
             let alreadyExists = window.isDownloaded(safeFileName);

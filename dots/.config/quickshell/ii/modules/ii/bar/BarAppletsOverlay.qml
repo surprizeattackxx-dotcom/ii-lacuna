@@ -23,7 +23,7 @@ PanelWindow {
     }
 
     function updateMonitor(output, mode, position, scale) {
-        monitorUpdateProc.command = ["bash", "/home/donnie/.config/hypr/scripts/update_monitor.sh", output, mode, position, scale]
+        monitorUpdateProc.command = ["bash", Directories.hyprConfig + "/scripts/update_monitor.sh", output, mode, position, scale]
         monitorUpdateProc.running = true
     }
 

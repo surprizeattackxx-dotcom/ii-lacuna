@@ -31,6 +31,9 @@ Singleton {
     property string servicesConfigPath: FileUtils.trimFileProtocol(`${Directories.config}/quickshell/ii/modules/settings/ServicesConfig.qml`)
     property string advancedConfigPath: FileUtils.trimFileProtocol(`${Directories.config}/quickshell/ii/modules/settings/AdvancedConfig.qml`)
 
+    // Hyprland config path (runtime, not project dots/)
+    readonly property string hyprConfig: FileUtils.trimFileProtocol(`${Directories.config}/hypr`)
+
     // Other dirs used by the shell, without "file://"
     property string assetsPath: Quickshell.shellPath("assets")
     property string scriptPath: Quickshell.shellPath("scripts")

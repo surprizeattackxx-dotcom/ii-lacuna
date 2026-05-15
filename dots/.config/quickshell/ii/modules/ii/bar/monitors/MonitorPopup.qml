@@ -193,7 +193,7 @@ Item {
 
     property var cachedLuaMonitors: ({})
     property var cachedDisabledMonitors: ([])
-    readonly property string disabledFilePath: "/home/donnie/.local/state/quickshell/user/generated/wallpaper/monitors_disabled.txt"
+    readonly property string disabledFilePath: Directories.state + "/user/generated/wallpaper/monitors_disabled.txt"
 
     function mergeDisabledFile(content) {
         let disabled = [];
@@ -267,7 +267,7 @@ Item {
 
     Process {
         id: luaFileReader
-        command: ["bash", "-c", "cat /home/donnie/projects/ii-lacuna/dots/.config/hypr/monitors.lua 2>/dev/null || echo ''"]
+        command: ["bash", "-c", "cat ~/.config/hypr/monitors.lua 2>/dev/null || echo ''"]
         running: true
         stdout: StdioCollector {
             onStreamFinished: {
@@ -752,7 +752,7 @@ Item {
                                                         }
                                                     }
                                                     let stateContent = "return {\n  active = {\n" + activeMonitors.join(",\n") + "\n  },\n  disabled = {\n" + disabledMonitors.join(",\n") + "\n  },\n  moved = {\n  }\n}\n";
-                                                    let stateFilePath = "/home/donnie/.config/hypr/monitor-state.lua";
+                                                    let stateFilePath = "~/.config/hypr/monitor-state.lua";
                                                     let stateEncoded = Qt.btoa(stateContent);
                                                     Quickshell.execDetached(["bash", "-c", "echo " + stateEncoded + " | base64 -d > " + stateFilePath + " && hyprctl reload"]);
                                                 }
@@ -1123,7 +1123,7 @@ Item {
                     // legacy hyprlang syntax. Writing the file is the correct live path —
                     // Hyprland watches monitors.lua and auto-reloads it on change.
                     let luaContent = luaMonitorBlocks.join("\n");
-                    let monitorsFilePath = "/home/donnie/projects/ii-lacuna/dots/.config/hypr/monitors.lua";
+                    let monitorsFilePath = "~/.config/hypr/monitors.lua";
                     let encoded = Qt.btoa(luaContent);
                     // Build monitor-state.lua
                     let activeMonitors = [];
@@ -1140,7 +1140,7 @@ Item {
                     stateContent += "  disabled = {\n" + disabledMonitors.join(",\n") + "\n  },\n";
                     stateContent += "  moved = {\n  }\n";
                     stateContent += "}\n";
-                    let stateFilePath = "/home/donnie/.config/hypr/monitor-state.lua";
+                    let stateFilePath = "~/.config/hypr/monitor-state.lua";
                     let stateEncoded = Qt.btoa(stateContent);
 
                     // Build monitors_disabled.txt — one monitor name per line

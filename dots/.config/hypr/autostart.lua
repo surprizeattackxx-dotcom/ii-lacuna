@@ -5,27 +5,34 @@ hl.on("hyprland.start", function()
     hl.exec_cmd("hyprpm reload -n")
 
     -- Load local plugins
+    local plugin_base = os.getenv("HOME") .. "/projects"
     hl.exec_cmd("sleep 5 && " ..
-        "hyprctl plugin load /home/donnie/projects/hypr-plugins/hymission/build-cmake/libhymission.so" )
+        "hyprctl plugin load " .. plugin_base .. "/hypr-plugins/hymission/build-cmake/libhymission.so" )
     hl.exec_cmd("sleep 5 && " ..
-        "hyprctl plugin load /home/donnie/projects/hypr-gamma/build/libhyprgamma.so" )
+        "hyprctl plugin load " .. plugin_base .. "/hypr-gamma/build/libhyprgamma.so" )
     hl.exec_cmd("sleep 5 && " ..
-        "hyprctl plugin load /home/donnie/projects/hypr-plugins/hypr-dynamic-cursors/out/dynamic-cursors.so" )
+        "hyprctl plugin load " .. plugin_base .. "/hypr-plugins/hypr-dynamic-cursors/out/dynamic-cursors.so" )
     hl.exec_cmd("sleep 5 && " ..
-        "hyprctl plugin load /home/donnie/projects/hypr-plugins/hyprtrails/Build/libhyprtrails.so" )
+        "hyprctl plugin load " .. plugin_base .. "/hypr-plugins/hyprtrails/Build/libhyprtrails.so" )
     -- hyprglass disabled — crashes Hyprland on XWayland fullscreen games (Forza Horizon 5)
-    -- "sleep 1 && hyprctl plugin load /home/donnie/projects/hypr-plugins/hyprglass/hyprglass.so")
+    -- "sleep 1 && hyprctl plugin load " .. plugin_base .. "/hypr-plugins/hyprglass/hyprglass.so")
 
     -- Dynamic monitor daemon (hotplug → auto-migrate workspaces)
     hl.exec_cmd("~/.config/hypr/scripts/monitor-watch.sh")
 
     -- Pin workspaces to monitors after startup (fixes init race where monitors
-    -- may connect before workspace rules fire, leaving DP-2 unreachable)
+    -- may connect before workspace rules fire, leaving secondary monitors unreachable)
+    -- Reads monitor-state.lua for user's actual monitor names
     hl.exec_cmd(
         "sleep 3 && " ..
-        "hyprctl dispatch moveworkspacetomonitor 11 DP-2 && " ..
-        "hyprctl dispatch moveworkspacetomonitor 21 HDMI-A-1 && " ..
-        "hyprctl dispatch focusmonitor DP-1"
+        "bash -c 'STATE=\"$HOME/.config/hypr/monitor-state.lua\"; " ..
+        "if [ -f \"$STATE\" ]; then " ..
+        "  MONS=$(grep -oP '\"[A-Z0-9-]+\"' \"$STATE\" | tr -d \\'\"\\' | head -3); " ..
+        "  IFS=$\\'\\n\\' read -r -a ARR <<< \"$MONS\"; " ..
+        "  [ ${#ARR[@]} -ge 2 ] && hyprctl dispatch moveworkspacetomonitor 11 ${ARR[1]}; " ..
+        "  [ ${#ARR[@]} -ge 3 ] && hyprctl dispatch moveworkspacetomonitor 21 ${ARR[2]}; " ..
+        "  [ ${#ARR[@]} -ge 1 ] && hyprctl dispatch focusmonitor ${ARR[0]}; " ..
+        "fi'"
     )
 
     -- Core services

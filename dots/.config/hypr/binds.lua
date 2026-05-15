@@ -35,14 +35,14 @@ hl.bind(mainMod .. " + SHIFT + RIGHT", hl.dsp.window.move({ direction = "right" 
 hl.bind(mainMod .. " + SHIFT + UP",    hl.dsp.window.move({ direction = "up"    }))
 hl.bind(mainMod .. " + SHIFT + DOWN",  hl.dsp.window.move({ direction = "down"  }))
 
--- Workspace switching: 1–10 on DP-1
+-- Workspace switching: 1–10 on primary monitor
 for i = 1, 10 do
     local key = i % 10
     hl.bind(mainMod .. " + " .. key,          hl.dsp.focus({ workspace = i }))
     hl.bind(mainMod .. " + SHIFT + " .. key,  hl.dsp.window.move({ workspace = i }))
 end
 
--- Workspace switching: 11–20 on DP-2 (ALT + 0-9)
+-- Workspace switching: 11–20 on secondary monitor (ALT + 0-9)
 for i = 11, 20 do
     local key = (i - 10) % 10
     hl.bind(mainMod .. " + ALT + " .. key,          hl.dsp.focus({ workspace = i }))
@@ -76,12 +76,12 @@ hl.bind(mainMod .. " + I",          hl.dsp.exec_cmd("qs -p ~/.config/quickshell/
 hl.bind(mainMod .. " + L",          hl.dsp.global("quickshell:lock"))
 hl.bind("CTRL + ALT + DELETE",      hl.dsp.global("quickshell:sessionToggle"))
 
-hl.bind("SUPER + TAB", hl.dsp.exec_cmd("/home/donnie/projects/hypr-plugins/hymission/debug_toggle.sh"))
+hl.bind("SUPER + TAB", hl.dsp.exec_cmd("$HOME/projects/hypr-plugins/hymission/debug_toggle.sh"))
 
 
 
 -- Per-monitor gamma GUI
-hl.bind(mainMod .. " + H", hl.dsp.exec_cmd("/home/donnie/projects/hypr-gamma/gui/build-gui/hyprgamma-gui"))
+hl.bind(mainMod .. " + H", hl.dsp.exec_cmd("$HOME/projects/hypr-gamma/gui/build-gui/hyprgamma-gui"))
 
 -- Utilities
 hl.bind(mainMod .. " + SHIFT + S",  hl.dsp.global("quickshell:regionScreenshot"))
@@ -97,7 +97,7 @@ hl.bind("CTRL + SUPER + V",              hl.dsp.exec_cmd("pavucontrol"))
 -- Config shortcuts
 hl.bind("CTRL + SUPER + R",              hl.dsp.exec_cmd("~/.config/hypr/scripts/reload.sh"))
 hl.bind("CTRL + " .. mainMod .. " + SLASH",          hl.dsp.exec_cmd("xdg-open ~/.config/illogical-impulse/config.json"))
-hl.bind("CTRL + " .. mainMod .. " + ALT + SLASH",    hl.dsp.exec_cmd("xdg-open ~/.config/hypr/custom/keybinds.conf"))
+hl.bind("CTRL + " .. mainMod .. " + ALT + SLASH",    hl.dsp.exec_cmd("xdg-open ~/.config/hypr/binds.lua"))
 
 -- Exit
 hl.bind(mainMod .. " + SHIFT + M",  hl.dsp.exec_cmd("command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch exit"))

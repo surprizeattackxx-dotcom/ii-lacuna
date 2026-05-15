@@ -5,7 +5,7 @@ MODE="$2"
 POSITION="$3"
 SCALE="$4"
 
-FILE="/home/donnie/projects/ii-lacuna/dots/.config/hypr/monitors.lua"
+FILE="$HOME/.config/hypr/monitors.lua"
 
 echo "Updating $OUTPUT with $MODE, $POSITION, $SCALE" >> /tmp/monitor_debug.log
 
