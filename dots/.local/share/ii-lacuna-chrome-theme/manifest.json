@@ -1,0 +1,19 @@
+{
+  "manifest_version": 3,
+  "name": "ii-lacuna Active Theme",
+  "version": "1.0",
+  "key": "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAo2W5eySXff2kmRcAS8EXMqYj0/rRQc4ww8mMIwudja0OAw/w1HGB/3gK+8KKqDZX9QzyhYfTp7oRqA7Y+8lhfb7cVBC1AFjIp6pyVbG3xQVFNKDXMa4jzxmzLd6l7uEfVJmOjoLWD1OCtsblyG3Wx27qAXV9jRltu+tK4HgPDvzkUcwgy7ef9kCEdxPSWjWe/ayfNmkXT0+rGwDeZEXoCk6fyO6X7/m51fZwIFdE82HQuly+eOltU4rAE7bZjkUvDxDLpedyVyeonWDjJWYRAnOoEm82z4flgyacMxiJnM86R7IaDXea+l5fl0xrUDJPolHuaeBzs9E+WNJ0JYHC2wIDAQAB",
+  "theme": {
+    "colors": {
+      "frame": [30, 30, 46],
+      "frame_inactive": [24, 24, 37],
+      "toolbar": [30, 30, 46],
+      "tab_text": [205, 214, 244],
+      "tab_background_text": [166, 173, 200],
+      "ntp_background": [30, 30, 46],
+      "ntp_text": [205, 214, 244],
+      "ntp_link": [203, 166, 247],
+      "button_background": [49, 50, 68]
+    }
+  }
+}
