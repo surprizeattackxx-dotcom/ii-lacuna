@@ -78,7 +78,7 @@ PanelWindow {
         return BarComponentRegistry.allComponents.filter(c => !usedIds.includes(c.id))
     }
 
-    readonly property var themeNames: ["Mocha", "Glass", "Matugen", "Gruvbox", "Apple", "Nord", "Angel", "Ayu", "Cobalt2", "Cursor", "Dracula", "Flexoki", "Frappe", "Github", "Kanagawa", "Latte", "Macchiato", "Material_ocean", "Matrix", "Mercury", "Open_code", "Orng", "Osaka_jade", "Rose_pine", "Sakura", "Samurai", "Synthwave84", "Vercel", "Vesper", "Zen_burn", "Zen_garden"]
+    readonly property var themeNames: ["Matugen", "Mocha", "Frappe", "Latte", "Macchiato", "Dracula", "Nord", "Rose_pine", "Gruvbox", "Glass", "Kanagawa"]
 
     function moveUp(section, index) {
         if (index === 0) return
@@ -138,7 +138,7 @@ PanelWindow {
             themeApplyProc.command = ["bash", Directories.wallpaperSwitchScriptPath, "--noswitch", "--mode", "dark"];
         } else {
             const path = Directories.defaultThemes + "/" + themeName.toLowerCase() + ".json";
-            themeApplyProc.command = ["bash", Directories.applyCustomThemeScriptPath, path];
+            themeApplyProc.command = ["bash", Directories.applyCustomThemeScriptPath, path, themeName];
         }
         themeApplyProc.running = true
     }
