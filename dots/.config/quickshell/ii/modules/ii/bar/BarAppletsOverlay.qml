@@ -48,9 +48,12 @@ PanelWindow {
     anchors.top: true
     anchors.bottom: true
 
-    Component.onCompleted: {
-        if (GlobalStates.activeTheme !== "Matugen")
-            applyTheme(GlobalStates.activeTheme)
+    Connections {
+        target: Persistent
+        function onReadyChanged() {
+            if (Persistent.ready && GlobalStates.activeTheme !== "Matugen")
+                root.applyTheme(GlobalStates.activeTheme)
+        }
     }
 
     onVisibleChanged: {
