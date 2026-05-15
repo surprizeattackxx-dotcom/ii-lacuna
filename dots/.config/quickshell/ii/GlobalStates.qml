@@ -13,6 +13,8 @@ Singleton {
     property alias sidebarLeftOpen: root.policiesPanelOpen // Until all sidebars naming is fixed
     property alias sidebarRightOpen: root.dashboardPanelOpen // Until all sidebars naming is fixed
 
+    property string activeTheme: Persistent.states.activeTheme
+    onActiveThemeChanged: Persistent.states.activeTheme = activeTheme
     property bool barOpen: true
     property bool barAppletsOpen: false
     property bool crosshairOpen: false
