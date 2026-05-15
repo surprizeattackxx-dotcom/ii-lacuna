@@ -1,6 +1,6 @@
 #!/bin/bash
 # Apply a custom or built-in theme JSON, theming GTK4, Kitty, Rofi, Hyprland, and terminal.
-# Usage: apply_custom_theme.sh <theme.json>
+# Usage: apply_custom_theme.sh <theme.json> [THEME_NAME]
 THEME_FILE="$1"
 THEME_NAME="${2:-}"
 [[ -z "$THEME_FILE" || ! -f "$THEME_FILE" ]] && { echo "Usage: apply_custom_theme.sh <theme.json>" >&2; exit 1; }
