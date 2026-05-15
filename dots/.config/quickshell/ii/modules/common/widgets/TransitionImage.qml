@@ -7,14 +7,19 @@ import qs.modules.common.functions
 Item {
     id: root
 
-    readonly property int status: imgAIsBack ? imgB.status : imgA.status
+    // Ready if EITHER image is loaded — prevents the container going transparent
+    // during a wallpaper change (which would expose the swww layer and cause a
+    // double-transition visual artefact).
+    readonly property int status: (imgA.status === Image.Ready || imgB.status === Image.Ready)
+        ? Image.Ready
+        : (imgAIsBack ? imgB.status : imgA.status)
     required property string imageSource
 
     property int animationDuration: 1000
     property var fillMode: Image.PreserveAspectCrop
     property bool animated: true
     property bool imgAIsBack: true
-    
+
     property var sourceSize: Qt.size(0, 0)
     property bool cache: false
     property bool antialiasing: true
@@ -34,15 +39,11 @@ Item {
         front.source  = newSrc
         front.z       = 1
         back.z        = 0
-
-        if (root.animated) {
-            front.opacity = 0
-            fadeAnim.target = front
-            fadeAnim.restart()
-        } else {
-            front.opacity = 1
-            root.imgAIsBack = !root.imgAIsBack
-        }
+        front.opacity = 0
+        // Don't start the animation yet — onStatusChanged on the front image
+        // will trigger it once the image is actually ready to display.
+        // This prevents a crossfade over a blank/loading image, and keeps the
+        // container opaque (back image visible) during the load.
     }
 
     NumberAnimation {
@@ -63,6 +64,19 @@ Item {
         fillMode: root.fillMode
         sourceSize: root.sourceSize
         cache: root.cache; antialiasing: root.antialiasing; asynchronous: root.asynchronous; smooth: root.smooth; mipmap: root.mipmap
+        onStatusChanged: {
+            if (status !== Image.Ready) return
+            // imgA is "front" when imgAIsBack is false
+            if (!root.imgAIsBack && imgA.opacity === 0) {
+                if (root.animated) {
+                    fadeAnim.target = imgA
+                    fadeAnim.restart()
+                } else {
+                    imgA.opacity = 1
+                    root.imgAIsBack = !root.imgAIsBack
+                }
+            }
+        }
     }
 
     Image {
@@ -72,5 +86,18 @@ Item {
         fillMode: root.fillMode
         sourceSize: root.sourceSize
         cache: root.cache; antialiasing: root.antialiasing; asynchronous: root.asynchronous; smooth: root.smooth; mipmap: root.mipmap
+        onStatusChanged: {
+            if (status !== Image.Ready) return
+            // imgB is "front" when imgAIsBack is true
+            if (root.imgAIsBack && imgB.opacity === 0) {
+                if (root.animated) {
+                    fadeAnim.target = imgB
+                    fadeAnim.restart()
+                } else {
+                    imgB.opacity = 1
+                    root.imgAIsBack = !root.imgAIsBack
+                }
+            }
+        }
     }
 }

@@ -8,7 +8,7 @@ get_pictures_dir() {
         xdg-user-dir PICTURES; return
     fi
     local config_file="${XDG_CONFIG_HOME:-$HOME/.config}/user-dirs.dirs"
-    if [ -f "$config_file" ]; then
+    if [ -f "$config_file" ] && [ -r "$config_file" ]; then
         local pictures_path
         pictures_path=$(source "$config_file" >/dev/null 2>&1; echo "$XDG_PICTURES_DIR")
         echo "${pictures_path/#\$HOME/$HOME}"; return

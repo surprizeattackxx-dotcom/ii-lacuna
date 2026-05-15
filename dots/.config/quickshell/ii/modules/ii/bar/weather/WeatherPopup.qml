@@ -10,6 +10,7 @@ StyledPopup {
     id: root
 
     Item {
+        id: content
         implicitWidth:  300
         implicitHeight: mainLayout.implicitHeight
 

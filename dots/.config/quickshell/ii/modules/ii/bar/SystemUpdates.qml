@@ -91,6 +91,7 @@ MouseArea {
 
             // Dim track ring — always present when checking
             Canvas {
+                id: trackRing
                 anchors.fill: parent
                 visible: Updates.checking
                 onPaint: {
@@ -104,7 +105,7 @@ MouseArea {
                 }
                 Connections {
                     target: root
-                    function onAccentColorChanged() { parent.requestPaint() }
+                    function onAccentColorChanged() { trackRing.requestPaint() }
                 }
             }
 
@@ -302,6 +303,7 @@ MouseArea {
 
                         // Track ring (always visible, dim)
                         Canvas {
+                            id: trackRing2
                             anchors.fill: parent
                             onPaint: {
                                 var ctx = getContext("2d")
@@ -314,7 +316,7 @@ MouseArea {
                             }
                             Connections {
                                 target: root
-                                function onAccentColorChanged() { parent.requestPaint() }
+                                function onAccentColorChanged() { trackRing2.requestPaint() }
                             }
                         }
 
@@ -489,7 +491,7 @@ MouseArea {
     Process {
         id: updaterProc
         running: false
-        command: ["/usr/bin/kitty", "-e", "/usr/bin/arch-update"]
+        command: ["/usr/bin/kitty", "-e", "/usr/bin/arch-update", "--devel"]
         // Quickshell Process has no onExited — use onRunningChanged instead.
         // When running becomes false the process has ended naturally.
         onRunningChanged: {

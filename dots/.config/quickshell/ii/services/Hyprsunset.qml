@@ -20,7 +20,7 @@ Singleton {
 
     readonly property real gammaLowerLimit: 25
 
-    property string from: Config.options?.light?.night?.from ?? "19:00" 
+    property string from: Config.options?.light?.night?.from ?? "19:00"
     property string to: Config.options?.light?.night?.to ?? "06:30"
     property bool automatic: Config.options?.light?.night?.automatic && (Config?.ready ?? true)
     property int colorTemperature: Config.options?.light?.night?.colorTemperature ?? 5000
@@ -143,7 +143,7 @@ Singleton {
                     root.temperatureActive = false;
                 else
                     root.temperatureActive = (output != "6500"); // 6500 is the default when off
-                // console.log("[Hyprsunset] Fetched state:", output, "->", root.temperatureActive);
+                    // console.log("[Hyprsunset] Fetched state:", output, "->", root.temperatureActive);
             }
         }
     }
@@ -182,7 +182,16 @@ Singleton {
     function runNightLightThemeSync() {
         if (!Persistent.ready || !Persistent.states.followNightLight)
             return;
-        // Night light on (warm filter) → dark shell; off → light. Matches temperatureActive, not time-of-day alone.
+        // Wait for Config before syncing — colorMode may not be resolved yet.
+        if (!Config.ready) {
+            nightLightThemeDebounce.restart();
+            return;
+        }
+        // Ensure time-of-day evaluation has settled so temperatureActive
+        // reflects the correct state, not stale fetchProc results from before reload.
+        root.reEvaluate();
+        root.ensureState();
+        // Night light on (warm filter) → dark shell; off → light.
         const wantDark = root.temperatureActive;
         if (wantDark === Appearance.m3colors.darkmode) {
             MaterialThemeLoader.reloadAfterExternalColorChange();

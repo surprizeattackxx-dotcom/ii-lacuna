@@ -97,22 +97,16 @@ Singleton {
     }
 
     // ── Icon theme refresh ────────────────────────────────────────────────
-    // Bumped several times after a theme change to force icon reload across the dock
-    // TODO if loading the wallpaper takes too much time, the icons fail to change, i didn't find a better way
+    // Reactively update icons when theme or wallpaper changes
     property int iconThemeRevision: 0
+    onIconThemeRevisionChanged: {
+        // Trigger logic here if needed
+    }
 
-    Timer {
-        id: themeRefreshTimer
-        interval: 300
-        repeat: true
-        property int count: 0
-        onTriggered: {
-            root.iconThemeRevision += 1
-            if (++count >= 6) {
-                count = 0
-                stop()
-            }
-        }
+    Connections {
+        target: Config.options
+        function onWallpaperPathChanged() { root.iconThemeRevision++ }
+        function onColorModeChanged() { root.iconThemeRevision++ }
     }
 
     property list<var> _prevApps: []

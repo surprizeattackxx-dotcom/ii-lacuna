@@ -3,7 +3,6 @@ pragma ComponentBehavior: Bound
 import qs
 import qs.services
 import qs.modules.common
-import qs.modules.common.utils //FIXME. remove
 import qs.modules.common.widgets
 import qs.modules.common.widgets.widgetCanvas
 import qs.modules.common.functions as CF
@@ -173,7 +172,6 @@ Variants {
         readonly property string widgetStatePath: {
             const stateDir = CF.FileUtils.trimFileProtocol(Directories.state).replace(/\/$/, "");
             const p = `${stateDir}/user/generated/widgets/monitors/${bgRoot.monitor.name}.json`;
-            console.log("[widget-pos] State path for", bgRoot.monitor.name, "→", p);
             return p;
         }
         FileView {
@@ -257,7 +255,7 @@ Variants {
             TransitionImage {
                 id: wallpaper
                 visible: opacity > 0 && !blurLoader.active && !bgRoot.wallpaperIsVideo && !bgRoot.wallpaperIsWpe
-                opacity: (status === Image.Ready && !bgRoot.wallpaperIsVideo && !bgRoot.wallpaperIsWpe) ? 1 : 0
+                opacity: (status === Image.Ready && !bgRoot.wallpaperIsVideo && !bgRoot.wallpaperIsWpe && !GlobalStates.wallpaperTransitioning) ? 1 : 0
                 // Range = groups that workspaces span on
                 property int chunkSize: Config?.options.bar.workspaces.shown ?? 10
                 property int lower: Math.floor(bgRoot.firstWorkspaceId / chunkSize) * chunkSize
@@ -314,6 +312,9 @@ Variants {
                         duration: 800
                         easing.type: Easing.OutCubic
                     }
+                }
+                Behavior on opacity {
+                    NumberAnimation { duration: 200; easing.type: Easing.InOutQuad }
                 }
                 width: bgRoot.wallpaperWidth / bgRoot.wallpaperToScreenRatio * bgRoot.effectiveWallpaperScale
                 height: bgRoot.wallpaperHeight / bgRoot.wallpaperToScreenRatio * bgRoot.effectiveWallpaperScale

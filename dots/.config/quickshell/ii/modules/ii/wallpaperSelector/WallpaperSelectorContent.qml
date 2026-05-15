@@ -195,7 +195,12 @@ MouseArea {
 
     function selectWallpaperPath(filePath) {
         if (filePath && filePath.length > 0) {
-            Wallpapers.select(filePath, wallpaperSelectorContent.useDarkMode, wallpaperSelectorContent.selectedMonitor);
+            Wallpapers.select(
+                filePath,
+                wallpaperSelectorContent.useDarkMode,
+                wallpaperSelectorContent.selectedMonitor,
+                wallpaperSelectorContent.selectedMonitor.length > 0
+            );
             filterText = "";
             wallpaperSelectorContent.browserMode = false;
         }

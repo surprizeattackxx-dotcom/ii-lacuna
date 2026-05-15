@@ -46,14 +46,10 @@ Item {
     }
 
     onVisibleChanged: {
-        if (selfManagedVisibility.includes(modelData.id)) {
-            console.log("[BarComponent] system_tray visible changed to:", visible, new Error().stack)
-        }
     }
 
     Component.onCompleted: {
         if (selfManagedVisibility.includes(modelData.id)) {
-            console.log("[BarComponent] system_tray onCompleted, modelData.visible:", modelData.visible, "visible:", visible)
             modelData.visible = true;
             visible = true;
         }
@@ -70,7 +66,7 @@ Item {
         "active_window": [activeWindowComp, activeWindowComp],
         "date": [dateCompVert, dateCompVert],
         "record_indicator": [recordIndicatorComp, recordIndicatorComp],
-        "screen_share_indicator": [screenshareIndicatorComp, screenshareIndicatorComp],
+        "screen_share_indicator": [screenshareIndicatorComp, screenshareIndicatorCompVert],
         "timer": [timerComp, timerCompVert],
         "weather": [weatherComp, weatherComp],
         "policies_panel_button": [policiesPanelButton, policiesPanelButton],
@@ -146,6 +142,7 @@ Item {
         Component { id: timerCompVert; Vertical.VerticalTimerWidget {} }
 
         Component { id: screenshareIndicatorComp; ScreenShareIndicator {} }
+        Component { id: screenshareIndicatorCompVert; ScreenShareIndicator { vertical: true } }
 
         Component { id: recordIndicatorComp; RecordIndicator { vertical: rootItem.vertical } }
 

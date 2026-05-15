@@ -17,19 +17,17 @@ Scope {
 
         sourceComponent: PanelWindow {
             id: panelWindow
-            readonly property HyprlandMonitor monitor: Hyprland.monitorFor(panelWindow.screen)
-            property bool monitorIsFocused: Hyprland.focusedMonitor?.id == monitor?.id
-
+            
+            // Center the window on the screen
+            screen: Hyprland.focusedMonitor ?? Quickshell.screens[0]
+            
             exclusionMode: ExclusionMode.Ignore
             WlrLayershell.namespace: "quickshell:wallpaperChanger"
             WlrLayershell.layer: WlrLayer.Overlay
             WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
             color: "transparent"
 
-            anchors.bottom: true
-            anchors.left: true
-            anchors.right: true
-
+            // Remove illegal anchors.fill, let PanelWindow autosize to implicit content
             implicitHeight: changerContent.implicitHeight
             implicitWidth: changerContent.implicitWidth
 
@@ -47,9 +45,6 @@ Scope {
 
             WallpaperChangerContent {
                 id: changerContent
-                anchors.bottom: parent.bottom
-                anchors.left: parent.left
-                anchors.right: parent.right
             }
         }
     }

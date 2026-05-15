@@ -9,6 +9,9 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SHELL_CONFIG_FILE="$XDG_CONFIG_HOME/illogical-impulse/config.json"
 PREFERRED_MATUGEN_MONITOR="${PREFERRED_MATUGEN_MONITOR:-DP-1}"
 
+# Expand ~ in venv path (bash doesn't expand ~ inside variables)
+II_VENV="${ILLOGICAL_IMPULSE_VIRTUAL_ENV/#\~/$HOME}"
+
 get_monitor_state_path() {
     local monitor="$1"
     local state_file="$XDG_STATE_HOME/quickshell/user/generated/wallpaper/monitors/${monitor}.json"
@@ -54,8 +57,8 @@ generate_material_you_scheme() {
     local color=$(cat "$color_file")
     
     # Activate venv and run kde-material-you-colors to generate the color scheme
-    if [[ -n "$ILLOGICAL_IMPULSE_VIRTUAL_ENV" ]]; then
-        source "$(eval echo $ILLOGICAL_IMPULSE_VIRTUAL_ENV)/bin/activate" 2>/dev/null || true
+    if [[ -n "$II_VENV" ]]; then
+        source "$II_VENV/bin/activate" 2>/dev/null || true
         
         if [[ "$target_mode" == "dark" ]]; then
             kde-material-you-colors -d --color "$color" 2>/dev/null &
@@ -71,11 +74,11 @@ generate_material_you_scheme() {
 # Apply Material You color scheme via KDE
 # ============================================================================
 if [[ "$mode" == "dark" ]]; then
-    color_scheme="MaterialYouDark"
+    color_scheme="ColloidDarkGruvbox"
     # Also set gsettings for compatibility with applycolor.sh (which reads gsettings)
     gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' 2>/dev/null || true
 else
-    color_scheme="MaterialYouLight"
+    color_scheme="colloidLightGruvbox"
     gsettings set org.gnome.desktop.interface color-scheme 'prefer-light' 2>/dev/null || true
 fi
 
@@ -98,19 +101,23 @@ if [[ -f "$SHELL_CONFIG_FILE" ]]; then
             terminalscheme="$SCRIPT_DIR/terminal/scheme-base.json"
 
             # Regenerate material colors from wallpaper with correct mode
-            source "$(eval echo $ILLOGICAL_IMPULSE_VIRTUAL_ENV)/bin/activate" 2>/dev/null || true
+            source "$II_VENV/bin/activate" 2>/dev/null || true
             python3 "$SCRIPT_DIR/generate_colors_material.py" \
                 --mode "$mode" \
                 --path "$color_source" \
                 --termscheme "$terminalscheme" \
                 --blend_bg_fg \
                 --cache "$XDG_STATE_HOME/quickshell/user/generated/color.txt" \
+                --json-out "$XDG_STATE_HOME/quickshell/user/generated/colors.json" \
                 > "$XDG_STATE_HOME/quickshell/user/generated/material_colors.scss" 2>/dev/null || true
             deactivate 2>/dev/null || true
         fi
         
         # Now apply the regenerated colors to all apps
         bash "$SCRIPT_DIR/applycolor.sh" 2>/dev/null
+        
+        # Notify quickshell to reload the theme
+        qs -c ii ipc call theme reload 2>/dev/null || true
     ) &
 fi
 

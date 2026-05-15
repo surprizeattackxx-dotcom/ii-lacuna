@@ -11,6 +11,12 @@ import Quickshell.Io
  * It is necessary to run reapplyTheme() on startup because Singletons are lazily loaded.
  */
 Singleton {
+    IpcHandler {
+        target: "theme"
+        function reload(): void {
+            root.reloadAfterExternalColorChange()
+        }
+    }
     id: root
     property string filePath: Directories.generatedMaterialThemePath
 
@@ -46,11 +52,10 @@ Singleton {
                 // Convert snake_case to CamelCase
                 const camelCaseKey = key.replace(/_([a-z])/g, (g) => g[1].toUpperCase())
                 const m3Key = `m3${camelCaseKey}`
-                Appearance.m3colors[m3Key] = json[key]
+                try { Appearance.m3colors[m3Key] = json[key] } catch (e) {}
             }
         }
         
-        Appearance.m3colors.darkmode = (Appearance.m3colors.m3background.hslLightness < 0.5)
     }
 
     function resetFilePathNextTime() {

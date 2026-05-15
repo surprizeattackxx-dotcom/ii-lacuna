@@ -77,7 +77,7 @@ Singleton {
     Process {
         id: saveData
         command: [
-            "secret-tool", "store", "--label=" + keyringLabel,
+            "secret-tool", "store", "--label", keyringLabel,
             ...propertiesAsArgs,
         ]
         onRunningChanged: {
@@ -92,8 +92,8 @@ Singleton {
 
     Process {
         id: getData
-        command: [ // We need to use echo for a newline so splitparser does parse
-            "bash", "-c", `${Directories.scriptPath}/keyring/try_lookup.sh 2> /dev/null`,
+        command: [
+            "bash", `${Directories.scriptPath}/keyring/try_lookup.sh`,
         ]
         stdout: StdioCollector {
             id: keyringDataOutputCollector
@@ -113,7 +113,7 @@ Singleton {
         onExited: (exitCode, exitStatus) => {
             // console.log("[KeyringStorage] Keyring data fetch process exited with code:", exitCode);
             if (exitCode === 1) {
-                console.error("[KeyringStorage] Entry not found, initializing.");
+                console.info("[KeyringStorage] Entry not found, initializing.");
                 root.keyringData = {};
                 saveKeyringData()
             }

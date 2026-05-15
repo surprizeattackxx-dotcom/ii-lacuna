@@ -34,6 +34,7 @@ Singleton {
     property bool superReleaseMightTrigger: true
     property bool wallpaperSelectorOpen: false
     property bool wallpaperChangerOpen: false
+    property bool wallpaperTransitioning: false
     property bool workspaceShowNumbers: true
     property bool isScrollingLayout: false
 
@@ -115,6 +116,22 @@ Singleton {
         onReleased: {
             root.superDown = false
         }
+    }
+
+
+    IpcHandler {
+        target: "wallpaper"
+        function transition(): void {
+            GlobalStates.wallpaperTransitioning = true
+            wallpaperTransitionTimer.restart()
+        }
+    }
+
+    Timer {
+        id: wallpaperTransitionTimer
+        interval: 900
+        repeat: false
+        onTriggered: GlobalStates.wallpaperTransitioning = false
     }
 
     Process {

@@ -3042,7 +3042,7 @@ Singleton {
         // Ensure memories directory exists
         Quickshell.execDetached(["bash", "-c", `mkdir -p "${Directories.aiMemoryPath.replace("memory.md", "memories")}"`]);
         setModel(currentModelId, false, false); // Do necessary setup for model
-        if (Config.options.ai.extraModels.length > 0) {
+        if (Config.options.ai.extraModels?.length > 0) {
             modelsOfProviders = mergeModelsFromList(baseModels, Config.options.ai.extraModels)
         }
     }

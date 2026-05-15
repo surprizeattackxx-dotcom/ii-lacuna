@@ -325,9 +325,9 @@ curl -sf "https://api.open-meteo.com/v1/forecast?latitude=$LAT&longitude=$LON&${
                 root.location.lon   = position.coordinate.longitude;
                 root.location.valid = true;
                 root.getData();
-            } else {
-                root.gpsActive = root.location.valid;
-                console.error("[WeatherService] Failed to get the GPS location.");
+            } else if (root.location.valid) {
+                root.gpsActive = false;
+                console.warn("[WeatherService] GPS position became invalid.");
             }
         }
 
@@ -337,8 +337,7 @@ curl -sf "https://api.open-meteo.com/v1/forecast?latitude=$LAT&longitude=$LON&${
                 root.location.valid = false;
                 root.gpsActive = false;
                 root.getData();
-                Quickshell.execDetached(["notify-send", Translation.tr("Weather Service"), Translation.tr("Cannot find a GPS service. Using the fallback method instead."), "-a", "Shell"]);
-                console.error("[WeatherService] Could not acquire a valid backend plugin.");
+                console.warn("[WeatherService] GPS plugin became invalid, switching to fallback.");
             }
         }
     }

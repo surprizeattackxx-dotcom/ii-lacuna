@@ -125,6 +125,7 @@ Scope {
 
                     BarContent {
                         id: barContent
+                        monitorIndex: barRoot.monitorIndex
 
                         implicitHeight: Appearance.sizes.barHeight
                         anchors {

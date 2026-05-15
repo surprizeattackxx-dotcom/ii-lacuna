@@ -1,91 +1,158 @@
 #!/bin/bash
-TV="HDMI-A-1"
-TV_CONFIG="3840x2160@60.0,3840x0,1.0,bitdepth,10,cm,hdr,sdrbrightness,1.1,sdrsaturation,1.0"
-TV_SINK="48"
-FALLBACK_WS="1"
-STATE_FILE="/tmp/hypr-tv-state.json"
-DISABLED_MONITORS_FILE="${XDG_STATE_HOME:-$HOME/.local/state}/quickshell/user/generated/wallpaper/monitors_disabled.txt"
-MONITOR_OVERRIDES_CONF="${XDG_CONFIG_HOME:-$HOME/.config}/hypr/monitor-overrides.conf"
+# Dynamic monitor daemon — listens for hotplug events and manages workspace migration.
+# Handles: monitor disconnect → move workspaces to fallback; reconnect → restore.
+# Respects disabled-monitors list from toggle-tv.sh.
+
 SOCKET="$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock"
+STATE_FILE="$HOME/.config/hypr/monitor-state.lua"
+PID_FILE="/tmp/hypr-monitor-watch.pid"
+DISABLED_FILE="${XDG_STATE_HOME:-$HOME/.local/state}/quickshell/user/generated/wallpaper/monitors_disabled.txt"
 
-if [[ ! -S "$SOCKET" ]]; then
-  echo "Error: Could not find socket at $SOCKET"
-  exit 1
+[[ -S "$SOCKET" ]] || { echo "No Hyprland socket at $SOCKET"; exit 1; }
+
+# Workspace ranges — must match workspaces.lua
+declare -A WS_START WS_END
+WS_START["DP-1"]=1;     WS_END["DP-1"]=10
+WS_START["DP-2"]=11;    WS_END["DP-2"]=20
+WS_START["HDMI-A-1"]=21; WS_END["HDMI-A-1"]=30
+FALLBACK_ORDER=("DP-1" "DP-2" "HDMI-A-1")
+KNOWN_MONS=("DP-1" "DP-2" "HDMI-A-1")
+
+# Kill existing instance if running
+if [[ -f "$PID_FILE" ]]; then
+    old_pid=$(cat "$PID_FILE")
+    if kill -0 "$old_pid" 2>/dev/null; then
+        kill "$old_pid" 2>/dev/null
+        sleep 0.2
+    fi
 fi
+echo $$ > "$PID_FILE"
 
-echo "Using socket: $SOCKET"
+# In-memory: which workspaces were moved per monitor
+declare -A MOVED
 
-save_and_evacuate() {
-  echo "TV disconnected — saving state and rescuing windows from workspaces 21–30"
-  echo "$TV" >> "$DISABLED_MONITORS_FILE"
-  # Persist disabled state so hyprctl keyword calls don't re-enable the TV
-  sed -i "/^monitor=$TV/d" "$MONITOR_OVERRIDES_CONF" 2>/dev/null || true
-  echo "monitor=$TV,disabled" >> "$MONITOR_OVERRIDES_CONF"
+# ── Helpers ──────────────────────────────────────────────────────────
 
-  # Save address→workspace mapping for all windows on TV workspaces
-  hyprctl clients -j | \
-    jq '[.[] | select(.workspace.id >= 21 and .workspace.id <= 30) | {address, workspace: .workspace.id}]' \
-    > "$STATE_FILE"
+active_mons()   { hyprctl monitors all -j | jq -r '.[] | select(.disabled == false) | .name'; }
+disabled_mons() { [[ -f "$DISABLED_FILE" ]] && cat "$DISABLED_FILE" || true; }
 
-  echo "Saved state: $(cat $STATE_FILE)"
+is_active()   { active_mons | grep -qxF "$1"; }
+is_disabled() { disabled_mons | grep -qxF "$1"; }
 
-  # Move them all to fallback
-  hyprctl clients -j | \
-    jq -r '.[] | select(.workspace.id >= 21 and .workspace.id <= 30) | .address' | \
-    while read -r addr; do
-      hyprctl dispatch movetoworkspacesilent "$FALLBACK_WS,address:$addr"
+get_fallback() {
+    local exclude="$1"
+    for fb in "${FALLBACK_ORDER[@]}"; do
+        [[ "$fb" == "$exclude" ]] && continue
+        is_active "$fb" && { echo "$fb"; return; }
     done
+    echo ""
 }
 
-restore_state() {
-  echo "TV reconnected — restoring windows to their original workspaces"
-
-  if [[ ! -f "$STATE_FILE" ]]; then
-    echo "No saved state found, nothing to restore"
-    return
-  fi
-
-  # Small delay to let Hyprland fully register the monitor
-  sleep 1
-
-  # Apply correct position so TV doesn't overlap other monitors
-  hyprctl keyword monitor "$TV,$TV_CONFIG"
-
-  jq -c '.[]' "$STATE_FILE" | while read -r entry; do
-    addr=$(echo "$entry" | jq -r '.address')
-    ws=$(echo "$entry"   | jq -r '.workspace')
-    echo "Restoring $addr → workspace $ws"
-    hyprctl dispatch movetoworkspacesilent "$ws,address:$addr"
-  done
-
-  rm -f "$STATE_FILE"
-  sed -i "/^${TV}$/d" "$DISABLED_MONITORS_FILE"
-  sed -i "/^monitor=$TV/d" "$MONITOR_OVERRIDES_CONF" 2>/dev/null || true
+write_state() {
+    local active disabled
+    active=$(active_mons)
+    disabled=$(disabled_mons)
+    {
+        echo "return {"
+        echo "  active = {"
+        while IFS= read -r m; do [[ -n "$m" ]] && echo "    \"$m\","; done <<< "$active"
+        echo "  },"
+        echo "  disabled = {"
+        while IFS= read -r m; do [[ -n "$m" ]] && echo "    \"$m\","; done <<< "$disabled"
+        echo "  },"
+        echo "  moved = {"
+        for mon in "${KNOWN_MONS[@]}"; do
+            local val="${MOVED[$mon]}"
+            [[ -n "$val" ]] && echo "    [\"$mon\"] = {$val},"
+        done
+        echo "  }"
+        echo "}"
+    } > "$STATE_FILE"
 }
 
-handle_event() {
-  local event="$1"
+read_state() {
+    MOVED=()
+    [[ ! -f "$STATE_FILE" ]] && return
+    local in_moved=0 mon=""
+    while IFS= read -r line; do
+        if [[ "$line" =~ ^[[:space:]]*moved[[:space:]]*=[[:space:]]*\{ ]]; then
+            in_moved=1
+        elif [[ $in_moved -eq 1 && "$line" =~ \[\\\"(.+)\\\"\]\]\ *=\ *\{(.+)\},? ]]; then
+            MOVED["${BASH_REMATCH[1]}"]="${BASH_REMATCH[2]}"
+        elif [[ $in_moved -eq 1 && "$line" =~ ^[[:space:]]*\} ]]; then
+            in_moved=0
+        fi
+    done < "$STATE_FILE"
+}
 
-  if [[ "$event" == "monitorremoved>>HDMI-A-1" ]]; then
-    # Skip if already in disabled list — means we just re-disabled a spurious re-add
-    if grep -qx "$TV" "$DISABLED_MONITORS_FILE" 2>/dev/null; then
-      echo "TV removed — already in disabled list, skipping state save"
-      return
+# ── Core logic ───────────────────────────────────────────────────────
+
+evacuate() {
+    local mon="$1"
+    local start="${WS_START[$mon]}" end="${WS_END[$mon]}"
+    [[ -z "$start" ]] && return
+
+    local fb
+    fb=$(get_fallback "$mon")
+    [[ -z "$fb" ]] && { echo "No fallback for $mon, skipping"; return; }
+
+    local moved_ws=()
+    for ((ws = start; ws <= end; ws++)); do
+        hyprctl dispatch moveworkspacetomonitor "$ws" "$fb" &>/dev/null
+        moved_ws+=("$ws")
+    done
+    MOVED["$mon"]=$(IFS=,; echo "${moved_ws[*]}")
+    write_state
+    notify-send "Monitor: $mon disconnected" "Workspaces $start–$end → $fb" -a "Hyprland"
+}
+
+restore() {
+    local mon="$1"
+    local moved="${MOVED[$mon]}"
+    [[ -z "$moved" ]] && return
+    is_active "$mon" || return
+
+    IFS=',' read -ra wss <<< "$moved"
+    for ws in "${wss[@]}"; do
+        hyprctl dispatch moveworkspacetomonitor "$ws" "$mon" &>/dev/null
+    done
+    unset MOVED["$mon"]
+    write_state
+    notify-send "Monitor: $mon connected" "Workspaces restored" -a "Hyprland"
+}
+
+# Restore hyprgamma config for this monitor if it was previously saved
+restore_gamma() {
+    local mon="$1"
+    local cfg="$HOME/.config/hypr/hyprgamma.json"
+    [[ -f "$cfg" ]] && hyprctl hyprgamma:reload &>/dev/null
+}
+
+# ── Event loop ───────────────────────────────────────────────────────
+
+read_state
+write_state
+
+socat -u "UNIX-CONNECT:$SOCKET" - 2>/dev/null | while IFS= read -r line; do
+    if [[ "$line" == monitorremoved'>>'* ]]; then
+        mon="${line#*'>>'}"
+        echo "[$(date +%H:%M:%S)] removed: $mon"
+        is_disabled "$mon" && continue
+        evacuate "$mon"
+        restore_gamma "$mon"
+    elif [[ "$line" == monitoradded'>>'* ]]; then
+        mon="${line#*'>>'}"
+        echo "[$(date +%H:%M:%S)] added: $mon"
+            if is_disabled "$mon"; then
+                hyprctl eval "hl.monitor({ output = \"$mon\", disabled = true })" &>/dev/null
+                write_state
+                notify-send "Monitor: $mon reconnected" "Re-disabled (in disabled list)" -a "Hyprland"
+                continue
+            fi
+        sleep 0.5
+        restore "$mon"
+        restore_gamma "$mon"
     fi
-    save_and_evacuate
-  elif [[ "$event" == "monitoradded>>HDMI-A-1" ]]; then
-    # If TV is in the disabled list, immediately re-disable it (suppress spurious re-enables
-    # caused by hyprctl keyword calls triggering Hyprland config re-apply)
-    if grep -qx "$TV" "$DISABLED_MONITORS_FILE" 2>/dev/null; then
-      echo "TV appeared but is in disabled list — re-disabling"
-      hyprctl keyword monitor "$TV,disabled"
-    else
-      restore_state
-    fi
-  fi
-}
+done
 
-socat -u "UNIX-CONNECT:$SOCKET" - | \
-  while read -r line; do
-    handle_event "$line"
-  done
+rm -f "$PID_FILE"

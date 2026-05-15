@@ -110,9 +110,6 @@ Item {
                             smooth:       true
                             asynchronous: true
                             layer.enabled: true
-
-                            // Rounded clip via layer
-                            layer.effect: null
                         }
 
                         // Hover overlay

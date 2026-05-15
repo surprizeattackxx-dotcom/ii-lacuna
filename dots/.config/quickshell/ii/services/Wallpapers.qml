@@ -5,6 +5,7 @@ import QtQuick
 import Qt.labs.folderlistmodel
 import Quickshell
 import Quickshell.Io
+import Quickshell.Hyprland
 pragma Singleton
 pragma ComponentBehavior: Bound
 
@@ -32,6 +33,9 @@ Singleton {
     property var colorCache: ({})
 
     property int crossfadeDuration: 600
+    readonly property bool preferredDarkMode: (Config.ready && Config.options.appearance.colorMode.length > 0)
+        ? Config.options.appearance.colorMode === "dark"
+        : Appearance.m3colors.darkmode
     // Path to the per-monitor state directory written by fetchwall.sh
     readonly property string monitorStateDir: `${FileUtils.trimFileProtocol(Directories.state)}/user/generated/wallpaper/monitors`
     readonly property string fetchwallScriptPath: `${FileUtils.trimFileProtocol(Directories.scriptPath)}/fetchwall.sh`
@@ -59,18 +63,20 @@ Singleton {
         target: Config
         function onReadyChanged() { // Apply wallpaper on config ready if it's a video
             if (!Config.ready || !root.isVideoFile(Config.options.background.wallpaperPath.toLowerCase())) return;
-            root.apply(Config.options.background.wallpaperPath, Appearance.m3colors.darkmode);
+            root.apply(Config.options.background.wallpaperPath, root.preferredDarkMode);
         }
     }
 
-    function openFallbackPicker(darkMode = Appearance.m3colors.darkmode) {
+    function openFallbackPicker(darkMode = root.preferredDarkMode) {
+        const focusedMonitor = Hyprland.focusedMonitor?.name ?? "DP-1"
         applyProc.exec([
             Directories.wallpaperSwitchScriptPath,
-            "--mode", (darkMode ? "dark" : "light")
+            "--mode", (darkMode ? "dark" : "light"),
+            "--monitor", focusedMonitor
         ])
     }
 
-    function apply(path, darkMode = Appearance.m3colors.darkmode, monitor = "") {
+    function apply(path, darkMode = root.preferredDarkMode, monitor = "", persistSelection = false) {
         if (!path || path.length === 0) return
             root.aboutToChange(path)
             const args = [
@@ -80,14 +86,16 @@ Singleton {
             ]
             if (monitor && monitor.length > 0) {
                 args.push("--monitor", monitor)
-                args.push("--no-save")
+                if (!persistSelection) {
+                    args.push("--no-save")
+                }
             }
             applyProc.exec(args)
             root.changed()
     }
 
     // Fetch a unique random wallpaper for every connected monitor
-    function fetchPerMonitor(darkMode = Appearance.m3colors.darkmode) {
+    function fetchPerMonitor(darkMode = root.preferredDarkMode) {
         applyProc.exec([
             "bash", root.fetchwallScriptPath,
             "--mode", (darkMode ? "dark" : "light")
@@ -110,12 +118,14 @@ Singleton {
     Process {
         id: selectProc
         property string filePath: ""
-        property bool darkMode: Appearance.m3colors.darkmode
+        property bool darkMode: root.preferredDarkMode
         property string monitor: ""
-        function select(filePath, darkMode = Appearance.m3colors.darkmode, monitor = "") {
+        property bool persistSelection: false
+        function select(filePath, darkMode = root.preferredDarkMode, monitor = "", persistSelection = false) {
             selectProc.filePath = filePath
             selectProc.darkMode = darkMode
             selectProc.monitor = monitor
+            selectProc.persistSelection = persistSelection
             selectProc.exec(["test", "-d", FileUtils.trimFileProtocol(filePath)])
         }
         onExited: (exitCode, exitStatus) => {
@@ -123,15 +133,15 @@ Singleton {
                 setDirectory(selectProc.filePath);
                 return;
             }
-            root.apply(selectProc.filePath, selectProc.darkMode, selectProc.monitor);
+            root.apply(selectProc.filePath, selectProc.darkMode, selectProc.monitor, selectProc.persistSelection);
         }
     }
 
-    function select(filePath, darkMode = Appearance.m3colors.darkmode, monitor = "") {
-        selectProc.select(filePath, darkMode, monitor);
+    function select(filePath, darkMode = root.preferredDarkMode, monitor = "", persistSelection = false) {
+        selectProc.select(filePath, darkMode, monitor, persistSelection);
     }
 
-    function randomFromCurrentFolder(darkMode = Appearance.m3colors.darkmode) {
+    function randomFromCurrentFolder(darkMode = root.preferredDarkMode) {
         if (folderModel.count === 0) return;
         const randomIndex = Math.floor(Math.random() * folderModel.count);
         const filePath = folderModel.get(randomIndex, "filePath");

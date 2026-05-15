@@ -17,15 +17,18 @@ ClockWidget 1.0 ClockWidget.qml
 ClockWidgetPopup 1.0 ClockWidgetPopup.qml
 DashboardPanelButton 1.0 DashboardPanelButton.qml
 HyprlandXkbIndicator 1.0 HyprlandXkbIndicator.qml
+MatugenColors 1.0 MatugenColors.qml
 Media 1.0 Media.qml
 NotificationHistoryPopup 1.0 NotificationHistoryPopup.qml
 NotificationUnreadCount 1.0 NotificationUnreadCount.qml
+NetworkPopup 1.0 NetworkPopup.qml
 PoliciesPanelButton 1.0 PoliciesPanelButton.qml
 RecordIndicator 1.0 RecordIndicator.qml
 Resource 1.0 Resource.qml
 Resources 1.0 Resources.qml
 ResourcesPopup 1.0 ResourcesPopup.qml
 ResourcesPopupCompact 1.0 ResourcesPopupCompact.qml
+Scaler 1.0 Scaler.qml
 ScreenShareIndicator 1.0 ScreenShareIndicator.qml
 ScrollHint 1.0 ScrollHint.qml
 StyledPopup 1.0 StyledPopup.qml
@@ -43,3 +46,7 @@ WorkspacePreviewPopup 1.0 WorkspacePreviewPopup.qml
 Workspaces 1.0 Workspaces.qml
 ClockWidgetPopupCompact 1.0 ClockWidgetPopupCompact.qml
 MediaPopup 1.0 MediaPopup.qml
+WallpaperPicker 1.0 WallpaperPicker.qml
+MusicPopup 1.0 music/MusicPopup.qml
+MonitorPopup 1.0 monitors/MonitorPopup.qml
+MonitorSettingsTab 1.0 MonitorSettingsTab.qml

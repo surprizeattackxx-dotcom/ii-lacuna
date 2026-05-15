@@ -169,21 +169,16 @@ Item { // Bar content region
         }
     }
 
-    Row { // Middle section
+    Item { // Middle section
         id: middleSection
-        anchors {
-            top: parent.top
-            bottom: parent.bottom
-            horizontalCenter: parent.horizontalCenter
-        }
+        anchors.horizontalCenter: parent.horizontalCenter
+        height: parent.height
+        width: centerCenter.width + (middleLeftRepeater.count > 0 ? 4 : 0) + (middleRightRepeater.count > 0 ? 4 : 0)
 
         RowLayout {
-            anchors {
-                top: parent.top
-                bottom: parent.bottom
-                right: centerCenter.left
-                rightMargin: 4
-            }
+            anchors.right: centerCenter.left
+            anchors.rightMargin: 4
+            height: parent.height
             Repeater {
                 id: middleLeftRepeater
                 model: root.leftList
@@ -254,7 +249,7 @@ Item { // Bar content region
             id: rightRepeater
             model: Config.options.bar.layouts.right
             delegate: BarComponent {
-                list: rightRepeater.model
+                list: Config.options.bar.layouts.right
                 barSection: 2
             }
         }

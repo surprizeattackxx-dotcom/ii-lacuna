@@ -113,7 +113,7 @@ Singleton {
         required property int notificationId
         interval: 7000
         running: true
-        onTriggered: () => {
+        onTriggered: {
             const index = root.list.findIndex((notif) => notif.notificationId === notificationId);
             const notifObject = root.list[index];
             if (notifObject == null) { destroy(); return; }
@@ -402,11 +402,11 @@ Singleton {
                     try { replyAction.invoke(replyText); }
                     catch (_) { replyAction.invoke(); }
                 } else {
-                    console.warn("[Notifications] No reply mechanism found for notification " + id);
+                    console.info("[Notifications] Notification " + id + " does not support inline replies.");
                 }
             }
         } else {
-            console.warn("[Notifications] Notification " + id + " not found on server; cannot send reply.");
+            console.info("[Notifications] Notification " + id + " expired or closed; cannot send reply.");
         }
 
         root.replySent(id, replyText);

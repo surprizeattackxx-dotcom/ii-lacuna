@@ -363,9 +363,9 @@ Singleton {
                     property bool pillStyle: true // ActivSpot-style numbered square pills per workspace
                     property bool alwaysShowNumbers: false
                     property int showNumberDelay: 300 // milliseconds
-                    property list<string> numberMap: ["1", "2"] // Characters to show instead of numbers on workspace indicator
+                    property list<string> numberMap: ["1", "2", "3"] // Characters to show instead of numbers on workspace indicator
                     property bool useWorkspaceMap: true
-                    property list<var> workspaceMap: [0, 10]
+                    property list<var> workspaceMap: [0, 10, 20]
                     property int maxWindowCount: 1 // Maximum windows to show in one workspace
                     property bool useNerdFont: false
                     property int activeIndicatorOpacity: 100 // 0-100
@@ -616,7 +616,7 @@ Singleton {
                 property bool showIcons: true
                 property bool centerIcons: true
                 property bool useWorkspaceMap: true
-                property list<var> workspaceMap: [0, 10]
+                property list<var> workspaceMap: [0, 10, 20]
                 property bool showOpeningAnimation: true
                 property string style: "classic" // Options: classic, scrolling
                 property int centerTopPaddingRatio: 3

@@ -110,12 +110,32 @@ RippleButton { // Right sidebar button — left‑click: toggle panel; right‑c
             iconSize: Appearance.font.pixelSize.larger
             color: rightSidebarButton.colText
         }
-        MaterialSymbol {
+        Item {
             Layout.topMargin: indicatorsColumnLayout.realSpacing
+            Layout.preferredWidth: btIcon.implicitWidth
+            Layout.preferredHeight: btIcon.implicitHeight
             visible: BluetoothStatus.available
-            text: BluetoothStatus.connected ? "bluetooth_connected" : BluetoothStatus.enabled ? "bluetooth" : "bluetooth_disabled"
-            iconSize: Appearance.font.pixelSize.larger
-            color: rightSidebarButton.colText
+
+            MaterialSymbol {
+                id: btIcon
+                anchors.fill: parent
+                text: BluetoothStatus.connected ? "bluetooth_connected" : BluetoothStatus.enabled ? "bluetooth" : "bluetooth_disabled"
+                iconSize: Appearance.font.pixelSize.larger
+                color: rightSidebarButton.colText
+            }
+
+            MouseArea {
+                id: btMouseArea
+                anchors.fill: parent
+                hoverEnabled: true
+                onClicked: btPopup.open = !btPopup.open
+            }
+
+            NetworkPopup {
+                id: btPopup
+                hoverTarget: btMouseArea
+                open: false // Controlled manually by click
+            }
         }
         Revealer {
             vertical: true

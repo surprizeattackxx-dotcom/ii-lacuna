@@ -10,8 +10,7 @@ import Quickshell.Io
 StyledPopup {
     id: root
 
-    // Fixed-size Item drives popup shell size; ColumnLayout fills it
-    Item {
+    contentItem: Item {
         id: content
         implicitWidth:  320
         implicitHeight: mainLayout.implicitHeight

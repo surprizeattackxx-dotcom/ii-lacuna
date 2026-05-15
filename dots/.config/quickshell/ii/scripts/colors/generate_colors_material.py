@@ -234,10 +234,17 @@ if args.json_out is not None:
         for k, v in material_colors.items()
         if "palette" not in k.lower() and not k.startswith("term")
     }
-    import os
-    os.makedirs(os.path.dirname(args.json_out), exist_ok=True)
-    with open(args.json_out, "w") as f:
-        json.dump(json_colors, f, indent=2)
+    import os, tempfile
+    out_dir = os.path.dirname(args.json_out)
+    os.makedirs(out_dir, exist_ok=True)
+    fd, tmp_path = tempfile.mkstemp(dir=out_dir)
+    try:
+        with os.fdopen(fd, "w") as f:
+            json.dump(json_colors, f, indent=2)
+        os.replace(tmp_path, args.json_out)
+    except Exception:
+        os.unlink(tmp_path)
+        raise
 
 if not args.debug:
     print(f"$darkmode: {darkmode};")

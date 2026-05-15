@@ -158,35 +158,6 @@ WindowDialog {
             onMoved: root.brightnessMonitor.setBrightness(value)
         }
     }
-
-    WindowDialogSectionHeader {
-        text: Translation.tr("Gamma")
-    }
-
-    WindowDialogSeparator {
-        Layout.topMargin: -22
-        Layout.leftMargin: 0
-        Layout.rightMargin: 0
-    }
-
-    Column {
-        id: gammaColumn
-        Layout.topMargin: -16
-        Layout.fillWidth: true
-        Layout.fillHeight: true
-
-        WindowDialogSlider {
-            anchors {
-                left: parent.left
-                right: parent.right
-                leftMargin: 4
-                rightMargin: 4
-            }
-            // text: Translation.tr("Brightness")
-            value: root.brightnessMonitor?.brightness ?? 0
-            onMoved: root.brightnessMonitor?.setBrightness(value)
-        }
-    }
     
     WindowDialogButtonRow {
         Layout.fillWidth: true

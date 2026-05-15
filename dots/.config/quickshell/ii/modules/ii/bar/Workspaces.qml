@@ -21,11 +21,11 @@ Item {
 
     readonly property bool useWorkspaceMap: Config.options.bar.workspaces.useWorkspaceMap
     readonly property list<int> workspaceMap: Config.options.bar.workspaces.workspaceMap
-    readonly property int monitorIndex: barLoader.monitorIndex
+    readonly property int monitorIndex: root.QsWindow.window?.monitorIndex ?? 0
     property int workspaceOffset: useWorkspaceMap ? workspaceMap[monitorIndex] : 0
 
     readonly property int workspacesShown: dynamicWorkspaces
-    ? ((workspaceMap[monitorIndex + 1] ?? workspaceMap[monitorIndex] + Config.options.bar.workspaces.shown) - workspaceMap[monitorIndex])
+    ? ((workspaceMap[monitorIndex + 1] ?? (workspaceMap[monitorIndex] + Config.options.bar.workspaces.shown)) - workspaceMap[monitorIndex])
     : Config.options.bar.workspaces.shown
     readonly property int workspaceGroup: Math.floor((monitor?.activeWorkspace?.id - root.workspaceOffset - 1) / root.workspacesShown)
     property list<bool> workspaceOccupied: []
@@ -320,20 +320,19 @@ Item {
                 GlobalStates.overviewOpen = !GlobalStates.overviewOpen
             }
             if (event.button === Qt.BackButton) {
-                Hyprland.dispatch(`togglespecialworkspace`);
+                Hyprland.dispatch(`hl.dsp.workspace.toggle_special()`);
             }
             if (event.button === Qt.LeftButton) {
                 const wsId = workspaceOffset + workspaceGroup * workspacesShown + hoverIndex + 1;
-                Hyprland.dispatch(`workspace ${wsId}`);
+                Hyprland.dispatch(`hl.dsp.focus({workspace=${wsId}})`);
             }
         }
 
         onWheel: (event) => {
-            // console.log(event.angleDelta.y)
             if (event.angleDelta.y < 0)
-                Hyprland.dispatch(`workspace r+1`);
+                Hyprland.dispatch(`hl.dsp.focus({workspace="r+1"})`);
             else if (event.angleDelta.y > 0)
-                Hyprland.dispatch(`workspace r-1`);
+                Hyprland.dispatch(`hl.dsp.focus({workspace="r-1"})`);
         }
     }
 

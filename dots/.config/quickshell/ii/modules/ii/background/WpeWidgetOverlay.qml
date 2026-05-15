@@ -3,7 +3,6 @@ pragma ComponentBehavior: Bound
 import qs
 import qs.services
 import qs.modules.common
-import qs.modules.common.utils //FIXME. remove
 import qs.modules.common.widgets
 import qs.modules.common.widgets.widgetCanvas
 import qs.modules.common.functions as CF
@@ -189,16 +188,6 @@ Variants {
                         wallpaperSafetyTriggered: false
                         overrideX: perScreen.widgetX("clock")
                         overrideY: perScreen.widgetY("clock")
-                    }
-                }
-
-                Timer {
-                    interval: 1000
-                    running: true
-                    repeat: true
-                    onTriggered: {
-                        console.log("wallpaperIsWpe =", wallpaperIsWpe)
-                        console.log("wpeReady =", wpeReady)
                     }
                 }
 

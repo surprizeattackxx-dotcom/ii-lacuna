@@ -13,7 +13,6 @@ LazyLoader {
     property real popupBackgroundMargin: 0
 
     // Defaults to showing when the hoverTarget is hovered.
-    // Callers that need finer control can override: open: myCondition || popupHovered
     property bool open: (hoverTarget?.containsMouse ?? false) || popupHovered
 
     active: true
@@ -43,8 +42,7 @@ LazyLoader {
         margins {
             left: {
                 if (!Config.options.bar.vertical) {
-                    if (!root.hoverTarget || !root.QsWindow)
-                        return 0;
+                    if (!root.hoverTarget || !root.QsWindow) return 0;
                     var targetPos = root.QsWindow.mapFromItem(root.hoverTarget, 0, 0);
                     var centeredX = targetPos.x + (root.hoverTarget.width - popupWindow.implicitWidth) / 2;
                     return Math.max(0, Math.min(screenWidth - popupWindow.implicitWidth, centeredX));
@@ -67,24 +65,9 @@ LazyLoader {
 
         StyledRectangularShadow { target: popupBackground }
 
-        // HoverHandler on the background — passive, never blocks child input.
-        // Drives root.popupHovered so callers can react via onPopupHoveredChanged.
         HoverHandler {
             target:    popupBackground
             onHoveredChanged: root.popupHovered = hovered
-        }
-
-        Rectangle {
-            anchors.fill:    popupBackground
-            anchors.margins: -1
-            radius:          popupBackground.radius + 1
-            color:           "transparent"
-            border.width:    1
-            border.color:    Qt.rgba(
-                Appearance.m3colors.m3outlineVariant.r,
-                Appearance.m3colors.m3outlineVariant.g,
-                Appearance.m3colors.m3outlineVariant.b, 0.55)
-            z: popupBackground.z - 1
         }
 
         Rectangle {
@@ -99,23 +82,44 @@ LazyLoader {
                 bottomMargin: Appearance.sizes.elevationMargin + root.popupBackgroundMargin * (!popupWindow.anchors.bottom)
             }
 
-            implicitWidth:  root.contentItem.implicitWidth  + margin * 2
-            implicitHeight: root.contentItem.implicitHeight + margin * 2
+            implicitWidth:  (root.contentItem?.implicitWidth ?? 0) + margin * 2
+            implicitHeight: (root.contentItem?.implicitHeight ?? 0) + margin * 2
 
-            color:  Appearance.m3colors.m3surfaceContainer
+            color:  Appearance.m3colors.base
             radius: Appearance.rounding.large
+            border.width: 1
+            border.color: Appearance.m3colors.overlay1
+            clip: true
 
-            children: [root.contentItem]
+            // --- Matugen-style Blobs ---
+            property real orbitAngle: 0
+            NumberAnimation on orbitAngle {
+                from: 0; to: Math.PI * 2; duration: 25000; loops: Animation.Infinite; running: true
+            }
 
-            onChildrenChanged: {
+            Rectangle {
+                width: (parent?.width ?? 0) * 0.7; height: width; radius: width / 2
+                x: ((parent?.width ?? 0) / 2 - width / 2) + Math.cos((parent?.orbitAngle ?? 0) * 2) * 60
+                y: ((parent?.height ?? 0) / 2 - height / 2) + Math.sin((parent?.orbitAngle ?? 0) * 2) * 30
+                color: Appearance.m3colors.mauve
+                opacity: 0.08
+            }
+            
+            Rectangle {
+                width: (parent?.width ?? 0) * 0.5; height: width; radius: width / 2
+                x: ((parent?.width ?? 0) / 2 - width / 2) + Math.sin((parent?.orbitAngle ?? 0) * 1.5) * -50
+                y: ((parent?.height ?? 0) / 2 - height / 2) + Math.cos((parent?.orbitAngle ?? 0) * 1.5) * -40
+                color: Appearance.m3colors.blue
+                opacity: 0.06
+            }
+
+            Component.onCompleted: {
                 if (root.contentItem) {
+                    root.contentItem.parent = popupBackground
                     root.contentItem.anchors.fill    = popupBackground
                     root.contentItem.anchors.margins = margin
                 }
             }
-
-            border.width: 1
-            border.color: Appearance.m3colors.m3outlineVariant
         }
     }
 }

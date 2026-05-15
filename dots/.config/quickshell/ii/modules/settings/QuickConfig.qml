@@ -20,20 +20,20 @@ ContentPage {
 
         Process {
             id: fetchwallProc
-            stdout: SplitParser { onRead: data => console.log("[fetchwall stdout]", data) }
-            stderr: SplitParser { onRead: data => console.log("[fetchwall stderr]", data) }
+            stdout: SplitParser {}
+            stderr: SplitParser {}
             onExited: (code, status) => {
-                console.log("[fetchwall] exited code=" + code)
+                
                 monitorPreviewsContainer.refreshCount++
             }
         }
 
         Process {
             id: osuWallProc
-            stdout: SplitParser { onRead: data => console.log("[osuwall stdout]", data) }
-            stderr: SplitParser { onRead: data => console.log("[osuwall stderr]", data) }
+            stdout: SplitParser {}
+            stderr: SplitParser {}
             onExited: (code, status) => {
-                console.log("[osuwall] exited code=" + code)
+                
                 monitorPreviewsContainer.refreshCount++
             }
         }
@@ -71,7 +71,7 @@ ContentPage {
             stdout: SplitParser {
                 onRead: data => {
                     if (data.startsWith("ERR:")) {
-                        console.log("[wpeEnum]", data)
+                        
                         return
                     }
                     const idx = data.indexOf("|")
@@ -83,13 +83,13 @@ ContentPage {
                     page.wpeWallpapers = [...page.wpeWallpapers, { id: id, path: path, title: title }]
                 }
             }
-            stderr: SplitParser { onRead: data => console.log("[wpeEnum err]", data) }
+            stderr: SplitParser {}
         }
 
         Process {
             id: wpeApplyProc
-            stdout: SplitParser { onRead: data => console.log("[wpeApply]", data) }
-            stderr: SplitParser { onRead: data => console.log("[wpeApply err]", data) }
+            stdout: SplitParser {}
+            stderr: SplitParser {}
             onExited: (code, status) => {
                 page.wpeApplyingPath = ""
                 monitorPreviewsContainer.refreshCount++
@@ -119,7 +119,7 @@ ContentPage {
                     }]
                 }
             }
-            stderr: SplitParser { onRead: data => console.log("[wpeProps err]", data) }
+            stderr: SplitParser {}
         }
 
         component SmallLightDarkPreferenceButton: RippleButton {

@@ -18,7 +18,7 @@ StyledPopup {
 
     property var windows: []
 
-    Item {
+    contentItem: Item {
         id: content
         implicitWidth: Math.max(windowList.implicitWidth + 20, 100)
         implicitHeight: windowList.implicitHeight + 14

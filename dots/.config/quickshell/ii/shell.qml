@@ -3,10 +3,11 @@
 //@ pragma Env QT_QUICK_CONTROLS_STYLE=Default
 //@ pragma Env QT_QUICK_FLICKABLE_WHEEL_DECELERATION=10000
 //@ pragma Env QT_SCALE_FACTOR=1
+//@ pragma Env QT_ORGANIZATION_NAME=illogical-impulse
+//@ pragma Env QT_ORGANIZATION_DOMAIN=ii-lacuna
 
 import QtQuick
-import QtQuick.Window
-import QtQuick.Controls 2.15
+import QtQuick.Controls
 import QtQuick.Layouts 1.3
 import Quickshell
 import Quickshell.Io
@@ -22,6 +23,11 @@ import qs.modules.common.widgets
 
 ShellRoot {
     id: root
+
+    Component.onCompleted: {
+        Qt.application.organization = "illogical-impulse"
+        Qt.application.domain = "ii-lacuna"
+    }
 
     Process { id: applyProcess }
 

@@ -30,8 +30,10 @@ Rectangle {
     property real horizontalPadding: 12
 
     property bool showBrightness: Config.options.sidebar.quickSliders.showBrightness
+        && (root.brightnessMonitor?.ready ?? false)
     property bool showVolume:     Config.options.sidebar.quickSliders.showVolume
     property bool showMic:        Config.options.sidebar.quickSliders.showMic
+    property bool showGamma:      Config.options.sidebar.quickSliders.showGamma ?? false
 
     RowLayout {
         id: contentItem
@@ -63,7 +65,10 @@ Rectangle {
                     setVal: (v) => { if (Audio.sink?.audio) Audio.sink.audio.volume = v } },
                 { show: showMic, icon: "mic",
                     getVal: () => Audio.source?.audio?.volume ?? 0,
-                    setVal: (v) => { if (Audio.source?.audio) Audio.source.audio.volume = v } }
+                    setVal: (v) => { if (Audio.source?.audio) Audio.source.audio.volume = v } },
+                { show: showGamma, icon: "light_mode",
+                    getVal: () => (Hyprsunset.gamma - Hyprsunset.gammaLowerLimit) / (100 - Hyprsunset.gammaLowerLimit),
+                    setVal: (v) => Hyprsunset.setGamma(Math.round(Hyprsunset.gammaLowerLimit + v * (100 - Hyprsunset.gammaLowerLimit))) }
             ]
 
             QuickSlider {
