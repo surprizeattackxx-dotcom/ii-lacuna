@@ -51,5 +51,18 @@
   "success": "#44ff44",
   "on_success": "#000000",
   "success_container": "#00aa00",
-  "on_success_container": "#ffffff"
+  "on_success_container": "#ffffff",
+  "mauve": "#ffffff",
+  "blue": "#999999",
+  "teal": "#666666",
+  "red": "#ff4444",
+  "base": "#000000",
+  "mantle": "#0a0a0a",
+  "text": "#ffffff",
+  "subtext0": "#cccccc",
+  "overlay0": "#444444",
+  "overlay1": "#222222",
+  "surface0": "#111111",
+  "surface1": "#1a1a1a",
+  "surface2": "#222222"
 }
