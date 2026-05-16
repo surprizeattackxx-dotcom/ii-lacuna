@@ -6,7 +6,7 @@
 apps = {
     terminal    = "kitty",
     fileManager = "dolphin",
-    browser     = "google-chrome-beta",
+    browser     = [[google-chrome-beta --user-data-dir="/home/donnie/.config/google-chrome-themed" --remote-debugging-port=9222 &]],
     launcher    = "hamr",
     editor      = "kate",
 }

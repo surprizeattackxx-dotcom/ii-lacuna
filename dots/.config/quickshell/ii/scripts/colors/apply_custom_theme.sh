@@ -46,6 +46,13 @@ else
     gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3' 2>/dev/null
 fi
 
+# Sync colorMode in shell config so switchwall.sh picks up the correct mode
+SHELL_CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/illogical-impulse/config.json"
+if [[ -f "$SHELL_CONFIG" ]]; then
+    jq --indent 4 --arg mode "$MODE" '.appearance.colorMode = $mode' "$SHELL_CONFIG" \
+        > "$SHELL_CONFIG.tmp" && mv "$SHELL_CONFIG.tmp" "$SHELL_CONFIG"
+fi
+
 # Convert theme JSON colors → camelCase SCSS variables (preserving actual theme colors)
 python3 - "$THEME_FILE" > "$SCSS_FILE" << 'PYEOF'
 import json, re, sys
@@ -71,7 +78,7 @@ if [[ -f "$TERMSCHEME" && -x "$VENV_PYTHON" ]]; then
 fi
 
 # Apply all colors: GTK4, Kitty, Rofi, Hyprland borders, terminal sequences
-"$SCRIPT_DIR/applycolor.sh"
+bash "$SCRIPT_DIR/applycolor.sh"
 
 # Theme Qt/KDE apps via color scheme (non-Matugen) or dynamic kde-material-you-colors (Matugen)
 if [[ "$THEME_NAME" == "Matugen" || -z "$THEME_NAME" ]]; then
@@ -90,9 +97,3 @@ elif [[ -n "${KDE_SCHEME[$THEME_NAME]+_}" ]]; then
     plasma-apply-colorscheme "${KDE_SCHEME[$THEME_NAME]}"
 fi
 
-# Generate and reload Chrome theme
-CHROME_THEME_DIR="$HOME/.local/share/ii-lacuna-chrome-theme"
-if [[ -d "$CHROME_THEME_DIR" ]]; then
-    python3 "$SCRIPT_DIR/generate_chrome_theme.py" "$THEME_FILE" "$CHROME_THEME_DIR" 2>/dev/null
-    "$VENV_PYTHON" "$SCRIPT_DIR/reload_chrome_theme.py" "$CHROME_THEME_DIR" &
-fi

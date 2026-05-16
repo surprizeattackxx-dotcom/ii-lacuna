@@ -5,6 +5,7 @@ Usage: generate_chrome_theme.py <theme.json> <output_dir>
 """
 import json
 import sys
+import time
 from pathlib import Path
 
 STABLE_KEY = (
@@ -53,10 +54,18 @@ def main() -> None:
         if hex_val and hex_val.startswith("#"):
             colors[slot] = hex_to_rgb(hex_val)
 
+    # Use timestamp as version so Chrome sees a change and reloads the theme
+    version = time.strftime("%Y.%m%d.%H%M")
+
+    # Delete stale Cached Theme.pak so Chrome re-reads updated colors
+    pak = output_dir / "Cached Theme.pak"
+    if pak.exists():
+        pak.unlink()
+
     manifest = {
         "manifest_version": 3,
         "name": "ii-lacuna Active Theme",
-        "version": "1.0",
+        "version": version,
         "key": STABLE_KEY,
         "theme": {"colors": colors},
     }

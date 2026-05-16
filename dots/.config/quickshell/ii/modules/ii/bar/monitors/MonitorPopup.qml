@@ -754,7 +754,9 @@ Item {
                                                     let stateContent = "return {\n  active = {\n" + activeMonitors.join(",\n") + "\n  },\n  disabled = {\n" + disabledMonitors.join(",\n") + "\n  },\n  moved = {\n  }\n}\n";
                                                     let stateFilePath = "~/.config/hypr/monitor-state.lua";
                                                     let stateEncoded = Qt.btoa(stateContent);
-                                                    Quickshell.execDetached(["bash", "-c", "echo " + stateEncoded + " | base64 -d > " + stateFilePath + " && hyprctl reload"]);
+                                                    let disabledVal = modelData.val;
+                                                    let targetMon = monitorsModel.get(window.activeEditIndex).name;
+                                                    Quickshell.execDetached(["bash", "-c", "echo " + stateEncoded + " | base64 -d > " + stateFilePath + " && hyprctl eval 'hl.monitor({ output = \"" + targetMon + "\", disabled = " + (disabledVal ? "true" : "false") + " })'"]);
                                                 }
                                             }
                                         }
@@ -1153,9 +1155,17 @@ Item {
                     let disabledContent = disabledNames.join("\n") + "\n";
                     let disabledEncoded = Qt.btoa(disabledContent);
 
-                    // Write file then explicitly reload — Hyprland watches hyprland.lua,
-                    // not required sub-files like monitors.lua, so we must trigger reload manually.
-                    Quickshell.execDetached(["bash", "-c", "echo " + encoded + " | base64 -d > " + monitorsFilePath + " && echo " + stateEncoded + " | base64 -d > " + stateFilePath + " && echo " + disabledEncoded + " | base64 -d > " + window.disabledFilePath + " && hyprctl reload"]);
+                    // Write files and apply immediately via hyprctl eval — no reload needed.
+                    let evalScript = "#!/bin/bash\n";
+                    evalScript += "echo " + encoded + " | base64 -d > " + monitorsFilePath + "\n";
+                    evalScript += "echo " + stateEncoded + " | base64 -d > " + stateFilePath + "\n";
+                    evalScript += "echo " + disabledEncoded + " | base64 -d > " + window.disabledFilePath + "\n";
+                    for (let j = 0; j < rects.length; j++) {
+                        let r = rects[j];
+                        evalScript += "hyprctl eval 'hl.monitor({ output = \"" + r.name + "\", mode = \"" + r.resW + "x" + r.resH + "@" + r.rate + "\", position = \"" + r.x + "x" + r.y + "\", scale = " + r.sysScale + ", bitdepth = " + r.bitdepth + ", cm = \"" + r.cm + "\", sdrbrightness = " + r.sdrBrightness.toFixed(2) + ", sdrsaturation = " + r.sdrSaturation.toFixed(2) + ", disabled = " + (r.disabled ? "true" : "false") + " })'\n";
+                    }
+                    let scriptEncoded = Qt.btoa(evalScript);
+                    Quickshell.execDetached(["bash", "-c", "echo " + scriptEncoded + " | base64 -d | bash"]);
 
                     Quickshell.execDetached(["notify-send", "Display Update", "Applied & Saved layout for: " + summaryString]);
                 }

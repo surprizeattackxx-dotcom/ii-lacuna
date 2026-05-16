@@ -19,6 +19,7 @@ hl.on("hyprland.start", function()
 
     -- Dynamic monitor daemon (hotplug → auto-migrate workspaces)
     hl.exec_cmd("~/.config/hypr/scripts/monitor-watch.sh")
+    hl.exec_cmd("~/.config/hypr/scripts/update_notifier.sh")
 
     -- Pin workspaces to monitors after startup (fixes init race where monitors
     -- may connect before workspace rules fire, leaving secondary monitors unreachable)

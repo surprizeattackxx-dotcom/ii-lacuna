@@ -55,7 +55,6 @@ Singleton {
                 try { Appearance.m3colors[m3Key] = json[key] } catch (e) {}
             }
         }
-        
     }
 
     function resetFilePathNextTime() {

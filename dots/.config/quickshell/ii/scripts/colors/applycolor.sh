@@ -11,7 +11,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 CONFIG_FILE="$XDG_CONFIG_HOME/illogical-impulse/config.json"
 MATERIAL_COLORS_FILE="$STATE_DIR/user/generated/material_colors.scss"
 
-term_alpha=100  # Set to < 100 to make terminals transparent
+term_alpha=75  # Set to < 100 to make terminals transparent
 
 # Ensure generated dir exists
 mkdir -p "$STATE_DIR/user/generated"
@@ -172,12 +172,12 @@ HYPREOF
     # persistence across reboots.  Without this guard, every write triggers a
     # full config reload which re-applies monitors.conf and resets resolution.
     if command -v hyprctl &>/dev/null; then
-        hyprctl keyword misc:disable_autoreload true 2>/dev/null
+        hyprctl eval "hl.config({ misc = { disable_autoreload = true } })" 2>/dev/null
     fi
     mv "$_tmp" "$hypr_colors_file"
     echo "[applycolor] Hyprland colors written to $hypr_colors_file"
     if command -v hyprctl &>/dev/null; then
-        hyprctl keyword misc:disable_autoreload false 2>/dev/null
+        hyprctl eval "hl.config({ misc = { disable_autoreload = false } })" 2>/dev/null
     fi
 }
 
@@ -214,14 +214,14 @@ apply_borders() {
     local group_inactive="0xff${surface_variant#\#}"
 
     # Apply live (takes effect immediately)
-    hyprctl keyword general:col.active_border        "$col_active_1 $col_active_2 45deg" 2>/dev/null
-    hyprctl keyword general:col.inactive_border      "$col_inactive"                     2>/dev/null
-    hyprctl keyword decoration:shadow:color         "$shadow_col"      2>/dev/null
-    hyprctl keyword decoration:shadow:color_inactive "$shadow_inactive" 2>/dev/null
-    hyprctl keyword group:col.border_active          "$group_active"                     2>/dev/null
-    hyprctl keyword group:col.border_inactive        "$group_inactive"                   2>/dev/null
-    hyprctl keyword group:col.border_locked_active   "$group_active"                     2>/dev/null
-    hyprctl keyword group:col.border_locked_inactive "$group_inactive"                   2>/dev/null
+    hyprctl eval "hl.config({ ['general.col.active_border'] = { colors = {'${col_active_1}', '${col_active_2}'}, angle = 45 } })" 2>/dev/null
+    hyprctl eval "hl.config({ ['general.col.inactive_border'] = '${col_inactive}' })" 2>/dev/null
+    hyprctl eval "hl.config({ ['decoration.shadow.color'] = '${shadow_col}' })" 2>/dev/null
+    hyprctl eval "hl.config({ ['decoration.shadow.color_inactive'] = '${shadow_inactive}' })" 2>/dev/null
+    hyprctl eval "hl.config({ ['group.col.border_active'] = '${group_active}' })" 2>/dev/null
+    hyprctl eval "hl.config({ ['group.col.border_inactive'] = '${group_inactive}' })" 2>/dev/null
+    hyprctl eval "hl.config({ ['group.col.border_locked_active'] = '${group_active}' })" 2>/dev/null
+    hyprctl eval "hl.config({ ['group.col.border_locked_inactive'] = '${group_inactive}' })" 2>/dev/null
 
     # Write persistent config so colors survive reboots
     _write_hypr_colors_conf         "$col_active_1" "$col_active_2" "$col_inactive"         "$shadow_col" "$shadow_inactive"         "$group_active" "$group_inactive" "$surface"
@@ -474,6 +474,19 @@ ROFIEOF
 # ---------------------------------------------------------------------------
 
 # ---------------------------------------------------------------------------
+# Chrome — generate and reload theme
+# ---------------------------------------------------------------------------
+apply_chrome() {
+    local theme_json="$STATE_DIR/user/generated/colors.json"
+    local chrome_theme_dir="$HOME/.local/state/quickshell/chrome-theme"
+    
+    if [ -f "$theme_json" ]; then
+        python3 "$SCRIPT_DIR/generate_chrome_theme.py" "$theme_json" "$chrome_theme_dir"
+        python3 "$SCRIPT_DIR/reload_chrome_theme.py" "$chrome_theme_dir"
+    fi
+}
+
+# ---------------------------------------------------------------------------
 # Cava — splice Material You gradient colors into cava config
 # Reads the matugen-generated file and replaces the gradient block
 # ---------------------------------------------------------------------------
@@ -539,8 +552,7 @@ apply_hyprexpo() {
     done
     surface="${surface:-#000000}"
 
-    hyprctl keyword plugin:hyprexpo:bg_col "rgb(${surface#\#})" 2>/dev/null
-    echo "[applycolor] Hyprexpo bg_col updated to $surface"
+    echo "[applycolor] Hyprexpo bg_col skipped (plugin not loaded)"
 }
 # CONFIG_DIR is only needed for apply_qt, so warn but don't hard-exit
 # ---------------------------------------------------------------------------
@@ -569,6 +581,8 @@ fi
 apply_gtk4 &        # GTK4 colors.css — picked up automatically by running apps
 apply_kitty &        # Kitty terminal config + live reload
 apply_rofi &         # Rofi color theme file
+# Wire up Chrome theme
+apply_chrome &
 # VSCode is handled by material-code-set-color.sh (called from switchwall.sh post_process)
 apply_borders &  # Always apply
 apply_cava &         # Cava gradient colors
@@ -603,7 +617,7 @@ apply_icons() {
     sed -i "s/^Theme=.*/Theme=$icon_theme/" \
         "$HOME/.config/kdeglobals" 2>/dev/null
     # Hyprland env (runtime)
-    hyprctl keyword env GTK_ICON_THEME,"$icon_theme" 2>/dev/null
+    hyprctl eval "hl.env('GTK_ICON_THEME', '${icon_theme}')" 2>/dev/null
     # GNOME/GTK settings daemon — this is what actually sticks across apps
     gsettings set org.gnome.desktop.interface icon-theme "$icon_theme" 2>/dev/null
 
