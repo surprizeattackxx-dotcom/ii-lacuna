@@ -455,8 +455,10 @@ color244              ${error}
 color245              ${outline_variant}
 KITTYEOF
 
-    # Live-reload all running kitty instances
-    pkill -SIGUSR1 kitty 2>/dev/null || true
+    # Live-reload all running kitty instances via remote control (gentle, no signal)
+    if command -v kitty &>/dev/null; then
+        kitty @ set-colors "$kitty_theme_file" 2>/dev/null || true
+    fi
 }
 
 # ---------------------------------------------------------------------------
