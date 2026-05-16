@@ -25,9 +25,26 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Cache opencode
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.opencode/bin
+          key: opencode-${{ runner.os }}-${{ runner.arch }}-v1.15.0
+
+      - name: Install opencode v1.15.0
+        if: steps.cache.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          curl -fsSL https://opencode.ai/install | VERSION=1.15.0 bash
+
+      - name: Add opencode to PATH
+        shell: bash
+        run: echo "$HOME/.opencode/bin" >> $GITHUB_PATH
+
       - name: Run opencode
-        uses: anomalyco/opencode/github@latest
+        shell: bash
         env:
           OPENCODE_API_KEY: ${{ secrets.OPENCODE_API_KEY }}
-        with:
-          model: opencode-go/qwen3.6-plus
+          MODEL: opencode-go/qwen3.6-plus
+        run: opencode github run
