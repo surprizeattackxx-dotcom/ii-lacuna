@@ -62,7 +62,7 @@ WMouseAreaButton {
     }
 
     function closeWindow() {
-        Hyprland.dispatch(`closewindow address:${root.hyprlandClient?.address}`);
+        Hyprland.dispatch(`hl.dsp.window.close({window = "address:${root.hyprlandClient?.address}"})`)
     }
 
     acceptedButtons: Qt.LeftButton | Qt.MiddleButton | Qt.RightButton
@@ -142,7 +142,7 @@ WMouseAreaButton {
             icon.name: isPinned ? "checkmark" : "empty"
             text: Translation.tr("Show this window on all desktops")
             onTriggered: {
-                Hyprland.dispatch(`pin address:${root.hyprlandClient?.address}`);
+                Hyprland.dispatch(`hl.dsp.window.pin({window = "address:${root.hyprlandClient?.address}"})`);
             }
         }
         Action {

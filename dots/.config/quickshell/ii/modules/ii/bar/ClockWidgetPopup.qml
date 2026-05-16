@@ -239,5 +239,15 @@ StyledPopup {
                 }
             }
         }
+
+        Component {
+            id: transferCard
+            LocalSendTransferCard {}
+        }
+
+        Component {
+            id: sendCard
+            LocalSendSendCard {}
+        }
     }
 }

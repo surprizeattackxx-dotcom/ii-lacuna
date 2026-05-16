@@ -18,6 +18,7 @@ Item {
     required property int index
     property var originalIndex: index
     property bool vertical: false
+    property bool highlighted: false
 
     implicitWidth: wrapper.implicitWidth
     implicitHeight: wrapper.implicitHeight
@@ -55,6 +56,10 @@ Item {
         }
     }
 
+    function toggleHighlight(highlight) {
+        rootItem.highlighted = highlight
+    }
+
     property var compMap: ({ // [horizontal, vertical]
         "workspaces": [workspaceComp,workspaceComp],
         "music_player": [musicPlayerComp, musicPlayerCompVert],
@@ -73,8 +78,6 @@ Item {
         "dashboard_panel_button": [dashboardPanelButton, dashboardPanelButtonVert],
         "system_updates": [systemUpdatesComp, systemUpdatesComp]
     })
-
-    property list<string> primaryBackgroundComps: ["timer", "record_indicator", "screen_share_indicator"] // components that are mostly indicators
 
     property real startRadius: {
         if (barGroupStyle === 0) return Appearance.rounding.full

@@ -2,7 +2,9 @@
      <h1>  [ ii-lacuna hyprland dots ] </h1>
 </div>
 
-
+> [!WARNING]  
+> Hyprland 0.55 update:
+> If you are still on the versions before 0.55, you should not update the shell, or use the pre-luaification release on the releases page.
 
 <div align="center"> 
      <h2>• screenshots •</h2>
@@ -14,10 +16,6 @@
 | Media mode | Sharp style |
 | ----------- | ----------- |
 | <img width="1920" height="1077" alt="image" src="https://github.com/user-attachments/assets/a966c5ca-ef0a-4ecf-882b-e7ef55dde74e" /> | <img width="1918" height="1078" alt="image" src="https://github.com/user-attachments/assets/745aafcd-246e-4433-a81f-37a88ac5c1ee" /> |
-
-
-
-
 
 </div>
 
@@ -69,7 +67,7 @@ Run the cli (if it's installed):
 vynx update
 ```
 
-Use the update button:
+Use the update button _that runs the update script in background_:
   
 <img width="354" height="78" alt="image" src="https://github.com/user-attachments/assets/77d9d962-00b3-48a4-b9d5-1d3d0c053e86" />
 

@@ -2,15 +2,14 @@ pragma ComponentBehavior: Bound
 
 import qs.services
 import qs.modules.common
+import qs.modules.common.functions
 import qs.modules.common.widgets
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 
 Item {
     id: root
-    readonly property var keybinds: HyprlandKeybinds.keybinds
-    property real spacing: 20
-    property real titleSpacing: 7
     property real padding: 4
     implicitWidth: row.implicitWidth + padding * 2
     implicitHeight: row.implicitHeight + padding * 2
@@ -209,10 +208,24 @@ Item {
                         }
                     }
 
+    StyledFlickable {
+        id: flickable
+        anchors.fill: parent
+        anchors.margins: Appearance.rounding.small
+        contentHeight: height
+        contentWidth: flow.implicitWidth
+        Flow {
+            id: flow
+            height: flickable.height
+            flow: Flow.TopToBottom
+            spacing: 10
+            Repeater {
+                model: [...HyprlandKeybinds.keybindCategories, ""]
+                delegate: CheatsheetKeybindsCategory {
+                    required property var modelData
+                    categoryName: modelData
                 }
             }
-            
         }
     }
-    
 }

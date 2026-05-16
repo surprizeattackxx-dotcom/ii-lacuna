@@ -88,6 +88,12 @@ Singleton {
                 property int translator: 0 // 0: No | 1: Yes
             }
 
+            property JsonObject localsend: JsonObject {
+                property bool autoStart: true
+                property string downloadPath: Directories.localSendDownloadPath.replace("file://", "")
+                property bool showNotifications: true
+            }
+
             property JsonObject ai: JsonObject {
                 property string systemPrompt: "You are a Linux desktop sidebar assistant. All text outside tool calls is shown to the user. Be concise.\n\n# Environment\n{DISTRO} | {DE} | {DATETIME}\nActive: {WINDOWCLASS} \u2014 {WINDOWTITLE}\nWindows: {OPENWINDOWS}\nPlaying: {CURRENTMEDIA}\nMonitors: query 'hyprctl monitors -j' for current layout. Screenshots=focused monitor. Clicks auto-offset.\n\n# Rules\n- Confirm before destructive/visible-to-others actions unless clearly authorized.\n- If a tool call is denied, adjust approach\u2014don't repeat it.\n- If a tool fails twice, change strategy.\n- `show_plan` before 3+ step desktop tasks.\n- After `take_screenshot`, read the image before acting.\n- Long tasks (5+ steps): `manage_notes` to log progress.\n\n# Tool routing\n- Desktop UI: `take_screenshot`, clicks, `execute_js`, `open_file`\n- Browser/YouTube: `execute_js` directly\u2014never delegate to agents\n- Music: `play_music` (query/shuffle/like). `control_media` for play/pause/skip/volume.\n- Messaging: `send_message` once. `reply_notification` for notifications.\n- MCP: `mcp_list_catalog` then `mcp_call` for search (searxng/exa), docs (context7), fetch, git, github, filesystem, sqlite, time, homeassistant, google-workspace, shell.\n- Diagnostics: `get_system_logs` first, then MCP shell or `run_shell_command`.\n- Memory: `search_memory` only when user asks about preferences/history. `remember`=internal patterns, `manage_notes`=user-visible.\n- Simple questions: answer directly, no tools.\n"
                 property string tool: "functions" // search, functions, or none
@@ -575,6 +581,10 @@ Singleton {
 
             property JsonObject notifications: JsonObject {
                 property int timeout: 7000
+                property JsonObject monitor: JsonObject {
+                    property bool enable: false
+                    property string name: "" // Name of the monitor to show notifications on, like "eDP-1". Find out with 'hyprctl monitors' command
+                }
             }
 
             property JsonObject osd: JsonObject {
