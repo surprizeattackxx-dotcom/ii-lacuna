@@ -90,19 +90,21 @@ fi
 bash "$SCRIPT_DIR/applycolor.sh"
 
 # Theme Qt/KDE apps via color scheme (non-Matugen) or dynamic kde-material-you-colors (Matugen)
-if [[ "$THEME_NAME" == "Matugen" || -z "$THEME_NAME" ]]; then
-    COLOR_TXT="$STATE_DIR/user/generated/color.txt"
+VENV_DIR="${ILLOGICAL_IMPULSE_VIRTUAL_ENV:-$HOME/.local/state/quickshell/.venv}"
+VENV_DIR="${VENV_DIR/#\~/$HOME}"
+KDE_BIN="$VENV_DIR/bin/kde-material-you-colors"
+KDE_DYNAMIC() {
+    [[ ! -x "$KDE_BIN" ]] && return
     printf '%s' "${PRIMARY#\#}" > "$COLOR_TXT"
+    [[ "$MODE" == "dark" ]] && KDE_MODE_FLAG="-d" || KDE_MODE_FLAG="-l"
+    "$KDE_BIN" "$KDE_MODE_FLAG" --color "${PRIMARY#\#}" -sv 5 &
+}
 
-    VENV_DIR="${ILLOGICAL_IMPULSE_VIRTUAL_ENV:-$HOME/.local/state/quickshell/.venv}"
-    KDE_BIN="$VENV_DIR/bin/kde-material-you-colors"
-    if [[ -x "$KDE_BIN" ]]; then
-        [[ "$MODE" == "dark" ]] && KDE_MODE_FLAG="-d" || KDE_MODE_FLAG="-l"
-        source "$VENV_DIR/bin/activate" 2>/dev/null
-        "$KDE_BIN" "$KDE_MODE_FLAG" --color "${PRIMARY#\#}" -sv 5 &
-        deactivate 2>/dev/null
-    fi
+if [[ "$THEME_NAME" == "Matugen" || -z "$THEME_NAME" ]]; then
+    KDE_DYNAMIC
 elif [[ -n "${KDE_SCHEME[$THEME_NAME]+_}" ]]; then
     plasma-apply-colorscheme "${KDE_SCHEME[$THEME_NAME]}"
+else
+    KDE_DYNAMIC
 fi
 
