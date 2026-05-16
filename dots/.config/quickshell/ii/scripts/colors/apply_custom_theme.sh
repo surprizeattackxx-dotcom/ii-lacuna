@@ -16,12 +16,18 @@ declare -A KDE_SCHEME=(
     [Gruvbox]="GruvboxColors"
     [Glass]="kvGlass"
     [Kanagawa]="KanagawaWave"
+    [Rose_pine_dawn]="RosePineDawn"
+    [Solarized_light]="SolarizedLight"
+    [Everforest_light]="Everforest-Light-Medium"
+    [Ayu_light]="Ayu-Light"
+    [One_light]="OneLight"
 )
 
 XDG_STATE_HOME="${XDG_STATE_HOME:-$HOME/.local/state}"
 SCRIPT_DIR="$(dirname "$(realpath "$0")")"
 STATE_DIR="$XDG_STATE_HOME/quickshell"
 VENV_PYTHON="${ILLOGICAL_IMPULSE_VIRTUAL_ENV:-$HOME/.local/state/quickshell/.venv}/bin/python3"
+VENV_PYTHON="${VENV_PYTHON/#\~/$HOME}"
 COLORS_JSON="$STATE_DIR/user/generated/colors.json"
 SCSS_FILE="$STATE_DIR/user/generated/material_colors.scss"
 TERMSCHEME="$SCRIPT_DIR/terminal/scheme-base.json"
@@ -68,9 +74,12 @@ for k, v in d.items():
         print(f"${snake_to_camel(k)}: {v};")
 PYEOF
 
-# Append terminal colors (term0-term15) derived from the theme's primary color
+# Append terminal colors (term0-term15)
+# If the theme JSON already has term0..term15, use those directly (skip Python generation)
 PRIMARY=$(jq -r '.primary // "#ffffff"' "$THEME_FILE")
-if [[ -f "$TERMSCHEME" && -x "$VENV_PYTHON" ]]; then
+if jq -e '.term0' "$THEME_FILE" > /dev/null 2>&1; then
+    : # term colors already in SCSS via the Python conversion above — skip generator
+elif [[ -f "$TERMSCHEME" && -x "$VENV_PYTHON" ]]; then
     "$VENV_PYTHON" "$SCRIPT_DIR/generate_colors_material.py" \
         --color "$PRIMARY" --mode "$MODE" \
         --termscheme "$TERMSCHEME" --blend_bg_fg 2>/dev/null \
