@@ -34,11 +34,56 @@ TERMSCHEME="$SCRIPT_DIR/terminal/scheme-base.json"
 
 mkdir -p "$(dirname "$COLORS_JSON")"
 
-# Copy theme JSON → colors.json (MaterialThemeLoader watches this for QML colors)
-cp "$THEME_FILE" "$COLORS_JSON"
+# Catppuccin → M3 key mapping so MaterialThemeLoader's applyColors matches m3colors properties
+python3 - "$THEME_FILE" > "$COLORS_JSON" << 'PYMAP'
+import json, sys
+
+CATPPUCCIN_TO_M3 = {
+    "base": "background", "mantle": "surface_container_low", "crust": "surface_container_lowest",
+    "text": "on_surface", "subtext0": "on_surface_variant", "subtext1": "outline",
+    "surface0": "surface_container", "surface1": "surface_container_high",
+    "surface2": "surface_container_highest",
+    "overlay0": "outline", "overlay1": "outline_variant", "overlay2": "surface_variant",
+    "mauve": "primary", "blue": "primary", "sapphire": "secondary",
+    "peach": "tertiary", "green": "success", "red": "error",
+    "teal": "success", "pink": "secondary", "yellow": "tertiary", "maroon": "error",
+    "rosewater": "tertiary", "flamingo": "error", "sky": "secondary",
+    "lavender": "primary", "white": "on_surface"
+}
+
+with open(sys.argv[1]) as f:
+    raw = json.load(f)
+
+# Start with all original keys
+out = dict(raw)
+
+# Only fill missing M3 keys from Catppuccin aliases
+for k, v in raw.items():
+    m3_key = CATPPUCCIN_TO_M3.get(k, k)
+    if m3_key != k and m3_key not in raw and isinstance(v, str) and v.startswith("#"):
+        out[m3_key] = v
+
+# Ensure common M3 surface keys that MaterialThemeLoader needs
+for fallback_m3, fallback_ctp in [("surface", "base"), ("surface_dim", "base"),
+    ("surface_bright", "base"),
+    ("on_background", "text"), ("on_surface", "text"),
+    ("on_primary", "white"), ("on_secondary", "white"), ("on_tertiary", "white"),
+    ("on_error", "white"), ("on_success", "white"),
+    ("primary_container", "mauve"), ("secondary_container", "sapphire"),
+    ("tertiary_container", "peach"), ("error_container", "red"),
+    ("success_container", "green"),
+    ("inverse_surface", "crust"), ("inverse_on_surface", "text"),
+    ("inverse_primary", "mauve"),
+    ("scrim", "crust"), ("shadow", "crust"),
+    ("on_surface_variant", "subtext0")]:
+    if fallback_m3 not in out and fallback_ctp in raw:
+        out[fallback_m3] = raw[fallback_ctp]
+
+json.dump(out, sys.stdout, indent=2)
+PYMAP
 
 # Detect dark/light mode from background color lightness
-BG=$(jq -r '.background // "#1e1e2e"' "$THEME_FILE")
+BG=$(jq -r '.background // "#1e1e2e"' "$COLORS_JSON")
 R=$(( 16#${BG:1:2} )); G=$(( 16#${BG:3:2} )); B=$(( 16#${BG:5:2} ))
 L=$(( (R + G + B) / 3 ))
 [[ $L -lt 128 ]] && MODE="dark" || MODE="light"
@@ -60,7 +105,7 @@ if [[ -f "$SHELL_CONFIG" ]]; then
 fi
 
 # Convert theme JSON colors → camelCase SCSS variables (preserving actual theme colors)
-python3 - "$THEME_FILE" > "$SCSS_FILE" << 'PYEOF'
+python3 - "$COLORS_JSON" > "$SCSS_FILE" << 'PYEOF'
 import json, re, sys
 
 def snake_to_camel(name):
@@ -76,8 +121,8 @@ PYEOF
 
 # Append terminal colors (term0-term15)
 # If the theme JSON already has term0..term15, use those directly (skip Python generation)
-PRIMARY=$(jq -r '.primary // "#ffffff"' "$THEME_FILE")
-if jq -e '.term0' "$THEME_FILE" > /dev/null 2>&1; then
+PRIMARY=$(jq -r '.primary // "#ffffff"' "$COLORS_JSON")
+if jq -e '.term0' "$COLORS_JSON" > /dev/null 2>&1; then
     : # term colors already in SCSS via the Python conversion above — skip generator
 elif [[ -f "$TERMSCHEME" && -x "$VENV_PYTHON" ]]; then
     "$VENV_PYTHON" "$SCRIPT_DIR/generate_colors_material.py" \

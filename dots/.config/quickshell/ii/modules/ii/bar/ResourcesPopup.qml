@@ -152,7 +152,7 @@ StyledPopup {
             }
 
             ResourceCard {
-                accent: "#64B5F6"; resourceName: "RAM"; ratio: ResourceUsage.memoryUsedPercentage
+                accent: Appearance.m3colors.sapphire; resourceName: "RAM"; ratio: ResourceUsage.memoryUsedPercentage
                 stats: [
                     {label:"Used",  value:content.formatKB(ResourceUsage.memoryUsed),  color:content.usageColor(ResourceUsage.memoryUsedPercentage)},
                     {label:"Free",  value:content.formatKB(ResourceUsage.memoryFree)},
@@ -161,7 +161,7 @@ StyledPopup {
             }
             ResourceCard {
                 visible: ResourceUsage.swapTotal > 0
-                accent: "#CE93D8"; resourceName: "Swap"; ratio: ResourceUsage.swapUsedPercentage
+                accent: Appearance.m3colors.mauve; resourceName: "Swap"; ratio: ResourceUsage.swapUsedPercentage
                 stats: [
                     {label:"Used",  value:content.formatKB(ResourceUsage.swapUsed),  color:content.usageColor(ResourceUsage.swapUsedPercentage)},
                     {label:"Free",  value:content.formatKB(ResourceUsage.swapFree)},
@@ -169,7 +169,7 @@ StyledPopup {
                 ]
             }
             ResourceCard {
-                accent: "#FFB74D"; resourceName: "CPU"; ratio: ResourceUsage.cpuUsage
+                accent: Appearance.m3colors.peach; resourceName: "CPU"; ratio: ResourceUsage.cpuUsage
                 stats: [
                     {label:"Load", value:Math.round(ResourceUsage.cpuUsage*100)+"%", color:content.usageColor(ResourceUsage.cpuUsage)},
                     {label:"Freq", value:content.cpuFreq},
@@ -177,7 +177,7 @@ StyledPopup {
                 ]
             }
             ResourceCard {
-                accent: "#80CBC4"; resourceName: "GPU"; ratio: content.gpuUsage
+                accent: Appearance.m3colors.teal; resourceName: "GPU"; ratio: content.gpuUsage
                 stats: [
                     {label:"Load", value:content.gpuLoad,     color:content.usageColor(content.gpuUsage)},
                     {label:"VRAM", value:content.gpuVramUsed, color:content.usageColor(content.gpuRatio)},
@@ -185,7 +185,7 @@ StyledPopup {
                 ]
             }
             ResourceCard {
-                accent: "#81C784"; resourceName: "Disk"; ratio: content.diskRatio
+                accent: Appearance.m3colors.green; resourceName: "Disk"; ratio: content.diskRatio
                 stats: [
                     {label:"Used", value:content.diskUsed,                              color:content.usageColor(content.diskRatio)},
                     {label:"Free", value:content.diskFree},

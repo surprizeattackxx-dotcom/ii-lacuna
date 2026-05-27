@@ -3,6 +3,7 @@ pragma Singleton
 import qs.modules.common
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import qs
 
 Singleton {

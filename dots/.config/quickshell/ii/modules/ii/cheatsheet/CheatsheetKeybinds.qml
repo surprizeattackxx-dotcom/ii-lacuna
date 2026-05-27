@@ -207,6 +207,10 @@ Item {
                             }
                         }
                     }
+                }
+            }
+        }
+    }
 
     StyledFlickable {
         id: flickable

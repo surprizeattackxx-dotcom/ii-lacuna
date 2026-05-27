@@ -26,6 +26,7 @@ Item {
     // Components that manage their own visibility dynamically (e.g. based on
     // live service data). These should NEVER persist a false state to config,
     // because they may be empty for a moment on startup before data arrives.
+    readonly property list<string> primaryBackgroundComps: []
     readonly property list<string> selfManagedVisibility: ["system_tray"]
     readonly property bool hideSystemUpdatesWhenZero:
         modelData.id === "system_updates"

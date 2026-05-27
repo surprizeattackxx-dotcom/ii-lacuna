@@ -62,11 +62,7 @@ Singleton {
         const t = clockHour * 60 + clockMinute;
         const from = fromHour * 60 + fromMinute;
         const to = toHour * 60 + toMinute;
-        const manualActive = manualActiveHour * 60 + manualActiveMinute;
 
-        if (root.manualActive !== undefined && (inBetween(from, manualActive, t) || inBetween(to, manualActive, t))) {
-            root.manualActive = undefined;
-        }
         root.shouldBeOn = inBetween(t, from, to);
         if (firstEvaluation) {
             firstEvaluation = false;
@@ -86,12 +82,31 @@ Singleton {
         }
     }
 
-    function startHyprsunset() {
-        Quickshell.execDetached(["bash", "-c", `pidof hyprsunset || hyprsunset`]);
+    function killHyprsunset() {
+        Quickshell.execDetached(["bash", "-c", "pkill hyprsunset 2>/dev/null || true"]);
+    }
+
+    function startHyprsunsetWithArgs(args) {
+        root.killHyprsunset();
+        Quickshell.execDetached(["bash", "-c", `sleep 0.1 && hyprsunset ${args}`]);
+    }
+
+    // Detect running state on startup (before first evaluation settles)
+    Process {
+        id: startupStateProc
+        running: true
+        command: ["bash", "-c", "pidof hyprsunset >/dev/null 2>&1 && echo running || echo stopped"]
+        stdout: StdioCollector {
+            id: startupCollector
+            onStreamFinished: {
+                if (root.firstEvaluation) {
+                    root.temperatureActive = startupCollector.text.trim() === "running";
+                }
+            }
+        }
     }
 
     function load() {
-        root.startHyprsunset();
         root.ensureState();
     }
 
@@ -101,52 +116,26 @@ Singleton {
         repeat: false
         onTriggered: {
             root.ensureState();
-            root.setGamma(root.gamma);
         }
     }
 
     function enableTemperature() {
         root.temperatureActive = true;
-
-        // console.log("[Hyprsunset] Enabling");
-        root.startHyprsunset();
-        Quickshell.execDetached(["bash", "-c", `hyprctl hyprsunset temperature ${root.colorTemperature}`]);
+        root.startHyprsunsetWithArgs(`-t ${root.colorTemperature} -g ${root.gamma}`);
     }
 
     function disableTemperature() {
         root.temperatureActive = false;
-        // console.log("[Hyprsunset] Disabling");
-        Quickshell.execDetached(["bash", "-c", `hyprctl hyprsunset temperature ${root.defaultColorTemperature}`]);
+        root.startHyprsunsetWithArgs(`-t ${root.defaultColorTemperature} -g ${root.gamma}`);
     }
 
     function setGamma(gamma) {
         root.gamma = Math.max(root.gammaLowerLimit, Math.min(100, gamma));
-
         root.gammaChangeAttempt();
-
-        root.startHyprsunset();
-        Quickshell.execDetached(["bash", "-c", `hyprctl hyprsunset gamma ${root.gamma}`]);
-    }
-
-    function fetchState() {
-        fetchProc.running = true;
-    }
-
-    Process {
-        id: fetchProc
-        running: true
-        command: ["bash", "-c", "hyprctl hyprsunset temperature"]
-        stdout: StdioCollector {
-            id: stateCollector
-            onStreamFinished: {
-                const output = stateCollector.text.trim();
-                if (output.length == 0 || output.startsWith("Couldn't"))
-                    root.temperatureActive = false;
-                else
-                    root.temperatureActive = (output != "6500"); // 6500 is the default when off
-                    // console.log("[Hyprsunset] Fetched state:", output, "->", root.temperatureActive);
-            }
-        }
+        const args = root.temperatureActive
+            ? `-t ${root.colorTemperature} -g ${root.gamma}`
+            : `-t ${root.defaultColorTemperature} -g ${root.gamma}`;
+        root.startHyprsunsetWithArgs(args);
     }
 
     function toggleTemperature(active = undefined) {
@@ -169,7 +158,7 @@ Singleton {
         target: Config.options.light.night
         function onColorTemperatureChanged() {
             if (!root.temperatureActive) return;
-            Quickshell.execDetached(["hyprctl", "hyprsunset", "temperature", `${Config.options.light.night.colorTemperature}`]);
+            root.startHyprsunsetWithArgs(`-t ${Config.options.light.night.colorTemperature} -g ${root.gamma}`);
         }
     }
 

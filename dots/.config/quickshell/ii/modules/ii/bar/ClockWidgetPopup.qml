@@ -7,6 +7,7 @@ import QtQuick.Layouts
 
 StyledPopup {
     id: root
+    property bool compact: false
     property string formattedDate:   Qt.locale().toString(DateTime.clock.date, "dddd, MMMM dd, yyyy")
     property string formattedTime:   DateTime.time
     property string formattedUptime: DateTime.uptime

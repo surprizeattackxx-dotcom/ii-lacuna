@@ -8,6 +8,7 @@ import qs.modules.ii.bar
 
 StyledPopup {
     id: root
+    property bool compact: false
 
     Item {
         id: content

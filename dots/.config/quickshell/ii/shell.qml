@@ -20,6 +20,7 @@ import "./modules/ii"
 
 import qs.modules.common
 import qs.modules.common.widgets
+import qs.services
 
 ShellRoot {
     id: root
@@ -27,9 +28,15 @@ ShellRoot {
     Component.onCompleted: {
         Qt.application.organization = "illogical-impulse"
         Qt.application.domain = "ii-lacuna"
+        MaterialThemeLoader.reapplyTheme()
     }
 
-    Process { id: applyProcess }
+    // Apply colors on startup so kitty theme is resolved before any terminal opens
+    Process {
+        id: applyProcess
+        running: true
+        command: ["bash", Quickshell.env("HOME") + "/.config/quickshell/ii/scripts/colors/applycolor.sh"]
+    }
 
     // Recompute widget positions on shell startup to ensure they persist across boots
     Process {
