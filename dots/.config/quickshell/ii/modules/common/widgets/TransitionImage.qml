@@ -1,4 +1,5 @@
 import QtQuick
+import Qt5Compat.GraphicalEffects
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
@@ -15,7 +16,9 @@ Item {
         : (imgAIsBack ? imgB.status : imgA.status)
     required property string imageSource
 
-    property int animationDuration: 1000
+    property string transitionType: Config.options.background.transitionType ?? "radial"
+
+    property int animationDuration: transitionType === "radial" ? 1100 : 1000
     property var fillMode: Image.PreserveAspectCrop
     property bool animated: true
     property bool imgAIsBack: true
@@ -27,14 +30,25 @@ Item {
     property bool smooth: true
     property bool mipmap: true
 
+    property bool transitionActive: false
+    property bool ready: false
+
+    property bool imgAIsBack: true
+    property Item backImg: imgAIsBack ? imgA : imgB
+    property Item frontImg: imgAIsBack ? imgB : imgA
+
+    property int status: (imgA.status === Image.Ready || imgB.status === Image.Ready) ? Image.Ready : frontImg.status
+
+    Component.onCompleted: ready = true
+
     onImageSourceChanged: fadeTo(imageSource)
-    Component.onCompleted: imgA.source = imageSource
+
+    property string currentWallpaper: ""
 
     function fadeTo(newSrc) {
-        var back  = imgAIsBack ? imgA : imgB
-        var front = imgAIsBack ? imgB : imgA
+        if (!newSrc || newSrc === currentWallpaper) return
 
-        if (newSrc === back.source) return
+        let hasWallpaper = (currentWallpaper !== "")
 
         front.source  = newSrc
         front.z       = 1
@@ -46,15 +60,18 @@ Item {
         // container opaque (back image visible) during the load.
     }
 
-    NumberAnimation {
-        id: fadeAnim
-        property: "opacity"
-        from: 0; to: 1
-        duration: root.animationDuration
-        easing.type: Easing.InOutQuad
+    function startTransition() {
+        if (effectLoader.item && typeof effectLoader.item.start === "function") {
+            effectLoader.item.start()
+        } else {
+            cleanupTransition()
+        }
+    }
 
-        onFinished: {
-            root.imgAIsBack = !root.imgAIsBack
+    function cleanupTransition() {
+        root.transitionActive = false
+        if (effectLoader.item && typeof effectLoader.item.cleanup === "function") {
+            effectLoader.item.cleanup()
         }
     }
 
