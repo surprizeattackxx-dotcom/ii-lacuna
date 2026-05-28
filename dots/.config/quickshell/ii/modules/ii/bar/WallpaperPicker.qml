@@ -129,7 +129,8 @@ Item {
                         ${ensureDaemonCmd}
                         
                         # Run matugen completely detached so it doesn't block awww execution
-                        ( matugen image "$FINAL_THUMB" || true; bash "$RELOAD_SCRIPT" || true ) &
+                        _MT_MODE=$(magick "$FINAL_THUMB" -colorspace Gray -format "%[fx:mean]" info: 2>/dev/null | awk '{print ($1 < 0.5) ? "dark" : "light"}')
+                        ( matugen image "$FINAL_THUMB" --mode "${_MT_MODE:-dark}" || true; bash "$RELOAD_SCRIPT" || true ) &
                         MATUGEN_PID=$!
                         
                         # DETERMINISTIC LOOP
@@ -177,8 +178,9 @@ Item {
                             pkill mpvpaper || true; systemctl --user stop "wpe@*.service" wpe-combined.service || true
                             
                             ${ensureDaemonCmd}
-                            
-                            ( matugen image "$FINAL_THUMB" || true; bash "$RELOAD_SCRIPT" || true ) &
+
+                            _MT_MODE=$(magick "$FINAL_THUMB" -colorspace Gray -format "%[fx:mean]" info: 2>/dev/null | awk '{print ($1 < 0.5) ? "dark" : "light"}')
+                            ( matugen image "$FINAL_THUMB" --mode "${_MT_MODE:-dark}" || true; bash "$RELOAD_SCRIPT" || true ) &
                             MATUGEN_PID=$!
                             
                             # DETERMINISTIC LOOP
@@ -235,7 +237,8 @@ Item {
                 ${lockBgCmd} || true
                 pkill mpvpaper || true; systemctl --user stop "wpe@*.service" wpe-combined.service || true
                 
-                ( matugen image "$THUMB_FILE" || true; bash "$RELOAD_SCRIPT" || true ) &
+                _MT_MODE=$(magick "$THUMB_FILE" -colorspace Gray -format "%[fx:mean]" info: 2>/dev/null | awk '{print ($1 < 0.5) ? "dark" : "light"}')
+                ( matugen image "$THUMB_FILE" --mode "${_MT_MODE:-dark}" || true; bash "$RELOAD_SCRIPT" || true ) &
                 MATUGEN_PID=$!
                 
                 ${wallpaperCmd}
