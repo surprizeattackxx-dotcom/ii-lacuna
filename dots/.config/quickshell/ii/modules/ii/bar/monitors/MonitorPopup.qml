@@ -289,6 +289,7 @@ Item {
                     window.mergeDisabledFile(this.text);
                 }
                 window.readAndMergeMonitorConfig();
+                displayPoller.restart();
             }
         }
     }
@@ -347,6 +348,34 @@ Item {
                         });
 
                         if (data[i].focused) window.activeEditIndex = i;
+                    }
+
+                    // Re-add disabled monitors that are no longer reported by hyprctl
+                    let activeNames = [];
+                    for (let i = 0; i < monitorsModel.count; i++) {
+                        activeNames.push(monitorsModel.get(i).name);
+                    }
+                    for (let d = 0; d < window.cachedDisabledMonitors.length; d++) {
+                        let disabledName = window.cachedDisabledMonitors[d];
+                        if (activeNames.indexOf(disabledName) < 0) {
+                            monitorsModel.append({
+                                name: disabledName,
+                                resW: 1920,
+                                resH: 1080,
+                                sysScale: 1.0,
+                                rate: "60",
+                                uiX: 0,
+                                uiY: 0,
+                                vrr: 0,
+                                bitdepth: 8,
+                                cm: "auto",
+                                hdrBrightness: -1,
+                                sdrBrightness: 1.0,
+                                sdrSaturation: 1.0,
+                                disabled: true
+                            });
+                            activeNames.push(disabledName);
+                        }
                     }
 
                     window.forceLayoutUpdate();
@@ -1198,15 +1227,16 @@ Item {
                     opacity: window.introProgress
                     Behavior on baseScale { NumberAnimation { duration: 600; easing.type: Easing.OutQuint } }
 
-                    Rectangle {
-                        id: screenBezel
-                        width: window.s(140) + (window.s(180) * (window.currentSimW / 1920))
-                        height: window.s(90) + (window.s(90) * (window.currentSimH / 1080))
-                        anchors.centerIn: parent
-                        radius: window.s(12)
-                        color: window.crust
-                        border.color: window.surface2
-                        border.width: window.s(2)
+                        Rectangle {
+                            id: screenBezel
+                            width: window.s(140) + (window.s(180) * (window.currentSimW / 1920))
+                            height: window.s(90) + (window.s(90) * (window.currentSimH / 1080))
+                            anchors.centerIn: parent
+                            radius: window.s(12)
+                            color: monitorsModel.count > 0 && monitorsModel.get(0).disabled ? Qt.alpha(window.crust, 0.6) : window.crust
+                            border.color: monitorsModel.count > 0 && monitorsModel.get(0).disabled ? window.red : window.surface2
+                            border.width: window.s(2)
+                            opacity: monitorsModel.count > 0 && monitorsModel.get(0).disabled ? 0.5 : 1.0
 
                         Behavior on width { NumberAnimation { duration: 600; easing.type: Easing.OutQuint } }
                         Behavior on height { NumberAnimation { duration: 600; easing.type: Easing.OutQuint } }
@@ -1246,7 +1276,7 @@ Item {
                                             font.family: "JetBrains Mono"
                                             font.pixelSize: window.s(12)
                                             color: window.subtext0
-                                            text: window.currentSimW + "x" + window.currentSimH + " @ " + (monitorsModel.count > 0 ? monitorsModel.get(0).rate : "60") + "Hz"
+                                            text: monitorsModel.count > 0 && monitorsModel.get(0).disabled ? "DISABLED" : (window.currentSimW + "x" + window.currentSimH + " @ " + (monitorsModel.count > 0 ? monitorsModel.get(0).rate : "60") + "Hz")
                                         }
                                     }
                                 }
@@ -1347,9 +1377,10 @@ Item {
                                     height: (model.resH / model.sysScale) * window.uiScale
 
                                     radius: 8
-                                    color: isActive ? window.surface1 : window.surface0
-                                    border.color: isActive ? window.selectedResAccent : window.surface2
+                                    color: model.disabled ? Qt.alpha(window.surface0, 0.4) : (isActive ? window.surface1 : window.surface0)
+                                    border.color: model.disabled ? window.red : (isActive ? window.selectedResAccent : window.surface2)
                                     border.width: isActive ? 2 : 1
+                                    opacity: model.disabled ? 0.5 : 1.0
                                     z: isActive ? 5 : 0
 
                                     Behavior on x { NumberAnimation { duration: 300; easing.type: Easing.OutQuint } }
@@ -1393,7 +1424,7 @@ Item {
                                                 font.family: "JetBrains Mono"
                                                 font.pixelSize: 10
                                                 color: window.subtext0
-                                                text: model.resW + "x" + model.resH + " @ " + model.rate + "Hz"
+                                                text: model.disabled ? "DISABLED" : (model.resW + "x" + model.resH + " @ " + model.rate + "Hz")
                                             }
                                         }
                                     }
