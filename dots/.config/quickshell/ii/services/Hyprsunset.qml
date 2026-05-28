@@ -126,16 +126,15 @@ Singleton {
 
     function disableTemperature() {
         root.temperatureActive = false;
-        root.startHyprsunsetWithArgs(`-t ${root.defaultColorTemperature} -g ${root.gamma}`);
+        root.killHyprsunset();
     }
 
     function setGamma(gamma) {
         root.gamma = Math.max(root.gammaLowerLimit, Math.min(100, gamma));
         root.gammaChangeAttempt();
-        const args = root.temperatureActive
-            ? `-t ${root.colorTemperature} -g ${root.gamma}`
-            : `-t ${root.defaultColorTemperature} -g ${root.gamma}`;
-        root.startHyprsunsetWithArgs(args);
+        if (root.temperatureActive) {
+            root.startHyprsunsetWithArgs(`-t ${root.colorTemperature} -g ${root.gamma}`);
+        }
     }
 
     function toggleTemperature(active = undefined) {
