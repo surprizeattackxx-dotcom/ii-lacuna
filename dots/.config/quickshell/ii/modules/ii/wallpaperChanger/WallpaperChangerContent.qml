@@ -42,6 +42,8 @@ Item {
     property bool isOnlineSearch: false
     property bool isSearchPaused: false
     property bool hasSearched: false
+    property string lastSearchName: ""
+    property bool searchIndexRestored: false
     property var colorMap: ({})
     property int cacheVersion: 0
 
@@ -49,6 +51,7 @@ Item {
     property string currentDownloadName: ""
     property bool isApplying: false
     property bool isModelChanging: false
+    property bool isAiThinking: false
 
     property bool isScrollingBlocked: false
     property bool jumpToLastOnFilterChange: false
@@ -58,11 +61,12 @@ Item {
     property bool isLoading: srcModel.status === FolderListModel.Loading ||
                              (currentFilter === "Search" && searchFolderModel.status === FolderListModel.Loading)
 
-    property bool showSpinner: isDownloadingWallpaper ||
+    property bool showSpinner: isDownloadingWallpaper || isAiThinking ||
                                (currentFilter === "Search" && hasSearched && !isSearchPaused) ||
                                (currentFilter !== "Search" && isLoading)
 
     property string currentNotification: {
+        if (isAiThinking) return aiPickProc.mode === "local" ? "AI is choosing a wallpaper..." : "AI is picking a theme...";
         if (isDownloadingWallpaper) return "Downloading wallpaper...";
         if (currentFilter === "Search") {
             if (!hasSearched) return "Type something to search...";
@@ -336,6 +340,32 @@ Item {
         if (!safeFileName || isApplying) return;
         isApplying = true;
         targetWallName = safeFileName;
+
+        if (currentFilter === "Search" && safeFileName.startsWith("ddg_")) {
+            let destFile = srcDir + "/" + safeFileName;
+            let mapFile = Quickshell.env("HOME") + "/.cache/wallpaper_picker/search_map.txt";
+            let esc = (str) => String(str).replace(/(["\\$`])/g, '\\$1');
+            searchDownloadProc.destFile = destFile;
+            searchDownloadProc.command = ["bash", "-c", `
+                DEST="${esc(destFile)}"; MAP="${esc(mapFile)}"; NAME="${esc(safeFileName)}"
+                if [ -s "$DEST" ]; then echo OK; exit 0; fi
+                URL=$(awk -F'|' -v f="$NAME" '$1 == f {print $2; exit}' "$MAP")
+                [ -z "$URL" ] && exit 1
+                curl -s -L -m 25 -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" "$URL" -o "$DEST.tmp" || exit 1
+                [ -s "$DEST.tmp" ] || exit 1
+                if file -b --mime-type "$DEST.tmp" | grep -qi webp; then
+                    magick "$DEST.tmp" "$DEST" 2>/dev/null && rm -f "$DEST.tmp" || mv "$DEST.tmp" "$DEST"
+                else
+                    mv "$DEST.tmp" "$DEST"
+                fi
+                [ -s "$DEST" ] && echo OK || exit 1
+            `];
+            isDownloadingWallpaper = true;
+            currentDownloadName = safeFileName;
+            searchDownloadProc.running = true;
+            return;
+        }
+
         let path = fullPath || (srcDir + "/" + getCleanName(safeFileName));
         Wallpapers.apply(path, Wallpapers.preferredDarkMode, Hyprland.focusedMonitor?.name ?? "", true);
         GlobalStates.wallpaperChangerOpen = false;
@@ -482,7 +512,7 @@ Item {
         isModelChanging = false; searchIndexRestored = true; isOnlineSearch = true; hasSearched = true;
         visibleItemCount = 0; searchQuery = searchInput.text.trim(); isSearchPaused = false;
         let rawSearchDir = decodeURIComponent(searchDir.replace(/^file:\/\//, ""));
-        let scriptPath = moduleDir + "/ddg_search.sh";
+        let scriptPath = decodeURIComponent(Qt.resolvedUrl("ddg_search.sh").toString().replace(/^file:\/\//, ""));
         Quickshell.execDetached(["bash", "-c", `
             exec > /tmp/qs_ddg_run.log 2>&1
             echo 'stop' > /tmp/ddg_search_control
@@ -832,7 +862,133 @@ Item {
                     }
                 }
             }
+
+            Rectangle {
+                id: aiBtn; width: s(44); height: s(44); radius: s(10)
+                color: isAiThinking ? Qt.rgba(_theme.mauve.r, _theme.mauve.g, _theme.mauve.b, 0.35)
+                       : (aiMouseArea.containsMouse ? Qt.rgba(_theme.mauve.r, _theme.mauve.g, _theme.mauve.b, 0.22) : Qt.rgba(_theme.mauve.r, _theme.mauve.g, _theme.mauve.b, 0.12))
+                border.color: aiMouseArea.containsMouse || isAiThinking ? _theme.mauve : Qt.rgba(_theme.mauve.r, _theme.mauve.g, _theme.mauve.b, 0.5); border.width: 1
+                Behavior on color { ColorAnimation { duration: 300 } }
+                Behavior on border.color { ColorAnimation { duration: 300 } }
+                MouseArea { id: aiMouseArea; anchors.fill: parent; hoverEnabled: true; enabled: !isApplying && !isAiThinking; cursorShape: Qt.PointingHandCursor; onClicked: aiPickWallpaper() }
+                Canvas {
+                    id: aiStar; width: s(20); height: s(20); anchors.centerIn: parent
+                    property string activeColor: aiMouseArea.containsMouse || isAiThinking ? _theme.mauve : Qt.rgba(_theme.mauve.r, _theme.mauve.g, _theme.mauve.b, 0.85)
+                    onActiveColorChanged: requestPaint(); property real scaleTrigger: s(1); onScaleTriggerChanged: requestPaint()
+                    RotationAnimation on rotation { loops: Animation.Infinite; from: 0; to: 360; duration: 1400; running: isAiThinking }
+                    onPaint: {
+                        var ctx = getContext("2d"); ctx.reset(); ctx.fillStyle = activeColor;
+                        function star(cx, cy, r) {
+                            ctx.beginPath();
+                            ctx.moveTo(cx, cy - r); ctx.quadraticCurveTo(cx, cy, cx + r, cy);
+                            ctx.quadraticCurveTo(cx, cy, cx, cy + r); ctx.quadraticCurveTo(cx, cy, cx - r, cy);
+                            ctx.quadraticCurveTo(cx, cy, cx, cy - r); ctx.fill();
+                        }
+                        star(s(8), s(8), s(6)); star(s(15), s(14), s(3.5));
+                    }
+                }
+            }
         }
+    }
+
+    Process {
+        id: searchDownloadProc
+        property string destFile: ""
+        onExited: (exitCode, exitStatus) => {
+            isDownloadingWallpaper = false;
+            currentDownloadName = "";
+            if (exitCode === 0) {
+                Wallpapers.apply(searchDownloadProc.destFile, Wallpapers.preferredDarkMode, Hyprland.focusedMonitor?.name ?? "", true);
+                GlobalStates.wallpaperChangerOpen = false;
+            } else {
+                isApplying = false;
+            }
+        }
+    }
+
+    property var aiLocalCandidates: []
+
+    readonly property string aiModel: "opencode/deepseek-v4-flash-free"
+    readonly property string aiCmdScript: `D="$HOME/.cache/wallpaper_picker/ai_scratch"
+mkdir -p "$D"
+cd "$D" && opencode run -m ` + aiModel + ` "$1" </dev/null 2>/dev/null`
+
+    Timer {
+        id: aiTimeout; interval: 90000
+        onTriggered: { aiPickProc.running = false; isAiThinking = false; }
+    }
+
+    Process {
+        id: aiPickProc
+        property string mode: "search"
+        stdout: StdioCollector { id: aiPickOut }
+        onExited: (exitCode, exitStatus) => {
+            aiTimeout.stop();
+            isAiThinking = false;
+            let cleaned = aiPickOut.text.replace(/\x1b\[[0-9;]*m/g, "").replace(/\x1b\][^\x07]*\x07/g, "");
+            let lines = cleaned.split("\n").map(l => l.trim()).filter(l => l.length > 0 && !l.startsWith(">"));
+            if (lines.length === 0) return;
+            if (aiPickProc.mode === "local") {
+                let last = lines.length > 0 ? lines[lines.length - 1] : "";
+                let m = last.match(/\d+/);
+                let idx = m ? parseInt(m[0]) : -1;
+                if (idx >= 0 && idx < aiLocalCandidates.length) {
+                    let c = aiLocalCandidates[idx];
+                    applyWallpaper(c.fileName, c.isVideo, c.filePath);
+                }
+            } else {
+                let q = lines.length > 0 ? lines[lines.length - 1].trim().replace(/^["'`]+|["'`]+$/g, "") : "";
+                if (q.length > 0 && q.length < 60) {
+                    if (currentFilter !== "Search") currentFilter = "Search";
+                    searchInput.text = q;
+                    triggerOnlineSearch();
+                }
+            }
+        }
+    }
+
+    function aiPickWallpaper() {
+        if (isAiThinking || isApplying) return;
+
+        if (currentFilter === "Search") {
+            isAiThinking = true;
+            aiPickProc.mode = "search";
+            let seed = Math.floor(Math.random() * 1000000);
+            let prompt = "Pick a desktop wallpaper theme. Output ONLY one short search phrase, 2 to 4 words, lowercase, no punctuation, no quotes, nothing else. Be creative and visually striking - vary across landscapes, abstract, anime, space, cyberpunk, nature, architecture, minimal, moody art. Avoid cliches. Random seed " + seed + ".";
+            aiPickProc.command = ["bash", "-c", aiCmdScript, "_", prompt];
+            aiPickProc.running = true;
+            aiTimeout.restart();
+            return;
+        }
+
+        let cands = [];
+        for (let i = 0; i < localProxyModel.count; i++) {
+            let item = localProxyModel.get(i);
+            let fname = item.fileName || "";
+            let isVid = fname.startsWith("000_");
+            let isWpeItem = item.isWpe === true;
+            if (isWpeItem) continue;
+            if (!checkItemMatchesFilter(fname, isVid, isWpeItem, cacheVersion, currentFilter)) continue;
+            let hex = colorMap[String(fname)];
+            cands.push({ fileName: fname, filePath: item.filePath || "", isVideo: isVid, color: hex ? getHexBucket(hex) : "unknown" });
+        }
+        if (cands.length === 0) return;
+        if (cands.length === 1) { applyWallpaper(cands[0].fileName, cands[0].isVideo, cands[0].filePath); return; }
+
+        if (cands.length > 80) {
+            for (let i = cands.length - 1; i > 0; i--) { let j = Math.floor(Math.random() * (i + 1)); let t = cands[i]; cands[i] = cands[j]; cands[j] = t; }
+            cands = cands.slice(0, 80);
+        }
+        aiLocalCandidates = cands;
+
+        let listText = cands.map((c, i) => i + ": " + getCleanName(c.fileName) + " [" + c.color + "]").join("\n");
+        let seed = Math.floor(Math.random() * 1000000);
+        let prompt = "From this numbered list of desktop wallpapers (filename and dominant color), pick the ONE that would make the most striking and pleasing wallpaper for a fresh random vibe. Use the names and colors to choose something interesting and varied. Reply with ONLY the number, nothing else. Random seed " + seed + ".\n\n" + listText;
+        isAiThinking = true;
+        aiPickProc.mode = "local";
+        aiPickProc.command = ["bash", "-c", aiCmdScript, "_", prompt];
+        aiPickProc.running = true;
+        aiTimeout.restart();
     }
 
     Component.onCompleted: {

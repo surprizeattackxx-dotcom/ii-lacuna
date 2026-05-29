@@ -11,7 +11,12 @@ Singleton {
     // XDG Dirs, with "file://"
     readonly property string home: StandardPaths.standardLocations(StandardPaths.HomeLocation)[0]
     readonly property string config: StandardPaths.standardLocations(StandardPaths.ConfigLocation)[0]
-    readonly property string state: StandardPaths.standardLocations(StandardPaths.StateLocation)[0]
+    // Must match the scripts' "$XDG_STATE_HOME/quickshell" (Qt's StateLocation injects an org segment, which diverges)
+    readonly property string state: {
+        const xdg = Quickshell.env("XDG_STATE_HOME");
+        const base = (xdg && xdg.length > 0) ? ("file://" + xdg) : (home + "/.local/state");
+        return base + "/quickshell";
+    }
     readonly property string cache: StandardPaths.standardLocations(StandardPaths.CacheLocation)[0]
     readonly property string genericCache: StandardPaths.standardLocations(StandardPaths.GenericCacheLocation)[0]
     readonly property string documents: StandardPaths.standardLocations(StandardPaths.DocumentsLocation)[0]

@@ -81,8 +81,6 @@ StyledPopup {
         if (cache.lastWifiJson !== "") window.processWifiJson(cache.lastWifiJson);
         if (cache.lastBtJson !== "") window.processBtJson(cache.lastBtJson);
         introState = 1.0;
-        
-        if (window.activeMode === "wifi") savedNetworksFetcher.running = true;
     }
 
     function playSfx(filename) {
@@ -144,18 +142,6 @@ StyledPopup {
 
     property string pendingWifiSsid: ""
     property string pendingWifiId: ""
-    property var savedWifiNetworks: []
-
-    Process {
-        id: savedNetworksFetcher
-        command: ["bash", "-c", "nmcli -t -f NAME connection show | grep -v 'lo'"]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                let text = this.text.trim();
-                window.savedWifiNetworks = text ? text.split('\n') : [];
-            }
-        }
-    }
 
     Process {
         id: connectProcess
@@ -171,19 +157,7 @@ StyledPopup {
             if (code !== 0) {
                 window.failedId = targetId;
                 failClearTimer.restart();
-                window.playSfx("error.wav"); 
-                
-                if (window.activeMode === "wifi" && targetSsid !== "") {
-                    Quickshell.execDetached(["bash", "-c", "nmcli connection delete '" + targetSsid + "' 2>/dev/null"]);
-                    
-                    let newSaved = [];
-                    for(let i = 0; i < window.savedWifiNetworks.length; i++) {
-                        if(window.savedWifiNetworks[i] !== targetSsid) {
-                            newSaved.push(window.savedWifiNetworks[i]);
-                        }
-                    }
-                    window.savedWifiNetworks = newSaved;
-                }
+                window.playSfx("error.wav");
             }
             
             window.connectingId = "";
@@ -203,11 +177,7 @@ StyledPopup {
         connectProcess.targetSsid = (mode === "wifi") ? macOrSsid : ""; 
         
         if (mode === "wifi") {
-            if (password !== "") {
-                connectProcess.command = ["bash", "-c", "nmcli device wifi connect '" + macOrSsid + "' password '" + password + "'"];
-            } else {
-                connectProcess.command = ["bash", "-c", "nmcli device wifi connect '" + macOrSsid + "'"];
-            }
+            connectProcess.command = ["bash", "-c", "nmcli connection up '" + macOrSsid + "'"];
         } else {
             connectProcess.command = ["bash", "-c", window.scriptsDir + "/bluetooth_panel_logic.sh --connect '" + macOrSsid + "'"];
         }
@@ -283,7 +253,6 @@ StyledPopup {
         window.ignoreNextModeFileUpdate = false;
         
         window.pendingWifiId = ""; window.pendingWifiSsid = "";
-        if (window.activeMode === "wifi") savedNetworksFetcher.running = true;
 
         infoListModel.clear();
         window.busyTasks = ({});
@@ -351,6 +320,7 @@ StyledPopup {
         }
     }
 
+    property bool ethKilled: false
     property bool wifiPowerPending: false
     property string expectedWifiPower: ""
     property string wifiPower: "off"
@@ -421,11 +391,9 @@ StyledPopup {
                 }
 
                 if (window.activeMode === "wifi") {
-                    let sigValue = obj.signal !== undefined ? obj.signal + "%" : "Calculating...";
-                    nodes.push({ id: "sig_" + i, name: sigValue, icon: obj.icon || "󰤨", action: "Signal Strength", isInfoNode: true, isActionable: false, parentIndex: cIndex });
-                    nodes.push({ id: "sec_" + i, name: obj.security || "Open", icon: "󰦝", action: "Security", isInfoNode: true, isActionable: false, parentIndex: cIndex });
+                    nodes.push({ id: "speed_" + i, name: obj.freq || "Unknown", icon: "󰓅", action: "Link Speed", isInfoNode: true, isActionable: false, parentIndex: cIndex });
+                    nodes.push({ id: "type_" + i, name: obj.security || "Wired", icon: "󰈀", action: "Connection", isInfoNode: true, isActionable: false, parentIndex: cIndex });
                     if (obj.ip) nodes.push({ id: "ip_" + i, name: obj.ip, icon: "󰩟", action: "IP Address", isInfoNode: true, isActionable: false, parentIndex: cIndex });
-                    if (obj.freq) nodes.push({ id: "freq_" + i, name: obj.freq, icon: "󰖧", action: "Band", isInfoNode: true, isActionable: false, parentIndex: cIndex });
                 } else {
                     nodes.push({ id: "bat_" + obj.mac, name: (obj.battery || "0") + "%", icon: "󰥉", action: "Battery", isInfoNode: true, isActionable: false, parentIndex: cIndex });
                     if (obj.profile) {
@@ -446,7 +414,8 @@ StyledPopup {
         try {
             let data = JSON.parse(textData);
             let fetchedPower = data.power || "off";
-            
+            window.ethKilled = (data.killed === true);
+
             if (window.wifiPowerPending) {
                 window.wifiPower = window.expectedWifiPower; 
                 if (fetchedPower === window.expectedWifiPower) {
@@ -619,7 +588,7 @@ StyledPopup {
 
     Process {
         id: wifiPoller
-        command: ["bash", window.scriptsDir + "/wifi_panel_logic.sh"]
+        command: ["bash", window.scriptsDir + "/ethernet_panel_logic.sh"]
         running: true
         stdout: StdioCollector {
             onStreamFinished: {
@@ -1124,7 +1093,7 @@ StyledPopup {
                                     font.family: "Iosevka Nerd Font"
                                     font.pixelSize: window.s(48) - (window.s(16) * coreContainer.multiShift)
                                     color: window.surface2
-                                    text: window.activeMode === "wifi" ? "󰤮" : "󰂲"
+                                    text: window.activeMode === "wifi" ? "󰈂" : "󰂲"
                                 }
                             }
 
@@ -1159,7 +1128,7 @@ StyledPopup {
                                     font.family: "Iosevka Nerd Font"
                                     font.pixelSize: window.s(48) - (window.s(16) * coreContainer.multiShift)
                                     color: window.activeColor
-                                    text: window.activeMode === "wifi" ? "󰤨" : "󰂯"
+                                    text: window.activeMode === "wifi" ? "󰈁" : "󰂯"
                                     SequentialAnimation on opacity {
                                         running: showScanning; loops: Animation.Infinite
                                         NumberAnimation { to: 0.5; duration: 1000; easing.type: Easing.InOutSine }
@@ -1182,7 +1151,7 @@ StyledPopup {
                                     anchors.centerIn: parent
                                     spacing: window.s(8)
                                     
-                                    Text { Layout.alignment: Qt.AlignHCenter; font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(32); color: window.crust; text: "󰤨" }
+                                    Text { Layout.alignment: Qt.AlignHCenter; font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(32); color: window.crust; text: "󰈀" }
                                     
                                     Text { 
                                         Layout.alignment: Qt.AlignHCenter; Layout.maximumWidth: pwdLayer.width - window.s(40)
@@ -1250,7 +1219,7 @@ StyledPopup {
                                         font.family: "Iosevka Nerd Font"
                                         font.pixelSize: window.s(48) - (window.s(16) * coreContainer.multiShift)
                                         color: isMyDisconnecting ? window.overlay1 : window.crust
-                                        text: isMyDisconnecting ? "" : (coreMa.containsMouse ? (window.activeMode === "wifi" ? "󰖪" : "󰂲") : (coreContainer.myDevice ? (coreContainer.myDevice.icon || (window.activeMode === "wifi" ? "󰤨" : "󰂯")) : ""))
+                                        text: isMyDisconnecting ? "" : (coreMa.containsMouse ? (window.activeMode === "wifi" ? "󰈂" : "󰂲") : (coreContainer.myDevice ? (coreContainer.myDevice.icon || (window.activeMode === "wifi" ? "󰈀" : "󰂯")) : ""))
                                         Behavior on color { ColorAnimation { duration: 200 } }
                                     }
                                     LoadingDots { Layout.alignment: Qt.AlignHCenter; visible: isMyDisconnecting; dotCol: window.overlay1 }
@@ -1293,7 +1262,7 @@ StyledPopup {
                                             font.family: "Iosevka Nerd Font"
                                             font.pixelSize: window.s(48) - (window.s(16) * coreContainer.multiShift)
                                             color: window.text
-                                            text: isMyDisconnecting ? "" : (coreMa.containsMouse ? (window.activeMode === "wifi" ? "󰖪" : "󰂲") : (coreContainer.myDevice ? (coreContainer.myDevice.icon || (window.activeMode === "wifi" ? "󰤨" : "󰂯")) : ""))
+                                            text: isMyDisconnecting ? "" : (coreMa.containsMouse ? (window.activeMode === "wifi" ? "󰈂" : "󰂲") : (coreContainer.myDevice ? (coreContainer.myDevice.icon || (window.activeMode === "wifi" ? "󰈀" : "󰂯")) : ""))
                                         }
                                         LoadingDots { Layout.alignment: Qt.AlignHCenter; visible: isMyDisconnecting; dotCol: window.text }
                                         Text {
@@ -1356,8 +1325,8 @@ StyledPopup {
                                     window.disconnectingDevices = Object.assign({}, dd);
                                     busyTimeout.restart();
                                     
-                                    let cmd = window.activeMode === "wifi" 
-                                        ? "nmcli device disconnect $(nmcli -t -f DEVICE,TYPE d | grep wifi | cut -d: -f1 | head -n1)"
+                                    let cmd = window.activeMode === "wifi"
+                                        ? "nmcli device disconnect $(nmcli -t -f DEVICE,TYPE device | awk -F: '$2==\"ethernet\"{print $1;exit}')"
                                         : "bash " + window.scriptsDir + "/bluetooth_panel_logic.sh --disconnect '" + coreContainer.myDevice.mac + "'"
                                     Quickshell.execDetached(["sh", "-c", cmd])
                                     
@@ -1893,19 +1862,7 @@ StyledPopup {
                                             floatCard.triggered = false;
                                             drainAnim.start(); 
                                         } else {
-                                            let sec = typeof security !== "undefined" && security ? security.trim().toLowerCase() : "";
-                                            let isSecure = sec !== "" && sec !== "open" && sec !== "--" && sec !== "none";
-                                            let isSaved = false;
-                                            for (let i = 0; i < window.savedWifiNetworks.length; i++) {
-                                                if (window.savedWifiNetworks[i] === ssid) { isSaved = true; break; }
-                                            }
-
-                                            if (window.activeMode === "wifi" && isSecure && !isSaved) {
-                                                window.pendingWifiSsid = ssid;
-                                                window.pendingWifiId = floatCard.itemId;
-                                            } else {
-                                                window.connectDevice(window.activeMode, floatCard.itemId, window.activeMode === "wifi" ? ssid : mac, "");
-                                            }
+                                            window.connectDevice(window.activeMode, floatCard.itemId, window.activeMode === "wifi" ? ssid : mac, "");
                                         }
                                     }
                                 }
@@ -1967,8 +1924,8 @@ StyledPopup {
                         RowLayout {
                             anchors.centerIn: parent
                             spacing: window.s(8)
-                            Text { font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(18); color: window.activeMode === "wifi" ? window.crust : window.text; text: "󰤨"; Behavior on color { ColorAnimation{duration:200} } }
-                            Text { font.family: "JetBrains Mono"; font.weight: Font.Black; font.pixelSize: window.s(13); color: window.activeMode === "wifi" ? window.crust : window.text; text: "Wi-Fi"; Behavior on color { ColorAnimation{duration:200} } }
+                            Text { font.family: "Iosevka Nerd Font"; font.pixelSize: window.s(18); color: window.activeMode === "wifi" ? window.crust : window.text; text: "󰈀"; Behavior on color { ColorAnimation{duration:200} } }
+                            Text { font.family: "JetBrains Mono"; font.weight: Font.Black; font.pixelSize: window.s(13); color: window.activeMode === "wifi" ? window.crust : window.text; text: "Ethernet"; Behavior on color { ColorAnimation{duration:200} } }
                         }
                         MouseArea {
                             id: wifiTabMa; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
@@ -2020,13 +1977,17 @@ StyledPopup {
                 }
             }
 
-            // Power Toggle 
+            // Power Toggle
             Rectangle {
                 anchors.bottom: parent.bottom
                 anchors.right: parent.right
                 anchors.margins: window.s(30)
                 width: window.s(48); height: window.s(48); radius: window.s(24)
-                
+
+                visible: !(window.activeMode === "wifi" && window.ethKilled)
+                opacity: visible ? 1.0 : 0.0
+                Behavior on opacity { NumberAnimation { duration: 200 } }
+
                 color: "transparent"
                 border.color: window.currentPowerPending ? window.activeColor : (window.currentPower ? "transparent" : window.surface2)
                 border.width: window.s(2)
@@ -2085,7 +2046,8 @@ StyledPopup {
                             
                             wifiPendingReset.restart();
                             window.wifiPower = window.expectedWifiPower; // Optimistic
-                            Quickshell.execDetached(["nmcli", "radio", "wifi", window.wifiPower]);
+                            let ethAction = window.wifiPower === "on" ? "connect" : "disconnect";
+                            Quickshell.execDetached(["bash", "-c", "IFACE=$(nmcli -t -f DEVICE,TYPE device | awk -F: '$2==\"ethernet\"{print $1;exit}'); nmcli device " + ethAction + " \"$IFACE\""]);
                             wifiPoller.running = true;
                         } else {
                             if (window.btPowerPending) return;
@@ -2099,6 +2061,60 @@ StyledPopup {
                             Quickshell.execDetached(["bash", window.scriptsDir + "/bluetooth_panel_logic.sh", "--toggle"]);
                             btPoller.running = true;
                         }
+                    }
+                }
+            }
+
+            // Ethernet Killswitch (locks the wired link down until pressed again)
+            Rectangle {
+                anchors.bottom: parent.bottom
+                anchors.left: parent.left
+                anchors.margins: window.s(30)
+                width: window.s(48); height: window.s(48); radius: window.s(24)
+
+                visible: window.activeMode === "wifi"
+                opacity: visible ? 1.0 : 0.0
+                Behavior on opacity { NumberAnimation { duration: 200 } }
+
+                color: "transparent"
+                border.color: window.ethKilled ? "transparent" : window.surface2
+                border.width: window.s(2)
+                Behavior on border.color { ColorAnimation { duration: 300 } }
+
+                Rectangle {
+                    anchors.fill: parent
+                    radius: window.s(24)
+                    opacity: window.ethKilled ? 1.0 : 0.0
+                    Behavior on opacity { NumberAnimation { duration: 300 } }
+                    gradient: Gradient {
+                        orientation: Gradient.Horizontal
+                        GradientStop { position: 0.0; color: Qt.lighter(window.red, 1.15) }
+                        GradientStop { position: 1.0; color: window.red }
+                    }
+                }
+
+                scale: killMa.pressed ? 0.9 : (killMa.containsMouse ? 1.1 : 1.0)
+                Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutBack } }
+
+                Text {
+                    anchors.centerIn: parent
+                    font.family: "Iosevka Nerd Font"
+                    font.pixelSize: window.s(22)
+                    color: window.ethKilled ? window.crust : (killMa.containsMouse ? window.red : window.text)
+                    text: "󰚌"
+                    Behavior on color { ColorAnimation { duration: 200 } }
+                }
+
+                MouseArea {
+                    id: killMa
+                    anchors.fill: parent
+                    hoverEnabled: true
+                    cursorShape: Qt.PointingHandCursor
+                    onClicked: {
+                        window.playSfx(window.ethKilled ? "power_on.wav" : "power_off.wav");
+                        window.ethKilled = !window.ethKilled; // Optimistic
+                        Quickshell.execDetached(["bash", window.scriptsDir + "/ethernet_killswitch.sh", "--toggle"]);
+                        wifiPoller.running = true;
                     }
                 }
             }
