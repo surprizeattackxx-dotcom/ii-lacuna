@@ -12,7 +12,7 @@ Menu {
     id: root
 
     property bool downDirection: false
-    property bool hasIcons: false // TODO: implement
+    property bool hasIcons: false
 
     property color color: Looks.colors.bg1Base
     property alias backgroundPane: bgPane
@@ -100,5 +100,6 @@ Menu {
 
     delegate: WMenuItem {
         id: menuItemDelegate
+        reserveIconSpace: root.hasIcons
     }
 }

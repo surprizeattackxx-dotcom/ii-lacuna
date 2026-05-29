@@ -8,20 +8,13 @@ import qs.modules.common.functions
 Item {
     id: root
 
-    // Ready if EITHER image is loaded — prevents the container going transparent
-    // during a wallpaper change (which would expose the swww layer and cause a
-    // double-transition visual artefact).
-    readonly property int status: (imgA.status === Image.Ready || imgB.status === Image.Ready)
-        ? Image.Ready
-        : (imgAIsBack ? imgB.status : imgA.status)
     required property string imageSource
 
     property string transitionType: Config.options.background.transitionType ?? "radial"
 
     property int animationDuration: transitionType === "radial" ? 1100 : 1000
     property var fillMode: Image.PreserveAspectCrop
-    property bool animated: true
-    property bool imgAIsBack: true
+    property bool animated: Config.options.background.animateWallpaperChanges
 
     property var sourceSize: Qt.size(0, 0)
     property bool cache: false
@@ -37,27 +30,39 @@ Item {
     property Item backImg: imgAIsBack ? imgA : imgB
     property Item frontImg: imgAIsBack ? imgB : imgA
 
-    property int status: (imgA.status === Image.Ready || imgB.status === Image.Ready) ? Image.Ready : frontImg.status
+    // Ready if EITHER image is loaded — keeps the container opaque during a
+    // wallpaper change, so the swww layer underneath never flashes through.
+    readonly property int status: (backImg.status === Image.Ready || frontImg.status === Image.Ready)
+        ? Image.Ready
+        : frontImg.status
 
     Component.onCompleted: ready = true
 
     onImageSourceChanged: fadeTo(imageSource)
 
-    property string currentWallpaper: ""
-
     function fadeTo(newSrc) {
-        if (!newSrc || newSrc === currentWallpaper) return
+        if (!newSrc || newSrc === backImg.source) return
 
-        let hasWallpaper = (currentWallpaper !== "")
+        if (root.animated && ready && root.width > 0 && root.height > 0) {
+            cleanupTransition()
 
-        front.source  = newSrc
-        front.z       = 1
-        back.z        = 0
-        front.opacity = 0
-        // Don't start the animation yet — onStatusChanged on the front image
-        // will trigger it once the image is actually ready to display.
-        // This prevents a crossfade over a blank/loading image, and keeps the
-        // container opaque (back image visible) during the load.
+            // Flip AT THE START so frontImg is ALWAYS the new image with z=1
+            root.imgAIsBack = !root.imgAIsBack
+
+            root.transitionActive = true
+            frontImg.source = newSrc
+
+            let wait = effectLoader.item ? effectLoader.item.waitForReady !== false : true
+
+            if (!wait || frontImg.status === Image.Ready) {
+                startTransition()
+            }
+        } else {
+            cleanupTransition()
+            root.imgAIsBack = !root.imgAIsBack
+            frontImg.source = newSrc
+            root.transitionActive = false
+        }
     }
 
     function startTransition() {
@@ -78,19 +83,21 @@ Item {
     Image {
         id: imgA
         anchors.fill: parent
+        visible: root.imgAIsBack || (!root.transitionActive || !effectLoader.item || effectLoader.item.hideFront === false)
+        layer.enabled: !visible && root.transitionActive
+        z: root.imgAIsBack ? 0 : 1
+
         fillMode: root.fillMode
         sourceSize: root.sourceSize
         cache: root.cache; antialiasing: root.antialiasing; asynchronous: root.asynchronous; smooth: root.smooth; mipmap: root.mipmap
+
         onStatusChanged: {
-            if (status !== Image.Ready) return
-            // imgA is "front" when imgAIsBack is false
-            if (!root.imgAIsBack && imgA.opacity === 0) {
-                if (root.animated) {
-                    fadeAnim.target = imgA
-                    fadeAnim.restart()
-                } else {
-                    imgA.opacity = 1
-                    root.imgAIsBack = !root.imgAIsBack
+            let wait = effectLoader.item ? effectLoader.item.waitForReady !== false : true
+            if (wait) {
+                if (status === Image.Ready && root.transitionActive && !root.imgAIsBack) {
+                    root.startTransition()
+                } else if (status === Image.Error && root.transitionActive && !root.imgAIsBack) {
+                    root.cleanupTransition()
                 }
             }
         }
@@ -99,21 +106,41 @@ Item {
     Image {
         id: imgB
         anchors.fill: parent
-        opacity: 0
+        visible: !root.imgAIsBack || (!root.transitionActive || !effectLoader.item || effectLoader.item.hideFront === false)
+        layer.enabled: !visible && root.transitionActive
+        z: !root.imgAIsBack ? 0 : 1
+
         fillMode: root.fillMode
         sourceSize: root.sourceSize
         cache: root.cache; antialiasing: root.antialiasing; asynchronous: root.asynchronous; smooth: root.smooth; mipmap: root.mipmap
+
         onStatusChanged: {
-            if (status !== Image.Ready) return
-            // imgB is "front" when imgAIsBack is true
-            if (root.imgAIsBack && imgB.opacity === 0) {
-                if (root.animated) {
-                    fadeAnim.target = imgB
-                    fadeAnim.restart()
-                } else {
-                    imgB.opacity = 1
-                    root.imgAIsBack = !root.imgAIsBack
+            let wait = effectLoader.item ? effectLoader.item.waitForReady !== false : true
+            if (wait) {
+                if (status === Image.Ready && root.transitionActive && root.imgAIsBack) {
+                    root.startTransition()
+                } else if (status === Image.Error && root.transitionActive && root.imgAIsBack) {
+                    root.cleanupTransition()
                 }
+            }
+        }
+    }
+
+    Loader {
+        id: effectLoader
+        anchors.fill: parent
+        source: "transitions/" + (root.transitionType.charAt(0).toUpperCase() + root.transitionType.slice(1)) + ".qml"
+
+        onLoaded: {
+            item.frontImg = Qt.binding(function() { return root.frontImg })
+            item.backImg = Qt.binding(function() { return root.backImg })
+            item.duration = Qt.binding(function() { return root.animationDuration })
+        }
+
+        Connections {
+            target: effectLoader.item
+            function onFinished() {
+                root.cleanupTransition()
             }
         }
     }

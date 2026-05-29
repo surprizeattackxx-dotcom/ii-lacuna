@@ -14,6 +14,7 @@ import qs.modules.common
 Singleton {
     id: root
 
+    property int khalPollInterval: 30000
     property bool khalAvailable: false
     property bool gcalAvailable: false
     property bool mutating: false
@@ -498,12 +499,13 @@ Singleton {
           }
       }
 
-      // khal poll timer (frequent, local data)
+      // khal poll timer (local data; backed off since the db rarely changes)
       Timer {
         id: interval
         running: false
-        interval: Config.options?.resources?.updateInterval ?? 3000
+        interval: root.khalPollInterval
         repeat: true
+        triggeredOnStart: true
         onTriggered: {
           getEventsProcess.running = true
         }

@@ -85,9 +85,7 @@ WBarAttachedPanelContent {
             SearchBar {
                 id: searchBar
                 Layout.fillWidth: true
-                implicitWidth: 832 // TODO: Make sizes naturally inferred
                 horizontalPadding: 32
-                // verticalPadding: root.searching ? 32 : 16 // TODO: make this not nuke the panel
                 Synchronizer on searching {
                     property alias target: root.searching
                 }
@@ -100,14 +98,10 @@ WBarAttachedPanelContent {
                     context.accepted();
                 }
             }
-            Item {
-                implicitHeight: root.searching ? 800 : 800 // TODO: Make sizes naturally inferred
+            Loader {
+                id: pageContentLoader
                 Layout.fillWidth: true
-                Loader {
-                    id: pageContentLoader
-                    anchors.fill: parent
-                    sourceComponent: root.searching ? searchPageComp : startPageComp
-                }
+                sourceComponent: root.searching ? searchPageComp : startPageComp
             }
         }
     }

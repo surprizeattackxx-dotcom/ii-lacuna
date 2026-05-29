@@ -34,4 +34,24 @@ Singleton {
         ...pairedButNotConnectedDevices,
         ...unpairedDevices
     ]
+
+    function deviceForAddress(addr) {
+        return Bluetooth.devices.values.find(d => d.address === addr) ?? null;
+    }
+
+    function connect(addr) {
+        deviceForAddress(addr)?.connect();
+    }
+
+    function disconnect(addr) {
+        deviceForAddress(addr)?.disconnect();
+    }
+
+    function pair(addr) {
+        deviceForAddress(addr)?.pair();
+    }
+
+    function forget(addr) {
+        deviceForAddress(addr)?.forget();
+    }
 }

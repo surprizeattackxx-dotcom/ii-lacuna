@@ -39,6 +39,14 @@ Scope {
                 property bool hasActiveWindows: false
                 property bool showBarBackground: barRoot.hasActiveWindows && Config.options.bar.barBackgroundStyle === 2 || Config.options.bar.barBackgroundStyle === 1
 
+                property bool monitorFullscreen: {
+                    const monitor = HyprlandData.monitors.find(m => m.name === barLoader.modelData?.name);
+                    const wsId = monitor?.activeWorkspace?.id;
+                    if (!wsId) return false;
+                    return HyprlandData.windowList.some(w => w.workspace.id === wsId && w.fullscreen > 0);
+                }
+                visible: !monitorFullscreen
+
                 Connections {
                     enabled: Config.options.bar.barBackgroundStyle === 2
                     target: HyprlandData
@@ -77,7 +85,7 @@ Scope {
                 exclusiveZone: (Config?.options.bar.autoHide.enable && (!mustShow || !Config?.options.bar.autoHide.pushWindows)) ? 0 :
                     Appearance.sizes.baseVerticalBarWidth + (Config.options.bar.cornerStyle === 1 ? Appearance.sizes.hyprlandGapsOut : 0)
                 WlrLayershell.namespace: "quickshell:verticalBar"
-                // WlrLayershell.layer: WlrLayer.Overlay // TODO enable this when bar can hide when fullscreen
+                WlrLayershell.layer: WlrLayer.Overlay
                 implicitWidth: Appearance.sizes.verticalBarWidth + Appearance.rounding.screenRounding
                 mask: Region {
                     item: hoverMaskRegion

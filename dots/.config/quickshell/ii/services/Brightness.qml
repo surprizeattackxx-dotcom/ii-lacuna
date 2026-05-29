@@ -186,6 +186,7 @@ Singleton {
     // Anti-flashbang
     property int workspaceAnimationDelay: 500
     property int contentSwitchDelay: 30
+    property int sampleCacheTtl: 1500
     property string screenshotDir: "/tmp/quickshell/brightness/antiflashbang"
     function brightnessMultiplierForLightness(x: real): real {
         // I hand picked some values and fitted an exponential curve for this
@@ -200,6 +201,8 @@ Singleton {
             required property var modelData
             property string screenName: modelData.name
             property string screenshotPath: `${root.screenshotDir}/screenshot-${screenName}.png`
+            property real cachedLightness: NaN
+            property real lastSampleMs: 0
             Connections {
                 enabled: Config.options.light.antiFlashbang.enable && Appearance.m3colors.darkmode
                 target: Hyprland
@@ -218,9 +221,18 @@ Singleton {
                 id: screenshotTimer
                 interval: 700 // This is what I have for a Hyprland ws anim
                 onTriggered: {
-                    screenshotProc.running = false;
+                    if (!isNaN(screenScope.cachedLightness) && (Date.now() - screenScope.lastSampleMs) < root.sampleCacheTtl) {
+                        screenScope.applyLightness(screenScope.cachedLightness);
+                        return;
+                    }
+                    if (screenshotProc.running) return;
                     screenshotProc.running = true;
                 }
+            }
+
+            function applyLightness(lightness: real): void {
+                const newMultiplier = root.brightnessMultiplierForLightness(lightness);
+                Brightness.getMonitorForScreen(screenScope.modelData).setBrightnessMultiplier(newMultiplier);
             }
 
             Process {
@@ -234,9 +246,11 @@ Singleton {
                     id: lightnessCollector
                     onStreamFinished: {
                         Quickshell.execDetached(["rm", screenScope.screenshotPath]); // Cleanup
-                        const lightness = lightnessCollector.text
-                        const newMultiplier = root.brightnessMultiplierForLightness(parseFloat(lightness))
-                        Brightness.getMonitorForScreen(screenScope.modelData).setBrightnessMultiplier(newMultiplier)
+                        const lightness = parseFloat(lightnessCollector.text);
+                        if (isNaN(lightness)) return;
+                        screenScope.cachedLightness = lightness;
+                        screenScope.lastSampleMs = Date.now();
+                        screenScope.applyLightness(lightness);
                     }
                 }
             }

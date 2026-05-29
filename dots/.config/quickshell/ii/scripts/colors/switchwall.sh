@@ -137,6 +137,12 @@ kill_existing_mpvpaper() {
     pkill -f -9 mpvpaper || true
 }
 
+stop_existing_wpe() {
+    hyprctl monitors -j 2>/dev/null | jq -r '.[].name' | while read -r mon; do
+        systemctl --user stop "wpe@${mon}.service" 2>/dev/null || true
+    done
+}
+
 create_restore_script() {
     local video_path=$1
     cat > "$RESTORE_SCRIPT.tmp" << EOF
@@ -370,6 +376,7 @@ switch() {
         fi
 
         [[ -z "$noswitch_flag" && -z "$no_save_flag" ]] && check_and_prompt_upscale "$imgpath" &
+        stop_existing_wpe
         kill_existing_mpvpaper
 
         if is_video "$imgpath"; then

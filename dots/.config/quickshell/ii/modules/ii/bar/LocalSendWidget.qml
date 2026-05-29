@@ -6,52 +6,46 @@ import QtQuick.Layouts
 
 Item {
     id: root
-    property bool showDate: Config.options.bar.verbose
-    implicitWidth: rowLayout.implicitWidth + rowLayout.spacing * 10
+    implicitWidth: rowLayout.implicitWidth + 24
     implicitHeight: Appearance.sizes.barHeight
     property color colText: dropArea.containsDrag ? Appearance.colors.colPrimary : rootItem.highlighted ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer1
+    property bool hasPendingTransfer: LocalSend.currentTransfer !== null
+    property bool hasDroppedFiles: LocalSend.droppedFiles.length > 0
+    property bool isActive: hasPendingTransfer || hasDroppedFiles
 
     Connections {
         target: LocalSend
         function onCurrentTransferChanged() {
-            if (LocalSend.currentTransfer) {
-                rootItem.toggleHighlight(true)
-            } else {
-                rootItem.toggleHighlight(false)
-            }
+            rootItem.toggleHighlight(root.hasPendingTransfer || root.hasDroppedFiles)
         }
         function onDroppedFilesChanged() {
-            if (LocalSend.droppedFiles.length > 0) {
-                rootItem.toggleHighlight(true)
-            } else {
-                rootItem.toggleHighlight(false)
-            }
+            rootItem.toggleHighlight(root.hasPendingTransfer || root.hasDroppedFiles)
         }
     }
 
     RowLayout {
         id: rowLayout
         anchors.centerIn: parent
-        spacing: 4
+        spacing: 6
 
-        StyledText {
-            font.pixelSize: Appearance.font.pixelSize.large
-            color: root.colText
-            text: DateTime.time
+        MaterialSymbol {
+            text: "devices"
+            iconSize: Appearance.font.pixelSize.large
+            color: root.isActive ? Appearance.colors.colPrimary : root.colText
+            fill: root.isActive ? 1 : 0
         }
 
         StyledText {
-            visible: root.showDate
+            visible: root.isActive
             font.pixelSize: Appearance.font.pixelSize.small
             color: root.colText
-            text: "•"
+            text: root.hasPendingTransfer ? "!" : LocalSend.droppedFiles.length
         }
 
-        StyledText {
-            visible: root.showDate
-            font.pixelSize: Appearance.font.pixelSize.small
-            color: root.colText
-            text: DateTime.longDate
+        Rectangle {
+            visible: LocalSend.serverRunning
+            width: 6; height: 6; radius: 3
+            color: Appearance.colors.colPrimary
         }
     }
 
@@ -72,7 +66,7 @@ Item {
         anchors.fill: parent
         hoverEnabled: !Config.options.bar.tooltips.clickToShow
 
-        ClockWidgetPopup {
+        LocalSendWidgetPopup {
             compact: Config.options.bar.tooltips.compactPopups
             hoverTarget: mouseArea
         }

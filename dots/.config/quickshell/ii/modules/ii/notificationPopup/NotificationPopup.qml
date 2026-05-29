@@ -15,6 +15,5 @@ Scope {
 
     NotificationPopups {
         id: stack
-        popupModel: Notifications.popupList
     }
 }

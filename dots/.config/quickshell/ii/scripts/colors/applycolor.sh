@@ -76,22 +76,26 @@ apply_term() {
     # Convert literal \e and \\ notation to actual ESC bytes so terminals interpret them
     printf '%b' "$(cat "$dest")" > "${dest}.tmp" && mv "${dest}.tmp" "$dest"
 
-    # Build set of PTYs belonging to kitty (apply_kitty handles those via SIGUSR1)
-    declare -A _kitty_pts
-    while IFS= read -r line; do
-        ppid="${line%% *}"; tty="${line##* }"
-        [[ "$tty" =~ pts/([0-9]+) ]] || continue
-        [[ "$(cat "/proc/$ppid/comm" 2>/dev/null)" == "kitty" ]] || continue
-        _kitty_pts["${BASH_REMATCH[1]}"]=1
-    done < <(ps -eo ppid=,tty= 2>/dev/null)
+    # Known terminal emulators we want to push sequences to.
+    # kitty is excluded — apply_kitty() handles it cleanly via remote control.
+    local -A _term_emus=([foot]=1 [footclient]=1 [alacritty]=1 [wezterm-gui]=1
+        [xterm]=1 [urxvt]=1 [st]=1 [konsole]=1 [gnome-terminal]=1 [tilix]=1)
 
-    # Push sequences to every open terminal PTY we actually own
+    # Map pts number → whether the session leader is a known terminal emulator
+    declare -A _good_pts
+    while IFS= read -r line; do
+        local pid tty comm
+        pid="${line%% *}"; tty="${line##* }"
+        [[ "$tty" =~ pts/([0-9]+) ]] || continue
+        comm=$(cat "/proc/$pid/comm" 2>/dev/null) || continue
+        [[ "${_term_emus[$comm]+_}" ]] && _good_pts["${BASH_REMATCH[1]}"]=1
+    done < <(ps -eo pid=,tty= 2>/dev/null)
+
+    # Push sequences only to PTYs owned by known terminal emulators that we can write to
     local pushed=0
-    for file in /dev/pts/*; do
-        [[ "$file" =~ ^/dev/pts/([0-9]+)$ ]] || continue
+    for pts_num in "${!_good_pts[@]}"; do
+        local file="/dev/pts/$pts_num"
         [[ -w "$file" ]] || continue
-        # Skip kitty PTYs — apply_kitty() handles those cleanly via SIGUSR1
-        [[ "${_kitty_pts[${BASH_REMATCH[1]}]+_}" ]] && continue
         { cat "$dest" > "$file"; } 2>/dev/null & disown $! 2>/dev/null || true
         (( pushed++ )) || true
     done
@@ -426,7 +430,7 @@ color13 ${br_magenta}
 color14 ${br_cyan}
 color15 ${br_white}
 
-background            ${black}
+background            ${background}
 
 selection_background  ${on_secondary_container}
 selection_foreground  ${secondary_container}
@@ -529,12 +533,13 @@ apply_rofi() {
 }
 ROFIEOF
 
-    # If a main rofi config exists, ensure it imports our colors
+    # If a main rofi config exists, ensure it imports our colors (once)
     local rofi_conf="$rofi_dir/config.rasi"
-    if [[ -f "$rofi_conf" ]] && ! grep -q "material-colors.rasi" "$rofi_conf"; then
-        # Prepend the import at the top
-        sed -i '1s|^|@import "material-colors.rasi"\n|' "$rofi_conf"
-    elif [[ ! -f "$rofi_conf" ]]; then
+    if [[ -f "$rofi_conf" ]]; then
+        if ! grep -qF '@import "material-colors.rasi"' "$rofi_conf"; then
+            sed -i '1s|^|@import "material-colors.rasi"\n|' "$rofi_conf"
+        fi
+    else
         echo '@import "material-colors.rasi"' > "$rofi_conf"
     fi
 }

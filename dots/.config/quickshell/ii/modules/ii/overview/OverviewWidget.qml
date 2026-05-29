@@ -13,7 +13,7 @@ import Quickshell.Hyprland
 
 Item {
     id: root
-    property bool hyprscrollingEnabled: false //FIXME
+    readonly property bool hyprscrollingEnabled: Config.options.overview.hyprscrolling
     property int maxWorkspaceWidth: Config.options.overview.hyprscrollingImplementation.maxWorkspaceWidth
     property int minWorkspaceWidth: (monitorData?.transform % 2 === 1) ? 
         ((monitor.height - monitorData?.reserved[0] - monitorData?.reserved[2]) * root.scale / monitor.scale) :
@@ -24,16 +24,13 @@ Item {
     // Clamp to avoid lock-screen temp workspace (2147483647 - N) leaking into UI
     readonly property int effectiveActiveWorkspaceId: Math.max(1, Math.min(100, monitor?.activeWorkspace?.id ?? 1))
     readonly property int workspacesShown: Config.options.overview.rows * Config.options.overview.columns
-    //TODO: I may have to use effectibeActiveWorkspace ID like this: 
-    // readonly property int effectiveActiveWorkspaceId: Math.max(1, Math.min(100, monitor?.activeWorkspace?.id ?? 1))
-    // readonly property int workspaceGroup: Math.floor((effectiveActiveWorkspaceId - 1) / workspacesShown)
-    
+
     readonly property bool useWorkspaceMap: Config.options.overview.useWorkspaceMap
     readonly property list<int> workspaceMap: Config.options.overview.workspaceMap
     property int monitorIndex // to be set by parent
     property int workspaceOffset: useWorkspaceMap ? workspaceMap[monitorIndex] : 0
-    
-    readonly property int workspaceGroup: Math.floor((monitor.activeWorkspace?.id - workspaceOffset - 1) / workspacesShown)
+
+    readonly property int workspaceGroup: Math.floor((effectiveActiveWorkspaceId - workspaceOffset - 1) / workspacesShown)
     property bool monitorIsFocused: (Hyprland.focusedMonitor?.name == monitor.name)
     property var windows: HyprlandData.windowList
     property var windowByAddress: HyprlandData.windowByAddress
@@ -490,13 +487,12 @@ Item {
                                 window.pressed = false
                                 window.Drag.active = false
                                 if (targetWindowAdress !== "" && targetWindowAdress !== windowData?.address) {
-                                    // FIXME: we dont use the plugin anymore, so we have to somehow clear these or find a way to
-                                    // have the same functionality without/with another plugin
-                                    if (root.draggingTargetWorkspace === root.draggingFromWorkspace) { // plugin directly supports same workspace switch
-                                        Hyprland.dispatch(`layoutmsg swapaddrdir ${targetWindowAdress} ${root.draggingDirection} ${window.windowData?.address} true`)
+                                    if (root.draggingTargetWorkspace === root.draggingFromWorkspace) { // same workspace
+                                        if (root.hyprscrollingEnabled)
+                                            Hyprland.dispatch(`layoutmsg swapaddrdir ${targetWindowAdress} ${root.draggingDirection} ${window.windowData?.address} true`)
                                     } else { // different workspace
-                                        Hyprland.dispatch(`movetoworkspacesilent ${targetWorkspace}, address:${root.draggingFromWindowAddress}`)
-                                        Qt.callLater(() => {
+                                        Hyprland.dispatch(`hl.dsp.window.move({ workspace = ${targetWorkspace}, follow = false, window = "address:${root.draggingFromWindowAddress}" })`)
+                                        if (root.hyprscrollingEnabled) Qt.callLater(() => {
                                             Hyprland.dispatch(`layoutmsg swapaddrdir ${targetWindowAdress} ${root.draggingDirection} ${window.windowData?.address} true`)
                                         })
                                     }

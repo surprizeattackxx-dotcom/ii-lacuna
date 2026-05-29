@@ -15,7 +15,7 @@ Item {
     id: root
     visible: false
 
-    property bool enabled: false
+    property bool lyricsEnabled: false
     property string title: ""
     property string artist: ""
     property real duration: 0
@@ -47,7 +47,7 @@ Item {
     readonly property int nextIndex: nextNonEmptyIndex(currentIndex)
     readonly property string nextLineText: nextIndex >= 0 ? (root.lines[nextIndex]?.text ?? "") : ""
     readonly property string displayText: {
-        if (!root.enabled)
+        if (!root.lyricsEnabled)
             return "";
         if (root.loading)
             return "Fetching lyrics…";
@@ -313,7 +313,7 @@ Item {
     }
 
     function ensureFetched() {
-        if (!root.enabled)
+        if (!root.lyricsEnabled)
             return;
 
         if (!root.queryTitle || !root.queryArtist) {
@@ -388,7 +388,7 @@ Item {
             root.loading = false;
             root.error = "";
             root.loadedKey = root.fetchKey;
-        } else if (root.enabled) {
+        } else if (root.lyricsEnabled) {
             fetchDebounce.restart();
         }
     }
@@ -444,12 +444,12 @@ Item {
 
     onSelectedIdChanged: {
         root.resetState();
-        if (root.enabled)
+        if (root.lyricsEnabled)
             fetchDebounce.restart();
     }
 
-    onEnabledChanged: {
-        if (root.enabled)
+    onLyricsEnabledChanged: {
+        if (root.lyricsEnabled)
             fetchDebounce.restart();
         else {
             root.loading = false;
@@ -472,7 +472,7 @@ Item {
                 if (requestKey !== root.fetchKey) {
                     if (root.startPending) {
                         root.startPending = false;
-                        if (root.enabled)
+                        if (root.lyricsEnabled)
                             root.fetchAttempt(root.requestId);
                     }
                     return;

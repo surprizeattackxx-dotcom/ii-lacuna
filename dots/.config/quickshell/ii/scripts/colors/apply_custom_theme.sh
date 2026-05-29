@@ -138,6 +138,7 @@ bash "$SCRIPT_DIR/applycolor.sh"
 VENV_DIR="${ILLOGICAL_IMPULSE_VIRTUAL_ENV:-$HOME/.local/state/quickshell/.venv}"
 VENV_DIR="${VENV_DIR/#\~/$HOME}"
 KDE_BIN="$VENV_DIR/bin/kde-material-you-colors"
+COLOR_TXT="$STATE_DIR/user/generated/kde-color.txt"
 KDE_DYNAMIC() {
     [[ ! -x "$KDE_BIN" ]] && return
     printf '%s' "${PRIMARY#\#}" > "$COLOR_TXT"

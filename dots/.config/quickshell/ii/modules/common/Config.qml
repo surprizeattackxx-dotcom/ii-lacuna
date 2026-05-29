@@ -631,6 +631,7 @@ Singleton {
                 property list<var> workspaceMap: [0, 10, 20]
                 property bool showOpeningAnimation: true
                 property string style: "classic" // Options: classic, scrolling
+                property bool hyprscrolling: false
                 property int centerTopPaddingRatio: 3
 
                 property JsonObject hyprscrollingImplementation: JsonObject {

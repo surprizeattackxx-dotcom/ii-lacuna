@@ -77,7 +77,8 @@ Item {
         "weather": [weatherComp, weatherComp],
         "policies_panel_button": [policiesPanelButton, policiesPanelButton],
         "dashboard_panel_button": [dashboardPanelButton, dashboardPanelButtonVert],
-        "system_updates": [systemUpdatesComp, systemUpdatesComp]
+        "system_updates": [systemUpdatesComp, systemUpdatesComp],
+        "localsend": [localsendComp, localsendCompVert]
     })
 
     property real startRadius: {
@@ -178,4 +179,7 @@ Item {
 
         Component { id: dashboardPanelButton; DashboardPanelButton {} }
         Component { id: dashboardPanelButtonVert; VerticalDashboardPanelButton {} }
+
+        Component { id: localsendComp; LocalSendWidget {} }
+        Component { id: localsendCompVert; Vertical.LocalSendWidget {} }
 }

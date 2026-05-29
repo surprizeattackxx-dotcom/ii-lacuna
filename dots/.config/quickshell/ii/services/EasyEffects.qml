@@ -14,6 +14,8 @@ Singleton {
 
     property bool available: false
     property bool active: false
+    property list<string> outputPresets: []
+    property string activePreset: ""
 
     function fetchAvailability() {
         fetchAvailabilityProc.running = true
@@ -21,6 +23,15 @@ Singleton {
 
     function fetchActiveState() {
         fetchActiveStateProc.running = true
+    }
+
+    function fetchPresets() {
+        fetchPresetsProc.running = true
+    }
+
+    function applyPreset(name) {
+        root.activePreset = name
+        Quickshell.execDetached(["bash", "-c", `easyeffects -l '${name}' || flatpak run com.github.wwmm.easyeffects -l '${name}'`])
     }
 
     function disable() {
@@ -56,6 +67,17 @@ Singleton {
         command: ["bash", "-c", "pidof easyeffects || flatpak ps | grep com.github.wwmm.easyeffects > /dev/null 2>&1"]
         onExited: (exitCode, exitStatus) => {
             root.active = exitCode === 0
+        }
+    }
+
+    Process {
+        id: fetchPresetsProc
+        running: true
+        command: ["bash", "-c", 'd="${XDG_CONFIG_HOME:-$HOME/.config}/easyeffects/output"; [ -d "$d" ] && ls -1 "$d"/*.json 2>/dev/null | sed -e "s|.*/||" -e "s|\\.json$||"']
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.outputPresets = text.trim().split("\n").filter(l => l.length > 0)
+            }
         }
     }
 }

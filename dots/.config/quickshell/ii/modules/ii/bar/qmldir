@@ -17,6 +17,8 @@ ClockWidget 1.0 ClockWidget.qml
 ClockWidgetPopup 1.0 ClockWidgetPopup.qml
 DashboardPanelButton 1.0 DashboardPanelButton.qml
 HyprlandXkbIndicator 1.0 HyprlandXkbIndicator.qml
+LocalSendWidget 1.0 LocalSendWidget.qml
+LocalSendWidgetPopup 1.0 LocalSendWidgetPopup.qml
 MatugenColors 1.0 MatugenColors.qml
 Media 1.0 Media.qml
 NotificationHistoryPopup 1.0 NotificationHistoryPopup.qml

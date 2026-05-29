@@ -19,6 +19,10 @@ magick "$SOURCE_IMG_PATH" -thumbnail 200x -quality 50 "$RESIZED_IMG_PATH"
 
 # Get API key
 API_KEY=$(secret-tool lookup 'application' 'illogical-impulse' | jq -r '.apiKeys.gemini')
+if [[ -z "$API_KEY" || "$API_KEY" == "null" ]]; then
+    echo "Error: Gemini API key not found. Store it via secret-tool." >&2
+    exit 1
+fi
 
 # Encode image to base64
 if [[ "$(base64 --version 2>&1)" = *"FreeBSD"* ]]; then
@@ -26,7 +30,7 @@ if [[ "$(base64 --version 2>&1)" = *"FreeBSD"* ]]; then
 else
     B64FLAGS="-w0"
 fi
-B64DATA="$(base64 $B64FLAGS "$RESIZED_IMG_PATH")"
+B64DATA="$(base64 "$B64FLAGS" "$RESIZED_IMG_PATH")"
 
 # Prepare request data using jq for safe JSON construction
 payload=$(jq -n \

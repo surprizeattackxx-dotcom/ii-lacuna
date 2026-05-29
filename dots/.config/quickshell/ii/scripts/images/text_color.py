@@ -10,18 +10,17 @@ def to_hex(color):
     return "#{:02x}{:02x}{:02x}".format(int(color[0]), int(color[1]), int(color[2]))
 
 def get_color_from_stdin():
-    # Read raw bytes from stdin
     input_data = sys.stdin.buffer.read()
     if not input_data:
-        return {"error": "No data received via stdin"}
+        print("error: no data received via stdin", file=sys.stderr)
+        sys.exit(1)
 
-    # Convert bytes to numpy array and decode to image
     nparr = np.frombuffer(input_data, np.uint8)
     img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
-    
     if img is None:
-        return {"error": "Could not decode image data"}
-    
+        print("error: could not decode image data", file=sys.stderr)
+        sys.exit(1)
+
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     h, w, _ = img_rgb.shape
 

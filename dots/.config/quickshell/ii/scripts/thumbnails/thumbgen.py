@@ -63,11 +63,9 @@ def thumbnail_folder(*, dir_path: Path, workers: int, only_images: bool, recursi
         all_files = get_all_images(all_files=all_files)
     all_files = [str(fpath) for fpath in all_files]
     if machine_progress:
-        completed = 0
         total = len(all_files)
         with Pool(processes=workers) as p:
-            for result in p.imap(make_thumbnail, all_files):
-                completed += 1
+            for completed, result in enumerate(p.imap(make_thumbnail, all_files), 1):
                 print(f"PROGRESS {completed}/{total} FILE {all_files[completed-1]}")
                 sys.stdout.flush()
     else:

@@ -1,225 +1,128 @@
 import QtQuick
-import QtQuick.Window
-import QtQuick.Controls
 import QtQuick.Layouts
+import QtQuick.Effects
 import Quickshell
 import Quickshell.Wayland
-import Quickshell.Io 
+import qs.services
 import qs.modules.ii.bar as Bar
-import "../bar/WindowRegistry.js" as LayoutMath 
-
 
 PanelWindow {
-    id: popupWindow
+    id: island
+    anchors { top: true; right: true }
+    margins { top: 200; right: 16 }
 
-    // These properties are passed from Main.qml
-    property var popupModel
-
-    // Fetch the registry properties dynamically based on the current screen width and uiScale
-    property var layoutConfig: ({marginTop: 16, marginRight: 16, w: 360, spacing: 8, radius: 12, padding: 12})
-
-    WlrLayershell.namespace: "qs-popups"
-    WlrLayershell.layer: WlrLayer.Overlay
-    
-    anchors {
-        top: true
-        right: true
-    }
-    
-    margins {
-        top: popupWindow.layoutConfig.marginTop
-        right: popupWindow.layoutConfig.marginRight
-    }
-
-    exclusionMode: ExclusionMode.Ignore
-    focusable: false 
+    implicitHeight: islandShape.height + 16
+    implicitWidth: islandShape.width + 16
     color: "transparent"
 
-    implicitWidth: popupWindow.layoutConfig.w
-    implicitHeight: Math.min(popupList.contentHeight, Screen.height * 0.8)
+    WlrLayershell.namespace: "qs-popups"
+    exclusionMode: ExclusionMode.Ignore
+    focusable: false
 
-    // Smoothly adjust window height so it doesn't instantly snap when popups are added/removed
-    Behavior on height {
-        NumberAnimation { duration: 400; easing.type: Easing.OutQuint }
-    }
+    Bar.MatugenColors { id: _theme }
 
-    property bool dndEnabled: false
+    property var popupList: Notifications.popupList
+    property var currentPopup: popupList.length > 0 ? popupList[0] : null
+    property bool expanded: currentPopup !== null
 
-    // --- DND Polling Mechanism ---
-    Process {
-        id: dndPoller
-        command: ["bash", "-c", "cat ~/.cache/qs_dnd 2>/dev/null || echo '0'"]
-        stdout: StdioCollector {
-            onStreamFinished: popupWindow.dndEnabled = (this.text.trim() === "1")
-        }
-    }
+    onCurrentPopupChanged: if (currentPopup) cycleTimer.restart()
+
     Timer {
-        interval: 3000; running: true; repeat: true; triggeredOnStart: true
-        onTriggered: dndPoller.running = true
+        id: cycleTimer
+        interval: 5000
+        onTriggered: {
+            if (popupList.length > 0) Notifications.discardNotification(popupList[0].notificationId)
+        }
     }
 
-    // --- WRAPPER ITEM FOR OPACITY FIX ---
-    // Instead of fading the window, we fade the contents inside it.
-    Item {
-        id: contentWrapper
-        anchors.fill: parent
-        
-        opacity: popupWindow.dndEnabled ? 0.0 : 1.0
-        visible: opacity > 0.01 // Only hide completely when the fade out is basically done
-        Behavior on opacity { NumberAnimation { duration: 300 } }
+    Rectangle {
+        id: islandShape
+        x: 8; y: 8
+        width: expanded ? mainLayout.implicitWidth + 48 : 0
+        height: expanded ? mainLayout.implicitHeight + 36 : 0
+        radius: 18
+        color: _theme.surface0
+        clip: true
 
-        Bar.MatugenColors { id: _theme }
+        Behavior on width { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+        Behavior on height { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
 
-        property var blobPalette1: [_theme.mauve, _theme.blue, _theme.peach, _theme.green, _theme.pink]
-        property var blobPalette2: [_theme.sapphire, _theme.teal, _theme.maroon, _theme.yellow, _theme.red]
-
-        property real globalOrbitAngle: 0
-        NumberAnimation on globalOrbitAngle {
-            from: 0; to: Math.PI * 2; duration: 25000; loops: Animation.Infinite; running: true
+        layer.enabled: true
+        layer.effect: MultiEffect {
+            shadowEnabled: true
+            shadowBlur: 0.5
+            shadowOpacity: 0.35
+            shadowVerticalOffset: 8
+            shadowColor: "#000"
         }
 
-        ListView {
-            id: popupList
-            anchors.fill: parent
-            model: popupWindow.popupModel
-            spacing: popupWindow.layoutConfig.spacing
-            interactive: false 
-            clip: false 
+        visible: width > 0
 
-            add: Transition {
-                ParallelAnimation {
-                    NumberAnimation { property: "opacity"; from: 0.0; to: 1.0; duration: 400; easing.type: Easing.OutQuint }
-                    NumberAnimation { property: "x"; from: popupWindow.width * 0.4; to: 0; duration: 500; easing.type: Easing.OutQuint }
-                    NumberAnimation { property: "scale"; from: 0.9; to: 1.0; duration: 500; easing.type: Easing.OutQuint }
-                }
-            }
-            
-            remove: Transition {
-                ParallelAnimation {
-                    NumberAnimation { property: "opacity"; to: 0.0; duration: 350; easing.type: Easing.OutQuint }
-                    NumberAnimation { property: "x"; to: popupWindow.width * 0.4; duration: 400; easing.type: Easing.OutQuint }
-                    NumberAnimation { property: "scale"; to: 0.9; duration: 400; easing.type: Easing.OutQuint }
-                }
-            }
+        Rectangle {
+            anchors.left: parent.left
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            width: 3
+            radius: 1.5
+            color: _theme.blue
+            anchors.leftMargin: 6
+            anchors.topMargin: 12
+            anchors.bottomMargin: 12
+        }
 
-            displaced: Transition {
-                NumberAnimation { properties: "x,y"; duration: 450; easing.type: Easing.OutQuint }
-            }
+        ColumnLayout {
+            id: mainLayout
+            x: 20; y: 18
+            width: parent.width - 40
+            spacing: 4
+            visible: parent.width > 0
 
-            delegate: Item {
-                id: delegateRoot
-                width: ListView.view.width
-                height: contentCol.height + (popupWindow.layoutConfig.padding * 2)
-
-                property string fullSummary: modelData.summary || ""
-                property string fullBody: modelData.body || ""
+            RowLayout {
+                id: topRow
+                spacing: 12
+                Layout.fillWidth: true
 
                 Rectangle {
-                    id: popupCard
-                    anchors.fill: parent
-                    radius: popupWindow.layoutConfig.radius
-                    
-                    color: _theme.base
-                    border.color: _theme.surface1
-                    border.width: 1
-                    clip: true 
-                    
-                    property color blob1Color: contentWrapper.blobPalette1[index % 5]
-                    property color blob2Color: contentWrapper.blobPalette2[index % 5]
-
-                    Rectangle {
-                        width: parent.width * 0.7; height: width; radius: width / 2
-                        x: (parent.width / 2 - width / 2) + Math.cos(contentWrapper.globalOrbitAngle * 2 + index) * 60
-                        y: (parent.height / 2 - height / 2) + Math.sin(contentWrapper.globalOrbitAngle * 2 + index) * 30
-                        color: popupCard.blob1Color
-                        opacity: 0.12
-                    }
-                    
-                    Rectangle {
-                        width: parent.width * 0.5; height: width; radius: width / 2
-                        x: (parent.width / 2 - width / 2) + Math.sin(contentWrapper.globalOrbitAngle * 1.5 - index) * -50
-                        y: (parent.height / 2 - height / 2) + Math.cos(contentWrapper.globalOrbitAngle * 1.5 - index) * -40
-                        color: popupCard.blob2Color
-                        opacity: 0.10
-                    }
-
-                    Timer {
-                        interval: 5000
-                        running: true
-                        onTriggered: Notifications.discardNotification(modelData.notificationId)
-                    }
-
-                    MouseArea {
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        
-                        onClicked: {
-                            if ((modelData.appName === "Screenshot" || modelData.appName === "Screen Recorder") && modelData.appIcon !== "") {
-                                let folderPath = modelData.appIcon.substring(0, modelData.appIcon.lastIndexOf('/'))
-                                Quickshell.execDetached(["xdg-open", folderPath])
-                            } 
-                            else {
-                                if (modelData.notification && typeof modelData.notification.invokeAction === "function") {
-                                    modelData.notification.invokeAction("default")
-                                }
-                            }
-
-                            if (modelData.notification && typeof modelData.notification.close === "function") {
-                                modelData.notification.close()
-                            }
-                            Notifications.discardNotification(modelData.notificationId)
-                        }
-                        
-                        Rectangle {
-                            anchors.fill: parent
-                            radius: parent.radius
-                            color: _theme.surface0
-                            opacity: parent.containsMouse ? 0.3 : 0.0
-                            Behavior on opacity { NumberAnimation { duration: 250 } }
-                        }
-                    }
-                    ColumnLayout {
-                        id: contentCol
-                        anchors.left: parent.left
-                        anchors.right: parent.right
-                        anchors.top: parent.top
-                        anchors.margins: popupWindow.layoutConfig.padding
-                        spacing: 6
-
-                        Text {
-                            text: modelData.appName || "System"
-                            font.family: "JetBrains Mono"
-                            font.weight: Font.Medium
-                            font.pixelSize: 12
-                            color: _theme.overlay1
-                            Layout.fillWidth: true
-                        }
-
-                        Text {
-                            text: delegateRoot.fullSummary
-                            Layout.fillWidth: true
-                            font.family: "JetBrains Mono"
-                            font.weight: Font.Bold
-                            font.pixelSize: 15
-                            color: _theme.text
-                            wrapMode: Text.Wrap
-                            visible: text !== ""
-                        }
-
-                        Text {
-                            text: delegateRoot.fullBody
-                            Layout.fillWidth: true
-                            font.family: "JetBrains Mono"
-                            font.weight: Font.Medium
-                            font.pixelSize: 13
-                            color: _theme.subtext0 
-                            wrapMode: Text.Wrap
-                            textFormat: Text.PlainText
-                            visible: text !== ""
-                        }
+                    width: 24; height: 24; radius: 7
+                    color: _theme.surface2
+                    Image {
+                        anchors.fill: parent; anchors.margins: 4
+                        source: currentPopup ? "image://icon/" + currentPopup.appIcon : ""
+                        sourceSize { width: 16; height: 16 }
+                        fillMode: Image.PreserveAspectFit
                     }
                 }
+
+                Text {
+                    text: currentPopup ? (currentPopup.appName || "System") : ""
+                    color: _theme.text
+                    font.pixelSize: 13
+                    font.weight: Font.Medium
+                    elide: Text.ElideRight
+                    Layout.fillWidth: true
+                }
+            }
+
+            Text {
+                text: currentPopup && currentPopup.notification ? currentPopup.notification.summary || "" : ""
+                color: _theme.text
+                font.pixelSize: 12
+                font.weight: Font.DemiBold
+                wrapMode: Text.Wrap
+                elide: Text.ElideRight
+                Layout.fillWidth: true
+                Layout.maximumHeight: 36
+                visible: text.length > 0
+            }
+
+            Text {
+                text: currentPopup && currentPopup.notification ? currentPopup.notification.body || "" : ""
+                color: _theme.subtext0
+                font.pixelSize: 12
+                wrapMode: Text.Wrap
+                elide: Text.ElideRight
+                Layout.fillWidth: true
+                Layout.maximumHeight: 40
             }
         }
     }

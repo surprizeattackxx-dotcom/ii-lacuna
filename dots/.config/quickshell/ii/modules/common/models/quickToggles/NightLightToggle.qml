@@ -21,7 +21,7 @@ QuickToggleModel {
     hasMenu: true
 
     Component.onCompleted: {
-        Hyprsunset.fetchState()
+        // Hyprsunset detects running state via startupStateProc on its own init
     }
     
     tooltipText: Translation.tr("Night Light | Right-click to configure")

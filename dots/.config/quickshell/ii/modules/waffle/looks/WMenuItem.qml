@@ -49,6 +49,7 @@ MenuItem {
         return root.colForegroundDisabled;
     }
 
+    property bool reserveIconSpace: false
     property real inset: 2
     topInset: inset
     bottomInset: inset
@@ -86,7 +87,8 @@ MenuItem {
                 Layout.fillWidth: false
                 Layout.alignment: Qt.AlignVCenter
                 color: root.fgColor
-                visible: root.icon.name !== ""
+                visible: root.icon.name !== "" || root.reserveIconSpace
+                opacity: root.icon.name !== "" ? 1 : 0
                 icon: root.icon.name
             }
             WText {

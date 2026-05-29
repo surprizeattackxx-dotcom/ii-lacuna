@@ -12,14 +12,18 @@ import Quickshell.Hyprland
  * It is necessary to run reapplyTheme() on startup because Singletons are lazily loaded.
  */
 Singleton {
+    id: root
+    property string filePath: Directories.generatedMaterialThemePath
+
     IpcHandler {
         target: "theme"
         function reload(): void {
             root.reloadAfterExternalColorChange()
         }
+        function toggleLightDark(): void {
+            root.toggleLightDark()
+        }
     }
-    id: root
-    property string filePath: Directories.generatedMaterialThemePath
 
     function reapplyTheme() {
         themeFileView.reload()
@@ -108,14 +112,6 @@ Singleton {
         description: "Toggles between dark theme and light theme"
 
         onPressed: {
-            root.toggleLightDark();
-        }
-    }
-
-    IpcHandler {
-        target: "theme"
-
-        function toggleLightDark(): void {
             root.toggleLightDark();
         }
     }

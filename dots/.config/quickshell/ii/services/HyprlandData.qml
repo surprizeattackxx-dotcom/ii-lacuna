@@ -83,10 +83,15 @@ Singleton {
         updateAll();
     }
 
+    property var pendingEvents: ({})
+
     Timer {
         id: debounceTimer
-        interval: 20
-        onTriggered: updateAll()
+        interval: 130
+        onTriggered: {
+            root.pendingEvents = ({});
+            updateAll();
+        }
     }
 
     Connections {
@@ -94,6 +99,8 @@ Singleton {
 
         function onRawEvent(event) {
             if (["openlayer", "closelayer", "screencast"].includes(event.name)) return;
+            if (root.pendingEvents[event.name]) return;
+            root.pendingEvents[event.name] = true;
             debounceTimer.restart()
         }
     }

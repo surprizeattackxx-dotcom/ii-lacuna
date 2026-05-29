@@ -4,6 +4,7 @@ import QtQuick.Effects
 import Quickshell
 import Quickshell.Io
 import qs.modules.ii.bar
+import qs.modules.common
 import QtQuick.Controls
 
 Item {
@@ -64,11 +65,17 @@ Item {
         id: monitorsModel
     }
 
+    // activeEditIndex can lag behind the model during its clear/repopulate cycle,
+    // so bounds-check before get() — an out-of-range get() returns undefined.
+    readonly property var activeMon: (activeEditIndex >= 0 && activeEditIndex < monitorsModel.count)
+        ? monitorsModel.get(activeEditIndex)
+        : null
+
     property color selectedResAccent: window.mauve
     property color selectedRateAccent: window.blue
 
-    readonly property real sdrValue: monitorsModel.count > 0 ? monitorsModel.get(activeEditIndex).sdrBrightness : 1.0
-    readonly property real satValue: monitorsModel.count > 0 ? monitorsModel.get(activeEditIndex).sdrSaturation : 1.0
+    readonly property real sdrValue: activeMon ? activeMon.sdrBrightness : 1.0
+    readonly property real satValue: activeMon ? activeMon.sdrSaturation : 1.0
 
     property real currentSimW: monitorsModel.count > 0 ? monitorsModel.get(0).resW : 1920
     property real currentSimH: monitorsModel.count > 0 ? monitorsModel.get(0).resH : 1080
@@ -289,7 +296,8 @@ Item {
                     window.mergeDisabledFile(this.text);
                 }
                 window.readAndMergeMonitorConfig();
-                displayPoller.restart();
+                displayPoller.running = false;
+                displayPoller.running = true;
             }
         }
     }
@@ -445,9 +453,8 @@ Item {
                                 radius: window.s(12)
 
                                 property bool isSel: {
-                                    if (monitorsModel.count === 0) return false;
-                                    let activeMon = monitorsModel.get(window.activeEditIndex);
-                                    return activeMon.resW === modelData.resW && activeMon.resH === modelData.resH;
+                                    if (!window.activeMon) return false;
+                                    return window.activeMon.resW === modelData.resW && window.activeMon.resH === modelData.resH;
                                 }
                                 property color accentColor: modelData.accent
 
@@ -518,8 +525,8 @@ Item {
                         property var rateColors: [window.red, window.mauve, window.blue, window.sapphire, window.teal, window.pink, window.yellow, window.green, window.peach]
 
                         property int currentIndex: {
-                            if (monitorsModel.count === 0) return 0;
-                            let currentVal = parseInt(monitorsModel.get(window.activeEditIndex).rate) || 60;
+                            if (!window.activeMon) return 0;
+                            let currentVal = parseInt(window.activeMon.rate) || 60;
                             let closestIdx = 0;
                             let minDiff = 9999;
                             for (let i = 0; i < rates.length; i++) {
@@ -744,7 +751,7 @@ Item {
                                     ]
                                     delegate: Rectangle {
                                         required property var modelData
-                                        property bool isSel: monitorsModel.count > 0 && monitorsModel.get(window.activeEditIndex).disabled === modelData.val
+                                        property bool isSel: window.activeMon ? window.activeMon.disabled === modelData.val : false
                                         width: stateLbl.implicitWidth + window.s(16)
                                         height: window.s(28)
                                         radius: window.s(8)
@@ -814,7 +821,7 @@ Item {
                                     ]
                                     delegate: Rectangle {
                                         required property var modelData
-                                        property bool isSel: monitorsModel.count > 0 && monitorsModel.get(window.activeEditIndex).vrr === modelData.val
+                                        property bool isSel: window.activeMon ? window.activeMon.vrr === modelData.val : false
                                         width: vrrLbl.implicitWidth + window.s(16)
                                         height: window.s(28)
                                         radius: window.s(8)
@@ -863,7 +870,7 @@ Item {
                                     ]
                                     delegate: Rectangle {
                                         required property var modelData
-                                        property bool isSel: monitorsModel.count > 0 && monitorsModel.get(window.activeEditIndex).bitdepth === modelData.val
+                                        property bool isSel: window.activeMon ? window.activeMon.bitdepth === modelData.val : false
                                         width: bdLbl.implicitWidth + window.s(16)
                                         height: window.s(28)
                                         radius: window.s(8)
@@ -920,7 +927,7 @@ Item {
                                     ]
                                     delegate: Rectangle {
                                         required property var modelData
-                                        property bool isSel: monitorsModel.count > 0 && monitorsModel.get(window.activeEditIndex).cm === modelData.val
+                                        property bool isSel: window.activeMon ? window.activeMon.cm === modelData.val : false
                                         width: cmLbl.implicitWidth + window.s(16)
                                         height: window.s(28)
                                         radius: window.s(8)

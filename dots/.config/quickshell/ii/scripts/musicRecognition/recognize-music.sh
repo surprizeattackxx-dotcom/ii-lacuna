@@ -31,10 +31,6 @@ if [ -z "$AUDIO_DEVICE" ] || ! pactl list short sources | grep -q "$AUDIO_DEVICE
     exit 1
 fi
 
-if [ -z "$MONITOR_SOURCE" ] || ! pactl list short sources | grep -qF "$MONITOR_SOURCE"; then
-    exit 1
-fi
-
 cleanup() {
     kill "$SONGREC_PID" 2>/dev/null || true
     wait "$SONGREC_PID" 2>/dev/null
@@ -53,12 +49,3 @@ while IFS= read -r line; do
         exit 0
     fi
 done < "$FIFO"
-
-    ffmpeg -f s16le -ar 44100 -ac 2 -i "$TMP_RAW" -acodec libmp3lame -y -hide_banner -loglevel error "$TMP_MP3" 2>/dev/null
-    RESULT=$(songrec audio-file-to-recognized-song "$TMP_MP3" 2>/dev/null || true)
-
-    if echo "$RESULT" | grep -q '"matches": \[' && [ ${#RESULT} -gt $MIN_VALID_RESULT_LENGTH ]; then
-        echo "$RESULT"
-        exit 0
-    fi
-done

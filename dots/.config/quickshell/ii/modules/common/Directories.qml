@@ -18,7 +18,8 @@ Singleton {
     readonly property string downloads: StandardPaths.standardLocations(StandardPaths.DownloadLocation)[0]
     readonly property string pictures: StandardPaths.standardLocations(StandardPaths.PicturesLocation)[0]
     readonly property string music: StandardPaths.standardLocations(StandardPaths.MusicLocation)[0]
-    readonly property string videos: StandardPaths.standardLocations(StandardPaths.MoviesLocation)[0]
+    readonly     property string videos: StandardPaths.standardLocations(StandardPaths.MoviesLocation)[0]
+    property string localSendDownloadPath: FileUtils.trimFileProtocol(`${Directories.home}/Downloads/localsend`)
 
     readonly property string cliPath: FileUtils.trimFileProtocol(`${Directories.home}/.local/bin/vynx`)
 

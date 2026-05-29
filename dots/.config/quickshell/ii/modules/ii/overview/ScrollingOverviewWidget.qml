@@ -16,7 +16,7 @@ Item {
     required property int monitorIndex 
     required property var panelWindow
 
-    readonly property bool hyprscrollingEnabled: true //FIXME
+    readonly property bool hyprscrollingEnabled: Config.options.overview.hyprscrolling
     readonly property bool useWorkspaceMap: Config.options.overview.useWorkspaceMap
     readonly property list<int> workspaceMap: Config.options.overview.workspaceMap
     readonly property string backgroundStyle: Config.options.overview.scrollingStyle.backgroundStyle

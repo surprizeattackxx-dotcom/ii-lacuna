@@ -342,25 +342,18 @@ curl -sf "https://api.open-meteo.com/v1/forecast?latitude=$LAT&longitude=$LON&${
         }
     }
 
+    // Single poll loop. Fires once at start, then checks staleness against
+    // wall-clock time every minute — so it also catches sleep/wake gaps that
+    // Qt's interval timers miss, without a second parallel poller.
     Timer {
-        running: !root.gpsActive
-        repeat: true
-        interval: root.fetchInterval
-        triggeredOnStart: !root.gpsActive
-        onTriggered: root.getData()
-    }
-
-    // Watchdog: fires every minute to catch stale data after sleep/wake,
-    // since Qt timers don't account for system sleep time.
-    Timer {
-        running: root.ready
+        running: root.ready && !root.gpsActive
         repeat: true
         interval: 60000
+        triggeredOnStart: true
         onTriggered: {
-            if (!root.isLoading) {
-                const elapsed = root.lastRefreshMs > 0 ? Date.now() - root.lastRefreshMs : root.fetchInterval + 1;
-                if (elapsed > root.fetchInterval) root.getData();
-            }
+            if (root.isLoading) return;
+            const elapsed = root.lastRefreshMs > 0 ? Date.now() - root.lastRefreshMs : root.fetchInterval + 1;
+            if (elapsed >= root.fetchInterval) root.getData();
         }
     }
 }

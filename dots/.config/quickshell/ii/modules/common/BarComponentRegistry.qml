@@ -21,7 +21,8 @@ Singleton {
         { id: "timer", icon: "timer", title: "Timer & Pomodoro" },
         { id: "weather", icon: "weather_mix", title: "Weather" },
         { id: "utility_buttons", icon: "build", title: "Utility buttons" },
-        { id: "system_updates", icon: "system_update_alt", title: "System Updates" }
+        { id: "system_updates", icon: "system_update_alt", title: "System Updates" },
+        { id: "localsend", icon: "devices", title: "LocalSend" }
     ]
 
     function getComponent(id) {

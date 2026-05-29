@@ -47,6 +47,10 @@ payload=$(jq -n \
 
 # Get API key
 API_KEY=$(secret-tool lookup 'application' 'illogical-impulse' | jq -r '.apiKeys.gemini')
+if [[ -z "$API_KEY" || "$API_KEY" == "null" ]]; then
+    notify-send "Translation failed" "Gemini API key not found. Store it via secret-tool." -a "$NOTIFICATION_APP_NAME"
+    exit 1
+fi
 
 # Notify start
 notify-send "Translation started" "Will take 2 minutes, and you'll be notified when it's done, so feel free to do something else in the meantime." -a "$NOTIFICATION_APP_NAME"
