@@ -55,6 +55,9 @@ Item {
                 source: tryList[fallbackIdx] ? ("file://" + tryList[fallbackIdx]) : ""
                 fillMode: Image.PreserveAspectCrop
                 asynchronous: true
+                cache: true
+                sourceSize.width: container.width
+                sourceSize.height: container.height
                 onStatusChanged: {
                     if (status === Image.Error && fallbackIdx < tryList.length - 1)
                         fallbackIdx++
@@ -108,6 +111,9 @@ Item {
                     source: tryList[fallbackIdx] ? ("file://" + tryList[fallbackIdx]) : ""
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
+                    cache: true
+                    sourceSize.width: container.width
+                    sourceSize.height: container.height
                     onStatusChanged: {
                         if (status === Image.Error && fallbackIdx < tryList.length - 1)
                             fallbackIdx++

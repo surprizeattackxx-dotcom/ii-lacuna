@@ -26,6 +26,7 @@ Rectangle {
     // 1px border at the top or bottom
     Canvas {
         id: borderCanvas
+        renderStrategy: Canvas.Cooperative
         anchors.fill: parent
         // For dark mode we have a shiny top border, and for light mode we have sort of a shadow
         rotation: Looks.dark ? 0 : 180

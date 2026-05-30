@@ -3,6 +3,7 @@ import QtQuick
 
 Canvas {
     id: root
+    renderStrategy: Canvas.Cooperative
     property real amplitudeMultiplier: 0.5
     property real frequency: 6
     property color color: Appearance?.colors.colPrimary ?? "#685496"

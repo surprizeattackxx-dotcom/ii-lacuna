@@ -1195,6 +1195,7 @@ Item {
                         height: window.itemHeight + window.s(30)
                         fillMode: Image.PreserveAspectCrop
                         source: fileUrl !== undefined ? fileUrl : ""
+                        sourceSize: Qt.size(width, height)
                         asynchronous: true
 
                         transform: Matrix4x4 {
@@ -1241,6 +1242,7 @@ Item {
                         }
                         
                         Canvas {
+                            renderStrategy: Canvas.Cooperative
                             anchors.fill: parent
                             anchors.margins: window.s(8)
                             property real scaleTrigger: window.s(1)
@@ -1320,6 +1322,7 @@ Item {
 
                     Canvas {
                         id: notifSpinner
+                        renderStrategy: Canvas.Cooperative
                         width: window.s(14)
                         height: window.s(14)
                         anchors.centerIn: parent
@@ -1408,6 +1411,7 @@ Item {
                         }
 
                         Canvas {
+                            renderStrategy: Canvas.Cooperative
                             visible: modelData.name === "Video"
                             width: window.s(14); height: window.s(16)
                             anchors.centerIn: parent
@@ -1432,6 +1436,7 @@ Item {
                         }
 
                         Canvas {
+                            renderStrategy: Canvas.Cooperative
                             visible: modelData.name === "All"
                             width: window.s(14); height: window.s(14)
                             anchors.centerIn: parent
@@ -1488,6 +1493,7 @@ Item {
                 }
                 
                 Canvas {
+                    renderStrategy: Canvas.Cooperative
                     width: window.s(44); height: window.s(44)
                     anchors.centerIn: parent
                     property bool paused: window.isSearchPaused
@@ -1549,6 +1555,7 @@ Item {
 
                 Canvas {
                     id: searchIcon
+                    renderStrategy: Canvas.Cooperative
                     width: window.s(44)
                     height: window.s(44)
                     anchors.left: parent.left
@@ -1634,6 +1641,7 @@ Item {
                     }
 
                     Canvas {
+                        renderStrategy: Canvas.Cooperative
                         width: window.s(16)
                         height: window.s(16)
                         anchors.centerIn: parent

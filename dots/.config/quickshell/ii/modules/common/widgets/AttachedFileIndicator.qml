@@ -125,6 +125,7 @@ Rectangle {
 
         Loader {
             id: imagePreviewLoader
+            asynchronous: true
             visible: (root.imageWidth != -1) && (root.imageHeight != -1)
             Layout.alignment: Qt.AlignHCenter
             sourceComponent: Item {

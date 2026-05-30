@@ -75,6 +75,8 @@ StyledPopup {
                 anchors.fill: parent
                 source: musicContent.musicData.blur || ""
                 fillMode: Image.PreserveAspectCrop
+                sourceSize: Qt.size(width, height)
+                asynchronous: true
                 opacity: 0.15
             }
 
@@ -97,6 +99,8 @@ StyledPopup {
                             anchors.fill: parent; anchors.margins: 1
                             source: musicContent.musicData.artUrl || ""
                             fillMode: Image.PreserveAspectCrop
+                            sourceSize: Qt.size(width, height)
+                            asynchronous: true
                             opacity: status === Image.Ready ? 1 : 0
                             Behavior on opacity { NumberAnimation { duration: 500 } }
                             

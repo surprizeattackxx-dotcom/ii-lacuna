@@ -7,6 +7,7 @@ import qs.modules.common.functions
  */
 Canvas {
     id: root
+    renderStrategy: Canvas.Cooperative
 
     enum Alignment { Left, Right }
 

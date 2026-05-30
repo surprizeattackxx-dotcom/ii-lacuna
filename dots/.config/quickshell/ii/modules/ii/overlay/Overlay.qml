@@ -20,6 +20,7 @@ Scope {
     Loader {
         id: overlayLoader
         active: GlobalStates.overlayOpen || OverlayContext.hasPinnedWidgets
+        asynchronous: true
         sourceComponent: PanelWindow {
             id: overlayWindow
             exclusionMode: ExclusionMode.Ignore

@@ -60,6 +60,7 @@ Scope {
         Loader {
             id: contentLoader
             active: GlobalStates.calendarAppOpen
+            asynchronous: true
             anchors.centerIn: parent
             width: Math.min(860, parent.width - 80)
             height: Math.min(640, parent.height - 80)

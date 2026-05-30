@@ -6,6 +6,7 @@ import QtQuick.Effects
 
 Canvas { // Visualizer
     id: root
+    renderStrategy: Canvas.Cooperative
     property list<var> points
     property list<var> smoothPoints
     property real maxVisualizerValue: 1000

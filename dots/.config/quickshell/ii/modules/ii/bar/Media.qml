@@ -58,6 +58,7 @@ Item {
                 fillMode: Image.PreserveAspectCrop
                 cache: false
                 antialiasing: true
+                asynchronous: true
                 width: parent.width
                 height: parent.height
                 sourceSize.width: width

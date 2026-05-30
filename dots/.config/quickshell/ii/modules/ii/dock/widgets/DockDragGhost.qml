@@ -55,6 +55,7 @@ Item {
             anchors.fill: parent
             source: root.fileIsImage ? ("file://" + root.filePath) : ""
             fillMode: Image.PreserveAspectCrop
+            sourceSize: Qt.size(width, height)
             asynchronous: true
             cache: true
 

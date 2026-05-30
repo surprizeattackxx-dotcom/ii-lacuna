@@ -685,6 +685,7 @@ Item {
                         width: s(32); height: s(32); radius: s(6); color: "#60000000"
                         transform: Matrix4x4 { property real sf: -skewFactor; matrix: Qt.matrix4x4(1, sf, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1) }
                         Canvas {
+                            renderStrategy: Canvas.Cooperative
                             anchors.fill: parent; anchors.margins: s(8)
                             property real scaleTrigger: s(1); onScaleTriggerChanged: requestPaint()
                             onPaint: { var ctx = getContext("2d"); ctx.reset(); ctx.fillStyle = "#EEFFFFFF"; ctx.beginPath(); ctx.moveTo(s(4), 0); ctx.lineTo(s(14), s(8)); ctx.lineTo(s(4), s(16)); ctx.closePath(); ctx.fill(); }
@@ -740,6 +741,7 @@ Item {
 
                 Item { visible: showSpinner; width: s(44); height: s(44); anchors.left: parent.left; anchors.verticalCenter: parent.verticalCenter
                     Canvas {
+                        renderStrategy: Canvas.Cooperative
                         id: notifSpinner; width: s(14); height: s(14); anchors.centerIn: parent
                         property real scaleTrigger: s(1); onScaleTriggerChanged: requestPaint()
                         onPaint: { var ctx = getContext("2d"); ctx.reset(); ctx.lineWidth = s(2); ctx.strokeStyle = Qt.rgba(_theme.text.r, _theme.text.g, _theme.text.b, 0.3); ctx.beginPath(); ctx.arc(s(7), s(7), s(5), 0, Math.PI * 2); ctx.stroke(); ctx.strokeStyle = Qt.rgba(_theme.text.r, _theme.text.g, _theme.text.b, 0.9); ctx.beginPath(); ctx.arc(s(7), s(7), s(5), 0, Math.PI * 0.5); ctx.stroke(); }
@@ -778,12 +780,14 @@ Item {
                             Behavior on color { ColorAnimation { duration: 400; easing.type: Easing.OutQuart } }
                         }
                         Canvas {
+                            renderStrategy: Canvas.Cooperative
                             visible: modelData.name === "Video"; width: s(14); height: s(16); anchors.centerIn: parent; anchors.horizontalCenterOffset: s(2)
                             property string activeColor: currentFilter === modelData.name ? _theme.text : Qt.rgba(_theme.text.r, _theme.text.g, _theme.text.b, 0.7)
                             onActiveColorChanged: requestPaint(); property real scaleTrigger: s(1); onScaleTriggerChanged: requestPaint()
                             onPaint: { var ctx = getContext("2d"); ctx.reset(); ctx.fillStyle = activeColor; ctx.beginPath(); ctx.moveTo(0, 0); ctx.lineTo(s(14), s(8)); ctx.lineTo(0, s(16)); ctx.closePath(); ctx.fill(); }
                         }
                         Canvas {
+                            renderStrategy: Canvas.Cooperative
                             visible: modelData.name === "All"; width: s(14); height: s(14); anchors.centerIn: parent
                             property string activeColor: currentFilter === modelData.name ? _theme.text : Qt.rgba(_theme.text.r, _theme.text.g, _theme.text.b, 0.7)
                             onActiveColorChanged: requestPaint(); property real scaleTrigger: s(1); onScaleTriggerChanged: requestPaint()
@@ -804,6 +808,7 @@ Item {
                 Behavior on color { ColorAnimation { duration: 400; easing.type: Easing.OutQuart } }
                 MouseArea { id: scMouse; anchors.fill: parent; hoverEnabled: true; enabled: !isApplying; cursorShape: Qt.PointingHandCursor; onClicked: isSearchPaused = !isSearchPaused }
                 Canvas {
+                    renderStrategy: Canvas.Cooperative
                     width: s(44); height: s(44); anchors.centerIn: parent
                     property bool paused: isSearchPaused
                     property string activeColor: paused ? _theme.text : (scMouse.containsMouse ? _theme.text : Qt.rgba(_theme.text.r, _theme.text.g, _theme.text.b, 0.7))
@@ -830,6 +835,7 @@ Item {
                     onClicked: { if (currentFilter !== "Search") currentFilter = "Search"; else currentFilter = "All"; }
                 }
                 Canvas {
+                    renderStrategy: Canvas.Cooperative
                     id: searchIcon; width: s(44); height: s(44); anchors.left: parent.left
                     anchors.leftMargin: currentFilter === "Search" ? s(5) : 0; anchors.verticalCenter: parent.verticalCenter
                     Behavior on anchors.leftMargin { NumberAnimation { duration: 500; easing.type: Easing.OutExpo } }
@@ -855,6 +861,7 @@ Item {
                     Behavior on color { ColorAnimation { duration: 300 } }
                     MouseArea { id: submitMouseArea; anchors.fill: parent; cursorShape: Qt.PointingHandCursor; hoverEnabled: true; enabled: !isApplying; onClicked: triggerOnlineSearch() }
                     Canvas {
+                        renderStrategy: Canvas.Cooperative
                         width: s(16); height: s(16); anchors.centerIn: parent
                         property string activeColor: submitMouseArea.containsMouse ? _theme.text : Qt.rgba(_theme.text.r, _theme.text.g, _theme.text.b, 0.7)
                         onActiveColorChanged: requestPaint(); property real scaleTrigger: s(1); onScaleTriggerChanged: requestPaint()
@@ -872,6 +879,7 @@ Item {
                 Behavior on border.color { ColorAnimation { duration: 300 } }
                 MouseArea { id: aiMouseArea; anchors.fill: parent; hoverEnabled: true; enabled: !isApplying && !isAiThinking; cursorShape: Qt.PointingHandCursor; onClicked: aiPickWallpaper() }
                 Canvas {
+                    renderStrategy: Canvas.Cooperative
                     id: aiStar; width: s(20); height: s(20); anchors.centerIn: parent
                     property string activeColor: aiMouseArea.containsMouse || isAiThinking ? _theme.mauve : Qt.rgba(_theme.mauve.r, _theme.mauve.g, _theme.mauve.b, 0.85)
                     onActiveColorChanged: requestPaint(); property real scaleTrigger: s(1); onScaleTriggerChanged: requestPaint()

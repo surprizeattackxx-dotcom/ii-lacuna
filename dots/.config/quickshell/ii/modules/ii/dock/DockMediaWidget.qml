@@ -93,6 +93,7 @@ Item {
                 anchors.fill: parent
                 source: root.finalArtUrl
                 fillMode: Image.PreserveAspectCrop
+                sourceSize: Qt.size(width, height)
                 cache: true
                 antialiasing: true
                 asynchronous: true

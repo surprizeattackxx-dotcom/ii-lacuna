@@ -3,6 +3,7 @@ import "shapes/morph.js" as Morph
 
 Canvas {
     id: root
+    renderStrategy: Canvas.Cooperative
     property color color: "#685496"
     property var roundedPolygon: null
     property bool polygonIsNormalized: true

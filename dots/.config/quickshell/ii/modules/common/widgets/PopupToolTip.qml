@@ -37,6 +37,7 @@ Item {
     Loader {
         id: tooltipLoader
         anchors.fill: parent
+        asynchronous: true
         active: root.internalVisibleCondition
         sourceComponent: PopupWindow {
             visible: true

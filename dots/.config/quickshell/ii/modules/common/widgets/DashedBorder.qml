@@ -4,6 +4,7 @@ import qs.modules.common.functions
 
 Canvas {
     id: root
+    renderStrategy: Canvas.Cooperative
     property color color: "#ffffff"
     property int dashLength: 6
     property int gapLength: 4

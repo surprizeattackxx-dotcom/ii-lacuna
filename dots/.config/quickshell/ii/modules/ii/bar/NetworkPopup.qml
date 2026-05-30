@@ -711,6 +711,7 @@ StyledPopup {
 
             Canvas {
                 id: nodeLinesCanvas
+                renderStrategy: Canvas.Cooperative
                 anchors.fill: parent
                 anchors.bottomMargin: window.s(80)
                 z: 0 
@@ -970,6 +971,7 @@ StyledPopup {
 
                             Canvas {
                                 id: coreWave
+                                renderStrategy: Canvas.Cooperative
                                 anchors.fill: parent
                                 visible: centralCore.disconnectFill > 0
                                 opacity: 0.95
@@ -1618,6 +1620,7 @@ StyledPopup {
 
                                 Canvas {
                                     id: waveCanvas
+                                    renderStrategy: Canvas.Cooperative
                                     anchors.fill: parent
                                     
                                     property real scaleTrigger: window.s(1)

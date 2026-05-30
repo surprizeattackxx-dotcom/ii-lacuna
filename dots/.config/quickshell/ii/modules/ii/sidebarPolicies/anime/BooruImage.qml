@@ -107,6 +107,7 @@ Button {
         Loader {
             id: contextMenuLoader
             active: root.showActions
+            asynchronous: true
             anchors.top: menuButton.bottom
             anchors.right: parent.right
             anchors.margins: 8

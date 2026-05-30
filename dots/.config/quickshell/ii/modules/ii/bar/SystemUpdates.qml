@@ -92,6 +92,7 @@ MouseArea {
             // Dim track ring — always present when checking
             Canvas {
                 id: trackRing
+                renderStrategy: Canvas.Cooperative
                 anchors.fill: parent
                 visible: Updates.checking
                 onPaint: {
@@ -112,6 +113,7 @@ MouseArea {
             // Spinning arc
             Canvas {
                 id: barSpinArc
+                renderStrategy: Canvas.Cooperative
                 anchors.fill: parent
                 visible: Updates.checking
                 opacity: Updates.checking ? 1.0 : 0.0
@@ -304,6 +306,7 @@ MouseArea {
                         // Track ring (always visible, dim)
                         Canvas {
                             id: trackRing2
+                            renderStrategy: Canvas.Cooperative
                             anchors.fill: parent
                             onPaint: {
                                 var ctx = getContext("2d")
@@ -323,6 +326,7 @@ MouseArea {
                         // Spinning arc (only while checking)
                         Canvas {
                             id: spinArc
+                            renderStrategy: Canvas.Cooperative
                             anchors.fill: parent
                             visible: Updates.checking
                             opacity: Updates.checking ? 1.0 : 0.0
@@ -356,6 +360,7 @@ MouseArea {
                         // Checkmark/done ring fade-in when check completes
                         Canvas {
                             id: doneArc
+                            renderStrategy: Canvas.Cooperative
                             anchors.fill: parent
                             visible: !Updates.checking && Updates.count === 0
                             opacity: visible ? 1.0 : 0.0

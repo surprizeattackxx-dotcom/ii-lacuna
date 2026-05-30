@@ -678,6 +678,8 @@ ContentPage {
                                     source: "file://" + modelData.path + "/preview.gif"
                                     asynchronous: true
                                     cache: true
+                                    sourceSize.width: width
+                                    sourceSize.height: height
                                     clip: true
                                 }
 

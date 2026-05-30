@@ -110,6 +110,7 @@ MouseArea {
 
     Loader {
         active: true
+        asynchronous: true
         sourceComponent: Config.options.bar.tooltips.compactPopups ? resourcesPopupCompact : resourcesPopupFull
     }
     Component {

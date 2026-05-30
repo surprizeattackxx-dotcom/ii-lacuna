@@ -81,6 +81,7 @@ Scope {
     Loader {
         id: mediaControlsLoader
         active: GlobalStates.mediaControlsOpen
+        asynchronous: true
         onActiveChanged: {
             if (!mediaControlsLoader.active && root.realPlayers.length === 0) {
                 GlobalStates.mediaControlsOpen = false;

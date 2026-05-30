@@ -42,7 +42,7 @@ StyledPopup {
                 running: true
                 stdout: SplitParser { onRead: (l) => { const v=parseFloat(l); if(!isNaN(v)) content.cpuFreq=(v/1000).toFixed(2)+" GHz"; }}
             }
-            property var cpuTimer: Timer { interval:3000;repeat:true;running:true
+            property var cpuTimer: Timer { interval:3000;repeat:true;running:root.open
                 onTriggered: backend.cpuFreqProc.running = true
             }
             property var gpuProc: Process {
@@ -58,7 +58,7 @@ StyledPopup {
                     }
                 }}
             }
-            property var gpuTimer: Timer { interval:3000;repeat:true;running:true; onTriggered:backend.gpuProc.running=true }
+            property var gpuTimer: Timer { interval:3000;repeat:true;running:root.open; onTriggered:backend.gpuProc.running=true }
             property var diskProc: Process {
                 command: ["bash","-c","df -k / | awk 'NR==2{print $2,$3,$4}'"]
                 running: true
@@ -75,7 +75,7 @@ StyledPopup {
                     }
                 }}
             }
-            property var diskTimer: Timer { interval:10000;repeat:true;running:true; onTriggered:backend.diskProc.running=true }
+            property var diskTimer: Timer { interval:10000;repeat:true;running:root.open; onTriggered:backend.diskProc.running=true }
         }
 
         ColumnLayout {

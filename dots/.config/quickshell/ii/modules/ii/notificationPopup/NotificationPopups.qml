@@ -90,6 +90,7 @@ PanelWindow {
                         source: currentPopup ? "image://icon/" + currentPopup.appIcon : ""
                         sourceSize { width: 16; height: 16 }
                         fillMode: Image.PreserveAspectFit
+                        asynchronous: true
                     }
                 }
 

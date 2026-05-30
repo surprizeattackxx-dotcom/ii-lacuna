@@ -14,6 +14,7 @@ Scope {
     
     Loader {
         active: PolkitService.active
+        asynchronous: true
         sourceComponent: Variants {
             model: Quickshell.screens
             delegate: PanelWindow {

@@ -122,6 +122,7 @@ RippleButton {
 
         Canvas {
             id: myCanvas
+            renderStrategy: Canvas.Cooperative
             anchors.centerIn: parent
             anchors.margins: 8
 

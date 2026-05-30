@@ -198,6 +198,8 @@ PanelWindow {
                             anchors.margins: s(2)
                             source: currentNotification ? currentNotification.icon : ""
                             fillMode: Image.PreserveAspectFit
+                            sourceSize.width: s(20)
+                            sourceSize.height: s(20)
                             asynchronous: true
                         }
 
@@ -296,6 +298,8 @@ PanelWindow {
                             anchors.margins: s(4)
                             source: currentNotification ? currentNotification.icon : ""
                             fillMode: Image.PreserveAspectFit
+                            sourceSize.width: s(40)
+                            sourceSize.height: s(40)
                             asynchronous: true
                         }
 

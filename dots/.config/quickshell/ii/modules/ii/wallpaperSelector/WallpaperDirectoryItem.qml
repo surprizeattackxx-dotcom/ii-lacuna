@@ -181,6 +181,8 @@ MouseArea {
                     fillMode: Image.PreserveAspectCrop
                     asynchronous: true
                     cache: false
+                    sourceSize.width: wallpaperItemImageContainer.width
+                    sourceSize.height: wallpaperItemImageContainer.height
                     onStatusChanged: {
                         if (status === Image.Ready) {
                             root.wpePreviewLoaded = true

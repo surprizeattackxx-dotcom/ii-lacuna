@@ -528,6 +528,7 @@ Item {
     Loader {
         id: previewPopupLoader
         active: Config.options.dock.enablePreview ?? true
+        asynchronous: true
         sourceComponent: DockPreviewPopup {
             dockRoot: root
             dockWindow: root.QsWindow.window

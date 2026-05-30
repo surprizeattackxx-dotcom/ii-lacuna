@@ -159,6 +159,7 @@ Item { // Window
                 // mipmap: true
                 Layout.alignment: Qt.AlignHCenter
                 source: root.iconPath
+                asynchronous: true
                 width: iconSize
                 height: iconSize
                 sourceSize: Qt.size(iconSize, iconSize)
