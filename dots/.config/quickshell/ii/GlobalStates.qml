@@ -40,6 +40,7 @@ Singleton {
     property bool workspaceShowNumbers: true
     property bool isScrollingLayout: false
 
+    property bool gameLauncherOpen: false
     property bool calendarAppOpen: false
     property bool dashboardPanelOpen: false // formerly sidebarRightOpen
     property bool policiesPanelOpen: false  // formerly sidebarLeftOpen

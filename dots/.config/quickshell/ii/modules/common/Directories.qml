@@ -61,6 +61,7 @@ Singleton {
     property string lyricsPath: FileUtils.trimFileProtocol(`${Directories.cache}/lyrics/lyrics.json`)
     property string pinnedClipboardPath: FileUtils.trimFileProtocol(`${Directories.state}/user/pinned_clipboard.json`)
     property string alarmsPath: FileUtils.trimFileProtocol(`${Directories.state}/user/alarms.json`)
+    property string gameFavoritesPath: FileUtils.trimFileProtocol(`${Directories.state}/user/game_favorites.json`)
     property string generatedMaterialThemePath: FileUtils.trimFileProtocol(`${Directories.state}/user/generated/colors.json`)
     property string generatedWallpaperCategoryPath: FileUtils.trimFileProtocol(`${Directories.state}/user/generated/wallpaper/category.txt`)
     property string cliphistDecode: FileUtils.trimFileProtocol(`/tmp/quickshell/media/cliphist`)

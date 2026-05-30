@@ -25,6 +25,7 @@ import qs.modules.ii.verticalBar
 import qs.modules.ii.wallpaperSelector
 import qs.modules.ii.wallpaperChanger
 import qs.modules.ii.wrappedFrame
+import qs.modules.ii.gameLauncher
 
 Scope {
     property bool barExtraCondition: true
@@ -65,6 +66,7 @@ Scope {
     PanelLoader { component: CalendarApp {} }
     PanelLoader { component: SidebarDashboard {} }
     PanelLoader { extraCondition: Config.options.bar.vertical && barExtraCondition; component: VerticalBar {} }
+    PanelLoader { component: GameLauncher {} }
     PanelLoader { component: WallpaperSelector {} }
     PanelLoader { component: WrappedFrame {} }
     PanelLoader { component: WallpaperChanger {} }
