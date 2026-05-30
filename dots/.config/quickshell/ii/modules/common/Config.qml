@@ -86,6 +86,14 @@ Singleton {
                 property int weeb: 0 // 0: No | 1: Open | 2: Closet
                 property int wallpapers: 1 // 0: No | 1: Yes
                 property int translator: 0 // 0: No | 1: Yes
+                property int opencode: 1 // 0: No | 1: Yes
+            }
+
+            property JsonObject opencode: JsonObject {
+                property bool autostart: false
+                property int port: 47821
+                property string model: "" // empty = opencode default; format "provider/model"
+                property string agent: "" // empty = opencode default agent
             }
 
             property JsonObject localsend: JsonObject {
