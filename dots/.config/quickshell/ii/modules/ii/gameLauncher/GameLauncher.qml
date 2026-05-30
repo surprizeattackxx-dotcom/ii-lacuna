@@ -56,6 +56,7 @@ Scope {
             property bool installedOnly: false
             property bool showHidden: false
             property int sortMode: 0  // 0 = name, 1 = recent, 2 = playtime
+            readonly property bool romsActive: panel.tabIndex === 5
 
             // ---- filtered model as JS array ----
             property var filteredGames: []
@@ -425,7 +426,7 @@ Scope {
                     spacing: 8
 
                     Repeater {
-                        model: ["All", "Steam", "Heroic", "AppImages", "Native"]
+                        model: ["All", "Steam", "Heroic", "AppImages", "Native", "ROMs"]
 
                         Rectangle {
                             id: chip
@@ -494,6 +495,7 @@ Scope {
                     Loader {
                         id: viewLoader
                         anchors.fill: parent
+                        visible: !panel.romsActive
                         sourceComponent: {
                             switch (panel.viewMode) {
                                 case 0: return gridComp
@@ -523,10 +525,20 @@ Scope {
                         }
                     }
 
+                    RomBrowser {
+                        anchors.fill: parent
+                        visible: panel.romsActive
+                        searchText: panel.searchText
+                        onLaunchRequested: (gameData) => {
+                            Games.launchGame(gameData)
+                            rootScope.close()
+                        }
+                    }
+
                     ColumnLayout {
                         anchors.centerIn: parent
                         spacing: 12
-                        visible: panel.filteredGames.length === 0
+                        visible: !panel.romsActive && panel.filteredGames.length === 0
 
                         MaterialSymbol {
                             Layout.alignment: Qt.AlignHCenter

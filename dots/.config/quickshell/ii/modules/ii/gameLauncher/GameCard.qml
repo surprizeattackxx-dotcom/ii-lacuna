@@ -3,6 +3,7 @@ import qs.modules.common.widgets
 import qs.services
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Qt5Compat.GraphicalEffects
 
 Item {
@@ -56,6 +57,25 @@ Item {
                 asynchronous: true
                 visible: status === Image.Ready
                 opacity: root.gameData.installed ? 1.0 : 0.4
+
+                property bool artTried: false
+                onStatusChanged: {
+                    if ((status === Image.Error || status === Image.Null) && !artTried
+                            && root.gameData.artGen && root.gameData.art) {
+                        artTried = true
+                        artGenProc.running = true
+                    }
+                }
+            }
+
+            Process {
+                id: artGenProc
+                command: ["bash", "-c", root.gameData.artGen || ""]
+                onExited: (code, status) => {
+                    var s = artImage.source
+                    artImage.source = ""
+                    artImage.source = s
+                }
             }
 
             Rectangle {
@@ -228,6 +248,7 @@ Item {
             case "heroic": return "#8B5CF6"
             case "appimage": return "#5F9B4E"
             case "native": return "#7C4DFF"
+            case "rom": return "#E0794B"
             default: return "#666"
         }
     }
