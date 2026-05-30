@@ -1,5 +1,6 @@
 pragma Singleton
 
+import qs
 import qs.modules.common
 import qs.services
 import qs.modules.common.models
@@ -16,7 +17,7 @@ Singleton {
     property string query: ""
 
     function ensurePrefix(prefix) {
-        if ([Config.options.search.prefix.action, Config.options.search.prefix.app, Config.options.search.prefix.clipboard, Config.options.search.prefix.emojis, Config.options.search.prefix.math, Config.options.search.prefix.shellCommand, Config.options.search.prefix.webSearch, Config.options.search.prefix.fileSearch].some(i => root.query.startsWith(i))) {
+        if ([Config.options.search.prefix.action, Config.options.search.prefix.app, Config.options.search.prefix.clipboard, Config.options.search.prefix.emojis, Config.options.search.prefix.math, Config.options.search.prefix.shellCommand, Config.options.search.prefix.webSearch, Config.options.search.prefix.fileSearch, Config.options.search.prefix.ai].some(i => root.query.startsWith(i))) {
             root.query = prefix + root.query.slice(1);
         } else {
             root.query = prefix + root.query;
@@ -138,6 +139,21 @@ Singleton {
     // Combined built-in and user actions
     property var allActions: searchActions.concat(userActionScripts)
 
+    function makeAiResult(text) {
+        return resultComp.createObject(null, {
+            name: text.length > 0 ? text : Translation.tr("Ask Aria anything…"),
+            verb: Translation.tr("Ask"),
+            type: Translation.tr("AI"),
+            iconName: 'neurology',
+            iconType: LauncherSearchResult.IconType.Material,
+            execute: () => {
+                GlobalStates.overviewOpen = false;
+                GlobalStates.policiesPanelOpen = true;
+                Ai.sendUserMessage(text);
+            }
+        });
+    }
+
     property string mathResult: ""
     property bool clipboardWorkSafetyActive: {
         const enabled = Config.options.workSafety.enable.clipboard;
@@ -215,6 +231,10 @@ Singleton {
             return [];
 
         ///////////// Special cases ///////////////
+        if (root.query.startsWith(Config.options.search.prefix.ai)) {
+            // Ask Aria (natural-language assistant with tool access)
+            return [root.makeAiResult(StringUtils.cleanPrefix(root.query, Config.options.search.prefix.ai).trim())];
+        }
         if (root.query.startsWith(Config.options.search.prefix.clipboard)) {
             // Clipboard
             const searchString = StringUtils.cleanPrefix(root.query, Config.options.search.prefix.clipboard);
@@ -412,6 +432,15 @@ Singleton {
                 result.push(mathResultObject);
             if (!startsWithWebSearchPrefix)
                 result.push(webSearchResultObject);
+        }
+
+        ////// Natural-language fallback → Aria //////
+        if (Config.options.search.prefix.showDefaultActionsWithoutPrefix
+                && !startsWithNumber && !startsWithMathPrefix
+                && !startsWithShellCommandPrefix && !startsWithWebSearchPrefix
+                && !root.query.startsWith(Config.options.search.prefix.action)
+                && !root.query.startsWith(Config.options.search.prefix.app)) {
+            result.push(root.makeAiResult(root.query.trim()));
         }
 
         return result;

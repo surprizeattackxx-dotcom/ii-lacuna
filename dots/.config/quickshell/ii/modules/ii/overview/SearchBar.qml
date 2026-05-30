@@ -19,9 +19,10 @@ RowLayout {
         searchInput.forceActiveFocus();
     }
 
-    enum SearchPrefixType { Action, App, Clipboard, Emojis, Math, ShellCommand, WebSearch, DefaultSearch }
+    enum SearchPrefixType { Action, App, Clipboard, Emojis, Math, ShellCommand, WebSearch, Ai, DefaultSearch }
 
     property var searchPrefixType: {
+        if (root.searchingText.startsWith(Config.options.search.prefix.ai)) return SearchBar.SearchPrefixType.Ai;
         if (root.searchingText.startsWith(Config.options.search.prefix.action)) return SearchBar.SearchPrefixType.Action;
         if (root.searchingText.startsWith(Config.options.search.prefix.app)) return SearchBar.SearchPrefixType.App;
         if (root.searchingText.startsWith(Config.options.search.prefix.clipboard)) return SearchBar.SearchPrefixType.Clipboard;
@@ -44,6 +45,7 @@ RowLayout {
             case SearchBar.SearchPrefixType.Math: return MaterialShape.Shape.PuffyDiamond;
             case SearchBar.SearchPrefixType.ShellCommand: return MaterialShape.Shape.PixelCircle;
             case SearchBar.SearchPrefixType.WebSearch: return MaterialShape.Shape.SoftBurst;
+            case SearchBar.SearchPrefixType.Ai: return MaterialShape.Shape.Flower;
             default: return MaterialShape.Shape.Cookie7Sided;
         }
         text: switch (root.searchPrefixType) {
@@ -54,6 +56,7 @@ RowLayout {
             case SearchBar.SearchPrefixType.Math: return "calculate";
             case SearchBar.SearchPrefixType.ShellCommand: return "terminal";
             case SearchBar.SearchPrefixType.WebSearch: return "travel_explore";
+            case SearchBar.SearchPrefixType.Ai: return "neurology";
             case SearchBar.SearchPrefixType.DefaultSearch: return "search";
             default: return "search";
         }
