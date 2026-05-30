@@ -64,15 +64,16 @@ Scope {
             anchors.centerIn: parent
             width: Math.min(860, parent.width - 80)
             height: Math.min(640, parent.height - 80)
+            focus: GlobalStates.calendarAppOpen
+
+            Keys.onPressed: event => {
+                if (event.key === Qt.Key_Escape) {
+                    panelWindow.hide();
+                }
+            }
 
             sourceComponent: CalendarAppContent {
                 onCloseRequested: panelWindow.hide()
-            }
-        }
-
-        Keys.onPressed: event => {
-            if (event.key === Qt.Key_Escape) {
-                panelWindow.hide();
             }
         }
     }
