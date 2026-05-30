@@ -627,7 +627,7 @@ Item {
             opacity: matchesFilter ? (isVisuallyEnlarged ? 1.0 : 0.6) : 0.0
             scale: matchesFilter ? 1.0 : 0.5
             height: matchesFilter ? targetHeight : 0
-            anchors.verticalCenter: parent.verticalCenter; anchors.verticalCenterOffset: s(15)
+            anchors.verticalCenter: parent?.verticalCenter ?? undefined; anchors.verticalCenterOffset: s(15)
             z: isVisuallyEnlarged ? 10 : 1
 
             Behavior on scale { enabled: initialFocusSet; NumberAnimation { duration: 500; easing.type: Easing.InOutQuad } }

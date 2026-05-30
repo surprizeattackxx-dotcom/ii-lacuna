@@ -1030,7 +1030,7 @@ Inline w/ backslash and round brackets \\(e^{i\\pi} + 1 = 0\\)
                     text: Persistent.states.ai.model // TODO: add a readable version
                     tooltipText: {
                         const model = Ai.getModel();
-                        Translation.tr("Current model: %1\nSet it with %2model MODEL").arg(model ? model.name : "Unknown").arg(root.commandPrefix)
+                        Translation.tr("Current model: %1\nSet it with %2model MODEL").arg(model ? model.name : "Unknown").arg(root?.commandPrefix ?? "")
                     }
                 }
 

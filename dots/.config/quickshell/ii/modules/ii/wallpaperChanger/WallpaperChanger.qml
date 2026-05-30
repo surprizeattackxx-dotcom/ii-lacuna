@@ -19,7 +19,7 @@ Scope {
             id: panelWindow
             
             // Center the window on the screen
-            screen: Hyprland.focusedMonitor ?? Quickshell.screens[0]
+            screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0]
             
             exclusionMode: ExclusionMode.Ignore
             WlrLayershell.namespace: "quickshell:wallpaperChanger"
