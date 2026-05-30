@@ -426,10 +426,32 @@ Singleton {
         xhr.onreadystatechange = function() {
             if (xhr.readyState !== XMLHttpRequest.DONE)
                 return;
-            root.mcpBridgeAvailable = (xhr.status >= 200 && xhr.status < 300);
+            const up = (xhr.status >= 200 && xhr.status < 300);
+            root.mcpBridgeAvailable = up;
+            if (!up && (Config.options.ai?.mcpBridgeAutostart ?? true) && !mcpBridgeProc.running) {
+                mcpBridgeProc.running = true;
+                mcpBridgeRetryTimer.start();
+            }
         };
         xhr.open("GET", root.mcpBridgeUrl + "/health");
         xhr.send();
+    }
+
+    Process {
+        id: mcpBridgeProc
+        command: ["bash", Quickshell.shellPath("scripts/mcp-sidebar-bridge/run.sh")]
+    }
+
+    Timer {
+        id: mcpBridgeRetryTimer
+        interval: 2500
+        repeat: true
+        property int tries: 0
+        onTriggered: {
+            tries++;
+            root._pingMcpBridge();
+            if (root.mcpBridgeAvailable || tries > 8) { stop(); tries = 0; }
+        }
     }
 
     function _mcpHttpRequest(method, path, body, message, fnName) {
@@ -440,7 +462,7 @@ Singleton {
             if (xhr.status >= 200 && xhr.status < 300) {
                 root.addFunctionOutputMessage(fnName, xhr.responseText || "(empty)");
             } else {
-                root.addFunctionOutputMessage(fnName, "[MCP bridge] HTTP " + xhr.status + "\n" + (xhr.responseText || "") + "\n\nStart the bridge: ~/.config/quickshell/scripts/mcp-sidebar-bridge/run.sh");
+                root.addFunctionOutputMessage(fnName, "[MCP bridge] HTTP " + xhr.status + "\n" + (xhr.responseText || "") + "\n\nStart the bridge: ~/.config/quickshell/ii/scripts/mcp-sidebar-bridge/run.sh");
             }
             requester.makeRequest();
         };
