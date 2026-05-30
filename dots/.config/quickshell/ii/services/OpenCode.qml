@@ -28,10 +28,9 @@ Singleton {
     property var _msgOrder: []
 
     function start() {
-        if (serverReady || serveProc.running)
-            return _afterReady();
-        serveProc.running = true;
-        healthTimer.start();
+        if (serverReady) { _afterReady(); return; }
+        if (!serveProc.running) serveProc.running = true;
+        if (!healthTimer.running) healthTimer.start();
     }
 
     function _afterReady() {
@@ -149,21 +148,62 @@ Singleton {
         root.modelID = modelID;
     }
 
+    property string _pendingPrompt: ""
+    onSessionIdChanged: _flushPending()
+
     function sendPrompt(text) {
         if (text.length === 0) return;
+        root._pendingPrompt = text;
         root.start();
-        if (root.sessionId === "") {
-            retrySendTimer.pendingText = text;
-            retrySendTimer.start();
-            return;
-        }
-        const part = { type: "text", text: text };
-        const body = { parts: [part] };
+        root._flushPending();
+    }
+
+    function _flushPending() {
+        if (root._pendingPrompt === "" || root.sessionId === "") return;
+        const text = root._pendingPrompt;
+        root._pendingPrompt = "";
+        root._echoUser(text);
+        const body = { parts: [{ type: "text", text: text }] };
         if (root.providerID !== "" && root.modelID !== "")
             body.model = { providerID: root.providerID, modelID: root.modelID };
         if (root.agent !== "") body.agent = root.agent;
         root.busy = true;
-        _xhr("POST", `/session/${root.sessionId}/message`, body, () => {});
+        _xhr("POST", `/session/${root.sessionId}/message`, body,
+            () => { root.busy = false; root.refreshMessages(); },
+            (_s) => { root.busy = false; root.refreshMessages(); });
+    }
+
+    function _echoUser(text) {
+        const id = "local_" + Date.now();
+        root._msgMap[id] = { id: id, role: "user", parts: { p: { id: "p", type: "text", text: text } }, order: ["p"] };
+        root._msgOrder = [...root._msgOrder, id];
+        _touch();
+    }
+
+    // Authoritative: rebuild the message list from the server (works even if /event streaming is flaky)
+    function refreshMessages() {
+        if (root.sessionId === "") return;
+        _xhr("GET", `/session/${root.sessionId}/message`, null, (ms) => {
+            if (!Array.isArray(ms)) return;
+            const map = {};
+            const order = [];
+            for (const m of ms) {
+                const info = m.info || {};
+                if (!info.id) continue;
+                const parts = {};
+                const porder = [];
+                for (const p of (m.parts || [])) {
+                    if (!p.id || p.type === "step-start" || p.type === "step-finish") continue;
+                    parts[p.id] = p;
+                    porder.push(p.id);
+                }
+                map[info.id] = { id: info.id, role: info.role || "assistant", parts: parts, order: porder };
+                order.push(info.id);
+            }
+            root._msgMap = map;
+            root._msgOrder = order;
+            _touch();
+        });
     }
 
     function abort() {
@@ -245,6 +285,14 @@ Singleton {
         }
     }
 
+    Timer {
+        id: busyPoll
+        interval: 1500
+        repeat: true
+        running: root.busy && root.sessionId !== ""
+        onTriggered: root.refreshMessages()
+    }
+
     Process {
         id: serveProc
         command: ["opencode", "serve", "--port", String(root.port), "--hostname", "127.0.0.1"]
@@ -254,7 +302,7 @@ Singleton {
     Process {
         id: eventProc
         running: false
-        command: ["curl", "--no-buffer", "-sN", `${root.baseUrl}/event`]
+        command: ["bash", "-c", `curl --no-buffer -sN '${root.baseUrl}/event'`]
         stdout: SplitParser {
             onRead: line => {
                 if (!line.startsWith("data:")) return;
@@ -295,19 +343,4 @@ Singleton {
         }
     }
 
-    Timer {
-        id: retrySendTimer
-        interval: 200
-        repeat: true
-        property string pendingText: ""
-        property int tries: 0
-        onTriggered: {
-            tries++;
-            if (root.sessionId !== "") {
-                stop(); tries = 0;
-                const t = pendingText; pendingText = "";
-                root.sendPrompt(t);
-            } else if (tries > 40) { stop(); tries = 0; }
-        }
-    }
 }

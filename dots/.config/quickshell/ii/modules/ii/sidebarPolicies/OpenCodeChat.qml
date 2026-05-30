@@ -10,6 +10,7 @@ Item {
     id: root
 
     SwipeView.onIsCurrentItemChanged: if (SwipeView.isCurrentItem) OpenCode.start()
+    onVisibleChanged: if (visible) OpenCode.start()
 
     Connections {
         target: OpenCode
@@ -210,7 +211,7 @@ Item {
 
             RippleButton {
                 implicitWidth: 40; implicitHeight: 40
-                enabled: OpenCode.serverReady
+                enabled: OpenCode.busy || input.text.trim().length > 0
                 onClicked: OpenCode.busy ? OpenCode.abort() : root.send()
                 contentItem: MaterialSymbol {
                     horizontalAlignment: Text.AlignHCenter
