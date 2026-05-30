@@ -31,9 +31,11 @@ Item {
         anchors.left: parent.left
         anchors.right: parent.right
         height: cardHeight
-        radius: Appearance.rounding.normal
-        color: Appearance.colors.colLayer1
+        radius: Appearance.rounding.large
+        color: Appearance.m3colors.m3surfaceContainerHighest
         clip: true
+        border.width: root.selected ? 2 : 0
+        border.color: Appearance.m3colors.m3primary
 
         Image {
             id: artImage
@@ -72,7 +74,7 @@ Item {
             anchors.margins: 6
             height: 18
             implicitWidth: badgeText.implicitWidth + 12
-            radius: 4
+            radius: Appearance.rounding.small
             color: root.platformColor
 
             StyledText {
@@ -90,14 +92,15 @@ Item {
             width: 48
             height: 48
             radius: 24
-            color: Qt.rgba(1, 1, 1, 0.9)
+            color: Appearance.m3colors.m3primary
             visible: root.selected
 
             MaterialSymbol {
                 anchors.centerIn: parent
                 text: "play_arrow"
                 iconSize: 28
-                color: "#111"
+                fill: 1
+                color: Appearance.m3colors.m3onPrimary
             }
         }
 

@@ -143,41 +143,55 @@ Scope {
 
                     Item { Layout.fillWidth: true }
 
-                    // ---- view mode buttons ----
-                    Repeater {
-                        model: [
-                            { icon: "grid_view", tooltip: "Grid" },
-                            { icon: "view_carousel", tooltip: "Carousel" },
-                            { icon: "list", tooltip: "List" },
-                        ]
+                    // ---- view mode segmented buttons ----
+                    Rectangle {
+                        Layout.preferredHeight: 40
+                        implicitWidth: segmentRow.implicitWidth
+                        radius: Appearance.rounding.full
+                        color: Appearance.m3colors.m3surfaceContainerHigh
 
-                        Rectangle {
-                            required property int index
-                            required property var modelData
+                        RowLayout {
+                            id: segmentRow
+                            anchors.fill: parent
+                            spacing: 0
 
-                            Layout.preferredWidth: 36
-                            Layout.preferredHeight: 36
-                            radius: Appearance.rounding.full
-                            color: panel.viewMode === index
-                                ? Appearance.m3colors.m3primaryContainer
-                                : "transparent"
+                            Repeater {
+                                model: [
+                                    { icon: "grid_view", tooltip: "Grid" },
+                                    { icon: "view_carousel", tooltip: "Carousel" },
+                                    { icon: "list", tooltip: "List" },
+                                ]
 
-                            Behavior on color { ColorAnimation { duration: 120 } }
+                                Rectangle {
+                                    required property int index
+                                    required property var modelData
 
-                            MaterialSymbol {
-                                anchors.centerIn: parent
-                                text: modelData.icon
-                                iconSize: 20
-                                color: panel.viewMode === index
-                                    ? Appearance.m3colors.m3onPrimaryContainer
-                                    : Appearance.m3colors.m3onSurfaceVariant
-                            }
+                                    Layout.preferredWidth: 48
+                                    Layout.fillHeight: true
+                                    radius: Appearance.rounding.full
+                                    color: panel.viewMode === index
+                                        ? Appearance.m3colors.m3secondaryContainer
+                                        : "transparent"
 
-                            MouseArea {
-                                anchors.fill: parent
-                                cursorShape: Qt.PointingHandCursor
-                                hoverEnabled: true
-                                onClicked: panel.viewMode = index
+                                    Behavior on color { ColorAnimation { duration: 150 } }
+
+                                    MaterialSymbol {
+                                        anchors.centerIn: parent
+                                        text: modelData.icon
+                                        iconSize: 20
+                                        fill: panel.viewMode === index ? 1 : 0
+                                        color: panel.viewMode === index
+                                            ? Appearance.m3colors.m3onSecondaryContainer
+                                            : Appearance.m3colors.m3onSurfaceVariant
+                                    }
+
+                                    MouseArea {
+                                        anchors.fill: parent
+                                        cursorShape: Qt.PointingHandCursor
+                                        hoverEnabled: true
+                                        onClicked: panel.viewMode = index
+                                    }
+                                }
                             }
                         }
                     }
@@ -188,7 +202,7 @@ Scope {
                         Layout.preferredWidth: 320
                         Layout.preferredHeight: 40
                         radius: Appearance.rounding.full
-                        color: Appearance.colors.colLayer2
+                        color: Appearance.m3colors.m3surfaceContainerHigh
 
                         RowLayout {
                             anchors.fill: parent
@@ -214,6 +228,14 @@ Scope {
                                 clip: true
 
                                 onTextChanged: panel.searchText = text
+
+                                StyledText {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: "Search games"
+                                    color: Appearance.m3colors.m3outline
+                                    font.pixelSize: Appearance.font.pixelSize.normal
+                                    visible: searchInput.text.length === 0
+                                }
 
                                 Keys.onPressed: event => {
                                     if (event.key === Qt.Key_Escape)
@@ -281,33 +303,48 @@ Scope {
                         model: ["All", "Steam", "Heroic", "AppImages", "Native"]
 
                         Rectangle {
+                            id: chip
                             required property int index
                             required property string modelData
 
-                            Layout.preferredHeight: 32
-                            implicitWidth: tabLabel.implicitWidth + 24
-                            radius: Appearance.rounding.full
-                            color: panel.tabIndex === index ? Appearance.m3colors.m3primary : "transparent"
-
                             property bool isActive: panel.tabIndex === index
+
+                            Layout.preferredHeight: 32
+                            implicitWidth: chipRow.implicitWidth + 24
+                            radius: Appearance.rounding.small
+                            color: chip.isActive ? Appearance.m3colors.m3secondaryContainer : "transparent"
+                            border.width: chip.isActive ? 0 : 1
+                            border.color: Appearance.m3colors.m3outlineVariant
 
                             Behavior on color {
                                 ColorAnimation { duration: 150 }
                             }
 
-                            StyledText {
-                                id: tabLabel
+                            RowLayout {
+                                id: chipRow
                                 anchors.centerIn: parent
-                                text: parent.modelData
-                                color: parent.isActive ? Appearance.m3colors.m3onPrimary : Appearance.m3colors.m3onSurfaceVariant
-                                font.pixelSize: Appearance.font.pixelSize.small
-                                font.weight: parent.isActive ? Font.DemiBold : Font.Normal
+                                spacing: 4
+
+                                MaterialSymbol {
+                                    Layout.alignment: Qt.AlignVCenter
+                                    visible: chip.isActive
+                                    text: "check"
+                                    iconSize: 16
+                                    color: Appearance.m3colors.m3onSecondaryContainer
+                                }
+
+                                StyledText {
+                                    text: chip.modelData
+                                    color: chip.isActive ? Appearance.m3colors.m3onSecondaryContainer : Appearance.m3colors.m3onSurfaceVariant
+                                    font.pixelSize: Appearance.font.pixelSize.small
+                                    font.weight: chip.isActive ? Font.DemiBold : Font.Normal
+                                }
                             }
 
                             MouseArea {
                                 anchors.fill: parent
                                 cursorShape: Qt.PointingHandCursor
-                                onClicked: panel.tabIndex = index
+                                onClicked: panel.tabIndex = chip.index
                             }
                         }
                     }

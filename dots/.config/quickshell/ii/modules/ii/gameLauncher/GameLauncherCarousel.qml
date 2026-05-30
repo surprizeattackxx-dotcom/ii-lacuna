@@ -68,8 +68,8 @@ Item {
 
             Rectangle {
                 anchors.fill: parent
-                radius: Appearance.rounding.normal
-                color: Appearance.colors.colLayer1
+                radius: Appearance.rounding.large
+                color: Appearance.m3colors.m3surfaceContainerHighest
                 clip: true
 
                 Image {
@@ -175,7 +175,7 @@ Item {
         width: infoLayout.implicitWidth + 32
         height: 56
         radius: Appearance.rounding.full
-        color: Appearance.colors.colLayer2
+        color: Appearance.m3colors.m3surfaceContainerHigh
 
         RowLayout {
             id: infoLayout

@@ -56,7 +56,7 @@ Item {
                             Layout.preferredHeight: 64
                             Layout.leftMargin: 0
                             radius: Appearance.rounding.small
-                            color: Appearance.colors.colLayer1
+                            color: Appearance.m3colors.m3surfaceContainerHighest
                             clip: true
 
                             Image {
