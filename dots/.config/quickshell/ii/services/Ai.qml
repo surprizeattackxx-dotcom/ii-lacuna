@@ -3333,7 +3333,15 @@ echo "SCREENSHOT_OFFSET:\${SS_OFFSET_X}:\${SS_OFFSET_Y}"
             commandExecutionProc.running = true;
         } else if (name === "exit" || name === "done" || name === "finish") {
             // Model sometimes calls these to signal it's done — silently ignore
-        } else root.addMessage(Translation.tr("Unknown function call: %1").arg(name), "assistant");
+        } else {
+            // Model hallucinated a tool name — feed back a correction so it recovers instead of dead-ending
+            const aliases = { "run_shell": "run_shell_command", "shell": "run_shell_command", "bash": "run_shell_command", "execute_shell": "run_shell_command", "search": "web_search", "mcp": "mcp_call", "mcp_catalog": "mcp_list_catalog" };
+            const suggestion = aliases[name];
+            addFunctionOutputMessage(name, suggestion
+                ? `No tool named '${name}'. Use '${suggestion}' instead.`
+                : `No tool named '${name}'. Use one of your available tools, or just answer in text.`);
+            requester.makeRequest();
+        }
     }
 
     Process {
