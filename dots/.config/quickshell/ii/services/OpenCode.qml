@@ -48,7 +48,7 @@ Singleton {
         });
     }
 
-    function _xhr(method, path, body, onOk) {
+    function _xhr(method, path, body, onOk, onErr) {
         const xhr = new XMLHttpRequest();
         xhr.open(method, root.baseUrl + path);
         xhr.setRequestHeader("Content-Type", "application/json");
@@ -60,9 +60,50 @@ Singleton {
                 if (onOk) onOk(parsed);
             } else {
                 console.log("[OpenCode] request failed", method, path, xhr.status);
+                if (onErr) onErr(xhr.status);
             }
         };
         xhr.send(body ? JSON.stringify(body) : "");
+    }
+
+    // One-shot delegation: run a task in an isolated session, return final text via onDone.
+    property var _pendingTasks: []
+    function runTask(prompt, onDone) {
+        if (!prompt || prompt.length === 0) { onDone("No task provided."); return; }
+        root._pendingTasks = [...root._pendingTasks, { prompt: prompt, onDone: onDone }];
+        root.start();
+        taskPump.start();
+    }
+
+    function _execTask(t) {
+        _xhr("POST", "/session", {}, (data) => {
+            if (!data?.id) { t.onDone("OpenCode: failed to create session."); return; }
+            const body = { parts: [{ type: "text", text: t.prompt }] };
+            if (root.providerID !== "" && root.modelID !== "")
+                body.model = { providerID: root.providerID, modelID: root.modelID };
+            if (root.agent !== "") body.agent = root.agent;
+            _xhr("POST", `/session/${data.id}/message`, body, (resp) => {
+                let txt = "";
+                for (const p of (resp?.parts ?? []))
+                    if (p.type === "text" && p.text) txt += p.text;
+                t.onDone(txt.trim().length > 0 ? txt.trim() : "OpenCode finished with no text output.");
+            }, (status) => t.onDone(`OpenCode request failed (HTTP ${status}).`));
+        }, (status) => t.onDone(`OpenCode could not start a session (HTTP ${status}).`));
+    }
+
+    Timer {
+        id: taskPump
+        interval: 300
+        repeat: true
+        property int tries: 0
+        onTriggered: {
+            if (!root.serverReady) { tries++; if (tries > 80) { stop(); tries = 0; for (const t of root._pendingTasks) t.onDone("OpenCode server did not start."); root._pendingTasks = []; } return; }
+            tries = 0;
+            if (root._pendingTasks.length === 0) { stop(); return; }
+            const t = root._pendingTasks[0];
+            root._pendingTasks = root._pendingTasks.slice(1);
+            root._execTask(t);
+        }
     }
 
     function loadModels() {

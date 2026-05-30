@@ -213,6 +213,7 @@ Singleton {
         "system":  ["run_shell_command", "control_hyprland", "kill_process", "get_system_logs"],
         "comms":   ["notify", "speak", "send_message"],
         "clipboard":["read_clipboard_text", "write_clipboard"],
+        "coding":  ["opencode_task"],
         // Advanced tools — only for large/cloud models
         "advanced":["execute_js", "search_app", "capture_region", "ocr_region",
                     "read_clipboard_image", "memory_file", "kg_store", "kg_query",
@@ -244,6 +245,9 @@ Singleton {
         "comms":   ["notify", "notification", "speak", "say ", "tell ", "message",
                      "send ", "text "],
         "clipboard":["clipboard", "copy", "paste", "copied"],
+        "coding":  ["code", "refactor", "debug", "implement", "function", "bug", "git ",
+                     "compile", "build ", "unit test", "repository", "repo", "codebase",
+                     "opencode", "script", "stack trace", "pull request"],
         "mcp": ["mcp", "model context", "jan mcp", "mcp server", "home assistant",
                 "gmail", "calendar", "pull request", "github issue", "discord message", "sqlite",
                 "searx", "notion", "google drive", "filesystem mcp"]
@@ -313,7 +317,7 @@ Singleton {
             const extras = root._toolSets["clipboard"].concat([
                 "run_task", "open_app", "show_plan", "execute_js", "search_app",
                 "control_system", "workspace_layout", "call_agent",
-                "mcp_list_catalog", "mcp_call"
+                "opencode_task", "mcp_list_catalog", "mcp_call"
             ]);
             for (let e = 0; e < extras.length; e++) {
                 if (toolNames.indexOf(extras[e]) === -1) toolNames.push(extras[e]);
@@ -1524,6 +1528,19 @@ echo "SCREENSHOT_OFFSET:\${SS_OFFSET_X}:\${SS_OFFSET_Y}"
             // Show brief indicator in main chat
             root.addMessage(`◆ ${def.displayName} (${def.emoji}) — ${task.substring(0, 100)}${task.length > 100 ? "…" : ""}`, root.interfaceRole);
             requester.makeRequest();
+            return;
+        } else if (name === "opencode_task") {
+            const task = args.task || args.prompt || "";
+            if (task.trim().length === 0) {
+                addFunctionOutputMessage(name, "No task provided for OpenCode.");
+                requester.makeRequest();
+                return;
+            }
+            root.addMessage(`◆ OpenCode — ${task.substring(0, 100)}${task.length > 100 ? "…" : ""}`, root.interfaceRole);
+            OpenCode.runTask(task, (result) => {
+                addFunctionOutputMessage(name, result);
+                requester.makeRequest();
+            });
             return;
         } else if (name === "return_result") {
             root._pendingAgentResult = args.result || "Task completed.";

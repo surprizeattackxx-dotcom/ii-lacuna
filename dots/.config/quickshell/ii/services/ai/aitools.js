@@ -5,6 +5,17 @@ function tools() {
         "gemini": {
             "functions": [{"functionDeclarations": [
                 {
+                    "name": "opencode_task",
+                    "description": "Delegate a coding or deep technical task to OpenCode, an autonomous coding agent with file editing, shell, LSP and 75+ models. Use for writing/refactoring/debugging code, editing project files, running build/test/git commands, or any multi-step engineering task. Give a complete, self-contained task description. Returns OpenCode's final result.",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "task": { "type": "string", "description": "Complete, self-contained description of the coding/technical task for OpenCode to perform." }
+                        },
+                        "required": ["task"]
+                    }
+                },
+                {
                     "name": "get_news",
                     "description": "Get current news headlines. Use for ANY news request: 'what's in the news', 'NPR today', 'latest on X'. ALWAYS use this instead of read_url for news.",
                     "parameters": {
@@ -749,6 +760,20 @@ function tools() {
         },
         "openai": {
             "functions": [
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "opencode_task",
+                        "description": "Delegate a coding or deep technical task to OpenCode, an autonomous coding agent with file editing, shell, LSP and 75+ models. Use for writing/refactoring/debugging code, editing project files, running build/test/git commands, or any multi-step engineering task. Give a complete, self-contained task description. Returns OpenCode's final result.",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "task": { "type": "string", "description": "Complete, self-contained description of the coding/technical task for OpenCode to perform." }
+                            },
+                            "required": ["task"]
+                        }
+                    },
+                },
                 {
                     "type": "function",
                     "function": {
@@ -1616,6 +1641,20 @@ function tools() {
         },
         "mistral": {
             "functions": [
+                {
+                    "type": "function",
+                    "function": {
+                        "name": "opencode_task",
+                        "description": "Delegate a coding or deep technical task to OpenCode, an autonomous coding agent with file editing, shell, LSP and 75+ models. Use for writing/refactoring/debugging code, editing project files, running build/test/git commands, or any multi-step engineering task. Give a complete, self-contained task description. Returns OpenCode's final result.",
+                        "parameters": {
+                            "type": "object",
+                            "properties": {
+                                "task": { "type": "string", "description": "Complete, self-contained description of the coding/technical task for OpenCode to perform." }
+                            },
+                            "required": ["task"]
+                        }
+                    },
+                },
                 {
                     "type": "function",
                     "function": {
