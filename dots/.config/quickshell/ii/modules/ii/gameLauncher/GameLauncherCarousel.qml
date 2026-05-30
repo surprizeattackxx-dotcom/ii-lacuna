@@ -4,6 +4,7 @@ import qs.services
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
+import Qt5Compat.GraphicalEffects
 
 Item {
     id: root
@@ -11,6 +12,7 @@ Item {
     property var model: []
     property int currentIndex: 0
     signal launchRequested(var gameData)
+    signal contextRequested(var gameData, real globalX, real globalY)
 
     function focusSearch() {}
     function selectFirst() { view.currentIndex = 0 }
@@ -67,39 +69,52 @@ Item {
             }
 
             Rectangle {
+                id: carouselCardBg
                 anchors.fill: parent
                 radius: Appearance.rounding.large
                 color: Appearance.m3colors.m3surfaceContainerHighest
-                clip: true
 
-                Image {
-                    id: cardImage
+                Item {
+                    id: carouselArtClip
                     anchors.fill: parent
-                    source: !modelData.art ? "" : (modelData.art.startsWith("http") ? modelData.art : "file://" + modelData.art)
-                    fillMode: Image.PreserveAspectCrop
-                    asynchronous: true
-                    visible: status === Image.Ready
-                    opacity: modelData.installed ? 1.0 : 0.4
-                }
-
-                Rectangle {
-                    anchors.fill: parent
-                    visible: !cardImage.visible
-                    gradient: Gradient {
-                        orientation: Gradient.Vertical
-                        GradientStop { position: 0.0; color: fallbackTop }
-                        GradientStop { position: 1.0; color: fallbackBot }
+                    layer.enabled: true
+                    layer.effect: OpacityMask {
+                        maskSource: Rectangle {
+                            width: carouselArtClip.width
+                            height: carouselArtClip.height
+                            radius: carouselCardBg.radius
+                        }
                     }
-                }
 
-                Rectangle {
-                    anchors.bottom: parent.bottom
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    height: 32
-                    gradient: Gradient {
-                        GradientStop { position: 0.0; color: "transparent" }
-                        GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.6) }
+                    Image {
+                        id: cardImage
+                        anchors.fill: parent
+                        source: !modelData.art ? "" : (modelData.art.startsWith("http") ? modelData.art : "file://" + modelData.art)
+                        fillMode: Image.PreserveAspectCrop
+                        asynchronous: true
+                        visible: status === Image.Ready
+                        opacity: modelData.installed ? 1.0 : 0.4
+                    }
+
+                    Rectangle {
+                        anchors.fill: parent
+                        visible: !cardImage.visible
+                        gradient: Gradient {
+                            orientation: Gradient.Vertical
+                            GradientStop { position: 0.0; color: fallbackTop }
+                            GradientStop { position: 1.0; color: fallbackBot }
+                        }
+                    }
+
+                    Rectangle {
+                        anchors.bottom: parent.bottom
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        height: 32
+                        gradient: Gradient {
+                            GradientStop { position: 0.0; color: "transparent" }
+                            GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.6) }
+                        }
                     }
                 }
             }
@@ -107,7 +122,13 @@ Item {
             MouseArea {
                 anchors.fill: parent
                 cursorShape: Qt.PointingHandCursor
-                onClicked: {
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                onClicked: mouse => {
+                    if (mouse.button === Qt.RightButton) {
+                        var p = mapToItem(null, mouse.x, mouse.y)
+                        root.contextRequested(modelData, p.x, p.y)
+                        return
+                    }
                     if (view.currentIndex === index)
                         root.launchRequested(modelData)
                     else

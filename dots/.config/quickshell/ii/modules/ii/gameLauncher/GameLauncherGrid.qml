@@ -10,6 +10,7 @@ Item {
     property var model: []
     property int currentIndex: -1
     signal launchRequested(var gameData)
+    signal contextRequested(var gameData, real globalX, real globalY)
 
     function focusSearch() {}
     function selectFirst() {
@@ -47,6 +48,7 @@ Item {
                 gameData: modelData
                 selected: gridView.activeFocus && gridView.currentIndex === parent.index
                 onClicked: root.launchRequested(modelData)
+                onContextRequested: (gx, gy) => root.contextRequested(modelData, gx, gy)
             }
         }
 

@@ -80,6 +80,64 @@ def steam_art_path(appid):
 
     return None
 
+def steam_hero_path(appid):
+    steam_root = HOME / '.steam' / 'steam'
+    lib_dirs = [steam_root] + [Path(p) for p in find_steam_libraries() if p != str(steam_root)]
+    for lib in lib_dirs:
+        libcache = lib / 'appcache' / 'librarycache' / appid
+        if not libcache.exists():
+            continue
+        for p in [libcache / 'library_hero_blur.jpg', libcache / 'library_hero.jpg', libcache / 'library_hero.png']:
+            if p.exists():
+                return str(p)
+        for sub in sorted(libcache.iterdir()):
+            if not sub.is_dir():
+                continue
+            for name in ['library_hero_blur.jpg', 'library_hero.jpg', 'library_hero.png']:
+                p = sub / name
+                if p.exists():
+                    return str(p)
+    return None
+
+def load_steam_playtime():
+    out = {}
+    udir = HOME / '.steam' / 'steam' / 'userdata'
+    if not udir.exists():
+        return out
+    try:
+        import vdf
+    except Exception:
+        return out
+    for ud in udir.iterdir():
+        cfg = ud / 'config' / 'localconfig.vdf'
+        if not cfg.exists():
+            continue
+        try:
+            d = vdf.load(open(cfg, encoding='utf-8', errors='replace'))
+            apps = d.get('UserLocalConfigStore', {}).get('Software', {}).get('Valve', {}).get('Steam', {}).get('apps', {})
+            for appid, info in apps.items():
+                if not isinstance(info, dict):
+                    continue
+                lp = int(info.get('LastPlayed', 0) or 0)
+                pt = int(info.get('Playtime', 0) or 0)
+                if lp or pt:
+                    prev = out.get(appid, (0, 0))
+                    out[appid] = (max(prev[0], lp), max(prev[1], pt))
+        except Exception:
+            continue
+    return out
+
+STEAM_PLAYTIME = load_steam_playtime()
+
+def enrich_steam(g):
+    appid = g['appId']
+    lp, pt = STEAM_PLAYTIME.get(appid, (0, 0))
+    g['lastPlayed'] = lp
+    g['playMinutes'] = pt
+    g['hero'] = steam_hero_path(appid)
+    g['storeUrl'] = f'https://store.steampowered.com/app/{appid}'
+    return g
+
 def find_steam_games():
     games, seen = [], set()
     for lib in find_steam_libraries():
@@ -91,6 +149,7 @@ def find_steam_games():
                 g['platform'] = 'steam'
                 g['installed'] = True
                 g['launch'] = f'steam steam://rungameid/{g["appId"]}'
+                enrich_steam(g)
                 games.append(g)
     return games, seen
 
@@ -142,11 +201,13 @@ def find_steam_uninstalled(installed_ids):
         art = steam_art_path(appid)
         if not art:
             continue
-        games.append({
+        g = {
             'appId': appid, 'name': info['name'], 'art': art,
             'platform': 'steam', 'installed': False,
             'launch': f'steam steam://rungameid/{appid}',
-        })
+        }
+        enrich_steam(g)
+        games.append(g)
     return games
 
 def find_heroic_games():
@@ -174,10 +235,13 @@ def find_heroic_games():
                 continue
             runner = g.get('runner', 'legendary')
             art = g.get('art_square') or g.get('art_cover') or None
+            hero = g.get('art_background') or g.get('art_cover') or None
+            store = (g.get('extra') or {}).get('storeUrl') or None
             games.append({
                 'appId': f'heroic_{app_name}', 'name': title, 'art': art,
                 'platform': 'heroic', 'installed': bool(g.get('is_installed')),
                 'launch': f'xdg-open "heroic://launch/{runner}/{app_name}"',
+                'lastPlayed': 0, 'playMinutes': 0, 'hero': hero, 'storeUrl': store,
             })
     return games
 
@@ -192,6 +256,7 @@ def find_appimages():
                 games.append({
                     'name': f.stem, 'appId': f'appimg_{hid}', 'platform': 'appimage',
                     'art': None, 'installed': True, 'launch': f'"{f}"',
+                    'lastPlayed': 0, 'playMinutes': 0, 'hero': None, 'storeUrl': None,
                 })
     return games
 
@@ -222,6 +287,7 @@ def find_native_games(steam_names):
             games.append({
                 'name': name, 'appId': id, 'platform': 'native',
                 'art': None, 'installed': True, 'launch': f'gtk-launch {f.stem}',
+                'lastPlayed': 0, 'playMinutes': 0, 'hero': None, 'storeUrl': None,
             })
     return games
 

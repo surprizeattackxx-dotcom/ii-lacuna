@@ -5,6 +5,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
+import Qt5Compat.GraphicalEffects
 
 Item {
     id: root
@@ -12,11 +13,16 @@ Item {
     property var model: []
     property int currentIndex: -1
     signal launchRequested(var gameData)
+    signal contextRequested(var gameData, real globalX, real globalY)
 
     function focusSearch() {}
     function selectFirst() {
         listView.currentIndex = 0
         listView.focus = true
+    }
+    function fmtPlaytime(min) {
+        if (min >= 60) return Math.round(min / 60) + "h"
+        return min + "m"
     }
 
     ListView {
@@ -52,30 +58,43 @@ Item {
                         spacing: 12
 
                         Rectangle {
+                            id: thumbBg
                             Layout.preferredWidth: 48
                             Layout.preferredHeight: 64
                             Layout.leftMargin: 0
                             radius: Appearance.rounding.small
                             color: Appearance.m3colors.m3surfaceContainerHighest
-                            clip: true
 
-                            Image {
-                                id: artImg
+                            Item {
+                                id: thumbClip
                                 anchors.fill: parent
-                                source: !modelData.art ? "" : (modelData.art.startsWith("http") ? modelData.art : "file://" + modelData.art)
-                                fillMode: Image.PreserveAspectCrop
-                                asynchronous: true
-                                visible: status === Image.Ready
-                            }
+                                layer.enabled: true
+                                layer.effect: OpacityMask {
+                                    maskSource: Rectangle {
+                                        width: thumbClip.width
+                                        height: thumbClip.height
+                                        radius: thumbBg.radius
+                                    }
+                                }
 
-                            Rectangle {
-                                anchors.fill: parent
-                                visible: !artImg.visible
-                                color: {
-                                    var h = 0
-                                    for (var i = 0; i < modelData.name.length; i++)
-                                        h = ((h << 5) - h) + modelData.name.charCodeAt(i)
-                                    return Qt.hsla(Math.abs(h) % 360 / 360, 0.45, 0.4, 1)
+                                Image {
+                                    id: artImg
+                                    anchors.fill: parent
+                                    source: !modelData.art ? "" : (modelData.art.startsWith("http") ? modelData.art : "file://" + modelData.art)
+                                    fillMode: Image.PreserveAspectCrop
+                                    asynchronous: true
+                                    visible: status === Image.Ready
+                                }
+
+                                Rectangle {
+                                    anchors.fill: parent
+                                    visible: !artImg.visible
+                                    color: {
+                                        var h = 0
+                                        for (var i = 0; i < modelData.name.length; i++)
+                                            h = ((h << 5) - h) + modelData.name.charCodeAt(i)
+                                        return Qt.hsla(Math.abs(h) % 360 / 360, 0.45, 0.4, 1)
+                                    }
                                 }
                             }
                         }
@@ -89,6 +108,13 @@ Item {
                                 ? Appearance.m3colors.m3onPrimaryContainer
                                 : Appearance.m3colors.m3onSurface
                             elide: Text.ElideRight
+                        }
+
+                        StyledText {
+                            visible: modelData.playMinutes > 0
+                            text: root.fmtPlaytime(modelData.playMinutes)
+                            color: Appearance.m3colors.m3onSurfaceVariant
+                            font.pixelSize: Appearance.font.pixelSize.small
                         }
 
                         Rectangle {
@@ -158,9 +184,15 @@ Item {
                 MouseArea {
                     anchors.fill: parent
                     cursorShape: Qt.PointingHandCursor
-                    onClicked: {
+                    acceptedButtons: Qt.LeftButton | Qt.RightButton
+                    onClicked: mouse => {
                         listView.currentIndex = index
-                        root.launchRequested(modelData)
+                        if (mouse.button === Qt.RightButton) {
+                            var p = mapToItem(null, mouse.x, mouse.y)
+                            root.contextRequested(modelData, p.x, p.y)
+                        } else {
+                            root.launchRequested(modelData)
+                        }
                     }
                 }
             }

@@ -18,6 +18,7 @@ Singleton {
     property bool available: false
 
     property list<string> favorites: []
+    property list<string> hidden: []
 
     function scan() {
         if (root.scanning) return
@@ -35,6 +36,21 @@ Singleton {
         favoritesFile.setText(JSON.stringify(root.favorites))
     }
 
+    function isHidden(appId) { return root.hidden.indexOf(appId) !== -1 }
+
+    function toggleHidden(appId) {
+        if (root.isHidden(appId))
+            root.hidden = root.hidden.filter(a => a !== appId)
+        else
+            root.hidden = [...root.hidden, appId]
+        hiddenFile.setText(JSON.stringify(root.hidden))
+    }
+
+    function openStorePage(game) {
+        if (game.storeUrl && game.storeUrl.length > 0)
+            Quickshell.execDetached(["xdg-open", game.storeUrl])
+    }
+
     function launchGame(game) {
         Quickshell.execDetached(["bash", "-c", game.launch])
     }
@@ -47,6 +63,17 @@ Singleton {
         }
         onLoadFailed: (error) => {
             if (error == FileViewError.FileNotFound) { root.favorites = []; favoritesFile.setText("[]") }
+        }
+    }
+
+    FileView {
+        id: hiddenFile
+        path: Qt.resolvedUrl(Directories.gameHiddenPath)
+        onLoaded: {
+            try { root.hidden = JSON.parse(hiddenFile.text()) } catch (e) { root.hidden = [] }
+        }
+        onLoadFailed: (error) => {
+            if (error == FileViewError.FileNotFound) { root.hidden = []; hiddenFile.setText("[]") }
         }
     }
 
@@ -67,7 +94,11 @@ Singleton {
                             appId: g.appId,
                             platform: g.platform,
                             art: g.art || "",
+                            hero: g.hero || "",
                             installed: g.installed !== false,
+                            playMinutes: g.playMinutes || 0,
+                            lastPlayed: g.lastPlayed || 0,
+                            storeUrl: g.storeUrl || "",
                             launch: g.launch,
                         })
                     }
@@ -88,6 +119,7 @@ Singleton {
 
     Component.onCompleted: {
         favoritesFile.reload()
+        hiddenFile.reload()
         root.scan()
     }
 }

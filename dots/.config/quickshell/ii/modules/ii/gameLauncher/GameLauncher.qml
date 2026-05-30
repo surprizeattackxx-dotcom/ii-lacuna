@@ -53,6 +53,9 @@ Scope {
             property int tabIndex: 0
             property string searchText: ""
             property int viewMode: 0
+            property bool installedOnly: false
+            property bool showHidden: false
+            property int sortMode: 0  // 0 = name, 1 = recent, 2 = playtime
 
             // ---- filtered model as JS array ----
             property var filteredGames: []
@@ -68,11 +71,19 @@ Scope {
                         continue
                     if (search.length > 0 && item.name.toLowerCase().indexOf(search) === -1)
                         continue
+                    if (Games.isHidden(item.appId) && !panel.showHidden)
+                        continue
+                    if (panel.installedOnly && !item.installed)
+                        continue
                     result.push(item)
                 }
                 result.sort((a, b) => {
                     var fa = Games.isFavorite(a.appId), fb = Games.isFavorite(b.appId)
                     if (fa !== fb) return fa ? -1 : 1
+                    if (panel.sortMode === 1 && a.lastPlayed !== b.lastPlayed)
+                        return b.lastPlayed - a.lastPlayed
+                    if (panel.sortMode === 2 && a.playMinutes !== b.playMinutes)
+                        return b.playMinutes - a.playMinutes
                     if (a.installed !== b.installed) return a.installed ? -1 : 1
                     return a.name.localeCompare(b.name)
                 })
@@ -98,15 +109,67 @@ Scope {
             Connections {
                 target: Games
                 function onFavoritesChanged() { panel.scheduleRebuild() }
+                function onHiddenChanged() { panel.scheduleRebuild() }
             }
 
             onTabIndexChanged: panel.rebuildFilter()
             onSearchTextChanged: panel.rebuildFilter()
+            onInstalledOnlyChanged: panel.rebuildFilter()
+            onShowHiddenChanged: panel.rebuildFilter()
+            onSortModeChanged: panel.rebuildFilter()
             Component.onCompleted: panel.rebuildFilter()
+
+            // ---- context menu ----
+            property var ctxGame: null
+
+            function openContextMenu(game, x, y) {
+                panel.ctxGame = game
+                contextMenu.x = Math.max(8, Math.min(x, panel.width - contextMenu.width - 8))
+                contextMenu.y = Math.max(8, Math.min(y, panel.height - contextMenu.height - 8))
+                contextMenu.visible = true
+            }
+
+            function doContextAction(action) {
+                var g = panel.ctxGame
+                if (!g) return
+                if (action === "fav") Games.toggleFavorite(g.appId)
+                else if (action === "launch") { Games.launchGame(g); rootScope.close() }
+                else if (action === "store") Games.openStorePage(g)
+                else if (action === "hide") Games.toggleHidden(g.appId)
+                contextMenu.visible = false
+            }
 
             Keys.onPressed: event => {
                 if (event.key === Qt.Key_Escape)
                     rootScope.close()
+            }
+
+            // ---- hero background ----
+            property var heroGame: {
+                var idx = viewLoader.item ? viewLoader.item.currentIndex : -1
+                if (idx >= 0 && idx < panel.filteredGames.length) return panel.filteredGames[idx]
+                return panel.filteredGames.length > 0 ? panel.filteredGames[0] : null
+            }
+            property string heroSource: {
+                if (!panel.heroGame || !panel.heroGame.hero || panel.heroGame.hero.length === 0) return ""
+                return panel.heroGame.hero.startsWith("http") ? panel.heroGame.hero : "file://" + panel.heroGame.hero
+            }
+
+            Image {
+                id: heroImage
+                anchors.fill: parent
+                source: panel.heroSource
+                fillMode: Image.PreserveAspectCrop
+                asynchronous: true
+                cache: false
+                opacity: status === Image.Ready ? 1 : 0
+                Behavior on opacity { NumberAnimation { duration: 450; easing.type: Easing.OutCubic } }
+            }
+
+            Rectangle {
+                anchors.fill: parent
+                color: ColorUtils.transparentize(Appearance.m3colors.m3background, 0.35)
+                opacity: heroImage.opacity
             }
 
             MouseArea {
@@ -254,6 +317,68 @@ Scope {
                         implicitWidth: 40
                         implicitHeight: 40
                         buttonRadius: 20
+                        colBackground: panel.sortMode !== 0 ? Appearance.m3colors.m3secondaryContainer : "transparent"
+                        colBackgroundHover: Appearance.colors.colLayer2Hover
+                        onClicked: panel.sortMode = (panel.sortMode + 1) % 3
+
+                        StyledToolTip {
+                            text: ["Sort: Name", "Sort: Recently played", "Sort: Playtime"][panel.sortMode]
+                        }
+
+                        contentItem: MaterialSymbol {
+                            anchors.centerIn: parent
+                            text: ["sort_by_alpha", "history", "schedule"][panel.sortMode]
+                            iconSize: 22
+                            color: panel.sortMode !== 0
+                                ? Appearance.m3colors.m3onSecondaryContainer
+                                : Appearance.m3colors.m3onSurface
+                        }
+                    }
+
+                    RippleButton {
+                        implicitWidth: 40
+                        implicitHeight: 40
+                        buttonRadius: 20
+                        colBackground: panel.installedOnly ? Appearance.m3colors.m3secondaryContainer : "transparent"
+                        colBackgroundHover: Appearance.colors.colLayer2Hover
+                        onClicked: panel.installedOnly = !panel.installedOnly
+
+                        StyledToolTip { text: panel.installedOnly ? "Showing installed only" : "Show installed only" }
+
+                        contentItem: MaterialSymbol {
+                            anchors.centerIn: parent
+                            text: "download_done"
+                            iconSize: 22
+                            color: panel.installedOnly
+                                ? Appearance.m3colors.m3onSecondaryContainer
+                                : Appearance.m3colors.m3onSurface
+                        }
+                    }
+
+                    RippleButton {
+                        implicitWidth: 40
+                        implicitHeight: 40
+                        buttonRadius: 20
+                        colBackground: panel.showHidden ? Appearance.m3colors.m3secondaryContainer : "transparent"
+                        colBackgroundHover: Appearance.colors.colLayer2Hover
+                        onClicked: panel.showHidden = !panel.showHidden
+
+                        StyledToolTip { text: panel.showHidden ? "Showing hidden games" : "Show hidden games" }
+
+                        contentItem: MaterialSymbol {
+                            anchors.centerIn: parent
+                            text: panel.showHidden ? "visibility" : "visibility_off"
+                            iconSize: 22
+                            color: panel.showHidden
+                                ? Appearance.m3colors.m3onSecondaryContainer
+                                : Appearance.m3colors.m3onSurface
+                        }
+                    }
+
+                    RippleButton {
+                        implicitWidth: 40
+                        implicitHeight: 40
+                        buttonRadius: 20
                         colBackground: "transparent"
                         colBackgroundHover: Appearance.colors.colLayer2Hover
                         enabled: !Games.scanning
@@ -384,6 +509,9 @@ Scope {
                                 Games.launchGame(gameData)
                                 rootScope.close()
                             })
+                            item.contextRequested.connect((gameData, gx, gy) => {
+                                panel.openContextMenu(gameData, gx, gy)
+                            })
                         }
 
                         Connections {
@@ -433,6 +561,90 @@ Scope {
                 height: 1
                 color: Appearance.m3colors.m3outlineVariant
                 opacity: 0.3
+            }
+
+            // ---- context menu ----
+            MouseArea {
+                anchors.fill: parent
+                visible: contextMenu.visible
+                acceptedButtons: Qt.LeftButton | Qt.RightButton
+                onPressed: contextMenu.visible = false
+            }
+
+            Rectangle {
+                id: contextMenu
+                visible: false
+                width: 230
+                height: menuCol.implicitHeight + 12
+                radius: Appearance.rounding.normal
+                color: Appearance.m3colors.m3surfaceContainer
+                border.width: 1
+                border.color: Appearance.m3colors.m3outlineVariant
+
+                property var actions: {
+                    var g = panel.ctxGame
+                    if (!g) return []
+                    var a = []
+                    a.push({ icon: Games.isFavorite(g.appId) ? "star" : "star_outline",
+                             label: Games.isFavorite(g.appId) ? "Remove favorite" : "Add favorite", action: "fav" })
+                    a.push({ icon: g.installed ? "play_arrow" : "download",
+                             label: g.installed ? "Launch" : "Install", action: "launch" })
+                    if (g.storeUrl && g.storeUrl.length > 0)
+                        a.push({ icon: "open_in_new", label: "Store page", action: "store" })
+                    a.push({ icon: Games.isHidden(g.appId) ? "visibility" : "visibility_off",
+                             label: Games.isHidden(g.appId) ? "Unhide" : "Hide", action: "hide" })
+                    return a
+                }
+
+                ColumnLayout {
+                    id: menuCol
+                    anchors.left: parent.left
+                    anchors.right: parent.right
+                    anchors.top: parent.top
+                    anchors.margins: 6
+                    spacing: 0
+
+                    Repeater {
+                        model: contextMenu.actions
+
+                        Rectangle {
+                            id: menuRow
+                            required property var modelData
+                            Layout.fillWidth: true
+                            Layout.preferredHeight: 38
+                            radius: Appearance.rounding.small
+                            color: rowMouse.containsMouse ? Appearance.colors.colLayer2Hover : "transparent"
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: 12
+                                anchors.rightMargin: 12
+                                spacing: 12
+
+                                MaterialSymbol {
+                                    text: menuRow.modelData.icon
+                                    iconSize: 20
+                                    color: Appearance.m3colors.m3onSurface
+                                }
+
+                                StyledText {
+                                    Layout.fillWidth: true
+                                    text: menuRow.modelData.label
+                                    color: Appearance.m3colors.m3onSurface
+                                    font.pixelSize: Appearance.font.pixelSize.small
+                                }
+                            }
+
+                            MouseArea {
+                                id: rowMouse
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: panel.doContextAction(menuRow.modelData.action)
+                            }
+                        }
+                    }
+                }
             }
         }
     }

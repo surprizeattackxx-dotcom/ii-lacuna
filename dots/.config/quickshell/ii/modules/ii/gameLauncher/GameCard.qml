@@ -3,6 +3,7 @@ import qs.modules.common.widgets
 import qs.services
 import QtQuick
 import Quickshell
+import Qt5Compat.GraphicalEffects
 
 Item {
     id: root
@@ -12,6 +13,7 @@ Item {
     property int cardHeight: cardWidth * 1.4
     property bool selected: false
     signal clicked()
+    signal contextRequested(real globalX, real globalY)
 
     implicitWidth: cardWidth
     implicitHeight: cardHeight + nameLabel.implicitHeight + 10
@@ -33,38 +35,48 @@ Item {
         height: cardHeight
         radius: Appearance.rounding.large
         color: Appearance.m3colors.m3surfaceContainerHighest
-        clip: true
-        border.width: root.selected ? 2 : 0
-        border.color: Appearance.m3colors.m3primary
 
-        Image {
-            id: artImage
+        Item {
+            id: artClip
             anchors.fill: parent
-            source: !root.gameData.art ? "" : (root.gameData.art.startsWith("http") ? root.gameData.art : "file://" + root.gameData.art)
-            fillMode: Image.PreserveAspectCrop
-            asynchronous: true
-            visible: status === Image.Ready
-            opacity: root.gameData.installed ? 1.0 : 0.4
-        }
-
-        Rectangle {
-            anchors.fill: parent
-            visible: !artImage.visible
-            gradient: Gradient {
-                orientation: Gradient.Vertical
-                GradientStop { position: 0; color: root.fallbackColor1 }
-                GradientStop { position: 1; color: root.fallbackColor2 }
+            layer.enabled: true
+            layer.effect: OpacityMask {
+                maskSource: Rectangle {
+                    width: artClip.width
+                    height: artClip.height
+                    radius: cardBg.radius
+                }
             }
-        }
 
-        Rectangle {
-            anchors.bottom: parent.bottom
-            anchors.left: parent.left
-            anchors.right: parent.right
-            height: 36
-            gradient: Gradient {
-                GradientStop { position: 0; color: "transparent" }
-                GradientStop { position: 1; color: Qt.rgba(0, 0, 0, 0.5) }
+            Image {
+                id: artImage
+                anchors.fill: parent
+                source: !root.gameData.art ? "" : (root.gameData.art.startsWith("http") ? root.gameData.art : "file://" + root.gameData.art)
+                fillMode: Image.PreserveAspectCrop
+                asynchronous: true
+                visible: status === Image.Ready
+                opacity: root.gameData.installed ? 1.0 : 0.4
+            }
+
+            Rectangle {
+                anchors.fill: parent
+                visible: !artImage.visible
+                gradient: Gradient {
+                    orientation: Gradient.Vertical
+                    GradientStop { position: 0; color: root.fallbackColor1 }
+                    GradientStop { position: 1; color: root.fallbackColor2 }
+                }
+            }
+
+            Rectangle {
+                anchors.bottom: parent.bottom
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: 36
+                gradient: Gradient {
+                    GradientStop { position: 0; color: "transparent" }
+                    GradientStop { position: 1; color: Qt.rgba(0, 0, 0, 0.5) }
+                }
             }
         }
 
@@ -87,13 +99,33 @@ Item {
             }
         }
 
+        StyledText {
+            anchors.bottom: parent.bottom
+            anchors.left: parent.left
+            anchors.margins: 8
+            visible: root.gameData.playMinutes > 0
+            text: root.fmtPlaytime(root.gameData.playMinutes)
+            color: "white"
+            font.pixelSize: 10
+            font.weight: Font.DemiBold
+        }
+
+        MaterialSymbol {
+            anchors.centerIn: parent
+            text: "cloud_download"
+            iconSize: 40
+            color: "white"
+            opacity: 0.85
+            visible: !root.gameData.installed
+        }
+
         Rectangle {
             anchors.centerIn: parent
             width: 48
             height: 48
             radius: 24
             color: Appearance.m3colors.m3primary
-            visible: root.selected
+            visible: root.selected && root.gameData.installed
 
             MaterialSymbol {
                 anchors.centerIn: parent
@@ -102,6 +134,15 @@ Item {
                 fill: 1
                 color: Appearance.m3colors.m3onPrimary
             }
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            radius: cardBg.radius
+            color: "transparent"
+            border.width: 2
+            border.color: Appearance.m3colors.m3primary
+            visible: root.selected
         }
 
         transform: Scale {
@@ -121,22 +162,22 @@ Item {
         MouseArea {
             anchors.fill: parent
             hoverEnabled: true
+            acceptedButtons: Qt.LeftButton | Qt.RightButton
             cursorShape: Qt.PointingHandCursor
-            onClicked: root.clicked()
+            onClicked: mouse => {
+                if (mouse.button === Qt.RightButton) {
+                    var p = mapToItem(null, mouse.x, mouse.y)
+                    root.contextRequested(p.x, p.y)
+                } else {
+                    root.clicked()
+                }
+            }
             onEntered: root.selected = true
             onExited: root.selected = false
         }
 
-        MaterialSymbol {
-            anchors.centerIn: parent
-            text: "cloud_download"
-            iconSize: 40
-            color: "white"
-            opacity: 0.85
-            visible: !root.gameData.installed
-        }
-
         Rectangle {
+            id: favBadge
             anchors.top: parent.top
             anchors.right: parent.right
             anchors.margins: 6
@@ -149,9 +190,9 @@ Item {
 
             MaterialSymbol {
                 anchors.centerIn: parent
-                text: parent.fav ? "star" : "star_outline"
+                text: favBadge.fav ? "star" : "star_outline"
                 iconSize: 18
-                color: parent.fav ? "#FFD54F" : "white"
+                color: favBadge.fav ? "#FFD54F" : "white"
             }
 
             MouseArea {
@@ -174,6 +215,11 @@ Item {
         elide: Text.ElideRight
         maximumLineCount: 2
         wrapMode: Text.Wrap
+    }
+
+    function fmtPlaytime(min) {
+        if (min >= 60) return Math.round(min / 60) + "h"
+        return min + "m"
     }
 
     readonly property color platformColor: {
