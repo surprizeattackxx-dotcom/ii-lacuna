@@ -1,3 +1,4 @@
+import qs
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
@@ -29,6 +30,16 @@ Item {
 
     function focusActiveItem() {
         swipeView.currentItem.forceActiveFocus()
+    }
+
+    Connections {
+        target: GlobalStates
+        function onOpenCodeRequestedChanged() {
+            if (GlobalStates.openCodeRequested && root.openCodeEnabled) {
+                Persistent.states.sidebar.policies.tab = root.aiChatEnabled ? 1 : 0;
+                GlobalStates.openCodeRequested = false;
+            }
+        }
     }
 
     Keys.onPressed: (event) => {

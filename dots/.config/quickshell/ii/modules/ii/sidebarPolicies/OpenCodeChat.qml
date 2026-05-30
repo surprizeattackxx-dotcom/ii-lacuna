@@ -11,6 +11,17 @@ Item {
 
     SwipeView.onIsCurrentItemChanged: if (SwipeView.isCurrentItem) OpenCode.start()
 
+    Connections {
+        target: OpenCode
+        function onDraftInputChanged() {
+            if (OpenCode.draftInput.length === 0) return;
+            input.text = OpenCode.draftInput;
+            OpenCode.draftInput = "";
+            input.forceActiveFocus();
+            input.cursorPosition = input.text.length;
+        }
+    }
+
     function send() {
         const text = input.text.trim();
         if (text.length === 0) return;

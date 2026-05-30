@@ -22,6 +22,7 @@ Singleton {
     property var agents: []
     property var messages: []
     property var pendingPermissions: []
+    property string draftInput: ""
 
     property var _msgMap: ({})
     property var _msgOrder: []

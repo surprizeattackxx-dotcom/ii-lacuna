@@ -99,6 +99,25 @@ Singleton {
         }
     }
 
+    property bool openCodeRequested: false
+    GlobalShortcut {
+        name: "openCodeContext"
+        description: "Open OpenCode pre-loaded with current context (clipboard + active window)"
+        onPressed: {
+            const clip = Quickshell.clipboardText ?? "";
+            const win = Hyprland.activeToplevel;
+            let ctx = "";
+            if (win?.title || win?.wmClass)
+                ctx += `Active window: ${win?.title ?? ""} (${win?.wmClass ?? ""})\n`;
+            if (clip.trim().length > 0)
+                ctx += `\nClipboard:\n${clip}\n`;
+            if (ctx.length > 0) ctx += "\n";
+            OpenCode.draftInput = ctx;
+            root.openCodeRequested = true;
+            root.policiesPanelOpen = true;
+        }
+    }
+
     GlobalShortcut {
         name: "voiceInput"
         description: "Toggle voice recording for AI chat STT"
