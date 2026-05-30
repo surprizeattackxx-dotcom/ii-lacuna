@@ -29,15 +29,24 @@ Singleton {
 
     function start() {
         if (serverReady) { _afterReady(); return; }
-        if (!serveProc.running) serveProc.running = true;
-        if (!healthTimer.running) healthTimer.start();
+        if (!healthTimer.running) healthTimer.start(); // pings first; launches the server only if it's down
     }
 
     function _afterReady() {
         if (eventProc.running === false) eventProc.running = true;
         if (root.models.length === 0) loadModels();
         if (root.agents.length === 0) loadAgents();
-        if (root.sessionId === "") createSession();
+        if (root.sessionId === "") _restoreOrCreate();
+    }
+
+    // Reconnect to the session persisted across qs reloads; create a fresh one if it's gone.
+    function _restoreOrCreate() {
+        if (!Persistent.ready) { restoreWaiter.start(); return; }
+        const saved = Persistent.states.opencode?.sessionId ?? "";
+        if (saved.length === 0) { createSession(); return; }
+        _xhr("GET", `/session/${saved}/message`, null,
+            (ms) => { root.sessionId = saved; _populateFromList(ms); },
+            (_s) => { createSession(); });
     }
 
     function loadAgents() {
@@ -149,7 +158,10 @@ Singleton {
     }
 
     property string _pendingPrompt: ""
-    onSessionIdChanged: _flushPending()
+    onSessionIdChanged: {
+        Persistent.states.opencode.sessionId = root.sessionId;
+        _flushPending();
+    }
 
     function sendPrompt(text) {
         if (text.length === 0) return;
@@ -183,27 +195,29 @@ Singleton {
     // Authoritative: rebuild the message list from the server (works even if /event streaming is flaky)
     function refreshMessages() {
         if (root.sessionId === "") return;
-        _xhr("GET", `/session/${root.sessionId}/message`, null, (ms) => {
-            if (!Array.isArray(ms)) return;
-            const map = {};
-            const order = [];
-            for (const m of ms) {
-                const info = m.info || {};
-                if (!info.id) continue;
-                const parts = {};
-                const porder = [];
-                for (const p of (m.parts || [])) {
-                    if (!p.id || p.type === "step-start" || p.type === "step-finish") continue;
-                    parts[p.id] = p;
-                    porder.push(p.id);
-                }
-                map[info.id] = { id: info.id, role: info.role || "assistant", parts: parts, order: porder };
-                order.push(info.id);
+        _xhr("GET", `/session/${root.sessionId}/message`, null, (ms) => _populateFromList(ms));
+    }
+
+    function _populateFromList(ms) {
+        if (!Array.isArray(ms)) return;
+        const map = {};
+        const order = [];
+        for (const m of ms) {
+            const info = m.info || {};
+            if (!info.id) continue;
+            const parts = {};
+            const porder = [];
+            for (const p of (m.parts || [])) {
+                if (!p.id || p.type === "step-start" || p.type === "step-finish") continue;
+                parts[p.id] = p;
+                porder.push(p.id);
             }
-            root._msgMap = map;
-            root._msgOrder = order;
-            _touch();
-        });
+            map[info.id] = { id: info.id, role: info.role || "assistant", parts: parts, order: porder };
+            order.push(info.id);
+        }
+        root._msgMap = map;
+        root._msgOrder = order;
+        _touch();
     }
 
     function abort() {
@@ -286,6 +300,13 @@ Singleton {
     }
 
     Timer {
+        id: restoreWaiter
+        interval: 100
+        repeat: true
+        onTriggered: { if (Persistent.ready) { stop(); root._restoreOrCreate(); } }
+    }
+
+    Timer {
         id: busyPoll
         interval: 1500
         repeat: true
@@ -295,7 +316,8 @@ Singleton {
 
     Process {
         id: serveProc
-        command: ["opencode", "serve", "--port", String(root.port), "--hostname", "127.0.0.1"]
+        // setsid -f detaches the server into its own session so it survives qs reloads
+        command: ["setsid", "-f", "opencode", "serve", "--port", String(root.port), "--hostname", "127.0.0.1"]
         running: Config.options.opencode?.autostart ?? false
     }
 
@@ -336,6 +358,9 @@ Singleton {
                     healthTimer.tries = 0;
                     root.serverReady = true;
                     root._afterReady();
+                } else if (healthTimer.tries === 1 && !serveProc.running) {
+                    // server is down — launch it once (ping-first avoids duplicating a survived server)
+                    serveProc.running = true;
                 }
             };
             xhr.send();

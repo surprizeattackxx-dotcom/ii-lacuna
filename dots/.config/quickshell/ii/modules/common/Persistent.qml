@@ -69,6 +69,10 @@ Singleton {
                 property real temperature: 0.5
             }
 
+            property JsonObject opencode: JsonObject {
+                property string sessionId: "" // reconnect to this session across qs reloads
+            }
+
             property JsonObject background: JsonObject {
                 property JsonObject mediaMode: JsonObject {
                     property bool enabled: false // just a flag, cannot be changed directly

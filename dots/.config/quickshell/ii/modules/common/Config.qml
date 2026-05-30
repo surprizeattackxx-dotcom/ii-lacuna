@@ -92,7 +92,7 @@ Singleton {
             property JsonObject opencode: JsonObject {
                 property bool autostart: false
                 property int port: 47821
-                property string model: "" // empty = opencode default; format "provider/model"
+                property string model: "opencode/big-pickle" // empty = opencode default; format "provider/model"
                 property string agent: "" // empty = opencode default agent
             }
 
