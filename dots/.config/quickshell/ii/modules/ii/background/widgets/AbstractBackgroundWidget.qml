@@ -9,15 +9,15 @@ import qs.modules.common.widgets.widgetCanvas
 AbstractWidget {
     id: root
 
-    required property string configEntryName
     required property int screenWidth
     required property int screenHeight
     required property int scaledScreenWidth
     required property int scaledScreenHeight
     required property real wallpaperScale
+    property string configEntryName: ""
     property bool visibleWhenLocked: false
-    property var configEntry: Config.options.background.widgets[configEntryName]
-    property string placementStrategy: configEntry.placementStrategy
+    property var configEntry: configEntryName ? Config.options.background.widgets[configEntryName] : null
+    property string placementStrategy: configEntry?.placementStrategy || "free"
 
     // Per-monitor position overrides passed down from Background.qml.
     // When >= 0 these take priority over both Config and lbr proc output.
@@ -26,11 +26,11 @@ AbstractWidget {
     readonly property bool hasOverride: overrideX >= 0 && overrideY >= 0
 
     property real targetX: {
-        const base = hasOverride ? overrideX : configEntry.x;
+        const base = hasOverride ? overrideX : (configEntry?.x ?? 0);
         return Math.max(0, Math.min(base, scaledScreenWidth - width));
     }
     property real targetY: {
-        const base = hasOverride ? overrideY : configEntry.y;
+        const base = hasOverride ? overrideY : (configEntry?.y ?? 0);
         return Math.max(0, Math.min(base, scaledScreenHeight - height));
     }
     x: targetX
@@ -50,8 +50,10 @@ AbstractWidget {
         if (root.hasOverride) return; // position is managed per-monitor, don't clobber config
         root.targetX = root.x;
         root.targetY = root.y;
-        configEntry.x = root.targetX;
-        configEntry.y = root.targetY;
+        if (configEntry) {
+            configEntry.x = root.targetX;
+            configEntry.y = root.targetY;
+        }
     }
 
     property bool needsColText: false

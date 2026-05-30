@@ -91,6 +91,13 @@ Singleton {
     property string readSddmBgScriptPath: FileUtils.trimFileProtocol(`${Directories.scriptPath}/lock/read-sddm-bg.sh`)
     property string setSddmThemeScriptPath: FileUtils.trimFileProtocol(`${Directories.scriptPath}/lock/set-sddm-theme.sh`)
     property string readSddmThemeScriptPath: FileUtils.trimFileProtocol(`${Directories.scriptPath}/lock/read-sddm-theme.sh`)
+
+    // Extension system paths
+    property string extensionsPath: FileUtils.trimFileProtocol(`${Directories.shellConfig}/extensions`)
+    property string extensionsCachePath: `${Directories.extensionsPath}/cache`
+    property string extensionsInstalledPath: `${Directories.extensionsPath}/installed`
+    property string pluginsJsonPath: `${Directories.extensionsPath}/plugins.json`
+
     // Cleanup on init
     Component.onCompleted: {
         Quickshell.execDetached(["mkdir", "-p", `${shellConfig}`])
@@ -103,5 +110,7 @@ Singleton {
         Quickshell.execDetached(["mkdir", "-p", `${aiSttTemp}`])
         Quickshell.execDetached(["mkdir", "-p", `${userActions}`])
         Quickshell.execDetached(["bash", "-c", `rm -rf '${tempImages}'; mkdir -p '${tempImages}'`])
+        Quickshell.execDetached(["mkdir", "-p", `${Directories.extensionsCachePath}`])
+        Quickshell.execDetached(["mkdir", "-p", `${Directories.extensionsInstalledPath}`])
     }
 }

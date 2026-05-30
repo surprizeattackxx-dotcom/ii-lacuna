@@ -14,6 +14,7 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions as CF
+import qs.modules.settings
 
 ApplicationWindow {
     id: root
@@ -59,6 +60,11 @@ ApplicationWindow {
             name: Translation.tr("Services"),
             icon: "api",
             component: "modules/settings/ServicesConfig.qml"
+        },
+        {
+            name: Translation.tr("Extensions"),
+            icon: "extension",
+            component: "modules/settings/ExtensionsConfig.qml"
         },
         {
             name: Translation.tr("Advanced"),

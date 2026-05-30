@@ -228,11 +228,98 @@ Variants {
             }
         }
 
+        property var extensionBgWidgets: []
+        property var _extensionBgWidgetObjects: []
+
+        function refreshExtensionBgWidgets() {
+            // Destroy all existing extension widget objects
+            for (let i = 0; i < _extensionBgWidgetObjects.length; i++) {
+                let obj = _extensionBgWidgetObjects[i]
+                if (obj && obj.destroy) {
+                    obj.destroy()
+                }
+            }
+            _extensionBgWidgetObjects = []
+
+            let list = ExtensionManager.getContributionPoint("backgroundWidgets")
+
+            for (let wi = 0; wi < list.length; wi++) {
+                let entry = list[wi]
+                let fullPath = entry.fullPath
+                let extId = entry.extensionId
+                let wid = entry.identifier
+                let x = entry.x
+                let y = entry.y
+                let strat = entry.placementStrategy || "free"
+
+                let comp = ExtensionManager.loadExtensionQmlComponent(fullPath)
+
+                let createWidget = (comp, entry, fullPath, extId, wid, x, y, strat) => {
+                    let savedWidgetConfig = ExtensionManager.getExtensionWidgetConfig(extId, wid)
+                    let savedX = savedWidgetConfig ? savedWidgetConfig.x : x
+                    let savedY = savedWidgetConfig ? savedWidgetConfig.y : y
+                    let qml = 'import QtQml; QtObject { property bool enable: true; property real x: ' + savedX + '; property real y: ' + savedY + '; property string placementStrategy: "' + strat + '" }'
+                    let cfg = Qt.createQmlObject(qml,bgRoot)
+
+                    let onPosChanged = () => {
+                        ExtensionManager.saveExtensionWidgetConfig(extId, wid, { enable: cfg.enable, x: cfg.x, y: cfg.y })
+                    }
+                    cfg.xChanged.connect(onPosChanged)
+                    cfg.yChanged.connect(onPosChanged)
+
+                    let widget = comp.createObject(widgetCanvas, {
+                        configEntry: cfg,
+                        screenWidth: bgRoot.screen.width,
+                        screenHeight: bgRoot.screen.height,
+                        scaledScreenWidth: bgRoot.screen.width / bgRoot.effectiveWallpaperScale,
+                        scaledScreenHeight: bgRoot.screen.height / bgRoot.effectiveWallpaperScale,
+                        wallpaperScale: bgRoot.effectiveWallpaperScale
+                    })
+
+                    if (widget && extId) {
+                        if ("extensionId" in widget) {
+                            widget.extensionId = extId
+                        } else {
+                            Object.defineProperty(widget, "extensionId", {
+                                value: extId,
+                                writable: true,
+                                configurable: true,
+                                enumerable: true
+                            })
+                        }
+                        let objects = _extensionBgWidgetObjects.slice()
+                        objects.push(widget)
+                        _extensionBgWidgetObjects = objects
+                    }
+                }
+
+                if (comp.status === Component.Ready) {
+                    createWidget(comp, entry, fullPath, extId, wid, x, y, strat)
+                } else if (comp.status === Component.Error) {
+                } else {
+                    comp.statusChanged.connect(() => {
+                        if (comp.status === Component.Ready) {
+                            createWidget(comp, entry, fullPath, extId, wid, x, y, strat)
+                        } else if (comp.status === Component.Error) {
+                        }
+                    })
+                }
+            }
+
+            bgRoot.extensionBgWidgets = list
+        }
+
         Component.onCompleted: {
+            refreshExtensionBgWidgets()
             if (!mediaModeOpen) {
                 Wallpapers.restore()
             }
             Persistent.states.background.mediaMode.enabled = false // we use this persistent to access this from outside of this script, cannot be toggled
+        }
+
+        Connections {
+            target: ExtensionManager
+            function onRefreshExtensions() { refreshExtensionBgWidgets() }
         }
 
         Item {
