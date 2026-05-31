@@ -60,6 +60,7 @@ Scope {
 
             // ---- filtered model as JS array ----
             property var filteredGames: []
+            property var recentGames: []
 
             function rebuildFilter() {
                 var result = []
@@ -89,6 +90,15 @@ Scope {
                     return a.name.localeCompare(b.name)
                 })
                 panel.filteredGames = result
+
+                var recent = []
+                for (var j = 0; j < Games.gameModel.count; j++) {
+                    var g = Games.gameModel.get(j)
+                    if (g.lastPlayed > 0 && !Games.isHidden(g.appId))
+                        recent.push(g)
+                }
+                recent.sort((a, b) => b.lastPlayed - a.lastPlayed)
+                panel.recentGames = recent.slice(0, 10)
             }
 
             function scheduleRebuild() { rebuildTimer.restart() }
@@ -485,6 +495,46 @@ Scope {
                 }
 
                 Item { Layout.preferredHeight: 16 }
+
+                // ---- continue playing shelf ----
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    visible: panel.tabIndex === 0 && panel.searchText.length === 0
+                        && !panel.romsActive && panel.recentGames.length > 0
+
+                    StyledText {
+                        text: "Continue playing"
+                        color: Appearance.m3colors.m3onSurface
+                        font.pixelSize: Appearance.font.pixelSize.large
+                        font.weight: Font.DemiBold
+                    }
+
+                    ListView {
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 268
+                        orientation: ListView.Horizontal
+                        spacing: 14
+                        clip: true
+                        model: panel.recentGames
+                        boundsBehavior: Flickable.StopAtBounds
+
+                        ScrollBar.horizontal: ScrollBar { policy: ScrollBar.AsNeeded }
+
+                        delegate: GameCard {
+                            required property var modelData
+                            cardWidth: 150
+                            gameData: modelData
+                            onClicked: {
+                                Games.launchGame(modelData)
+                                rootScope.close()
+                            }
+                            onContextRequested: (gx, gy) => panel.openContextMenu(modelData, gx, gy)
+                        }
+                    }
+
+                    Item { Layout.preferredHeight: 8 }
+                }
 
                 // ---- game view (switched by viewMode) ----
                 Item {
