@@ -20,6 +20,8 @@ Singleton {
     property list<string> favorites: []
     property list<string> hidden: []
     property var launchOpts: ({})
+    property var firstSeen: ({})
+    readonly property int newWindowSecs: 14 * 86400
 
     function scan() {
         if (root.scanning) return
@@ -69,6 +71,24 @@ Singleton {
         Quickshell.execDetached(["bash", "-c", cmd])
     }
 
+    function isNew(appId) {
+        var ts = root.firstSeen[appId]
+        if (!ts || ts <= 0) return false
+        return (Math.floor(Date.now() / 1000) - ts) < root.newWindowSecs
+    }
+
+    function canUninstall(game) {
+        return game && game.installed && (game.platform === "steam" || game.platform === "rom")
+    }
+
+    function uninstall(game) {
+        if (!game) return
+        if (game.platform === "steam")
+            Quickshell.execDetached(["bash", "-c", "steam steam://uninstall/" + game.appId])
+        else if (game.platform === "rom")
+            Quickshell.execDetached(["rm", "-f", game.appId])
+    }
+
     FileView {
         id: favoritesFile
         path: Qt.resolvedUrl(Directories.gameFavoritesPath)
@@ -102,6 +122,34 @@ Singleton {
         }
     }
 
+    FileView {
+        id: firstSeenFile
+        path: Qt.resolvedUrl(Directories.gameFirstSeenPath)
+        onLoaded: {
+            try { root.firstSeen = JSON.parse(firstSeenFile.text()) } catch (e) { root.firstSeen = ({}) }
+        }
+        onLoadFailed: (error) => {
+            if (error == FileViewError.FileNotFound) { root.firstSeen = ({}); firstSeenFile.setText("{}") }
+        }
+    }
+
+    function updateFirstSeen(games) {
+        var fs = JSON.parse(JSON.stringify(root.firstSeen))
+        var wasEmpty = Object.keys(fs).length === 0
+        var now = Math.floor(Date.now() / 1000)
+        var changed = false
+        for (var i = 0; i < games.length; i++) {
+            if (!(games[i].appId in fs)) {
+                fs[games[i].appId] = wasEmpty ? 0 : now
+                changed = true
+            }
+        }
+        if (changed) {
+            root.firstSeen = fs
+            firstSeenFile.setText(JSON.stringify(fs))
+        }
+    }
+
     Process {
         id: scanProc
         command: ["python3", root.scanScript]
@@ -129,6 +177,7 @@ Singleton {
                         })
                     }
                     root.available = root.gameModel.count > 0
+                    root.updateFirstSeen(games)
                 } catch (e) {
                     console.warn("Games: failed to parse scan output:", e)
                 }
@@ -147,6 +196,7 @@ Singleton {
         favoritesFile.reload()
         hiddenFile.reload()
         launchOptsFile.reload()
+        firstSeenFile.reload()
         root.scan()
     }
 }

@@ -119,6 +119,27 @@ Item {
             }
         }
 
+        Rectangle {
+            anchors.top: parent.top
+            anchors.left: parent.left
+            anchors.topMargin: 28
+            anchors.leftMargin: 6
+            height: 18
+            implicitWidth: newText.implicitWidth + 12
+            radius: Appearance.rounding.small
+            color: Appearance.m3colors.m3primary
+            visible: Games.isNew(root.gameData.appId)
+
+            StyledText {
+                id: newText
+                anchors.centerIn: parent
+                text: "NEW"
+                color: Appearance.m3colors.m3onPrimary
+                font.pixelSize: 10
+                font.weight: Font.Bold
+            }
+        }
+
         StyledText {
             anchors.bottom: parent.bottom
             anchors.left: parent.left

@@ -141,10 +141,21 @@ Scope {
                 contextMenu.visible = true
             }
 
+            property var confirmGame: null
+
             function openDetails(game) {
                 panel.detailsGame = game
                 gameDetails.shown = true
                 contextMenu.visible = false
+            }
+
+            function surpriseMe() {
+                var pool = panel.filteredGames.filter(g => g.installed)
+                if (pool.length === 0) pool = panel.filteredGames
+                if (pool.length === 0) return
+                var g = pool[Math.floor(Math.random() * pool.length)]
+                Games.launchGame(g)
+                rootScope.close()
             }
 
             function doContextAction(action) {
@@ -155,6 +166,10 @@ Scope {
                 else if (action === "launch") { Games.launchGame(g); rootScope.close() }
                 else if (action === "store") Games.openStorePage(g)
                 else if (action === "hide") Games.toggleHidden(g.appId)
+                else if (action === "uninstall") {
+                    if (g.platform === "rom") { panel.confirmGame = g; confirmDialog.visible = true }
+                    else Games.uninstall(g)
+                }
                 contextMenu.visible = false
             }
 
@@ -400,6 +415,24 @@ Scope {
                         buttonRadius: 20
                         colBackground: "transparent"
                         colBackgroundHover: Appearance.colors.colLayer2Hover
+                        onClicked: panel.surpriseMe()
+
+                        StyledToolTip { text: "Surprise me — launch a random game" }
+
+                        contentItem: MaterialSymbol {
+                            anchors.centerIn: parent
+                            text: "casino"
+                            iconSize: 22
+                            color: Appearance.m3colors.m3onSurface
+                        }
+                    }
+
+                    RippleButton {
+                        implicitWidth: 40
+                        implicitHeight: 40
+                        buttonRadius: 20
+                        colBackground: "transparent"
+                        colBackgroundHover: Appearance.colors.colLayer2Hover
                         enabled: !Games.scanning
                         onClicked: Games.scan()
 
@@ -591,6 +624,7 @@ Scope {
                             Games.launchGame(gameData)
                             rootScope.close()
                         }
+                        onContextRequested: (gameData, gx, gy) => panel.openContextMenu(gameData, gx, gy)
                     }
 
                     ColumnLayout {
@@ -664,6 +698,8 @@ Scope {
                         a.push({ icon: "open_in_new", label: "Store page", action: "store" })
                     a.push({ icon: Games.isHidden(g.appId) ? "visibility" : "visibility_off",
                              label: Games.isHidden(g.appId) ? "Unhide" : "Hide", action: "hide" })
+                    if (Games.canUninstall(g))
+                        a.push({ icon: "delete", label: g.platform === "rom" ? "Delete ROM" : "Uninstall", action: "uninstall" })
                     return a
                 }
 
@@ -726,6 +762,99 @@ Scope {
                 onLaunchRequested: (g) => {
                     Games.launchGame(g)
                     rootScope.close()
+                }
+            }
+
+            // ---- ROM delete confirmation ----
+            Item {
+                id: confirmDialog
+                anchors.fill: parent
+                visible: false
+
+                Rectangle {
+                    anchors.fill: parent
+                    color: ColorUtils.transparentize(Appearance.m3colors.m3scrim, 0.4)
+                    MouseArea { anchors.fill: parent; onClicked: confirmDialog.visible = false }
+                }
+
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: 400
+                    implicitHeight: confirmCol.implicitHeight + 48
+                    radius: Appearance.rounding.large
+                    color: Appearance.m3colors.m3surfaceContainerHigh
+
+                    MouseArea { anchors.fill: parent }
+
+                    ColumnLayout {
+                        id: confirmCol
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.top: parent.top
+                        anchors.margins: 24
+                        spacing: 14
+
+                        MaterialSymbol {
+                            text: "delete"
+                            iconSize: 32
+                            color: Appearance.m3colors.m3error
+                        }
+
+                        StyledText {
+                            text: "Delete this ROM?"
+                            color: Appearance.m3colors.m3onSurface
+                            font.pixelSize: Appearance.font.pixelSize.large
+                            font.weight: Font.DemiBold
+                        }
+
+                        StyledText {
+                            Layout.fillWidth: true
+                            text: (panel.confirmGame ? panel.confirmGame.name : "") + " will be permanently deleted from disk. This cannot be undone."
+                            color: Appearance.m3colors.m3onSurfaceVariant
+                            font.pixelSize: Appearance.font.pixelSize.small
+                            wrapMode: Text.Wrap
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
+                            Item { Layout.fillWidth: true }
+
+                            RippleButton {
+                                implicitWidth: 100
+                                implicitHeight: 40
+                                buttonRadius: Appearance.rounding.full
+                                colBackground: "transparent"
+                                colBackgroundHover: Appearance.colors.colLayer2Hover
+                                onClicked: confirmDialog.visible = false
+                                contentItem: StyledText {
+                                    anchors.centerIn: parent
+                                    text: "Cancel"
+                                    color: Appearance.m3colors.m3primary
+                                    font.pixelSize: Appearance.font.pixelSize.normal
+                                }
+                            }
+
+                            RippleButton {
+                                implicitWidth: 100
+                                implicitHeight: 40
+                                buttonRadius: Appearance.rounding.full
+                                colBackground: Appearance.m3colors.m3error
+                                colBackgroundHover: Appearance.m3colors.m3error
+                                onClicked: {
+                                    if (panel.confirmGame) Games.uninstall(panel.confirmGame)
+                                    confirmDialog.visible = false
+                                }
+                                contentItem: StyledText {
+                                    anchors.centerIn: parent
+                                    text: "Delete"
+                                    color: Appearance.m3colors.m3onError
+                                    font.pixelSize: Appearance.font.pixelSize.normal
+                                    font.weight: Font.DemiBold
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }

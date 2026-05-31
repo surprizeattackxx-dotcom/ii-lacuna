@@ -12,6 +12,7 @@ Item {
 
     property string searchText: ""
     signal launchRequested(var gameData)
+    signal contextRequested(var gameData, real globalX, real globalY)
 
     property var systems: []
     property var currentSystem: null
@@ -187,6 +188,7 @@ Item {
             Layout.fillHeight: true
             model: root.romGames
             onLaunchRequested: (gameData) => root.launchRequested(gameData)
+            onContextRequested: (gameData, gx, gy) => root.contextRequested(gameData, gx, gy)
         }
     }
 
