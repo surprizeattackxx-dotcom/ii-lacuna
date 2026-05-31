@@ -167,6 +167,7 @@ Singleton {
                             appId: g.appId,
                             platform: g.platform,
                             art: g.art || "",
+                            iconArt: g.iconArt === true,
                             hero: g.hero || "",
                             installed: g.installed !== false,
                             playMinutes: g.playMinutes || 0,

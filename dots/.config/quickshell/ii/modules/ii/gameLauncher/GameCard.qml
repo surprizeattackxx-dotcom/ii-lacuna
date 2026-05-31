@@ -51,11 +51,23 @@ Item {
                 }
             }
 
+            Rectangle {
+                anchors.fill: parent
+                visible: !artImage.visible || root.gameData.iconArt
+                gradient: Gradient {
+                    orientation: Gradient.Vertical
+                    GradientStop { position: 0; color: root.fallbackColor1 }
+                    GradientStop { position: 1; color: root.fallbackColor2 }
+                }
+            }
+
             Image {
                 id: artImage
                 anchors.fill: parent
+                anchors.margins: root.gameData.iconArt ? 26 : 0
                 source: !root.gameData.art ? "" : (root.gameData.art.startsWith("http") ? root.gameData.art : "file://" + root.gameData.art)
-                fillMode: Image.PreserveAspectCrop
+                fillMode: root.gameData.iconArt ? Image.PreserveAspectFit : Image.PreserveAspectCrop
+                sourceSize.height: root.gameData.iconArt ? 256 : 0
                 asynchronous: true
                 visible: status === Image.Ready
                 opacity: root.gameData.installed ? 1.0 : 0.4
@@ -81,20 +93,11 @@ Item {
             }
 
             Rectangle {
-                anchors.fill: parent
-                visible: !artImage.visible
-                gradient: Gradient {
-                    orientation: Gradient.Vertical
-                    GradientStop { position: 0; color: root.fallbackColor1 }
-                    GradientStop { position: 1; color: root.fallbackColor2 }
-                }
-            }
-
-            Rectangle {
                 anchors.bottom: parent.bottom
                 anchors.left: parent.left
                 anchors.right: parent.right
                 height: 36
+                visible: !root.gameData.iconArt
                 gradient: Gradient {
                     GradientStop { position: 0; color: "transparent" }
                     GradientStop { position: 1; color: Qt.rgba(0, 0, 0, 0.5) }

@@ -13,6 +13,68 @@ NON_GAME_NAMES = ('Proton', 'Steam Linux Runtime', 'Steamworks')
 LAUNCHER_NAMES = {'Steam', 'Lutris', 'Heroic Games Launcher', 'Goverlay',
     'ProtonUp-Qt', 'RetroArch', 'ES-DE', 'Bolt', 'SLSsteam', 'SLSsteam (Native)'}
 
+ICON_THEME_ROOTS = [
+    HOME / '.local' / 'share' / 'icons',
+    Path('/usr/share/icons'),
+]
+ICON_SIZE_PREF = ['scalable', '512x512', '256x256', '192x192', '128x128', '96x96', '64x64', '48x48']
+
+def resolve_icon(name):
+    if not name:
+        return None
+    if name.startswith('/'):
+        return name if Path(name).exists() else None
+    flat_dirs = [Path('/usr/share/pixmaps'), HOME / '.local' / 'share' / 'pixmaps',
+                 HOME / '.local' / 'share' / 'icons' / 'emudeck']
+    for d in flat_dirs:
+        if not d.exists():
+            continue
+        for e in ('.png', '.svg', '.xpm'):
+            p = d / (name + e)
+            if p.exists():
+                return str(p)
+        for child in d.iterdir():
+            if child.is_file() and child.stem.lower() == name.lower() and child.suffix.lower() in ('.png', '.svg', '.xpm'):
+                return str(child)
+    for root in ICON_THEME_ROOTS:
+        if not root.exists():
+            continue
+        for theme in ['hicolor', 'Papirus', 'Papirus-Dark', 'breeze', 'Adwaita']:
+            base = root / theme
+            if not base.exists():
+                continue
+            for size in ICON_SIZE_PREF:
+                for e in ('.svg', '.png'):
+                    p = base / size / 'apps' / (name + e)
+                    if p.exists():
+                        return str(p)
+    return None
+
+ESDE_THEME = Path('/usr/share/es-de/themes/slate-es-de')
+
+def esde_logo(sysname):
+    p = ESDE_THEME / sysname / 'images' / 'logo.svg'
+    return str(p) if p.exists() else None
+
+# rom-mimetype icon (substring) -> ES-DE system folder; ordered, specific first
+ROM_ICON_SYSTEMS = [
+    ('gba', 'gba'), ('gameboy-color', 'gbc'), ('gbc', 'gbc'),
+    ('snes', 'snes'), ('nintendo-ds', 'nds'), ('3ds', 'n3ds'),
+    ('n64', 'n64'), ('wii-u', 'wiiu'), ('wii', 'wii'), ('gamecube', 'gc'),
+    ('psp', 'psp'), ('ps3', 'ps3'), ('genesis', 'genesis'),
+    ('megadrive', 'megadrive'), ('master-system', 'mastersystem'),
+    ('nes', 'nes'), ('gameboy', 'gb'), ('gb-rom', 'gb'),
+]
+
+def rom_icon_to_system(icon):
+    if not icon:
+        return None
+    low = icon.lower()
+    for key, sysname in ROM_ICON_SYSTEMS:
+        if key in low:
+            return sysname
+    return None
+
 def is_game(name, appid):
     if appid in NON_GAME_APPIDS:
         return False
@@ -263,9 +325,13 @@ def find_appimages():
         for f in d.iterdir():
             if f.name.lower().endswith('.appimage') and f.is_file():
                 hid = hash(str(f)) & 0xffffffff
+                icon = (resolve_icon(f.stem) or resolve_icon(f.stem.lower())
+                        or resolve_icon(f.stem.split('-')[0])
+                        or resolve_icon(f.stem.split('-')[0].lower())
+                        or resolve_icon(f.stem.split('_')[0].lower()))
                 games.append({
                     'name': f.stem, 'appId': f'appimg_{hid}', 'platform': 'appimage',
-                    'art': None, 'installed': True, 'launch': f'"{f}"',
+                    'art': icon, 'iconArt': bool(icon), 'installed': True, 'launch': f'"{f}"',
                     'lastPlayed': 0, 'playMinutes': 0, 'hero': None, 'storeUrl': None,
                     'size': 0,
                 })
@@ -291,13 +357,18 @@ def find_native_games(steam_names):
             if name in steam_names or name in LAUNCHER_NAMES:
                 continue
             em = re.search(r'^Exec=(.+)$', text, re.MULTILINE)
+            im = re.search(r'^Icon=(.+)$', text, re.MULTILINE)
+            icon_name = im.group(1).strip() if im else None
+            rom_sys = rom_icon_to_system(icon_name)
+            icon = esde_logo(rom_sys) if rom_sys else resolve_icon(icon_name)
             id = f'native_{f.stem}'
             if id in seen_ids:
                 continue
             seen_ids.add(id)
             games.append({
                 'name': name, 'appId': id, 'platform': 'native',
-                'art': None, 'installed': True, 'launch': f'gtk-launch {f.stem}',
+                'art': icon, 'iconArt': bool(icon), 'installed': True,
+                'launch': f'gtk-launch {f.stem}',
                 'lastPlayed': 0, 'playMinutes': 0, 'hero': None, 'storeUrl': None,
                 'size': 0,
             })
