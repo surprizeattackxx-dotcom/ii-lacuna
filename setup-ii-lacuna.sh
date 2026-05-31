@@ -274,14 +274,10 @@ fi
 
 CONFIG_DIR="$HOME/.config"
 CHECK_DIR="$CONFIG_DIR/illogical-impulse"
-TARGET_DIR="$CONFIG_DIR/quickshell/ii"
-SCRIPTS_TARGET_DIR="$CONFIG_DIR/quickshell/scripts"
-SOURCE_DIR="$SCRIPT_DIR/dots/ii"
-SCRIPTS_SOURCE_DIR="$SCRIPT_DIR/dots/scripts"
+SOURCE_DIR="$SCRIPT_DIR/dots/.config"
 
 log_verbose "CONFIG_DIR=$CONFIG_DIR"
 log_verbose "CHECK_DIR=$CHECK_DIR"
-log_verbose "TARGET_DIR=$TARGET_DIR"
 log_verbose "SCRIPT_DIR=$SCRIPT_DIR"
 log_verbose "SOURCE_DIR=$SOURCE_DIR"
 
@@ -330,24 +326,13 @@ if [ ! -d "$SOURCE_DIR" ]; then
 fi
 log_verbose "Source directory found"
 
-log_verbose "Creating parent directory: $(dirname "$TARGET_DIR")"
-mkdir -p "$(dirname "$TARGET_DIR")"
+mkdir -p "$CONFIG_DIR"
 
-if [ "$BACKUP" = true ]; then
-    log_verbose "Checking for existing directory"
-    if [ -e "$TARGET_DIR" ] && [ ! -L "$TARGET_DIR" ]; then
-        BACKUP_DIR="${TARGET_DIR}_backup_$(date +%Y%m%d_%H%M%S)"
-        log_verbose "Existing directory found, creating backup: $BACKUP_DIR"
-        echo -e "${YELLOW}Backing up the current Quickshell configuration: $BACKUP_DIR${NC}"
-        mv "$TARGET_DIR" "$BACKUP_DIR"
-    else
-        log_verbose "No existing directory found (or already a symlink), skipping backup"
-    fi
-else
+if [ "$BACKUP" = false ]; then
     echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
     echo -e "${RED}      ⚠ No backup flag used${NC}"
     echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-    echo -e "${RED}Skipping the backup process...${NC}"
+    echo -e "${RED}Existing configs will be overwritten without backup...${NC}"
 fi
 
 if command -v vynx &> /dev/null; then
@@ -370,17 +355,33 @@ fi
 
 echo ""
 echo -e "${NC}• Linking...${NC}"
-log_verbose "Symlinking $SOURCE_DIR → $TARGET_DIR"
-rm -f "$TARGET_DIR"
-ln -s "$SOURCE_DIR" "$TARGET_DIR"
+link_fail=0
+for src in "$SOURCE_DIR"/*; do
+    [ -e "$src" ] || continue
+    name="$(basename "$src")"
+    target="$CONFIG_DIR/$name"
 
-rm -f "$SCRIPTS_TARGET_DIR"
-ln -s "$SCRIPTS_SOURCE_DIR" "$SCRIPTS_TARGET_DIR"
+    if [ -L "$target" ]; then
+        rm -f "$target"
+    elif [ -e "$target" ]; then
+        if [ "$BACKUP" = true ]; then
+            backup="${target}_backup_$(date +%Y%m%d_%H%M%S)"
+            log_verbose "Backing up $target → $backup"
+            mv "$target" "$backup"
+        else
+            rm -rf "$target"
+        fi
+    fi
 
-if [ $? -eq 0 ]; then
-    echo -e "${GREEN}✓ Symlinked: $TARGET_DIR → $SOURCE_DIR${NC}"
-    echo -e "${GREEN}✓ Symlinked: $SCRIPTS_TARGET_DIR → $SCRIPTS_SOURCE_DIR${NC}"
-else
+    if ln -s "$src" "$target"; then
+        echo -e "${GREEN}✓ Symlinked: $target → $src${NC}"
+    else
+        echo -e "${RED}✗ Failed to link: $target${NC}"
+        link_fail=1
+    fi
+done
+
+if [ "$link_fail" -ne 0 ]; then
     echo -e "${RED}✗ An error occurred while creating symlinks!${NC}"
     exit 1
 fi
