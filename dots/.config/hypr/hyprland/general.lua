@@ -1,4 +1,4 @@
--- MONITOR CONFIG
+-- ─── Monitor ───────────────────────────────────
 hl.monitor({
     output = "",
     mode = "preferred",
@@ -6,6 +6,7 @@ hl.monitor({
     scale = "1"
 })
 
+-- ─── Gestures ──────────────────────────────────
 hl.gesture({
     fingers = 3,
     direction = "swipe",
@@ -36,6 +37,7 @@ hl.gesture({
     end
 })
 
+-- ─── Core Config ──────────────────────────────
 hl.config({
     gestures = {
         workspace_swipe_distance = 700,
@@ -114,7 +116,7 @@ hl.config({
         -- precise_mouse_move = true,
     },
 })
--- Curves
+-- ─── Bezier Curves ──────────────────────────────
 hl.curve("expressiveFastSpatial", {
     type = "bezier",
     points = {{0.42, 1.67}, {0.21, 0.90}}
@@ -151,8 +153,8 @@ hl.curve("stall", {
     type = "bezier",
     points = {{1, -0.1}, {0.7, 0.85}}
 })
--- Configs
--- windows
+-- ─── Window Animations ─────────────────────────
+
 hl.animation({
     leaf = "windowsIn",
     enabled = true,
@@ -193,7 +195,7 @@ hl.animation({
     bezier = "emphasizedDecel"
 })
 
--- layers
+-- ─── Layer Animations ─────────────────────────
 hl.animation({
     leaf = "layersIn",
     enabled = true,
@@ -208,7 +210,7 @@ hl.animation({
     bezier = "menu_accel",
     style = "popin 94%"
 })
--- fade
+-- ─── Fade Animations ──────────────────────────
 hl.animation({
     leaf = "fadeLayersIn",
     enabled = true,
@@ -221,7 +223,7 @@ hl.animation({
     speed = 2.7,
     bezier = "stall"
 })
--- workspaces
+-- ─── Workspace Animations ─────────────────────
 hl.animation({
     leaf = "workspaces",
     enabled = true,
@@ -229,7 +231,7 @@ hl.animation({
     bezier = "menu_decel",
     style = "slide"
 })
--- specialWorkspace
+-- ─── Special Workspace Animations ─────────────
 hl.animation({
     leaf = "specialWorkspaceIn",
     enabled = true,
@@ -244,7 +246,7 @@ hl.animation({
     bezier = "emphasizedAccel",
     style = "slidevert"
 })
--- zoom
+-- ─── Zoom Animation ───────────────────────────
 hl.animation({
     leaf = "zoomFactor",
     enabled = true,
@@ -252,6 +254,7 @@ hl.animation({
     bezier = "standardDecel"
 })
 
+-- ─── Input & Misc Config ──────────────────────
 hl.config({
     input = {
         kb_layout = "us",

@@ -1,2 +1,6 @@
+[Common]
+FloatingTitlebar=true
+ShadowStrength=51
+
 [Style]
 WidgetDrawShadow=false

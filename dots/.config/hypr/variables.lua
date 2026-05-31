@@ -3,7 +3,6 @@
 
 -- ─── Config ────────────────────────────────────
 -- The folder within ~/.config/quickshell containing the config
-hl.env("qsConfig", "ii")
 
 -- ─── Apps ──────────────────────────────────────
 -- PULL REQUESTS ADDING MORE WILL NOT BE ACCEPTED, CONFIG FOR YOURSELF
@@ -18,3 +17,5 @@ settingsApp = "XDG_CURRENT_DESKTOP=gnome ~/.config/hypr/hyprland/scripts/launch_
 taskManager = "~/.config/hypr/hyprland/scripts/launch_first_available.sh 'gnome-system-monitor' 'plasma-systemmonitor --page-name Processes' 'command -v btop && kitty -1 fish -c btop'"
 
 workspaceGroupSize = 10
+
+hl.env("qsConfig", "ii")

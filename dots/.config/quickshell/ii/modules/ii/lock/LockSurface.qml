@@ -19,6 +19,12 @@ MouseArea {
     property bool showInputField: active || context.currentText.length > 0
     readonly property bool requirePasswordToPower: Config.options.lock.security.requirePasswordToPower
 
+    readonly property bool wallpaperIsVideo: {
+        const p = Config.options.background.wallpaperPath.toLowerCase();
+        return p.endsWith(".mp4") || p.endsWith(".webm") || p.endsWith(".mkv") || p.endsWith(".avi") || p.endsWith(".mov");
+    }
+    readonly property string wallpaperSource: wallpaperIsVideo ? Config.options.background.thumbnailPath : Config.options.background.wallpaperPath
+
     // Force focus on entry
     function forceFieldFocus() {
         passwordBox.forceActiveFocus();
@@ -57,6 +63,91 @@ MouseArea {
         forceFieldFocus();
         toolbarScale = 1;
         toolbarOpacity = 1;
+    }
+
+    // Wallpaper background
+    Image {
+        anchors.fill: parent
+        source: Qt.resolvedUrl(root.wallpaperSource)
+        fillMode: Image.PreserveAspectCrop
+        asynchronous: true
+        cache: true
+        visible: root.wallpaperSource.length > 0
+
+        // Scrim for legibility
+        Rectangle {
+            anchors.fill: parent
+            gradient: Gradient {
+                GradientStop { position: 0.0; color: ColorUtils.transparentize("#000000", 0.55) }
+                GradientStop { position: 0.4; color: ColorUtils.transparentize("#000000", 0.8) }
+                GradientStop { position: 1.0; color: ColorUtils.transparentize("#000000", 0.45) }
+            }
+        }
+    }
+
+    // Clock + date + weather
+    ColumnLayout {
+        anchors {
+            top: parent.top
+            topMargin: parent.height * 0.16
+            horizontalCenter: parent.horizontalCenter
+        }
+        spacing: 2
+        scale: root.toolbarScale
+        opacity: root.toolbarOpacity
+
+        StyledText {
+            Layout.alignment: Qt.AlignHCenter
+            text: DateTime.time
+            color: "#ffffff"
+            font {
+                pixelSize: 110
+                family: Appearance.font.family.expressive
+                weight: Font.Medium
+            }
+            style: Text.Raised
+            styleColor: ColorUtils.transparentize("#000000", 0.6)
+        }
+
+        StyledText {
+            Layout.alignment: Qt.AlignHCenter
+            text: DateTime.longDate
+            color: ColorUtils.transparentize("#ffffff", 0.15)
+            font {
+                pixelSize: Appearance.font.pixelSize.huge
+                weight: Font.Medium
+            }
+            style: Text.Raised
+            styleColor: ColorUtils.transparentize("#000000", 0.6)
+        }
+
+        RowLayout {
+            Layout.alignment: Qt.AlignHCenter
+            Layout.topMargin: 10
+            spacing: 6
+            visible: Weather.data.temp.length > 0
+
+            MaterialSymbol {
+                fill: 1
+                text: Icons.getWeatherIcon(Weather.data.wCode) ?? "cloud"
+                iconSize: Appearance.font.pixelSize.huge
+                color: "#ffffff"
+            }
+            StyledText {
+                text: Weather.data.temp
+                color: "#ffffff"
+                font.pixelSize: Appearance.font.pixelSize.larger
+                style: Text.Raised
+                styleColor: ColorUtils.transparentize("#000000", 0.6)
+            }
+            StyledText {
+                text: Weather.data.description
+                color: ColorUtils.transparentize("#ffffff", 0.2)
+                font.pixelSize: Appearance.font.pixelSize.larger
+                style: Text.Raised
+                styleColor: ColorUtils.transparentize("#000000", 0.6)
+            }
+        }
     }
 
     // Key presses

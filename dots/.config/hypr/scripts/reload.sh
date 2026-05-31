@@ -4,7 +4,5 @@
 # Reload Hyprland config
 hyprctl reload
 
-# Restart quickshell (kill then relaunch)
-qs kill -c ii
-sleep 0.5
-qs -c ii &
+# Restart quickshell via its systemd service (keeps the raised FD limit)
+systemctl --user restart quickshell-ii.service

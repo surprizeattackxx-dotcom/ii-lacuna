@@ -5,6 +5,7 @@
 
 local STATE_FILE = os.getenv("HOME") .. "/.config/hypr/monitor-state.lua"
 
+-- ─── State ─────────────────────────────────────
 Monitors = {}
 
 function Monitors:reload()
@@ -24,10 +25,16 @@ function Monitors:reload()
         self.moved = {}
         return
     end
-    data = data()
-    self.active = data.active or {}
-    self.disabled = data.disabled or {}
-    self.moved = data.moved or {}
+    local ok2, result = pcall(data)
+    if not ok2 or type(result) ~= "table" then
+        self.active = {}
+        self.disabled = {}
+        self.moved = {}
+        return
+    end
+    self.active = result.active or {}
+    self.disabled = result.disabled or {}
+    self.moved = result.moved or {}
 end
 
 function Monitors:isActive(name)
@@ -48,6 +55,7 @@ function Monitors:list()
     return self.active
 end
 
+-- ─── Moved Workspace Tracking ──────────────────
 function Monitors:isMoved(name)
     return self.moved[name] ~= nil
 end

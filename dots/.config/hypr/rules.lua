@@ -1,160 +1,191 @@
--- Window Rules & Layer Rules
+-- ============================================================
+--  Window & Layer Rules
+-- ============================================================
 
------------------------
----- WINDOW RULES ----
------------------------
+-- ------------------------------------------------------------
+--  WINDOW RULES
+-- ------------------------------------------------------------
 
-hl.window_rule({ name = "suppress-maximize-events", match = { class = ".*" }, suppress_event = "maximize" })
+-- ··· Global behaviour ···
+hl.window_rule({ match = { class = ".*" }, name = "suppress-maximize-events", suppress_event = "maximize" })
+hl.window_rule({ match = { class = ".*" }, name = "disable-blur-all", no_blur = true })
+hl.window_rule({ match = { class = "^$", title = "^$" }, name = "disable-blur-xwayland-menus", no_blur = true })
+hl.window_rule({ match = { class = "^$", title = "^$", xwayland = true }, name = "fix-xwayland-drags", no_focus = true })
+hl.window_rule({ match = { class = "firefox" }, name = "firefox-idle-inhibit", idle_inhibit = "focus" })
 
-hl.window_rule({
-    name = "fix-xwayland-drags",
-    match = { class = "^$", title = "^$", xwayland = true, float = true, fullscreen = false, pin = false },
-    no_focus = true,
-})
-
---hl.window_rule({ name = "steam-fixes",           match = { class = "steam_app_.*" },       float= true, immediate   = true         })
-hl.window_rule({ name = "firefox-idle-inhibit",  match = { class = "firefox" },            idle_inhibit = "focus"    })
-hl.window_rule({ name = "discord-pip",           match = { title = "Picture in picture" }, float = true, pin = true  })
-hl.window_rule({ name = "move-hyprland-run",     match = { class = "hyprland-run" },       float = true, move = "20 monitor_h-120" })
-
-hl.window_rule({ name = "disable-blur-xwayland-menus", match = { class = "^()$", title = "^()$" }, no_blur = true })
-hl.window_rule({ name = "disable-blur-all",            match = { class = ".*" },                   no_blur = true })
-
--- Floating dialogs
-local floating_rules = {
-    { title = "^(Open File)(.*)$" },
-    { title = "^(Select a File)(.*)$" },
-    { title = "^(Choose wallpaper)(.*)$",  size = "monitor_w*.60 monitor_h*.65" },
-    { title = "^(Open Folder)(.*)$" },
-    { title = "^(Save As)(.*)$" },
-    { title = "^(Library)(.*)$" },
-    { title = "^(File Upload)(.*)$" },
-    { title = "^(.*)(wants to save)$" },
-    { title = "^(.*)(wants to open)$" },
-    { class = "^(blueberry\\.py)$" },
-    { class = "^(guifetch)$" },
-    { class = "^(pavucontrol)$",                      size = "monitor_w*.45 monitor_h*.45" },
-    { class = "^(org\\.pulseaudio\\.pavucontrol)$",   size = "monitor_w*.45 monitor_h*.45" },
-    { class = "^(nm-connection-editor)$",             size = "monitor_w*.45 monitor_h*.45" },
-    { class = ".*plasmawindowed.*" },
-    { class = "kcm_.*" },
-    { class = ".*bluedevilwizard" },
-    { title = ".*Welcome" },
-    { title = "^(ii-lacuna Settings)$" },
-    { title = ".*Shell conflicts.*" },
-    { class = "org.freedesktop.impl.portal.desktop.kde", size = "monitor_w*.60 monitor_h*.65" },
-    { class = "^(Zotero)$",                           size = "monitor_w*.45 monitor_h*.45" },
+-- ··· Floating dialogs ···
+local floating_dialogs = {
+  { title = "^(Open File)(.*)$" },
+  { title = "^(Select a File)(.*)$" },
+  { title = "^(Choose wallpaper)(.*)$", size = "monitor_w*.60 monitor_h*.65" },
+  { title = "^(Open Folder)(.*)$" },
+  { title = "^(Save As)(.*)$" },
+  { title = "^(Library)(.*)$" },
+  { title = "^(File Upload)(.*)$" },
+  { title = "^(.*)(wants to save)$" },
+  { title = "^(.*)(wants to open)$" },
+  { title = ".*Welcome" },
+  { title = "^(ii-lacuna Settings)$" },
+  { title = ".*Shell conflicts.*" },
+  { class = "^(blueberry\\.py)$" },
+  { class = "^(guifetch)$" },
+  { class = "^(pavucontrol)$", size = "monitor_w*.45 monitor_h*.45" },
+  { class = "^(org\\.pulseaudio\\.pavucontrol)$", size = "monitor_w*.45 monitor_h*.45" },
+  { class = "^(nm-connection-editor)$", size = "monitor_w*.45 monitor_h*.45" },
+  { class = ".*plasmawindowed.*" },
+  { class = "kcm_.*" },
+  { class = ".*bluedevilwizard" },
+  { class = "org.freedesktop.impl.portal.desktop.kde", size = "monitor_w*.60 monitor_h*.65" },
+  { class = "^(Zotero)$", size = "monitor_w*.45 monitor_h*.45" },
 }
-
-for _, r in ipairs(floating_rules) do
-    hl.window_rule({
-        name  = "float-" .. (r.class or r.title or "unknown"),
-        match = { class = r.class, title = r.title },
-        float = true,
-        center = true,
-        size  = r.size,
-    })
+for _, r in ipairs(floating_dialogs) do
+  local rule = { float = true, center = true, match = {}, name = "float-" .. (r.class or r.title) }
+  if r.class then rule.match.class = r.class end
+  if r.title then rule.match.title = r.title end
+  if r.size then rule.size = r.size end
+  hl.window_rule(rule)
 end
 
-hl.window_rule({ name = "plasma-changeicons", match = { class = "^(plasma-changeicons)$" }, float = true, no_initial_focus = true, move = "999999 999999" })
-hl.window_rule({ name = "dolphin-copy",       match = { title = "^(Copying — Dolphin)$" }, move = "40 80" })
-hl.window_rule({ name = "warp-tile",          match = { class = "^dev\\.warp\\.Warp$" },   tile = true })
+-- ··· Centered floating apps ···
+hl.window_rule({ center = true, float = true, no_blur = true, name = "float-utils",
+  match = { class = "^(blueman-manager|polkit-gnome-authentication-agent-1|org.gnome.polkit|lxpolkit)$" } })
+hl.window_rule({ center = true, float = true, name = "float-media", match = { class = "^(mpv|imv|vlc)$" } })
+hl.window_rule({ center = true, float = true, name = "float-theme-tools", match = { class = "^(nwg-look|qt5ct|qt6ct|kvantummanager)$" } })
+hl.window_rule({ center = true, float = true, name = "float-qalculate", match = { class = "^(qalculate-gtk)$" } })
+hl.window_rule({ float = true, name = "float-mc", match = { class = "^(Minecraft.*|com\\.adamcake\\.Bolt|net\\.runelite\\.client\\.RuneLite)$" } })
+hl.window_rule({ center = true, name = "default-float-center", match = { float = true } })
 
+-- ··· Picture-in-picture ···
+hl.window_rule({ float = true, pin = true, name = "discord-pip", match = { title = "Picture in picture" } })
 hl.window_rule({
-    name  = "pip",
-    match = { title = "^([Pp]icture[-\\s]?[Ii]n[-\\s]?[Pp]icture)(.*)$" },
-    float = true,
-    keep_aspect_ratio = true,
-    move  = "monitor_w*.73 monitor_h*.72",
-    size  = "monitor_w*.25 monitor_h*.25",
-    pin   = true,
+  float = true, pin = true, keep_aspect_ratio = true, name = "pip",
+  match = { title = "^([Pp]icture[-\\s]?[Ii]n[-\\s]?[Pp]icture)(.*)$" },
+  move = "monitor_w*.73 monitor_h*.72", size = "monitor_w*.25 monitor_h*.25",
 })
 
-hl.window_rule({ name = "tearing-exe",    match = { title = ".*\\.exe" },             immediate = true })
-hl.window_rule({ name = "tearing-mc",     match = { title = ".*minecraft.*" },        immediate = true })
-hl.window_rule({ name = "tearing-steam",  match = { class = "^steam_app" },       immediate = true })
-hl.window_rule({ name = "jetbrains-fix",  match = { class = "^jetbrains-.*$", float = true, title = "^$|^\\s$|^win\\d+$" }, no_initial_focus = true })
-hl.window_rule({ name = "no-shadow-tiled", match = { float = false },                 no_shadow = true })
+-- ··· Tearing (immediate) ···
+local tearing = {
+  { match = { title = ".*\\.exe" }, name = "tearing-exe" },
+  { match = { title = ".*minecraft.*" }, name = "tearing-mc" },
+  { match = { class = "^steam_app" }, name = "tearing-steam" },
+}
+for _, r in ipairs(tearing) do
+  hl.window_rule({ immediate = true, match = r.match, name = r.name })
+end
 
--- Custom rules
-hl.window_rule({ name = "ws-facebook", match = { title = "^(facebook)$" }, workspace = "11:silent" })
-hl.window_rule({ name = "kitty-opacity",  match = { class = "^(kitty)$" },            opacity = 0.95, no_blur = true, xray = true })
-hl.window_rule({ name = "float-utils",    match = { class = "^(blueman-manager|polkit-gnome-authentication-agent-1|org.gnome.polkit|lxpolkit)$" }, float = true, center = true, no_blur = true })
-hl.window_rule({ name = "float-blueman", match = { class = "^(blueman-manager)$" },   size = { 800, 500 } })
-hl.window_rule({ name = "steam-sub-float", match = { class = "^(steam)$" }, float = true, center = true })
-hl.window_rule({ name = "ws-steam",       match = { class = "^(steam)$", title = "^(Steam)$" }, workspace = 2, float = false })
-hl.window_rule({ name = "steam-settings-float", match = { class = "^(steam)$", title = ".*(Properties|Settings|Game Settings).*" }, float = true, center = true })
-hl.window_rule({ name = "disable-glass-steam-games", match = { class = "^steam_app_.*" }, tag = "+hyprglass_disabled" })
-hl.window_rule({ name = "disable-glass-xwayland-fs", match = { xwayland = true, fullscreen = true }, tag = "+hyprglass_disabled" })
-hl.window_rule({ name = "float-theme-tools", match = { class = "^(nwg-look|qt5ct|qt6ct|kvantummanager)$" }, float = true, center = true })
-hl.window_rule({ name = "float-qalculate", match = { class = "^(qalculate-gtk)$" },   float = true, center = true })
-hl.window_rule({ name = "default-float-center", match = { float = true },             center = true })
-hl.window_rule({ name = "float-mc",     match = { class = "^(Minecraft.*|com\\.adamcake\\.Bolt|net\\.runelite\\.client\\.RuneLite)$" },        float = true })
-hl.window_rule({ name = "float-crimson-desert", match = { title = ".*Crimson Desert.*" }, float = true, center = true })
+-- ··· Confine pointer ···
+local confine = {
+  { match = { class = "^steam_app" }, name = "confine-steam" },
+  { match = { content = "game" }, name = "confine-game" },
+  { match = { title = ".*minecraft.*" }, name = "confine-mc" },
+}
+for _, r in ipairs(confine) do
+  hl.window_rule({ confine_pointer = true, match = r.match, name = r.name })
+end
 
------------------------
----- LAYER RULES ----
------------------------
+-- ··· Workspace assignments ···
+local workspaces = {
+  { match = { title = "^(facebook)$" }, workspace = "11:silent", name = "ws-facebook" },
+  { match = { class = "^(discord)$" }, workspace = "11 silent", name = "ws-discord" },
+  { match = { class = "^(org\\.mozilla\\.Thunderbird)$" }, workspace = "5 silent", name = "ws-thunderbird" },
+  { match = { class = "^(Spotify)$" }, workspace = "8 silent", name = "ws-spotify" },
+  { match = { class = "^(Gimp-2.10)$" }, workspace = "9 silent", name = "ws-gimp" },
+}
+for _, r in ipairs(workspaces) do
+  hl.window_rule({ match = r.match, workspace = r.workspace, name = r.name })
+end
 
-hl.layer_rule({ match = { namespace = ".*" },        xray = true })
-hl.layer_rule({ match = { namespace = "walker" },    no_anim = true })
-hl.layer_rule({ match = { namespace = "selection" }, no_anim = true })
-hl.layer_rule({ match = { namespace = "overview" },  no_anim = true })
-hl.layer_rule({ match = { namespace = "anyrun" },    no_anim = true })
-hl.layer_rule({ match = { namespace = "indicator.*" }, no_anim = true })
-hl.layer_rule({ match = { namespace = "osk" },       no_anim = true })
-hl.layer_rule({ match = { namespace = "hyprpicker" }, no_anim = true })
-hl.layer_rule({ match = { namespace = "noanim" },    no_anim = true })
-hl.layer_rule({ match = { namespace = "gtk4-layer-shell" }, no_anim = true })
+-- ··· Steam ···
+hl.window_rule({ float = true, name = "steam-app-float", match = { class = "steam_app_.*" } })
+hl.window_rule({ float = true, name = "steam-negative-float", match = { class = "^steam$", title = "negative:^Steam$" } })
+hl.window_rule({ float = true, name = "steam-sub-float", match = { class = "^(steam)$" } })
+hl.window_rule({ float = false, workspace = "2 silent", name = "ws-steam", match = { class = "^(steam)$", title = "^(Steam)$" } })
+hl.window_rule({ center = true, name = "steam-sub-center", match = { class = "^(steam)$", float = true } })
+hl.window_rule({ center = true, float = true, name = "steam-settings-float", match = { class = "^(steam)$", title = ".*(Properties|Settings|Game Settings).*" } })
+hl.window_rule({ center = true, float = true, name = "steam-sub-float-2", match = { class = "^(steam)$", title = "^((?!Steam$).*)$" } })
 
+-- ··· App-specific tweaks ···
+hl.window_rule({ float = true, no_initial_focus = true, move = "999999 999999", name = "plasma-changeicons", match = { class = "^(plasma-changeicons)$" } })
+hl.window_rule({ move = "40 80", name = "dolphin-copy", match = { title = "^(Copying — Dolphin)$" } })
+hl.window_rule({ tile = true, name = "warp-tile", match = { class = "^dev\\.warp\\.Warp$" } })
+hl.window_rule({ float = true, move = "20 monitor_h-120", name = "move-hyprland-run", match = { class = "hyprland-run" } })
+hl.window_rule({ no_blur = true, opacity = 0.95, xray = true, name = "kitty-opacity", match = { class = "^(kitty)$" } })
+hl.window_rule({ size = { 800, 500 }, name = "float-blueman", match = { class = "^(blueman-manager)$" } })
+hl.window_rule({ no_initial_focus = true, name = "jetbrains-fix", match = { class = "^jetbrains-.*$", float = true, title = "^$|^\\s$|^win\\d+$" } })
+
+-- ------------------------------------------------------------
+--  LAYER RULES
+-- ------------------------------------------------------------
+
+-- ··· Global ···
+hl.layer_rule({ xray = true, match = { namespace = ".*" } })
+
+-- ··· Blur ···
 local layer_blur = {
-    "gtk-layer-shell", "launcher", "notifications",
-    "session[0-9]*", "bar[0-9]*", "barcorner.*", "dock[0-9]*",
-    "indicator.*", "overview[0-9]*", "cheatsheet[0-9]*",
-    "sideright[0-9]*", "sideleft[0-9]*", "osk[0-9]*",
-    "quickshell:.*", "quickshell:session",
+  "gtk-layer-shell", "launcher", "notifications",
+  "session[0-9]*", "bar[0-9]*", "barcorner.*", "dock[0-9]*",
+  "indicator.*", "overview[0-9]*", "cheatsheet[0-9]*",
+  "sideright[0-9]*", "sideleft[0-9]*", "osk[0-9]*",
+  "quickshell:.*", "quickshell:session",
 }
 for _, ns in ipairs(layer_blur) do
-    hl.layer_rule({ match = { namespace = ns }, blur = true })
+  hl.layer_rule({ blur = true, match = { namespace = ns } })
 end
 
-hl.layer_rule({ match = { namespace = "launcher" },      ignore_alpha = 0.5  })
-hl.layer_rule({ match = { namespace = "notifications" }, ignore_alpha = 0.69 })
-
-local layer_ignore = {
-    "bar[0-9]*", "barcorner.*", "dock[0-9]*", "indicator.*",
-    "overview[0-9]*", "cheatsheet[0-9]*", "sideright[0-9]*",
-    "sideleft[0-9]*", "osk[0-9]*",
+-- ··· Ignore alpha ···
+local layer_ignore_alpha = {
+  { ns = "launcher", a = 0.5 },
+  { ns = "notifications", a = 0.69 },
+  { ns = "bar[0-9]*", a = 0.6 },
+  { ns = "barcorner.*", a = 0.6 },
+  { ns = "dock[0-9]*", a = 0.6 },
+  { ns = "indicator.*", a = 0.6 },
+  { ns = "overview[0-9]*", a = 0.6 },
+  { ns = "cheatsheet[0-9]*", a = 0.6 },
+  { ns = "sideright[0-9]*", a = 0.6 },
+  { ns = "sideleft[0-9]*", a = 0.6 },
+  { ns = "osk[0-9]*", a = 0.6 },
+  { ns = "quickshell:.*", a = 0.79 },
 }
-for _, ns in ipairs(layer_ignore) do
-    hl.layer_rule({ match = { namespace = ns }, ignore_alpha = 0.6 })
+for _, r in ipairs(layer_ignore_alpha) do
+  hl.layer_rule({ ignore_alpha = r.a, match = { namespace = r.ns } })
 end
 
-hl.layer_rule({ match = { namespace = "quickshell:.*" },                 ignore_alpha = 0.79                    })
-hl.layer_rule({ match = { namespace = "quickshell:bar" },                animation = "slide"                    })
-hl.layer_rule({ match = { namespace = "quickshell:cheatsheet" },         animation = "slide bottom"             })
-hl.layer_rule({ match = { namespace = "quickshell:dock" },               animation = "slide"                    })
-hl.layer_rule({ match = { namespace = "quickshell:screenCorners" },      animation = "popin 120%"               })
-hl.layer_rule({ match = { namespace = "quickshell:notificationPopup" },  animation = "fade"                     })
-hl.layer_rule({ match = { namespace = "quickshell:overlay" },            ignore_alpha = 1                       })
-hl.layer_rule({ match = { namespace = "quickshell:popup" },              xray = false, ignore_alpha = 1         })
-hl.layer_rule({ match = { namespace = "quickshell:mediaControls" },      ignore_alpha = 1                       })
-hl.layer_rule({ match = { namespace = "quickshell:reloadPopup" },        animation = "slide"                    })
-hl.layer_rule({ match = { namespace = "quickshell:sidebarRight" },       animation = "slide right"              })
-hl.layer_rule({ match = { namespace = "quickshell:sidebarLeft" },        animation = "slide left"               })
-hl.layer_rule({ match = { namespace = "quickshell:verticalBar" },        animation = "slide"                    })
-hl.layer_rule({ match = { namespace = "quickshell:osk" },                order = -1                             })
-hl.layer_rule({ match = { namespace = "quickshell:wallpaperSelector" },  animation = "slide top"                })
-hl.layer_rule({ match = { namespace = "quickshell:wTaskView" },          ignore_alpha = 0                       })
-hl.layer_rule({ match = { namespace = "quickshell:wallpaperChanger" },   blur = true, ignore_alpha = 0.6, animation = "slide bottom" })
-
-local quickshell_no_anim = {
-    "quickshell:actionCenter", "quickshell:lockWindowPusher",
-    "quickshell:overlay", "quickshell:overview", "quickshell:polkit",
-    "quickshell:regionSelector", "quickshell:screenshot", "quickshell:session",
-    "quickshell:wNotificationCenter", "quickshell:wOnScreenDisplay",
-    "quickshell:wStartMenu", "quickshell:wTaskView",
+-- ··· No animation ···
+local layer_no_anim = {
+  "walker", "selection", "overview", "anyrun", "indicator.*",
+  "osk", "hyprpicker", "noanim", "gtk4-layer-shell",
+  "quickshell:actionCenter", "quickshell:lockWindowPusher",
+  "quickshell:overlay", "quickshell:overview", "quickshell:polkit",
+  "quickshell:regionSelector", "quickshell:screenshot", "quickshell:session",
+  "quickshell:wNotificationCenter", "quickshell:wOnScreenDisplay",
+  "quickshell:wStartMenu", "quickshell:wTaskView",
 }
-for _, ns in ipairs(quickshell_no_anim) do
-    hl.layer_rule({ match = { namespace = ns }, no_anim = true })
+for _, ns in ipairs(layer_no_anim) do
+  hl.layer_rule({ no_anim = true, match = { namespace = ns } })
 end
+
+-- ··· Animations ···
+local layer_anim = {
+  { ns = "quickshell:bar", anim = "slide" },
+  { ns = "quickshell:cheatsheet", anim = "slide bottom" },
+  { ns = "quickshell:dock", anim = "slide" },
+  { ns = "quickshell:screenCorners", anim = "popin 120%" },
+  { ns = "quickshell:notificationPopup", anim = "fade" },
+  { ns = "quickshell:reloadPopup", anim = "slide" },
+  { ns = "quickshell:sidebarRight", anim = "slide right" },
+  { ns = "quickshell:sidebarLeft", anim = "slide left" },
+  { ns = "quickshell:verticalBar", anim = "slide" },
+  { ns = "quickshell:wallpaperSelector", anim = "slide top" },
+}
+for _, r in ipairs(layer_anim) do
+  hl.layer_rule({ animation = r.anim, match = { namespace = r.ns } })
+end
+
+-- ··· QuickShell overrides ···
+hl.layer_rule({ ignore_alpha = 1, match = { namespace = "quickshell:overlay" } })
+hl.layer_rule({ ignore_alpha = 1, xray = false, match = { namespace = "quickshell:popup" } })
+hl.layer_rule({ ignore_alpha = 1, match = { namespace = "quickshell:mediaControls" } })
+hl.layer_rule({ ignore_alpha = 0, match = { namespace = "quickshell:wTaskView" } })
+hl.layer_rule({ order = -1, match = { namespace = "quickshell:osk" } })
+hl.layer_rule({ animation = "slide bottom", blur = true, ignore_alpha = 0.6, match = { namespace = "quickshell:wallpaperChanger" } })

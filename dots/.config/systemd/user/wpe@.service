@@ -9,7 +9,7 @@ Restart=on-failure
 RestartSec=5
 ExecStart=/bin/bash -c '\
   STATE="%h/.local/state/quickshell/user/generated/wallpaper/monitors/%i.json"; \
-  ASSETS="/mnt/wwn-0x50014ee65ea3c55b-part1/SteamLibrary/steamapps/common/wallpaper_engine/assets"; \
+  ASSETS="%h/.local/share/Steam/steamapps/common/wallpaper_engine/assets"; \
   WPE=$(jq -r ".wpe_path // empty" "$STATE" 2>/dev/null); \
   [ -z "$WPE" ] && exit 0; \
   exec linux-wallpaperengine \

@@ -277,8 +277,29 @@ def find_steam_uninstalled(installed_ids):
         games.append(g)
     return games
 
+def heroic_installed_ids():
+    ids = set()
+    legendary = HOME / '.config' / 'heroic' / 'legendaryConfig' / 'legendary' / 'installed.json'
+    for f, key in [(legendary, None),
+                   (HOME / '.config' / 'heroic' / 'gog_store' / 'installed.json', 'installed'),
+                   (HOME / '.config' / 'heroic' / 'nile_config' / 'installed.json', None)]:
+        if not f.exists():
+            continue
+        try:
+            data = json.loads(f.read_text('utf-8', errors='replace'))
+        except Exception:
+            continue
+        if isinstance(data, dict):
+            entries = data.get(key) if key else data
+            ids.update(entries.keys() if isinstance(entries, dict) else
+                       (e.get('app_name') or e.get('id') for e in (entries or [])))
+        elif isinstance(data, list):
+            ids.update(e.get('app_name') or e.get('id') for e in data)
+    return {i for i in ids if i}
+
 def find_heroic_games():
     games = []
+    installed_ids = heroic_installed_ids()
     cache = HOME / '.config' / 'heroic' / 'store_cache'
     sources = ['legendary_library.json', 'gog_library.json', 'nile_library.json']
     for src in sources:
@@ -310,10 +331,10 @@ def find_heroic_games():
                 size = 0
             games.append({
                 'appId': f'heroic_{app_name}', 'name': title, 'art': art,
-                'platform': 'heroic', 'installed': bool(g.get('is_installed')),
+                'platform': 'heroic', 'installed': bool(g.get('is_installed')) or app_name in installed_ids,
                 'launch': f'xdg-open "heroic://launch/{runner}/{app_name}"',
                 'lastPlayed': 0, 'playMinutes': 0, 'hero': hero, 'storeUrl': store,
-                'size': size,
+                'size': size, 'runner': runner, 'appName': app_name,
             })
     return games
 

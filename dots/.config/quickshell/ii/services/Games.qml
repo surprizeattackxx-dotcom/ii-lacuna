@@ -11,6 +11,8 @@ Singleton {
     id: root
 
     readonly property string scanScript: Directories.scriptPath + "/games/scan_games.py"
+    readonly property string installScript: Directories.scriptPath + "/games/install_heroic.py"
+    readonly property string installStatePath: Directories.gameInstallStatePath
 
     property ListModel gameModel: ListModel {}
 
@@ -22,6 +24,14 @@ Singleton {
     property var launchOpts: ({})
     property var firstSeen: ({})
     readonly property int newWindowSecs: 14 * 86400
+
+    property var wineVersions: []
+    property string defaultInstallPath: ""
+    property var defaultWine: null
+
+    property string installingId: ""
+    property real installProgress: 0
+    property string installStatus: ""
 
     function scan() {
         if (root.scanning) return
@@ -75,6 +85,54 @@ Singleton {
         var ts = root.firstSeen[appId]
         if (!ts || ts <= 0) return false
         return (Math.floor(Date.now() / 1000) - ts) < root.newWindowSecs
+    }
+
+    function progressColor(pct) {
+        var hue = Math.max(0, Math.min(120, pct * 1.2)) / 360
+        return Qt.hsva(hue, 0.65, 0.95, 1)
+    }
+
+    function canInstall(game) {
+        return game && !game.installed && game.platform === "heroic" && game.runner === "legendary"
+    }
+
+    function installGame(game, basePath, wine) {
+        if (game.platform === "heroic" && game.runner !== "legendary") {
+            Quickshell.execDetached(["xdg-open", "heroic://install/" + game.appName])
+            return
+        }
+        if (root.installingId.length > 0) return
+        var w = wine || root.defaultWine || { name: "System Wine", bin: "/usr/bin/wine", type: "wine" }
+        var path = (basePath && basePath.length > 0) ? basePath : root.defaultInstallPath
+        Quickshell.execDetached(["systemd-run", "--user", "--quiet", "--collect",
+            "python3", root.installScript, "install",
+            "--app", game.appName, "--app-id", game.appId, "--name", game.name,
+            "--base-path", path, "--state-file", root.installStatePath,
+            "--wine-name", w.name, "--wine-bin", w.bin, "--wine-type", w.type])
+        root.installingId = game.appId
+        root.installProgress = 0
+        root.installStatus = "Preparing…"
+    }
+
+    property string lastInstallState: ""
+
+    function applyInstallState(t) {
+        try {
+            var d = JSON.parse(t)
+            var st = d.state || ""
+            if (d.active) {
+                root.installingId = d.appId || ""
+                root.installProgress = d.progress || 0
+                root.installStatus = d.status || ""
+            } else if (root.installingId === "" || root.installingId === d.appId) {
+                root.installingId = ""
+                root.installProgress = 0
+                root.installStatus = ""
+            }
+            if (st === "done" && root.lastInstallState !== "done" && root.lastInstallState !== "")
+                root.scan()
+            root.lastInstallState = st
+        } catch (e) {}
     }
 
     function canUninstall(game) {
@@ -175,6 +233,8 @@ Singleton {
                             storeUrl: g.storeUrl || "",
                             size: g.size || 0,
                             launch: g.launch,
+                            runner: g.runner || "",
+                            appName: g.appName || "",
                         })
                     }
                     root.available = root.gameModel.count > 0
@@ -193,11 +253,48 @@ Singleton {
         }
     }
 
+    Process {
+        id: runnersProc
+        command: ["python3", root.installScript, "list-runners"]
+        running: false
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    var d = JSON.parse(text)
+                    root.wineVersions = d.runners || []
+                    root.defaultInstallPath = d.defaultPath || ""
+                    root.defaultWine = d.defaultWine || null
+                } catch (e) {
+                    console.warn("Games: failed to parse runners:", e)
+                }
+            }
+        }
+    }
+
+    Timer {
+        running: root.installingId.length > 0
+        interval: 1000
+        repeat: true
+        onTriggered: installStateFile.reload()
+    }
+
+    FileView {
+        id: installStateFile
+        path: Qt.resolvedUrl(root.installStatePath)
+        watchChanges: true
+        onFileChanged: reload()
+        onLoaded: root.applyInstallState(installStateFile.text())
+    }
+
     Component.onCompleted: {
         favoritesFile.reload()
         hiddenFile.reload()
         launchOptsFile.reload()
         firstSeenFile.reload()
+        runnersProc.running = true
+        Quickshell.execDetached(["python3", root.installScript, "check-stale",
+            "--state-file", root.installStatePath])
+        installStateFile.reload()
         root.scan()
     }
 }

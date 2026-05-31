@@ -1,21 +1,16 @@
--- Hyprland 0.55 Lua Configuration
--- Modular entry point
--- https://wiki.hypr.land/Configuring/
-
--- Shared globals (accessible by all modules)
+-- ─── App Definitions ───────────────────────────
 apps = {
     terminal    = "kitty",
     fileManager = "dolphin",
-    browser     = [[google-chrome-beta --user-data-dir="/home/donnie/.config/google-chrome-themed" --remote-debugging-port=9222 &]],
+    browser     = "google-chrome-stable",
     launcher    = "hamr",
-    editor      = "kate",
-}
+    editor      = "kate",}
+
 mainMod = "SUPER"
 
--- Config dir
 local cfg = os.getenv("HOME") .. "/.config/hypr/"
 
--- Load modules in order
+-- ─── Config Includes ───────────────────────────
 dofile(cfg .. "monitors.lua")
 dofile(cfg .. "modules/dynamic-monitors.lua")
 dofile(cfg .. "env.lua")
@@ -26,5 +21,6 @@ dofile(cfg .. "input.lua")
 dofile(cfg .. "workspaces.lua")
 dofile(cfg .. "rules.lua")
 dofile(cfg .. "binds.lua")
+dofile(cfg .. "variables.lua")
 
 hl.permission("/usr/(bin|local/bin)/hyprpm", "plugin", "allow")

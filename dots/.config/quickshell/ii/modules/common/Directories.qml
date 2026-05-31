@@ -65,6 +65,7 @@ Singleton {
     property string gameHiddenPath: FileUtils.trimFileProtocol(`${Directories.state}/user/game_hidden.json`)
     property string gameLaunchOptsPath: FileUtils.trimFileProtocol(`${Directories.state}/user/game_launch_opts.json`)
     property string gameFirstSeenPath: FileUtils.trimFileProtocol(`${Directories.state}/user/game_first_seen.json`)
+    property string gameInstallStatePath: FileUtils.trimFileProtocol(`${Directories.state}/user/game_install.json`)
     property string generatedMaterialThemePath: FileUtils.trimFileProtocol(`${Directories.state}/user/generated/colors.json`)
     property string generatedWallpaperCategoryPath: FileUtils.trimFileProtocol(`${Directories.state}/user/generated/wallpaper/category.txt`)
     property string cliphistDecode: FileUtils.trimFileProtocol(`/tmp/quickshell/media/cliphist`)

@@ -1,0 +1,19 @@
+[Unit]
+Description=Quickshell (ii config)
+Documentation=https://quickshell.outfoxxed.me
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/qs -c ii
+Restart=always
+RestartSec=1
+# Raise file-descriptor limit — the wallpaper picker spawns many concurrent
+# thumbnail (magick) processes plus execDetached calls; the default 1024 soft
+# cap gets exhausted and blocks new processes (DDG search, AI pick, etc.)
+LimitNOFILE=524288
+Slice=session.slice
+
+[Install]
+WantedBy=graphical-session.target

@@ -1,21 +1,29 @@
 -- Input & Gestures
 
+-- ─── Input Config ──────────────────────────────
 hl.config({
-    input = {
-        kb_layout = "us",
-        follow_mouse = 1,
-        sensitivity = 0,
-
-        touchpad = {
-            natural_scroll = false,
-            disable_while_typing = true,
-            tap_to_click = true,
-        },
-    },
+  input = {
+    accel_profile = "adaptive",
+    emulate_discrete_scroll = 0,
+    follow_mouse = 1,
+    force_no_accel = false,
+    kb_layout = "us",
+    numlock_by_default = true,
+    off_window_axis_events = 2,
+    scroll_factor = 1.5,
+    sensitivity = 1,
+    touchpad = {
+      disable_while_typing = true,
+      natural_scroll = false,
+      scroll_factor = 0.1,
+      tap_to_click = true
+    }
+  }
 })
 
+-- ─── Gestures ──────────────────────────────────
 hl.gesture({
-    fingers   = 3,
-    direction = "horizontal",
-    action    = "workspace",
+  action = "workspace",
+  direction = "horizontal",
+  fingers = 3
 })

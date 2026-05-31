@@ -60,7 +60,16 @@ Scope {
 
             // ---- filtered model as JS array ----
             property var filteredGames: []
+            property int installedCount: panel.filteredGames.filter(g => g.installed).length
             property var recentGames: []
+            property var installingGames: {
+                if (Games.installingId.length === 0) return []
+                for (var i = 0; i < Games.gameModel.count; i++) {
+                    var g = Games.gameModel.get(i)
+                    if (g.appId === Games.installingId) return [g]
+                }
+                return []
+            }
 
             function rebuildFilter() {
                 var result = []
@@ -151,6 +160,17 @@ Scope {
             }
 
             property var confirmGame: null
+            property var installGame: null
+
+            function openInstall(game) {
+                if (!game) return
+                if (Games.canInstall(game)) {
+                    panel.installGame = game
+                    installDialog.visible = true
+                } else {
+                    Games.installGame(game, "", null)
+                }
+            }
 
             function openDetails(game) {
                 panel.detailsGame = game
@@ -168,6 +188,10 @@ Scope {
             }
 
             function handleGamepad(action) {
+                if (installDialog.visible) {
+                    if (action === "b") installDialog.visible = false
+                    return
+                }
                 if (gameDetails.shown) {
                     if (action === "b") gameDetails.shown = false
                     else if ((action === "a" || action === "start") && panel.detailsGame) {
@@ -215,7 +239,10 @@ Scope {
                 if (!g) return
                 if (action === "details") panel.openDetails(g)
                 else if (action === "fav") Games.toggleFavorite(g.appId)
-                else if (action === "launch") { Games.launchGame(g); rootScope.close() }
+                else if (action === "launch") {
+                    if (!g.installed && g.platform === "heroic") panel.openInstall(g)
+                    else { Games.launchGame(g); rootScope.close() }
+                }
                 else if (action === "store") Games.openStorePage(g)
                 else if (action === "hide") Games.toggleHidden(g.appId)
                 else if (action === "uninstall") {
@@ -226,8 +253,11 @@ Scope {
             }
 
             Keys.onPressed: event => {
-                if (event.key === Qt.Key_Escape)
-                    rootScope.close()
+                if (event.key === Qt.Key_Escape) {
+                    if (installDialog.visible) installDialog.visible = false
+                    else if (confirmDialog.visible) confirmDialog.visible = false
+                    else rootScope.close()
+                }
             }
 
             // ---- hero background ----
@@ -241,21 +271,70 @@ Scope {
                 return panel.heroGame.hero.startsWith("http") ? panel.heroGame.hero : "file://" + panel.heroGame.hero
             }
 
-            Image {
-                id: heroImage
+            Item {
+                id: hero
                 anchors.fill: parent
-                source: panel.heroSource
-                fillMode: Image.PreserveAspectCrop
-                asynchronous: true
-                cache: false
-                opacity: status === Image.Ready ? 1 : 0
-                Behavior on opacity { NumberAnimation { duration: 450; easing.type: Easing.OutCubic } }
+                property bool toggle: false
+                property string srcA: ""
+                property string srcB: ""
+                readonly property bool shown: panel.heroSource.length > 0
+
+                Connections {
+                    target: panel
+                    function onHeroSourceChanged() {
+                        if (hero.toggle) hero.srcB = panel.heroSource
+                        else hero.srcA = panel.heroSource
+                        hero.toggle = !hero.toggle
+                    }
+                }
+
+                SequentialAnimation on scale {
+                    loops: Animation.Infinite
+                    running: hero.shown
+                    NumberAnimation { from: 1.0; to: 1.06; duration: 18000; easing.type: Easing.InOutSine }
+                    NumberAnimation { from: 1.06; to: 1.0; duration: 18000; easing.type: Easing.InOutSine }
+                }
+
+                Image {
+                    id: heroA
+                    anchors.fill: parent
+                    source: hero.srcA
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                    cache: false
+                    opacity: (hero.toggle && status === Image.Ready) ? 1 : 0
+                    Behavior on opacity { NumberAnimation { duration: 600; easing.type: Easing.InOutCubic } }
+                }
+                Image {
+                    id: heroB
+                    anchors.fill: parent
+                    source: hero.srcB
+                    fillMode: Image.PreserveAspectCrop
+                    asynchronous: true
+                    cache: false
+                    opacity: (!hero.toggle && status === Image.Ready) ? 1 : 0
+                    Behavior on opacity { NumberAnimation { duration: 600; easing.type: Easing.InOutCubic } }
+                }
             }
 
             Rectangle {
                 anchors.fill: parent
                 color: ColorUtils.transparentize(Appearance.m3colors.m3background, 0.35)
-                opacity: heroImage.opacity
+                opacity: hero.shown ? 1 : 0
+                Behavior on opacity { NumberAnimation { duration: 450; easing.type: Easing.OutCubic } }
+            }
+
+            // ---- accent gradient header band ----
+            Rectangle {
+                anchors.top: parent.top
+                anchors.left: parent.left
+                anchors.right: parent.right
+                height: 220
+                gradient: Gradient {
+                    orientation: Gradient.Vertical
+                    GradientStop { position: 0; color: ColorUtils.transparentize(Appearance.m3colors.m3primary, 0.82) }
+                    GradientStop { position: 1; color: "transparent" }
+                }
             }
 
             MouseArea {
@@ -580,14 +659,139 @@ Scope {
 
                     Item { Layout.fillWidth: true }
 
-                    StyledText {
-                        text: panel.filteredGames.length + " games"
-                        color: Appearance.m3colors.m3onSurfaceVariant
-                        font.pixelSize: Appearance.font.pixelSize.small
+                    RowLayout {
+                        spacing: 6
+
+                        MaterialSymbol {
+                            text: "download_done"
+                            iconSize: 16
+                            color: Appearance.m3colors.m3primary
+                        }
+                        StyledText {
+                            text: panel.installedCount + " installed"
+                            color: Appearance.m3colors.m3primary
+                            font.pixelSize: Appearance.font.pixelSize.small
+                            font.weight: Font.DemiBold
+                        }
+                        StyledText {
+                            text: "· " + panel.filteredGames.length + " games"
+                            color: Appearance.m3colors.m3onSurfaceVariant
+                            font.pixelSize: Appearance.font.pixelSize.small
+                        }
                     }
                 }
 
                 Item { Layout.preferredHeight: 16 }
+
+                // ---- installing shelf ----
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 8
+                    visible: panel.installingGames.length > 0
+
+                    StyledText {
+                        text: "Installing"
+                        color: Appearance.m3colors.m3onSurface
+                        font.pixelSize: Appearance.font.pixelSize.large
+                        font.weight: Font.DemiBold
+                    }
+
+                    Repeater {
+                        model: panel.installingGames
+
+                        Rectangle {
+                            id: installRow
+                            required property var modelData
+                            Layout.fillWidth: true
+                            implicitHeight: 72
+                            radius: Appearance.rounding.normal
+                            color: Appearance.m3colors.m3surfaceContainer
+                            clip: true
+
+                            Rectangle {
+                                id: shimmer
+                                width: 130
+                                height: parent.height
+                                gradient: Gradient {
+                                    orientation: Gradient.Horizontal
+                                    GradientStop { position: 0.0; color: "transparent" }
+                                    GradientStop { position: 0.5; color: ColorUtils.transparentize(Appearance.m3colors.m3primary, 0.86) }
+                                    GradientStop { position: 1.0; color: "transparent" }
+                                }
+                                SequentialAnimation on x {
+                                    loops: Animation.Infinite
+                                    running: true
+                                    NumberAnimation { from: -shimmer.width; to: installRow.width; duration: 1600; easing.type: Easing.InOutSine }
+                                    PauseAnimation { duration: 700 }
+                                }
+                            }
+
+                            RowLayout {
+                                anchors.fill: parent
+                                anchors.leftMargin: 14
+                                anchors.rightMargin: 18
+                                spacing: 14
+
+                                Rectangle {
+                                    Layout.preferredWidth: 44
+                                    Layout.preferredHeight: 44
+                                    radius: Appearance.rounding.small
+                                    color: Appearance.m3colors.m3surfaceContainerHighest
+                                    clip: true
+
+                                    Image {
+                                        anchors.fill: parent
+                                        anchors.margins: modelData.iconArt ? 6 : 0
+                                        source: !modelData.art ? "" : (modelData.art.startsWith("http") ? modelData.art : "file://" + modelData.art)
+                                        fillMode: modelData.iconArt ? Image.PreserveAspectFit : Image.PreserveAspectCrop
+                                        asynchronous: true
+                                        visible: status === Image.Ready
+                                    }
+                                    MaterialSymbol {
+                                        anchors.centerIn: parent
+                                        text: "download"
+                                        iconSize: 22
+                                        color: Appearance.m3colors.m3onSurfaceVariant
+                                        visible: !modelData.art
+                                    }
+                                }
+
+                                ColumnLayout {
+                                    Layout.fillWidth: true
+                                    spacing: 6
+
+                                    RowLayout {
+                                        Layout.fillWidth: true
+                                        StyledText {
+                                            Layout.fillWidth: true
+                                            text: modelData.name
+                                            color: Appearance.m3colors.m3onSurface
+                                            font.pixelSize: Appearance.font.pixelSize.normal
+                                            font.weight: Font.DemiBold
+                                            elide: Text.ElideRight
+                                        }
+                                        StyledText {
+                                            text: Games.installStatus
+                                            color: Appearance.m3colors.m3onSurfaceVariant
+                                            font.pixelSize: Appearance.font.pixelSize.small
+                                        }
+                                    }
+
+                                    StyledProgressBar {
+                                        Layout.fillWidth: true
+                                        valueBarHeight: 2
+                                        wavy: true
+                                        value: Games.installProgress / 100
+                                        highlightColor: Games.progressColor(Games.installProgress)
+                                        trackColor: Appearance.m3colors.m3surfaceContainerHighest
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Item { Layout.preferredHeight: 8 }
+                }
 
                 // ---- continue playing shelf ----
                 ColumnLayout {
@@ -816,6 +1020,7 @@ Scope {
                     Games.launchGame(g)
                     rootScope.close()
                 }
+                onInstallRequested: (g) => panel.openInstall(g)
             }
 
             // ---- ROM delete confirmation ----
@@ -910,6 +1115,150 @@ Scope {
                     }
                 }
             }
+
+            // ---- Heroic install dialog ----
+            Item {
+                id: installDialog
+                anchors.fill: parent
+                visible: false
+
+                onVisibleChanged: if (visible) {
+                    pathField.text = Games.defaultInstallPath
+                    var di = 0
+                    if (Games.defaultWine)
+                        for (var i = 0; i < Games.wineVersions.length; i++)
+                            if (Games.wineVersions[i].name === Games.defaultWine.name) di = i
+                    wineCombo.currentIndex = di
+                }
+
+                Rectangle {
+                    anchors.fill: parent
+                    color: ColorUtils.transparentize(Appearance.m3colors.m3scrim, 0.4)
+                    MouseArea { anchors.fill: parent; onClicked: installDialog.visible = false }
+                }
+
+                Rectangle {
+                    anchors.centerIn: parent
+                    width: 460
+                    implicitHeight: installCol.implicitHeight + 48
+                    radius: Appearance.rounding.large
+                    color: Appearance.m3colors.m3surfaceContainerHigh
+
+                    MouseArea { anchors.fill: parent }
+
+                    ColumnLayout {
+                        id: installCol
+                        anchors.left: parent.left
+                        anchors.right: parent.right
+                        anchors.top: parent.top
+                        anchors.margins: 24
+                        spacing: 16
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 12
+                            MaterialSymbol {
+                                text: "download"
+                                iconSize: 28
+                                fill: 1
+                                color: Appearance.m3colors.m3primary
+                            }
+                            StyledText {
+                                Layout.fillWidth: true
+                                text: "Install " + (panel.installGame ? panel.installGame.name : "")
+                                color: Appearance.m3colors.m3onSurface
+                                font.pixelSize: Appearance.font.pixelSize.large
+                                font.weight: Font.DemiBold
+                                elide: Text.ElideRight
+                            }
+                        }
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 6
+                            StyledText {
+                                text: "Install location"
+                                color: Appearance.m3colors.m3onSurfaceVariant
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                font.weight: Font.DemiBold
+                            }
+                            MaterialTextField {
+                                id: pathField
+                                Layout.fillWidth: true
+                                text: Games.defaultInstallPath
+                            }
+                        }
+
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 6
+                            StyledText {
+                                text: "Proton / Wine version"
+                                color: Appearance.m3colors.m3onSurfaceVariant
+                                font.pixelSize: Appearance.font.pixelSize.small
+                                font.weight: Font.DemiBold
+                            }
+                            StyledComboBox {
+                                id: wineCombo
+                                Layout.fillWidth: true
+                                buttonIcon: "memory"
+                                model: Games.wineVersions.map(w => w.name)
+                            }
+                        }
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            Layout.topMargin: 4
+                            spacing: 8
+                            Item { Layout.fillWidth: true }
+
+                            RippleButton {
+                                implicitWidth: 100
+                                implicitHeight: 40
+                                buttonRadius: Appearance.rounding.full
+                                colBackground: "transparent"
+                                colBackgroundHover: Appearance.colors.colLayer2Hover
+                                onClicked: installDialog.visible = false
+                                contentItem: StyledText {
+                                    anchors.centerIn: parent
+                                    text: "Cancel"
+                                    color: Appearance.m3colors.m3primary
+                                    font.pixelSize: Appearance.font.pixelSize.normal
+                                }
+                            }
+
+                            RippleButton {
+                                implicitWidth: 120
+                                implicitHeight: 40
+                                buttonRadius: Appearance.rounding.full
+                                colBackground: Appearance.m3colors.m3primary
+                                colBackgroundHover: Appearance.m3colors.m3primary
+                                onClicked: {
+                                    if (panel.installGame)
+                                        Games.installGame(panel.installGame, pathField.text,
+                                            Games.wineVersions[wineCombo.currentIndex] || null)
+                                    installDialog.visible = false
+                                }
+                                contentItem: RowLayout {
+                                    anchors.centerIn: parent
+                                    spacing: 8
+                                    MaterialSymbol {
+                                        text: "download"
+                                        iconSize: 20
+                                        color: Appearance.m3colors.m3onPrimary
+                                    }
+                                    StyledText {
+                                        text: "Install"
+                                        color: Appearance.m3colors.m3onPrimary
+                                        font.pixelSize: Appearance.font.pixelSize.normal
+                                        font.weight: Font.DemiBold
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 
@@ -927,6 +1276,9 @@ Scope {
         }
         function open(): void {
             GlobalStates.gameLauncherOpen = true
+        }
+        function rescan(): void {
+            Games.scan()
         }
     }
 

@@ -1,4 +1,5 @@
 import qs.modules.common
+import qs.modules.common.functions
 import qs.modules.common.widgets
 import qs.services
 import QtQuick
@@ -29,6 +30,14 @@ Item {
     }
     readonly property color fallbackColor1: Qt.hsla(root.nameHue, 0.45, 0.45, 1)
     readonly property color fallbackColor2: Qt.hsla((root.nameHue + 0.5) % 1.0, 0.5, 0.25, 1)
+
+    StyledRectangularShadow {
+        target: cardBg
+        blur: 1.3 * Appearance.sizes.elevationMargin
+        offset: Qt.vector2d(0, 5)
+        opacity: root.selected ? 1 : 0
+        Behavior on opacity { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+    }
 
     Rectangle {
         id: cardBg
@@ -156,13 +165,57 @@ Item {
             font.weight: Font.DemiBold
         }
 
+        readonly property bool installing: Games.installingId === root.gameData.appId
+
         MaterialSymbol {
             anchors.centerIn: parent
             text: "cloud_download"
             iconSize: 40
             color: "white"
             opacity: 0.85
-            visible: !root.gameData.installed
+            visible: !root.gameData.installed && !cardBg.installing
+        }
+
+        Rectangle {
+            anchors.fill: parent
+            radius: cardBg.radius
+            visible: cardBg.installing
+            color: ColorUtils.transparentize(Appearance.m3colors.m3scrim, 0.35)
+
+            Column {
+                anchors.centerIn: parent
+                spacing: 8
+
+                Item {
+                    width: 76
+                    height: 76
+                    anchors.horizontalCenter: parent.horizontalCenter
+
+                    CircularProgress {
+                        anchors.fill: parent
+                        implicitSize: 76
+                        lineWidth: 6
+                        value: Games.installProgress / 100
+                        colPrimary: Games.progressColor(Games.installProgress)
+                        colSecondary: ColorUtils.transparentize(Appearance.m3colors.m3onSurface, 0.6)
+                    }
+                    StyledText {
+                        anchors.centerIn: parent
+                        text: Math.round(Games.installProgress) + "%"
+                        color: Games.progressColor(Games.installProgress)
+                        font.pixelSize: 20
+                        font.weight: Font.Bold
+                    }
+                }
+
+                StyledText {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: "Installing"
+                    color: "white"
+                    font.pixelSize: 11
+                    font.weight: Font.DemiBold
+                }
+            }
         }
 
         Rectangle {

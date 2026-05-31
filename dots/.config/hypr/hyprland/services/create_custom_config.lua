@@ -1,5 +1,6 @@
 require("hyprland/lib")
 
+-- ─── Custom Config Bootstrap ───────────────────
 hl.on("hyprland.start", function()
    local homeDir = os.getenv("HOME")
    if string.len(homeDir) == 0 then
@@ -12,8 +13,9 @@ hl.on("hyprland.start", function()
       baseCustomDir .. "/general.lua",
       baseCustomDir .. "/keybinds.lua",
       baseCustomDir .. "/rules.lua",
-      baseCustomDir .. "/variables.lua"
+       baseCustomDir .. "/variables.lua"
    }
+   -- ─── Create Missing Files ───────────────────────
    local createdFiles = 0
    for _, file in ipairs(files) do
       if not is_file_exists(file) then

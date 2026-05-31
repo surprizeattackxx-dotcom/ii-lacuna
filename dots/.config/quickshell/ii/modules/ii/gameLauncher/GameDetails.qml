@@ -14,7 +14,10 @@ Item {
     property var game: null
     property bool shown: false
     signal launchRequested(var game)
+    signal installRequested(var game)
     signal requestClose()
+
+    readonly property bool installing: root.game && Games.installingId === root.game.appId
 
     visible: shown || sheet.x < width
 
@@ -195,14 +198,33 @@ Item {
                         StyledText { visible: root.game && root.game.size > 0; text: root.fmtSize(root.game ? root.game.size : 0); color: Appearance.m3colors.m3onSurface; font.pixelSize: Appearance.font.pixelSize.small }
                     }
 
-                    // ---- launch button ----
+                    // ---- launch / install button ----
                     RippleButton {
                         Layout.fillWidth: true
                         implicitHeight: 48
                         buttonRadius: Appearance.rounding.full
+                        enabled: !root.installing
                         colBackground: Appearance.m3colors.m3primary
                         colBackgroundHover: Appearance.m3colors.m3primary
-                        onClicked: root.launchRequested(root.game)
+                        onClicked: {
+                            if (!root.game) return
+                            if (!root.game.installed && root.game.platform === "heroic")
+                                root.installRequested(root.game)
+                            else
+                                root.launchRequested(root.game)
+                        }
+
+                        StyledProgressBar {
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.bottom: parent.bottom
+                            anchors.margins: 6
+                            visible: root.installing
+                            wavy: true
+                            value: Games.installProgress / 100
+                            highlightColor: Games.progressColor(Games.installProgress)
+                            trackColor: ColorUtils.transparentize(Appearance.m3colors.m3onPrimary, 0.7)
+                        }
 
                         contentItem: RowLayout {
                             anchors.centerIn: parent
@@ -211,10 +233,12 @@ Item {
                                 text: (root.game && root.game.installed) ? "play_arrow" : "download"
                                 iconSize: 22
                                 fill: 1
+                                visible: !root.installing
                                 color: Appearance.m3colors.m3onPrimary
                             }
                             StyledText {
-                                text: (root.game && root.game.installed) ? "Launch" : "Install"
+                                text: root.installing ? Games.installStatus
+                                    : (root.game && root.game.installed) ? "Launch" : "Install"
                                 color: Appearance.m3colors.m3onPrimary
                                 font.pixelSize: Appearance.font.pixelSize.normal
                                 font.weight: Font.DemiBold
