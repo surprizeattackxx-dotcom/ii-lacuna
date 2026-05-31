@@ -381,6 +381,30 @@ for src in "$SOURCE_DIR"/*; do
     fi
 done
 
+LOCAL_SRC="$SCRIPT_DIR/dots/.local"
+if [ -d "$LOCAL_SRC" ]; then
+    while IFS= read -r -d '' src; do
+        rel="${src#"$LOCAL_SRC"/}"
+        target="$HOME/.local/$rel"
+        mkdir -p "$(dirname "$target")"
+        if [ -L "$target" ]; then
+            rm -f "$target"
+        elif [ -e "$target" ]; then
+            if [ "$BACKUP" = true ]; then
+                mv "$target" "${target}_backup_$(date +%Y%m%d_%H%M%S)"
+            else
+                rm -rf "$target"
+            fi
+        fi
+        if ln -s "$src" "$target"; then
+            echo -e "${GREEN}✓ Symlinked: $target → $src${NC}"
+        else
+            echo -e "${RED}✗ Failed to link: $target${NC}"
+            link_fail=1
+        fi
+    done < <(find "$LOCAL_SRC" -type f -print0)
+fi
+
 if [ "$link_fail" -ne 0 ]; then
     echo -e "${RED}✗ An error occurred while creating symlinks!${NC}"
     exit 1
