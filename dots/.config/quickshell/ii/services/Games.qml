@@ -19,6 +19,7 @@ Singleton {
 
     property list<string> favorites: []
     property list<string> hidden: []
+    property var launchOpts: ({})
 
     function scan() {
         if (root.scanning) return
@@ -51,8 +52,21 @@ Singleton {
             Quickshell.execDetached(["xdg-open", game.storeUrl])
     }
 
+    function getLaunchOpts(appId) { return root.launchOpts[appId] || {} }
+
+    function setLaunchOpt(appId, key, value) {
+        var all = JSON.parse(JSON.stringify(root.launchOpts))
+        if (!all[appId]) all[appId] = {}
+        all[appId][key] = value
+        root.launchOpts = all
+        launchOptsFile.setText(JSON.stringify(all))
+    }
+
     function launchGame(game) {
-        Quickshell.execDetached(["bash", "-c", game.launch])
+        var o = root.launchOpts[game.appId] || {}
+        var inner = (o.mangohud ? "mangohud " : "") + (o.gamemode ? "gamemoderun " : "") + game.launch
+        var cmd = o.gamescope ? ("gamescope -f -- " + inner) : inner
+        Quickshell.execDetached(["bash", "-c", cmd])
     }
 
     FileView {
@@ -74,6 +88,17 @@ Singleton {
         }
         onLoadFailed: (error) => {
             if (error == FileViewError.FileNotFound) { root.hidden = []; hiddenFile.setText("[]") }
+        }
+    }
+
+    FileView {
+        id: launchOptsFile
+        path: Qt.resolvedUrl(Directories.gameLaunchOptsPath)
+        onLoaded: {
+            try { root.launchOpts = JSON.parse(launchOptsFile.text()) } catch (e) { root.launchOpts = ({}) }
+        }
+        onLoadFailed: (error) => {
+            if (error == FileViewError.FileNotFound) { root.launchOpts = ({}); launchOptsFile.setText("{}") }
         }
     }
 
@@ -99,6 +124,7 @@ Singleton {
                             playMinutes: g.playMinutes || 0,
                             lastPlayed: g.lastPlayed || 0,
                             storeUrl: g.storeUrl || "",
+                            size: g.size || 0,
                             launch: g.launch,
                         })
                     }
@@ -120,6 +146,7 @@ Singleton {
     Component.onCompleted: {
         favoritesFile.reload()
         hiddenFile.reload()
+        launchOptsFile.reload()
         root.scan()
     }
 }

@@ -132,6 +132,7 @@ Scope {
 
             // ---- context menu ----
             property var ctxGame: null
+            property var detailsGame: null
 
             function openContextMenu(game, x, y) {
                 panel.ctxGame = game
@@ -140,10 +141,17 @@ Scope {
                 contextMenu.visible = true
             }
 
+            function openDetails(game) {
+                panel.detailsGame = game
+                gameDetails.shown = true
+                contextMenu.visible = false
+            }
+
             function doContextAction(action) {
                 var g = panel.ctxGame
                 if (!g) return
-                if (action === "fav") Games.toggleFavorite(g.appId)
+                if (action === "details") panel.openDetails(g)
+                else if (action === "fav") Games.toggleFavorite(g.appId)
                 else if (action === "launch") { Games.launchGame(g); rootScope.close() }
                 else if (action === "store") Games.openStorePage(g)
                 else if (action === "hide") Games.toggleHidden(g.appId)
@@ -647,6 +655,7 @@ Scope {
                     var g = panel.ctxGame
                     if (!g) return []
                     var a = []
+                    a.push({ icon: "info", label: "Details", action: "details" })
                     a.push({ icon: Games.isFavorite(g.appId) ? "star" : "star_outline",
                              label: Games.isFavorite(g.appId) ? "Remove favorite" : "Add favorite", action: "fav" })
                     a.push({ icon: g.installed ? "play_arrow" : "download",
@@ -706,6 +715,17 @@ Scope {
                             }
                         }
                     }
+                }
+            }
+
+            GameDetails {
+                id: gameDetails
+                anchors.fill: parent
+                game: panel.detailsGame
+                onRequestClose: gameDetails.shown = false
+                onLaunchRequested: (g) => {
+                    Games.launchGame(g)
+                    rootScope.close()
                 }
             }
         }

@@ -35,7 +35,11 @@ def parse_acf(path):
     t = path.read_text('utf-8', errors='replace')
     a = re.search(r'"appid"\s+"(\d+)"', t)
     n = re.search(r'"name"\s+"([^"]*)"', t)
-    return {'appId': a.group(1), 'name': n.group(1)} if a and n else None
+    s = re.search(r'"SizeOnDisk"\s+"(\d+)"', t)
+    if not (a and n):
+        return None
+    return {'appId': a.group(1), 'name': n.group(1),
+            'size': int(s.group(1)) if s else 0}
 
 def steam_art_path(appid):
     steam_root = HOME / '.steam' / 'steam'
@@ -136,6 +140,7 @@ def enrich_steam(g):
     g['playMinutes'] = pt
     g['hero'] = steam_hero_path(appid)
     g['storeUrl'] = f'https://store.steampowered.com/app/{appid}'
+    g.setdefault('size', 0)
     return g
 
 def find_steam_games():
@@ -237,11 +242,16 @@ def find_heroic_games():
             art = g.get('art_square') or g.get('art_cover') or None
             hero = g.get('art_background') or g.get('art_cover') or None
             store = (g.get('extra') or {}).get('storeUrl') or None
+            try:
+                size = int((g.get('install') or {}).get('install_size') or 0)
+            except (ValueError, TypeError):
+                size = 0
             games.append({
                 'appId': f'heroic_{app_name}', 'name': title, 'art': art,
                 'platform': 'heroic', 'installed': bool(g.get('is_installed')),
                 'launch': f'xdg-open "heroic://launch/{runner}/{app_name}"',
                 'lastPlayed': 0, 'playMinutes': 0, 'hero': hero, 'storeUrl': store,
+                'size': size,
             })
     return games
 
@@ -257,6 +267,7 @@ def find_appimages():
                     'name': f.stem, 'appId': f'appimg_{hid}', 'platform': 'appimage',
                     'art': None, 'installed': True, 'launch': f'"{f}"',
                     'lastPlayed': 0, 'playMinutes': 0, 'hero': None, 'storeUrl': None,
+                    'size': 0,
                 })
     return games
 
@@ -288,6 +299,7 @@ def find_native_games(steam_names):
                 'name': name, 'appId': id, 'platform': 'native',
                 'art': None, 'installed': True, 'launch': f'gtk-launch {f.stem}',
                 'lastPlayed': 0, 'playMinutes': 0, 'hero': None, 'storeUrl': None,
+                'size': 0,
             })
     return games
 
