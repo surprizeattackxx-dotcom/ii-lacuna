@@ -16,6 +16,16 @@ Item {
 
     function focusSearch() {}
     function selectFirst() { view.currentIndex = 0 }
+    function ensureSelected() { if (view.currentIndex < 0) view.currentIndex = 0 }
+    function navLeft() { if (view.currentIndex > 0) view.currentIndex-- }
+    function navRight() { if (view.currentIndex < root.model.length - 1) view.currentIndex++ }
+    function navUp() {}
+    function navDown() {}
+    function activate() {
+        var it = root.model[view.currentIndex]
+        if (it) root.launchRequested(it)
+    }
+    function selectedGame() { return root.model[view.currentIndex] }
 
     PathView {
         id: view

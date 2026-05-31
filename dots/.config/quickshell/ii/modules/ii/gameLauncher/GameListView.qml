@@ -20,6 +20,16 @@ Item {
         listView.currentIndex = 0
         listView.focus = true
     }
+    function ensureSelected() { if (listView.currentIndex < 0) listView.currentIndex = 0 }
+    function navUp() { if (listView.currentIndex > 0) listView.currentIndex-- }
+    function navDown() { if (listView.currentIndex < root.model.length - 1) listView.currentIndex++ }
+    function navLeft() {}
+    function navRight() {}
+    function activate() {
+        var it = root.model[listView.currentIndex]
+        if (it) root.launchRequested(it)
+    }
+    function selectedGame() { return root.model[listView.currentIndex] }
     function fmtPlaytime(min) {
         if (min >= 60) return Math.round(min / 60) + "h"
         return min + "m"

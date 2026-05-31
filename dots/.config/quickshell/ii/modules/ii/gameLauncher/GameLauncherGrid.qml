@@ -9,6 +9,7 @@ Item {
 
     property var model: []
     property int currentIndex: -1
+    property bool navActive: false
     signal launchRequested(var gameData)
     signal contextRequested(var gameData, real globalX, real globalY)
 
@@ -17,6 +18,19 @@ Item {
         gridView.currentIndex = 0
         gridView.focus = true
     }
+    function ensureSelected() {
+        root.navActive = true
+        if (gridView.currentIndex < 0) gridView.currentIndex = 0
+    }
+    function navUp() { root.navActive = true; gridView.moveCurrentIndexUp() }
+    function navDown() { root.navActive = true; gridView.moveCurrentIndexDown() }
+    function navLeft() { root.navActive = true; gridView.moveCurrentIndexLeft() }
+    function navRight() { root.navActive = true; gridView.moveCurrentIndexRight() }
+    function activate() {
+        var it = root.model[gridView.currentIndex]
+        if (it) root.launchRequested(it)
+    }
+    function selectedGame() { return root.model[gridView.currentIndex] }
 
     GridView {
         id: gridView
@@ -46,7 +60,7 @@ Item {
             GameCard {
                 anchors.centerIn: parent
                 gameData: modelData
-                selected: gridView.activeFocus && gridView.currentIndex === parent.index
+                externalSelected: (root.navActive || gridView.activeFocus) && gridView.currentIndex === parent.index
                 onClicked: root.launchRequested(modelData)
                 onContextRequested: (gx, gy) => root.contextRequested(modelData, gx, gy)
             }

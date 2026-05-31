@@ -12,7 +12,9 @@ Item {
     required property var gameData
     property int cardWidth: 180
     property int cardHeight: cardWidth * 1.4
-    property bool selected: false
+    property bool hovering: false
+    property bool externalSelected: false
+    readonly property bool selected: hovering || externalSelected
     signal clicked()
     signal contextRequested(real globalX, real globalY)
 
@@ -213,8 +215,8 @@ Item {
                     root.clicked()
                 }
             }
-            onEntered: root.selected = true
-            onExited: root.selected = false
+            onEntered: root.hovering = true
+            onExited: root.hovering = false
         }
 
         Rectangle {

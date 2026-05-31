@@ -109,6 +109,15 @@ Scope {
                 onTriggered: panel.rebuildFilter()
             }
 
+            Process {
+                id: gamepadProc
+                command: ["python3", Directories.scriptPath + "/games/gamepad.py"]
+                running: panel.visible
+                stdout: SplitParser {
+                    onRead: data => panel.handleGamepad(data.trim())
+                }
+            }
+
             Connections {
                 target: Games.gameModel
                 function onCountChanged() { panel.scheduleRebuild() }
@@ -156,6 +165,45 @@ Scope {
                 var g = pool[Math.floor(Math.random() * pool.length)]
                 Games.launchGame(g)
                 rootScope.close()
+            }
+
+            function handleGamepad(action) {
+                if (gameDetails.shown) {
+                    if (action === "b") gameDetails.shown = false
+                    else if ((action === "a" || action === "start") && panel.detailsGame) {
+                        Games.launchGame(panel.detailsGame)
+                        rootScope.close()
+                    }
+                    return
+                }
+                if (contextMenu.visible) {
+                    if (action === "b") contextMenu.visible = false
+                    return
+                }
+                if (panel.romsActive) {
+                    if (action === "b") {
+                        if (romBrowser.currentSystem) romBrowser.back()
+                        else rootScope.close()
+                    }
+                    return
+                }
+                var v = viewLoader.item
+                if (!v) return
+                if (action === "up") v.navUp()
+                else if (action === "down") v.navDown()
+                else if (action === "left") v.navLeft()
+                else if (action === "right") v.navRight()
+                else if (action === "a" || action === "start") {
+                    if (v.currentIndex < 0) v.ensureSelected()
+                    else v.activate()
+                } else if (action === "b") rootScope.close()
+                else if (action === "y") {
+                    var g = v.selectedGame()
+                    if (g) panel.openDetails(g)
+                } else if (action === "x") {
+                    var g2 = v.selectedGame()
+                    if (g2) Games.toggleFavorite(g2.appId)
+                }
             }
 
             function doContextAction(action) {
@@ -617,6 +665,7 @@ Scope {
                     }
 
                     RomBrowser {
+                        id: romBrowser
                         anchors.fill: parent
                         visible: panel.romsActive
                         searchText: panel.searchText
