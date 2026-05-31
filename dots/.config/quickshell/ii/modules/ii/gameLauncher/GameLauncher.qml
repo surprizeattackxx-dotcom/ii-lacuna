@@ -180,6 +180,8 @@ Scope {
                     if (action === "b") contextMenu.visible = false
                     return
                 }
+                if (action === "lb") { panel.tabIndex = Math.max(0, panel.tabIndex - 1); return }
+                if (action === "rb") { panel.tabIndex = Math.min(5, panel.tabIndex + 1); return }
                 if (panel.romsActive) {
                     if (action === "b") {
                         if (romBrowser.currentSystem) romBrowser.back()
