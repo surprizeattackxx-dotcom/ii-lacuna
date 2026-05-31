@@ -56,6 +56,13 @@ SYSTEMS = {
     'scummvm':     ('ScummVM',             ('std', 'scummvm')),
 }
 
+ESDE_THEME = Path('/usr/share/es-de/themes/slate-es-de')
+ESDE_ALIASES = {
+    'fc': 'famicom', 'sfc': 'snes', 'md': 'megadrive', 'ms': 'mastersystem',
+    'gg': 'gamegear', 'pce': 'pcengine', 'ps1': 'psx', 'vita': 'psvita',
+    '3ds': 'n3ds',
+}
+
 ROM_EXTS = {
     '.nes', '.sfc', '.smc', '.fig', '.swc', '.n64', '.z64', '.v64', '.gb', '.gbc',
     '.gba', '.nds', '.3ds', '.cia', '.iso', '.cso', '.chd', '.cue', '.bin', '.gdi',
@@ -99,6 +106,12 @@ def rom_dirs():
 def sysinfo(folder_name):
     key = folder_name.lower()
     return SYSTEMS.get(key)
+
+
+def system_logo(key):
+    name = ESDE_ALIASES.get(key, key)
+    p = ESDE_THEME / name / 'images' / 'logo.svg'
+    return str(p) if p.exists() else None
 
 
 def is_rom(path):
@@ -181,6 +194,7 @@ def list_systems():
                 'name': info[0],
                 'count': cnt,
                 'dir': str(d),
+                'logo': system_logo(d.name.lower()),
             })
     # merge duplicate systems across roots
     merged = {}
@@ -191,7 +205,8 @@ def list_systems():
             merged[k]['dirs'].append(s['dir'])
         else:
             merged[k] = {'system': s['system'], 'name': s['name'],
-                         'count': s['count'], 'dirs': [s['dir']]}
+                         'count': s['count'], 'dirs': [s['dir']],
+                         'logo': s['logo']}
     return sorted(merged.values(), key=lambda x: -x['count'])
 
 

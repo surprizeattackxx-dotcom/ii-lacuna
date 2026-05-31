@@ -184,6 +184,8 @@ Scope {
                     if (action === "b") {
                         if (romBrowser.currentSystem) romBrowser.back()
                         else rootScope.close()
+                    } else {
+                        romBrowser.gamepad(action)
                     }
                     return
                 }

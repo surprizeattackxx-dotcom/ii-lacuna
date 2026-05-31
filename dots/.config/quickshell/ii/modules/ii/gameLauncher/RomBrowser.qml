@@ -57,6 +57,30 @@ Item {
     function selectFirst() {}
     function focusSearch() {}
 
+    function gamepad(action) {
+        if (root.currentSystem === null) {
+            systemGrid.navActive = true
+            if (action === "up") systemGrid.moveCurrentIndexUp()
+            else if (action === "down") systemGrid.moveCurrentIndexDown()
+            else if (action === "left") systemGrid.moveCurrentIndexLeft()
+            else if (action === "right") systemGrid.moveCurrentIndexRight()
+            else if (action === "a" || action === "start") {
+                if (systemGrid.currentIndex < 0) systemGrid.currentIndex = 0
+                else if (systemGrid.currentIndex < root.systems.length)
+                    root.openSystem(root.systems[systemGrid.currentIndex])
+            }
+        } else {
+            if (action === "up") romGrid.navUp()
+            else if (action === "down") romGrid.navDown()
+            else if (action === "left") romGrid.navLeft()
+            else if (action === "right") romGrid.navRight()
+            else if (action === "a" || action === "start") {
+                if (romGrid.currentIndex < 0) romGrid.ensureSelected()
+                else romGrid.activate()
+            }
+        }
+    }
+
     Process {
         id: systemsProc
         command: ["python3", root.scanScript]
@@ -87,12 +111,15 @@ Item {
         cellWidth: 240
         cellHeight: 130
         model: root.systems
+        keyNavigationWraps: false
+        property bool navActive: false
 
         ScrollBar.vertical: ScrollBar { policy: ScrollBar.AsNeeded }
 
         delegate: Item {
             id: sysDelegate
             required property var modelData
+            required property int index
             width: systemGrid.cellWidth
             height: systemGrid.cellHeight
 
@@ -100,7 +127,7 @@ Item {
                 anchors.fill: parent
                 anchors.margins: 8
                 radius: Appearance.rounding.large
-                color: sysMouse.containsMouse
+                color: (sysMouse.containsMouse || (systemGrid.navActive && systemGrid.currentIndex === sysDelegate.index))
                     ? Appearance.m3colors.m3secondaryContainer
                     : Appearance.m3colors.m3surfaceContainerHigh
 
@@ -108,17 +135,35 @@ Item {
 
                 ColumnLayout {
                     anchors.centerIn: parent
-                    spacing: 4
+                    spacing: 6
 
-                    MaterialSymbol {
+                    Item {
                         Layout.alignment: Qt.AlignHCenter
-                        text: "videogame_asset"
-                        iconSize: 34
-                        color: Appearance.m3colors.m3onSurface
+                        Layout.preferredWidth: 140
+                        Layout.preferredHeight: 48
+
+                        Image {
+                            id: logoImg
+                            anchors.fill: parent
+                            source: sysDelegate.modelData.logo ? "file://" + sysDelegate.modelData.logo : ""
+                            fillMode: Image.PreserveAspectFit
+                            sourceSize.height: 96
+                            asynchronous: true
+                            visible: status === Image.Ready
+                        }
+
+                        MaterialSymbol {
+                            anchors.centerIn: parent
+                            text: "videogame_asset"
+                            iconSize: 34
+                            color: Appearance.m3colors.m3onSurface
+                            visible: !logoImg.visible
+                        }
                     }
 
                     StyledText {
                         Layout.alignment: Qt.AlignHCenter
+                        visible: !logoImg.visible
                         text: sysDelegate.modelData.name
                         font.pixelSize: Appearance.font.pixelSize.normal
                         font.weight: Font.DemiBold
@@ -184,6 +229,7 @@ Item {
         }
 
         GameLauncherGrid {
+            id: romGrid
             Layout.fillWidth: true
             Layout.fillHeight: true
             model: root.romGames
