@@ -562,7 +562,7 @@ Singleton {
                                                 "model": currentModel,
                                                 "requires_key": false,
                                                 "api_format": "openai",
-                                                "extraParams": { "num_ctx": 32768 },
+                                                "extraParams": { "num_ctx": 131072 },
         }),
         "google": aiModelComponent.createObject(this, {
             "name": `Google - ${currentModel}`,
@@ -999,7 +999,7 @@ Singleton {
                         endpoint: "http://localhost:11434/v1/chat/completions",
                         requires_key: false,
                         api_format: "openai",
-                        extraParams: { "num_ctx": 32768 },
+                        extraParams: { "num_ctx": 131072 },
                     };
                 }
             }

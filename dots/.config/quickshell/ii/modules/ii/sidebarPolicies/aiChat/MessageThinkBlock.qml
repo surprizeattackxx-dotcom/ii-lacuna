@@ -10,7 +10,7 @@ import Qt5Compat.GraphicalEffects
 
 Item {
     id: root
-    visible: !Config.options.ai.nothink
+    visible: !Config.options.sidebar.ai.nothink
     // These are needed on the parent loader
     property bool editing: false
     property bool renderMarkdown: true
