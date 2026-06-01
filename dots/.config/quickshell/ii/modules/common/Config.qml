@@ -749,6 +749,7 @@ Singleton {
                 property JsonObject ai: JsonObject {
                     property bool textFadeIn: false
                     property bool showProviderAndModelButtons: true
+                    property bool nothink: false
                 }
                 property JsonObject booru: JsonObject {
                     property bool allowNsfw: false
