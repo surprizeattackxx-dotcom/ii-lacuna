@@ -9,8 +9,8 @@ import qs.modules.ii.bar as Bar
 import "../bar/WindowRegistry.js" as LayoutMath
 
 // =========================================================
-// Dynamic Island Notifications - Apple-inspired notification system
-// Автономный компонент для уведомлений в стиле Dynamic Island
+// OSRS + M3 Notification Island
+// Old School RuneScape aesthetics with Material Design 3 motion
 // =========================================================
 
 PanelWindow {
@@ -24,14 +24,30 @@ PanelWindow {
     focusable: false
     color: "transparent"
 
-    // Масштабирование
+    // --- Scaling ---
     Bar.Scaler { id: scaler; currentWidth: Screen.width }
     function s(v) { return scaler.s(v); }
 
     implicitHeight: s(120)
 
-    // --- Theme ---
+    // --- Theme base (still reads M3 for consistency outside the island) ---
     Bar.MatugenColors { id: _theme }
+
+    // --- OSRS Color Palette (overrides for the island) ---
+    readonly property color osrsGold: "#FFB83F"
+    readonly property color osrsGoldDim: "#C48A2B"
+    readonly property color osrsParchment: "#E8D5B7"
+    readonly property color osrsParchmentDim: "#BFA786"
+    readonly property color osrsSurface: "#3D2B24"
+    readonly property color osrsSurfaceLight: "#4E362E"
+    readonly property color osrsBorder: "#1A110E"
+    readonly property color osrsBevel: "#5A3E34"
+    readonly property color osrsBevelHi: "#735144"
+    readonly property color osrsText: osrsParchment
+    readonly property color osrsTextDim: "#A0806A"
+    readonly property color osrsRed: "#D44444"
+    readonly property color osrsGreen: "#33AA33"
+    readonly property color osrsBlue: "#6699FF"
 
     // --- State ---
     property bool expanded: false
@@ -43,7 +59,6 @@ PanelWindow {
         id: notificationStack
     }
 
-    // --- Показ следующего уведомления ---
     function displayNextNotification() {
         if (notificationStack.count === 0) {
             currentNotification = null;
@@ -53,12 +68,9 @@ PanelWindow {
 
         currentNotification = notificationStack.get(0);
         expandIsland();
-
-        // Авто-закрытие через 5 секунд
         autoHideTimer.restart();
     }
 
-    // --- Удаление текущего уведомления ---
     function dismissCurrent() {
         if (notificationStack.count > 0) {
             notificationStack.remove(0);
@@ -67,13 +79,12 @@ PanelWindow {
         currentNotification = null;
         collapseIsland();
 
-        // Показываем следующее через небольшую задержку
         if (notificationStack.count > 0) {
             nextNotifTimer.start();
         }
     }
 
-    // --- Таймеры ---
+    // --- Timers ---
     Timer {
         id: autoHideTimer
         interval: 5000
@@ -86,13 +97,17 @@ PanelWindow {
         onTriggered: displayNextNotification()
     }
 
-    // --- Размеры острова ---
+    // --- Sizes ---
     property real collapsedWidth: s(180)
     property real collapsedHeight: s(44)
     property real expandedWidth: s(420)
     property real expandedHeight: s(110)
 
-    // --- Анимированный контейнер острова ---
+    // --- Bevel border helper: stacked rects for OSRS 3D panel look ---
+    property real borderW: 2
+    property real bevelW: 1.5
+
+    // --- Island Container ---
     Item {
         id: islandShape
         anchors.horizontalCenter: parent.horizontalCenter
@@ -102,11 +117,9 @@ PanelWindow {
         width: expanded ? expandedWidth : collapsedWidth
         height: expanded ? expandedHeight : collapsedHeight
 
-        // Используем аниматоры вместо Behavior для лучшей производительности
         Behavior on width { enabled: false }
         Behavior on height { enabled: false }
 
-        // Отдельные аниматоры для размеров
         NumberAnimation {
             id: widthAnim
             target: islandShape
@@ -123,7 +136,6 @@ PanelWindow {
             easing.type: Easing.Bezier; easing.bezierCurve: [0.16, 1, 0.3, 1]
         }
 
-        // Слушаем изменение expanded
         Connections {
             target: islandWindow
             function onExpandedChanged() {
@@ -134,234 +146,340 @@ PanelWindow {
             }
         }
 
-        // --- Фон острова ---
+        // ─── OSRS Panel: beveled border stack ───
+
+        // Outermost: dark border
         Rectangle {
-            id: islandBg
+            id: outerBorder
             anchors.fill: parent
             radius: height / 2
+            color: osrsBorder
 
-            color: Qt.rgba(_theme.base.r, _theme.base.g, _theme.base.b, expanded ? 0.95 : 0.88)
+            // Inner bevel highlight (top/left edge lighter)
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: 1
+                radius: parent.radius - 1
+                color: "transparent"
+                border.width: 1
+                border.color: osrsBevelHi
+            }
 
-            // Обводка - фиксированный цвет без анимации для производительности
-            border.width: 1
-            border.color: expanded
-                ? Qt.rgba(_theme.mauve.r, _theme.mauve.g, _theme.mauve.b, 0.4)
-                : Qt.rgba(_theme.text.r, _theme.text.g, _theme.text.b, 0.08)
+            // Surface background
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: borderW
+                radius: parent.radius - borderW
+                color: expanded ? osrsSurface : osrsSurfaceLight
 
-            // Тень - кэшируем и не меняем opacity во время анимации
+                // Inner shadow bevel (bottom edge darker)
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.margins: 0
+                    radius: parent.radius
+                    gradient: Gradient {
+                        orientation: Gradient.Vertical
+                        GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.04) }
+                        GradientStop { position: 0.3; color: "transparent" }
+                        GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.15) }
+                    }
+                }
+            }
+
+            // OSRS-style edge highlight (thin gold line at inner top)
+            Rectangle {
+                anchors {
+                    top: parent.top; topMargin: borderW + 1
+                    left: parent.left; leftMargin: borderW + 4
+                    right: parent.right; rightMargin: borderW + 4
+                }
+                height: 1
+                radius: 0
+                color: Qt.rgba(osrsGold.r, osrsGold.g, osrsGold.b, 0.15)
+                visible: expanded
+            }
+
+            // Shadow effect
             layer.enabled: true
             layer.smooth: true
             layer.effect: MultiEffect {
                 shadowEnabled: true
                 shadowColor: "#000000"
-                shadowOpacity: 0.3
+                shadowOpacity: 0.45
                 shadowBlur: 1.0
                 shadowVerticalOffset: 6
             }
+        }
 
-            // --- СВЕРНУТОЕ СОСТОЯНИЕ ---
-            Item {
-                id: collapsedContent
-                anchors.fill: parent
-                opacity: expanded ? 0 : 1
-                visible: opacity > 0.01
+        // ─── COLLAPSED STATE ───
+        Item {
+            id: collapsedContent
+            anchors.fill: parent
+            anchors.margins: borderW + 2
+            opacity: expanded ? 0 : 1
+            visible: opacity > 0.01
 
-                // Оптимизированный fade
-                NumberAnimation on opacity {
-                    id: collapsedFade
-                    duration: 200
-                    easing.type: Easing.OutQuad
-                    onStopped: {
-                        if (islandWindow.expanded && collapsedContent.opacity === 0) collapsedContent.visible = false;
-                    }
-                }
-
-                onVisibleChanged: {
-                    if (!islandWindow.expanded && visible) opacity = 1;
-                }
-
-                // Индикатор очереди уведомлений
-                Row {
-                    anchors.centerIn: parent
-                    spacing: s(8)
-
-                    // Иконка приложения (маленькая)
-                    Rectangle {
-                        width: s(24)
-                        height: s(24)
-                        radius: s(6)
-                        color: _theme.surface1
-                        visible: currentNotification !== null
-
-                        Image {
-                            anchors.fill: parent
-                            anchors.margins: s(2)
-                            source: currentNotification ? currentNotification.icon : ""
-                            fillMode: Image.PreserveAspectFit
-                            sourceSize.width: s(20)
-                            sourceSize.height: s(20)
-                            asynchronous: true
-                        }
-
-                        // Fallback иконка
-                        Text {
-                            anchors.centerIn: parent
-                            text: "󰵙"
-                            font.family: "Iosevka Nerd Font"
-                            font.pixelSize: s(14)
-                            color: _theme.mauve
-                            visible: parent.children[0].status !== Image.Ready
-                        }
-                    }
-
-                    // Индикатор активности - оптимизированная анимация
-                    Rectangle {
-                        width: s(6)
-                        height: s(6)
-                        radius: s(3)
-                        color: _theme.mauve
-                        anchors.verticalCenter: parent.verticalCenter
-
-                        ScaleAnimator on scale {
-                            id: pulseAnim
-                            from: 1.0
-                            to: 1.3
-                            duration: 600
-                            easing.type: Easing.InOutSine
-                            loops: Animation.Infinite
-                            running: currentNotification !== null && !expanded
-                        }
-                    }
-
-                    // Счетчик уведомлений
-                    Text {
-                        text: notificationQueue > 1 ? notificationQueue.toString() : ""
-                        font.family: "JetBrains Mono"
-                        font.pixelSize: s(12)
-                        font.weight: Font.Bold
-                        color: _theme.text
-                        visible: notificationQueue > 1
-                        anchors.verticalCenter: parent.verticalCenter
-                    }
+            NumberAnimation on opacity {
+                id: collapsedFade
+                duration: 200
+                easing.type: Easing.OutQuad
+                onStopped: {
+                    if (islandWindow.expanded && collapsedContent.opacity === 0) collapsedContent.visible = false;
                 }
             }
 
-            // --- РАЗВЕРНУТОЕ СОСТОЯНИЕ ---
-            Item {
-                id: expandedContent
-                anchors.fill: parent
-                anchors.margins: s(12)
-                opacity: expanded ? 1 : 0
-                visible: opacity > 0.01
+            onVisibleChanged: {
+                if (!islandWindow.expanded && visible) opacity = 1;
+            }
 
-                NumberAnimation on opacity {
-                    id: expandedFade
-                    duration: 280
-                    easing.type: Easing.OutQuad
-                    onStopped: {
-                        if (!islandWindow.expanded && expandedContent.opacity === 0) expandedContent.visible = false;
-                    }
-                }
+            Row {
+                anchors.centerIn: parent
+                spacing: s(8)
 
-                // Сдвиг при появлении через transform
-                transform: Translate { id: contentTranslate; y: 0 }
+                // App icon (small, inventory-slot style)
+                Rectangle {
+                    width: s(24)
+                    height: s(24)
+                    radius: s(3)
+                    color: osrsSurface
+                    border.width: 1
+                    border.color: osrsBorder
+                    visible: currentNotification !== null
 
-                NumberAnimation {
-                    id: slideAnim
-                    target: contentTranslate
-                    property: "y"
-                    duration: 320
-                    easing.type: Easing.OutBack; easing.overshoot: 1.2
-                }
-
-                onVisibleChanged: {
-                    if (islandWindow.expanded && visible) opacity = 1;
-                }
-
-                // Фиксированная структура вместо RowLayout для производительности
-                Item {
-                    anchors.fill: parent
-
-                    // Иконка приложения
+                    // Inner bevel
                     Rectangle {
-                        id: iconContainer
-                        width: s(48)
-                        height: s(48)
-                        radius: s(12)
-                        color: _theme.surface0
-                        anchors.left: parent.left
-                        anchors.verticalCenter: parent.verticalCenter
-
-                        Image {
-                            id: appIcon
-                            anchors.fill: parent
-                            anchors.margins: s(4)
-                            source: currentNotification ? currentNotification.icon : ""
-                            fillMode: Image.PreserveAspectFit
-                            sourceSize.width: s(40)
-                            sourceSize.height: s(40)
-                            asynchronous: true
-                        }
-
-                        // Fallback
-                        Text {
-                            anchors.centerIn: parent
-                            text: "󰵙"
-                            font.family: "Iosevka Nerd Font"
-                            font.pixelSize: s(24)
-                            color: _theme.mauve
-                            visible: appIcon.status !== Image.Ready
-                        }
+                        anchors.fill: parent
+                        anchors.margins: 1
+                        radius: parent.radius - 1
+                        color: "transparent"
+                        border.width: 1
+                        border.color: osrsBevelHi
                     }
 
-                    // Контент уведомления
-                    Column {
-                        anchors.left: iconContainer.right
-                        anchors.leftMargin: s(12)
-                        anchors.right: parent.right
-                        anchors.verticalCenter: parent.verticalCenter
-                        spacing: s(3)
-
-                        // Название приложения
-                        Text {
-                            width: parent.width
-                            text: currentNotification ? currentNotification.appName : ""
-                            font.family: "JetBrains Mono"
-                            font.pixelSize: s(11)
-                            font.weight: Font.Medium
-                            color: _theme.overlay1
-                            elide: Text.ElideRight
-                        }
-
-                        // Заголовок
-                        Text {
-                            width: parent.width
-                            text: currentNotification ? currentNotification.title : ""
-                            font.family: "JetBrains Mono"
-                            font.pixelSize: s(14)
-                            font.weight: Font.Bold
-                            color: _theme.text
-                            elide: Text.ElideRight
-                        }
-
-                        // Тело уведомления
-                        Text {
-                            width: parent.width
-                            text: currentNotification ? currentNotification.body : ""
-                            font.family: "JetBrains Mono"
-                            font.pixelSize: s(12)
-                            color: _theme.subtext0
-                            elide: Text.ElideRight
-                            maximumLineCount: 2
-                            wrapMode: Text.Wrap
-                            visible: text !== ""
-                        }
+                    Image {
+                        anchors.fill: parent
+                        anchors.margins: s(3)
+                        source: currentNotification ? currentNotification.icon : ""
+                        fillMode: Image.PreserveAspectFit
+                        sourceSize.width: s(16)
+                        sourceSize.height: s(16)
+                        asynchronous: true
                     }
+
+                    // Fallback rune-ish icon
+                    Text {
+                        anchors.centerIn: parent
+                        text: "󰵙"
+                        font.family: "Iosevka Nerd Font"
+                        font.pixelSize: s(12)
+                        color: osrsGold
+                        visible: parent.children[1].status !== Image.Ready
+                    }
+                }
+
+                // Gold pulsing dot (like a prayer/hitpoint icon)
+                Rectangle {
+                    width: s(7)
+                    height: s(7)
+                    radius: s(3.5)
+                    color: osrsGold
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    Rectangle {
+                        anchors.fill: parent
+                        anchors.margins: 1
+                        radius: parent.radius - 1
+                        color: "transparent"
+                        border.width: 1
+                        border.color: Qt.rgba(1, 1, 1, 0.3)
+                    }
+
+                    ScaleAnimator on scale {
+                        id: pulseAnim
+                        from: 1.0
+                        to: 1.4
+                        duration: 600
+                        easing.type: Easing.InOutSine
+                        loops: Animation.Infinite
+                        running: currentNotification !== null && !expanded
+                    }
+                }
+
+                // Notification count (gold, like OSRS XP drops)
+                Text {
+                    text: notificationQueue > 1 ? notificationQueue.toString() : ""
+                    font.family: "RuneScape Bold 12"
+                    font.pixelSize: s(13)
+                    color: osrsGold
+                    visible: notificationQueue > 1
+                    anchors.verticalCenter: parent.verticalCenter
+                    style: Text.Raised
+                    styleColor: osrsBorder
                 }
             }
         }
 
-        // --- Область взаимодействия ---
+        // ─── EXPANDED STATE ───
+        Item {
+            id: expandedContent
+            anchors.fill: parent
+            anchors.margins: s(14)
+            opacity: expanded ? 1 : 0
+            visible: opacity > 0.01
+
+            NumberAnimation on opacity {
+                id: expandedFade
+                duration: 280
+                easing.type: Easing.OutQuad
+                onStopped: {
+                    if (!islandWindow.expanded && expandedContent.opacity === 0) expandedContent.visible = false;
+                }
+            }
+
+            transform: Translate { id: contentTranslate; y: 0 }
+
+            NumberAnimation {
+                id: slideAnim
+                target: contentTranslate
+                property: "y"
+                duration: 320
+                easing.type: Easing.OutBack; easing.overshoot: 1.2
+            }
+
+            onVisibleChanged: {
+                if (islandWindow.expanded && visible) opacity = 1;
+            }
+
+            // --- Content layout ---
+            Item {
+                anchors.fill: parent
+
+                // OSRS inventory-slot icon
+                Rectangle {
+                    id: iconContainer
+                    width: s(48)
+                    height: s(48)
+                    radius: s(4)
+                    color: osrsSurface
+                    border.width: 2
+                    border.color: osrsBorder
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+
+                    // Bevel highlight
+                    Rectangle {
+                        anchors.fill: parent
+                        anchors.margins: 1
+                        radius: parent.radius - 1
+                        color: "transparent"
+                        border.width: 1
+                        border.color: osrsBevelHi
+                    }
+
+                    // Gold corner accents (OSRS inventory slot style)
+                    Rectangle {
+                        anchors.top: parent.top; anchors.topMargin: -1
+                        anchors.left: parent.left; anchors.leftMargin: -1
+                        width: s(10); height: s(10)
+                        color: "transparent"
+                        border.width: 1
+                        border.color: osrsGoldDim
+                        visible: expanded
+                    }
+                    Rectangle {
+                        anchors.bottom: parent.bottom; anchors.bottomMargin: -1
+                        anchors.right: parent.right; anchors.rightMargin: -1
+                        width: s(10); height: s(10)
+                        color: "transparent"
+                        border.width: 1
+                        border.color: osrsGoldDim
+                        visible: expanded
+                    }
+
+                    Image {
+                        id: appIcon
+                        anchors.fill: parent
+                        anchors.margins: s(6)
+                        source: currentNotification ? currentNotification.icon : ""
+                        fillMode: Image.PreserveAspectFit
+                        sourceSize.width: s(36)
+                        sourceSize.height: s(36)
+                        asynchronous: true
+                    }
+
+                    // Fallback
+                    Text {
+                        anchors.centerIn: parent
+                        text: "󰵙"
+                        font.family: "Iosevka Nerd Font"
+                        font.pixelSize: s(24)
+                        color: osrsGold
+                        visible: appIcon.status !== Image.Ready
+                    }
+                }
+
+                // Content column
+                Column {
+                    anchors.left: iconContainer.right
+                    anchors.leftMargin: s(14)
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: s(2)
+
+                    // App name - RuneScape Quill Caps for that OSRS UI feel
+                    Text {
+                        width: parent.width
+                        text: currentNotification ? currentNotification.appName : ""
+                        font.family: "RuneScape Quill Caps"
+                        font.pixelSize: s(10)
+                        font.letterSpacing: 1.2
+                        color: osrsGold
+                        elide: Text.ElideRight
+                        opacity: 0.85
+                    }
+
+                    // Title - RuneScape Bold 12 in gold
+                    Text {
+                        width: parent.width
+                        text: currentNotification ? currentNotification.title : ""
+                        font.family: "RuneScape Bold 12"
+                        font.pixelSize: s(15)
+                        color: osrsGold
+                        elide: Text.ElideRight
+                        style: Text.Raised
+                        styleColor: osrsBorder
+                    }
+
+                    // Body - parchment text
+                    Text {
+                        width: parent.width
+                        text: currentNotification ? currentNotification.body : ""
+                        font.family: "RuneScape Plain 12"
+                        font.pixelSize: s(12)
+                        color: osrsParchment
+                        elide: Text.ElideRight
+                        maximumLineCount: 2
+                        wrapMode: Text.Wrap
+                        visible: text !== ""
+                        lineHeight: 1.2
+                    }
+                }
+            }
+
+            // Small gold accent bar at bottom (like OSRS UI dividers)
+            Rectangle {
+                anchors {
+                    bottom: parent.bottom; bottomMargin: -s(4)
+                    left: parent.left; leftMargin: s(4)
+                    right: parent.right; rightMargin: s(4)
+                }
+                height: 1
+                color: Qt.rgba(osrsGold.r, osrsGold.g, osrsGold.b, 0.2)
+                visible: expanded
+            }
+        }
+
+        // --- Interaction ---
         MouseArea {
             id: islandMouse
             anchors.fill: parent
@@ -378,17 +496,13 @@ PanelWindow {
         }
     }
 
-    // --- Функции управления состоянием ---
+    // --- State functions ---
     function expandIsland() {
         expanded = true;
-
-        // Запускаем fade анимации
         collapsedFade.to = 0;
         collapsedFade.restart();
-
         expandedFade.to = 1;
         expandedFade.restart();
-
         slideAnim.from = islandWindow.s(8);
         slideAnim.to = 0;
         slideAnim.restart();
@@ -396,11 +510,8 @@ PanelWindow {
 
     function collapseIsland() {
         expanded = false;
-
-        // Запускаем fade анимации
         collapsedFade.to = 1;
         collapsedFade.restart();
-
         expandedFade.to = 0;
         expandedFade.restart();
     }
@@ -410,17 +521,17 @@ PanelWindow {
 
     Process {
         id: dndPoller
-        command: ["bash", "-c", "cat ~/.cache/qs_dnd 2>/dev/null || echo "0""]
+        command: ["bash", "-c", "cat ~/.cache/qs_dnd 2>/dev/null || echo \"0\""]
         stdout: StdioCollector {
             onStreamFinished: islandWindow.dndEnabled = (this.text.trim() === "1")
         }
     }
+
     Timer {
         interval: 3000; running: true; repeat: true; triggeredOnStart: true
         onTriggered: dndPoller.running = true
     }
 
-    // Не показывать уведомления если DND включен
     function showNotification(appName, title, body, icon) {
         if (dndEnabled) return;
 
@@ -441,7 +552,7 @@ PanelWindow {
         }
     }
 
-    // --- IPC: Слушатель внешних команд ---
+    // --- IPC Listener ---
     Process {
         id: ipcWatcher
         running: true
@@ -463,7 +574,6 @@ PanelWindow {
                         );
                     } catch(e) {
                         console.log("Failed to parse notification:", e);
-                        // Discard malformed notification, continue processing
                     }
                 }
                 ipcWatcher.running = false;
