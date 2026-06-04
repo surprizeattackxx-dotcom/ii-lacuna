@@ -68,6 +68,13 @@ PanelWindow {
         }
     }
 
+    // Fallback: if Persistent.ready is already true by the time this panel
+    // is constructed (common on QS reload), onReadyChanged never fires.
+    Component.onCompleted: {
+        if (Persistent.ready && GlobalStates.activeTheme !== "Matugen")
+            root.applyTheme(GlobalStates.activeTheme)
+    }
+
     onVisibleChanged: {
         if (visible) {
             panel._shown = false

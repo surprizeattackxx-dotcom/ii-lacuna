@@ -85,40 +85,63 @@ fi
 # Set the KDE color scheme
 kwriteconfig5 --file kdeglobals --group General --key ColorScheme "$color_scheme"
 
-# Generate the Material You scheme from current wallpaper
-generate_material_you_scheme "$mode"
-
 # ============================================================================
-# Illogical Impulse Shell Config & Regenerate Colors
+# Read active theme from states.json — if a preset is active, re-apply it
+# instead of regenerating from wallpaper (which would overwrite it).
 # ============================================================================
-if [[ -f "$SHELL_CONFIG_FILE" ]]; then
-    jq --arg m "$mode" '.appearance.colorMode = $m' "$SHELL_CONFIG_FILE" > "$SHELL_CONFIG_FILE.tmp" && mv "$SHELL_CONFIG_FILE.tmp" "$SHELL_CONFIG_FILE"
-    
-    # Regenerate material colors with correct mode flag
-    (
-        color_source="$(resolve_color_source)"
-        if [[ -n "$color_source" && -f "$color_source" ]]; then
-            terminalscheme="$SCRIPT_DIR/terminal/scheme-base.json"
+ACTIVE_THEME="Matugen"
+STATE_FILE="$XDG_STATE_HOME/quickshell/states.json"
+[[ -f "$STATE_FILE" ]] && ACTIVE_THEME=$(jq -r '.activeTheme // "Matugen"' "$STATE_FILE" 2>/dev/null || echo "Matugen")
 
-            # Regenerate material colors from wallpaper with correct mode
-            source "$II_VENV/bin/activate" 2>/dev/null || true
-            python3 "$SCRIPT_DIR/generate_colors_material.py" \
-                --mode "$mode" \
-                --path "$color_source" \
-                --termscheme "$terminalscheme" \
-                --blend_bg_fg \
-                --cache "$XDG_STATE_HOME/quickshell/user/generated/color.txt" \
-                --json-out "$XDG_STATE_HOME/quickshell/user/generated/colors.json" \
-                > "$XDG_STATE_HOME/quickshell/user/generated/material_colors.scss" 2>/dev/null || true
-            deactivate 2>/dev/null || true
+if [[ "$ACTIVE_THEME" != "Matugen" ]]; then
+    # Re-apply the preset theme — keeps colors.json in sync, applies KDE scheme, etc.
+    THEME_FILE="$(dirname "$SCRIPT_DIR")/defaults/themes/${ACTIVE_THEME,,}.json"
+    if [[ -f "$THEME_FILE" ]]; then
+        bash "$SCRIPT_DIR/apply_custom_theme.sh" "$THEME_FILE" "$ACTIVE_THEME"
+        # apply_custom_theme.sh auto-detects dark/light from theme colors,
+        # so re-override config + gsettings with the intended mode
+        jq --arg m "$mode" '.appearance.colorMode = $m' "$SHELL_CONFIG_FILE" > "$SHELL_CONFIG_FILE.tmp" && mv "$SHELL_CONFIG_FILE.tmp" "$SHELL_CONFIG_FILE"
+        if [[ "$mode" == "dark" ]]; then
+            gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' 2>/dev/null || true
+        else
+            gsettings set org.gnome.desktop.interface color-scheme 'prefer-light' 2>/dev/null || true
         fi
-        
-        # Now apply the regenerated colors to all apps
-        bash "$SCRIPT_DIR/applycolor.sh" 2>/dev/null
-        
-        # Notify quickshell to reload the theme
+        # Notify quickshell to reload the theme (colors.json was updated by apply_custom_theme.sh)
         qs -c ii ipc call theme reload 2>/dev/null || true
-    ) &
+    fi
+else
+    # Matugen active — regenerate from wallpaper (original behavior)
+    generate_material_you_scheme "$mode"
+
+    if [[ -f "$SHELL_CONFIG_FILE" ]]; then
+        jq --arg m "$mode" '.appearance.colorMode = $m' "$SHELL_CONFIG_FILE" > "$SHELL_CONFIG_FILE.tmp" && mv "$SHELL_CONFIG_FILE.tmp" "$SHELL_CONFIG_FILE"
+        
+        # Regenerate material colors with correct mode flag
+        (
+            color_source="$(resolve_color_source)"
+            if [[ -n "$color_source" && -f "$color_source" ]]; then
+                terminalscheme="$SCRIPT_DIR/terminal/scheme-base.json"
+
+                # Regenerate material colors from wallpaper with correct mode
+                source "$II_VENV/bin/activate" 2>/dev/null || true
+                python3 "$SCRIPT_DIR/generate_colors_material.py" \
+                    --mode "$mode" \
+                    --path "$color_source" \
+                    --termscheme "$terminalscheme" \
+                    --blend_bg_fg \
+                    --cache "$XDG_STATE_HOME/quickshell/user/generated/color.txt" \
+                    --json-out "$XDG_STATE_HOME/quickshell/user/generated/colors.json" \
+                    > "$XDG_STATE_HOME/quickshell/user/generated/material_colors.scss" 2>/dev/null || true
+                deactivate 2>/dev/null || true
+            fi
+            
+            # Now apply the regenerated colors to all apps
+            bash "$SCRIPT_DIR/applycolor.sh" 2>/dev/null
+            
+            # Notify quickshell to reload the theme
+            qs -c ii ipc call theme reload 2>/dev/null || true
+        ) &
+    fi
 fi
 
 # ============================================================================
