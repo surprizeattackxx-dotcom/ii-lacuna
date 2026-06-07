@@ -11,9 +11,9 @@
 
 ![Preview](../assets/preview.png)
 
-| Settings | Taskbar | Overview |
+| Settings | Taskbar | Wallpaper Changer |
 | ----------- | ----------- | ----------- |
-| ![Settings](../assets/feature-5.png) | ![Taskbar](../assets/feature-6.png) | ![Overview](../assets/feature-7.png) |
+| ![Settings](../assets/feature-5.png) | ![Taskbar](../assets/feature-6.png) | ![Wallpaper Changer](../assets/feature-7.png) |
 
 </div>
 
