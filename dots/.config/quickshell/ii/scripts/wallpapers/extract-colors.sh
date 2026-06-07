@@ -25,6 +25,10 @@ done < <(echo "$EXISTING_JSON" | jq -r 'keys[]')
 
 TOTAL=$(find "$TARGET_DIR" -maxdepth 2 -type f \( -iname "*.jpg" -o -iname "*.png" -o -iname "*.webp" \) | wc -l)
 
+# Leave headroom so the compositor never starves -> no freeze while caching
+JOBS=$(( $(nproc) / 2 ))
+[ "$JOBS" -lt 2 ] && JOBS=2
+
 temp_results=$(mktemp)
 processed=${#CACHED_KEYS[@]}
 
@@ -50,8 +54,10 @@ process_img() {
 
     colors=()
 
-    for i in 0 1 2; do
-        c=$(matugen image "$img" \
+    # matugen only exposes source-color indexes 0-1; index 2 always errors.
+    # nice/ionice so this never steals cycles from Hyprland + qs.
+    for i in 0 1; do
+        c=$(nice -n 19 ionice -c 3 matugen image "$img" \
             --json hex \
             --source-color-index "$i" \
             --dry-run --quiet 2>/dev/null \
@@ -75,7 +81,7 @@ while IFS= read -r -d '' img; do
     count=$((count + 1))
     processed=$((processed + 1))
 
-    if [ $((count % 15)) -eq 0 ]; then
+    if [ $((count % JOBS)) -eq 0 ]; then
         wait
         flush_results
         count=0

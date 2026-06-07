@@ -26,6 +26,9 @@ MouseArea {
     property string activeColorFilter: ""
     property real colorCacheProgress: 0
     property bool isColorFiltering: false
+    property int _cfChunkIndex: 0
+    property var _cfResults: []
+    property var _cfColor: null
 
     property var apiImages: {
         let allImages = [];
@@ -104,61 +107,80 @@ MouseArea {
     }
 
     Timer {
-        id: deferredColorFilterTimer
-        interval: 10
+        id: colorFilterChunkTimer
+        interval: 1
         running: false
-        repeat: false
-        onTriggered: wallpaperSelectorContent.executeColorFilter()
+        repeat: true
+        onTriggered: wallpaperSelectorContent.processColorFilterChunk()
+    }
+
+    function hexToRgb(hex) {
+        return {
+            r: parseInt(hex.slice(1, 3), 16) / 255,
+            g: parseInt(hex.slice(3, 5), 16) / 255,
+            b: parseInt(hex.slice(5, 7), 16) / 255
+        };
     }
 
     function applyColorFilter() {
+        colorFilterChunkTimer.stop();
+        colorFilteredModel.clear();
+        _cfResults = [];
+        _cfChunkIndex = 0;
+
         if (!activeColorFilter || activeColorFilter === "") {
             isColorFiltering = false;
-            colorFilteredModel.clear();
             grid.loadedCount = 0;
             loadTimer.restart();
             return;
         }
 
+        _cfColor = hexToRgb(activeColorFilter);
         isColorFiltering = true;
-        colorFilteredModel.clear();
-        deferredColorFilterTimer.restart();
+        colorFilterChunkTimer.start();
     }
 
-    function executeColorFilter() {
+    function processColorFilterChunk() {
+        const CHUNK = 30;
+        const THRESH_SQ = 0.04; // 0.2^2, skip sqrt
         const wps = Wallpapers.wallpapers;
-        let results = [];
-        
-        for (let i = 0; i < wps.length; i++) {
+        const fr = _cfColor.r, fg = _cfColor.g, fb = _cfColor.b;
+        const end = Math.min(_cfChunkIndex + CHUNK, wps.length);
+
+        for (let i = _cfChunkIndex; i < end; i++) {
             const path = wps[i];
             const colors = Wallpapers.colorCache[path];
             if (colors && colors.length > 0) {
-                let bestDist = Infinity;
+                let bestDistSq = Infinity;
                 for (let j = 0; j < colors.length; j++) {
-                    const dist = ColorUtils.calculateDistance(activeColorFilter, colors[j]);
-                    if (dist < bestDist) bestDist = dist;
+                    const c = hexToRgb(colors[j]);
+                    const dr = fr - c.r, dg = fg - c.g, db = fb - c.b;
+                    const distSq = dr * dr * 0.3 + dg * dg * 0.59 + db * db * 0.11;
+                    if (distSq < bestDistSq) bestDistSq = distSq;
                 }
-                if (bestDist < 0.2) {
-                    results.push({ path, bestDist });
-                }
+                if (bestDistSq < THRESH_SQ) _cfResults.push({ path, bestDistSq });
             }
         }
-        
-        results.sort((a, b) => a.bestDist - b.bestDist);
-        
-        for (let i = 0; i < results.length; i++) {
-            const path = results[i].path;
-            const fileName = path.split('/').pop();
-            colorFilteredModel.append({
-                filePath: "file://" + path,
-                actualPath: path,
-                fileName: fileName,
-                fileIsDir: false
-            });
+
+        _cfChunkIndex = end;
+
+        if (_cfChunkIndex >= wps.length) {
+            colorFilterChunkTimer.stop();
+            _cfResults.sort((a, b) => a.bestDistSq - b.bestDistSq);
+            for (let i = 0; i < _cfResults.length; i++) {
+                const path = _cfResults[i].path;
+                colorFilteredModel.append({
+                    filePath: "file://" + path,
+                    actualPath: path,
+                    fileName: path.split('/').pop(),
+                    fileIsDir: false
+                });
+            }
+            _cfResults = [];
+            grid.loadedCount = 0;
+            loadTimer.restart();
+            isColorFiltering = false;
         }
-        grid.loadedCount = 0;
-        loadTimer.restart();
-        isColorFiltering = false;
     }
 
     onActiveColorFilterChanged: {
