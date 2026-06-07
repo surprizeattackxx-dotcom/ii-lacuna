@@ -1,3 +1,3 @@
-function mogo-scan --wraps='/home/donnie/projects/mogo-agent.py scan' --description 'alias mogo-scan=/home/donnie/projects/mogo-agent.py scan'
-    /home/donnie/projects/mogo-agent.py scan $argv
+function mogo-scan --wraps='$HOME/projects/mogo-agent.py scan' --description 'alias mogo-scan=$HOME/projects/mogo-agent.py scan'
+    $HOME/projects/mogo-agent.py scan $argv
 end

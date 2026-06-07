@@ -3,8 +3,8 @@ if status is-interactive
 end
 
 # opencode
-fish_add_path /home/donnie/.opencode/bin
-fish_add_path /home/donnie/.local/bin
+fish_add_path $HOME/.opencode/bin
+fish_add_path $HOME/.local/bin
 function fish_greeting; end
 
 abbr -a cachy-update 'cachy-update --devel'
@@ -15,6 +15,6 @@ function qwen35 --wraps=ollama
 end
 
 # Added by LM Studio CLI (lms)
-set -gx PATH $PATH /home/donnie/.lmstudio/bin
+set -gx PATH $PATH $HOME/.lmstudio/bin
 # End of LM Studio CLI section
 

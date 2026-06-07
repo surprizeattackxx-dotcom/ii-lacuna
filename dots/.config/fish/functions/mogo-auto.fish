@@ -1,3 +1,3 @@
-function mogo-auto --wraps='/home/donnie/projects/mogo-agent.py run' --description 'alias mogo-auto=/home/donnie/projects/mogo-agent.py run'
-    /home/donnie/projects/mogo-agent.py run $argv
+function mogo-auto --wraps='$HOME/projects/mogo-agent.py run' --description 'alias mogo-auto=$HOME/projects/mogo-agent.py run'
+    $HOME/projects/mogo-agent.py run $argv
 end

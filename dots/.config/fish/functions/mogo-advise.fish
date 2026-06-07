@@ -1,3 +1,3 @@
-function mogo-advise --wraps='/home/donnie/projects/mogo-agent.py advise' --description 'alias mogo-advise=/home/donnie/projects/mogo-agent.py advise'
-    /home/donnie/projects/mogo-agent.py advise $argv
+function mogo-advise --wraps='$HOME/projects/mogo-agent.py advise' --description 'alias mogo-advise=$HOME/projects/mogo-agent.py advise'
+    $HOME/projects/mogo-agent.py advise $argv
 end

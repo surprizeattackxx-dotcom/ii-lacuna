@@ -8,6 +8,7 @@ import Quickshell
 import Quickshell.Wayland
 import qs
 import qs.modules.common
+import qs.modules.common.functions
 import qs.modules.common.widgets
 import qs.services
 import qs.modules.ii.bar.monitors
@@ -26,8 +27,8 @@ PanelWindow {
         id: chromeReloadProc
         command: [
             "python3",
-            "/home/donnie/.config/quickshell/ii/scripts/colors/reload_chrome_theme.py",
-            "/home/donnie/.local/state/quickshell/chrome-theme"
+            Directories.scriptPath + "/colors/reload_chrome_theme.py",
+            FileUtils.trimFileProtocol(Directories.state + "/chrome-theme")
         ]
     }
 

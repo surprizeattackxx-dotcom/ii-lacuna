@@ -1,3 +1,3 @@
-function mogo-watch --wraps='/home/donnie/projects/mogo-agent.py watch' --description 'alias mogo-watch=/home/donnie/projects/mogo-agent.py watch'
-    /home/donnie/projects/mogo-agent.py watch $argv
+function mogo-watch --wraps='$HOME/projects/mogo-agent.py watch' --description 'alias mogo-watch=$HOME/projects/mogo-agent.py watch'
+    $HOME/projects/mogo-agent.py watch $argv
 end
