@@ -71,12 +71,6 @@ bash setup-ii-lacuna.sh --full-install
 ## Updating
 
 ```bash
-vynx update
-```
-
-Or manually:
-
-```bash
 cd ii-lacuna && git pull && bash setup-ii-lacuna.sh --no-confirm
 ```
 
