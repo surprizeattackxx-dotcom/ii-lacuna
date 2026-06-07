@@ -78,7 +78,8 @@ Item {
         "policies_panel_button": [policiesPanelButton, policiesPanelButton],
         "dashboard_panel_button": [dashboardPanelButton, dashboardPanelButtonVert],
         "system_updates": [systemUpdatesComp, systemUpdatesComp],
-        "localsend": [localsendComp, localsendCompVert]
+        "localsend": [localsendComp, localsendCompVert],
+        "network_speed": [networkSpeedComp, networkSpeedComp],
     })
 
     property real startRadius: {
@@ -204,4 +205,6 @@ Item {
 
         Component { id: localsendComp; LocalSendWidget {} }
         Component { id: localsendCompVert; Vertical.LocalSendWidget {} }
+
+        Component { id: networkSpeedComp; NetworkSpeed { vertical: rootItem.vertical } }
 }

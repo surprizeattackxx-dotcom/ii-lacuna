@@ -222,7 +222,7 @@ Variants {
 
         property bool mediaModeOpen: mediaModeLoader.active && MprisController.activePlayer
         onMediaModeOpenChanged: {
-            if (!mediaModeOpen) {
+            if (!mediaModeOpen && Config.options.appearance.palette.type.startsWith("scheme")) {
                 Wallpapers.apply(Config.options.background.wallpaperPath)
                 LyricsService.shellColorChanged = false
             }
@@ -232,7 +232,6 @@ Variants {
         property var _extensionBgWidgetObjects: []
 
         function refreshExtensionBgWidgets() {
-            // Destroy all existing extension widget objects
             for (let i = 0; i < _extensionBgWidgetObjects.length; i++) {
                 let obj = _extensionBgWidgetObjects[i]
                 if (obj && obj.destroy) {
@@ -374,7 +373,7 @@ Variants {
                 y: -(bgRoot.movableYSpace) - (effectiveValueY - 0.5) * 2 * bgRoot.movableYSpace
 
                 imageSource: bgRoot.wallpaperSafetyTriggered ? "" : bgRoot.wallpaperPath
-                animated: Config.options.background.animateWallpaperChanges
+                animated: !bgRoot.wallpaperIsVideo
                 fillMode: Image.PreserveAspectCrop
                 Behavior on x {
                     NumberAnimation {
