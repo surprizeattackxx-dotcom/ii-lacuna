@@ -9,13 +9,11 @@
 <div align="center"> 
      <h2>• screenshots •</h2>
 
-| Overall view of widgets | Overlay and AI sidebar |
-| ----------- | ----------- |
-| <img width="1919" height="1078" alt="image" src="https://github.com/user-attachments/assets/9297bec7-63b4-47bf-8905-9a4baa8de4e9" /> | <img width="1916" height="1078" alt="image" src="https://github.com/user-attachments/assets/53c3b4be-9ba0-40dc-8570-c6a3a80c18cf" /> |  
+![Preview](assets/preview.png)
 
-| Media mode | Sharp style |
-| ----------- | ----------- |
-| <img width="1920" height="1077" alt="image" src="https://github.com/user-attachments/assets/a966c5ca-ef0a-4ecf-882b-e7ef55dde74e" /> | <img width="1918" height="1078" alt="image" src="https://github.com/user-attachments/assets/745aafcd-246e-4433-a81f-37a88ac5c1ee" /> |
+| Settings | Taskbar | Overview |
+| ----------- | ----------- | ----------- |
+| ![Settings](assets/feature-5.png) | ![Taskbar](assets/feature-6.png) | ![Overview](assets/feature-7.png) |
 
 </div>
 
@@ -67,9 +65,7 @@ Run the cli (if it's installed):
 vynx update
 ```
 
-Use the update button _that runs the update script in background_:
-  
-<img width="354" height="78" alt="image" src="https://github.com/user-attachments/assets/77d9d962-00b3-48a4-b9d5-1d3d0c053e86" />
+Use the update button _that runs the update script in background_.
 
 
 <div align="center">
