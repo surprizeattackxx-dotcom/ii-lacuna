@@ -12,10 +12,16 @@ hl.bind("ALT + F4", hl.dsp.window.close())
 hl.bind("SUPER + SHIFT + Q", hl.dsp.exec_cmd("hyprctl kill"))
 hl.bind("SUPER + P", hl.dsp.window.pin())
 hl.bind("SUPER + F", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle_fullscreen.sh"))
-hl.bind("SUPER + SHIFT + SPACE", hl.dsp.window.float({ action = "toggle" }))
+hl.bind("SUPER + ALT + SPACE", hl.dsp.exec_cmd("python3 ~/.config/hypr/scripts/dvd-bounce.py"))
 hl.bind("SUPER + S", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle_suspend_games.sh"))
 hl.bind("SUPER + SEMICOLON", hl.dsp.layout("splitratio -0.1"))
 hl.bind("SUPER + APOSTROPHE", hl.dsp.layout("splitratio +0.1"))
+
+-- ─── Cursor Zoom ───────────────────────────────
+hl.bind("SUPER + EQUAL", hl.dsp.exec_cmd("~/.config/hypr/scripts/zoom.sh increase 0.5"))
+hl.bind("SUPER + MINUS", hl.dsp.exec_cmd("~/.config/hypr/scripts/zoom.sh decrease 0.5"))
+hl.bind("SUPER + KP_ADD", hl.dsp.exec_cmd("~/.config/hypr/scripts/zoom.sh increase 0.5"))
+hl.bind("SUPER + KP_SUBTRACT", hl.dsp.exec_cmd("~/.config/hypr/scripts/zoom.sh decrease 0.5"))
 
 -- ─── Directional Focus ─────────────────────────
 hl.bind("SUPER + LEFT", hl.dsp.focus({ direction = "left" }))
