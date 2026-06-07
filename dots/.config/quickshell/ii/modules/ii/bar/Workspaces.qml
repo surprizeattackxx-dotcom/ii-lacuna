@@ -607,10 +607,17 @@ Item {
     WorkspacePreviewPopup {
         readonly property int hoveredWsId: root.workspaceGroup * root.workspacesShown + interactionMouseArea.hoverIndex + 1 + root.workspaceOffset
         readonly property var hoveredWindows: HyprlandData.windowList.filter(w => w.workspace.id === hoveredWsId && !w.floating)
+        readonly property var hoveredToplevels: ToplevelManager.toplevels.values.filter(t => {
+            const addr = "0x" + t.HyprlandToplevel?.address
+            const win = HyprlandData.windowByAddress[addr]
+            return win && win.workspace?.id === hoveredWsId && !win.floating
+        })
 
         hoverTarget: root
         open: (Config.options.bar.workspaces.showPreviewOnHover ?? true) && interactionMouseArea.containsMouse && hoveredWindows.length > 0 || popupHovered
         windows: hoveredWindows
+        workspaceId: hoveredWsId
+        toplevels: hoveredToplevels
     }
 
     component HoverOverlay: Rectangle {
