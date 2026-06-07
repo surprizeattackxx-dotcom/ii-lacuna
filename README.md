@@ -15,6 +15,10 @@
 | ----------- | ----------- | ----------- |
 | ![Settings](assets/feature-5.png) | ![Taskbar](assets/feature-6.png) | ![Wallpaper Changer](assets/feature-7.png) |
 
+| Bar Applets |
+| ----------- |
+| ![Bar Applets](assets/feature-8.png) |
+
 </div>
 
 <div align="center">
