@@ -1,6 +1,7 @@
 pragma Singleton
 
 import QtQuick
+import qs
 import qs.modules.common
 import qs.services
 import Quickshell
@@ -171,6 +172,8 @@ Singleton {
     function runNightLightThemeSync() {
         if (!Persistent.ready || !Persistent.states.followNightLight)
             return;
+        if (GlobalStates.activeTheme !== "Matugen")
+            return;
         // Wait for Config before syncing — colorMode may not be resolved yet.
         if (!Config.ready) {
             nightLightThemeDebounce.restart();
@@ -186,7 +189,7 @@ Singleton {
             MaterialThemeLoader.reloadAfterExternalColorChange();
             return;
         }
-        nightLightThemeProc.command = ["bash", Directories.darkModeToggleScriptPath, wantDark ? "dark" : "light"];
+        nightLightThemeProc.command = ["bash", Directories.darkModeToggleScriptPath, wantDark ? "dark" : "light", "--silent"];
         nightLightThemeProc.running = true;
     }
 

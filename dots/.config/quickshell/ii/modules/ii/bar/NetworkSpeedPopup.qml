@@ -7,7 +7,6 @@ import QtQuick.Layouts
 
 StyledPopup {
     id: root
-    popupRadius: Appearance.rounding.large
 
     function formatSpeed(bytesPerSecond) {
         var bits = bytesPerSecond * 8;

@@ -6,6 +6,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 import qs.modules.ii.bar.weather
+import qs.modules.ii.bar
 
 import qs.modules.ii.verticalBar as Vertical
 

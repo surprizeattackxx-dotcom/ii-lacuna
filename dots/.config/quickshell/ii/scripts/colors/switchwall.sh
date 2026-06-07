@@ -120,7 +120,7 @@ RESTORE_SCRIPT_DIR="$CUSTOM_DIR/scripts"
 RESTORE_SCRIPT="$RESTORE_SCRIPT_DIR/__restore_video_wallpaper.sh"
 THUMBNAIL_DIR="$RESTORE_SCRIPT_DIR/mpvpaper_thumbnails"
 VIDEO_OPTS="no-audio loop hwdec=auto scale=bilinear interpolation=no video-sync=display-resample panscan=1.0 video-scale-x=1.0 video-scale-y=1.0 video-align-x=0.5 video-align-y=0.5 load-scripts=no"
-PREFERRED_MATUGEN_MONITOR="${PREFERRED_MATUGEN_MONITOR:-DP-1}"
+PREFERRED_MATUGEN_MONITOR="${PREFERRED_MATUGEN_MONITOR:-DP-2}"
 MATUGEN_WALLPAPER_PATH_FILE="$STATE_DIR/user/generated/wallpaper/path.txt"
 
 is_video() {
@@ -513,6 +513,16 @@ switch() {
         fi
     fi
 
+    # Skip color generation on --restore/--noswitch if a custom theme is active
+    if [[ -n "$noswitch_flag" ]]; then
+        local _states_file="$STATE_DIR/states.json"
+        local _active_theme
+        _active_theme=$(jq -r '.activeTheme // "Matugen"' "$_states_file" 2>/dev/null || echo "Matugen")
+        if [[ "$_active_theme" != "Matugen" ]]; then
+            return
+        fi
+    fi
+
     # Set harmony and related properties
     if [ -f "$SHELL_CONFIG_FILE" ]; then
         harmony=$(jq -r '.appearance.wallpaperTheming.terminalGenerationProps.harmony' "$SHELL_CONFIG_FILE")
@@ -536,6 +546,46 @@ switch() {
         "$SCRIPT_DIR"/applycolor.sh
     fi
 
+    # Cache per-monitor colors for focus-based theme switching
+    local _cache_monitor="${monitor_flag:-$(get_focused_monitor_name)}"
+    mkdir -p "$MONITOR_STATE_DIR"
+    if [[ -n "$_cache_monitor" && -f "$STATE_DIR/user/generated/colors.json" ]]; then
+        cp "$STATE_DIR/user/generated/colors.json" "$MONITOR_STATE_DIR/${_cache_monitor}-colors.json"
+    fi
+
+    # On --noswitch (mode/type/theme variant change), propagate to all other monitor caches
+    if [[ -n "$noswitch_flag" && -d "$MONITOR_STATE_DIR" ]]; then
+        local _cur_colors="$STATE_DIR/user/generated/colors.json"
+        for _state_file in "$MONITOR_STATE_DIR"/*.json; do
+            [[ -f "$_state_file" ]] || continue
+            _mon=$(jq -r '.monitor // empty' "$_state_file" 2>/dev/null)
+            [[ -z "$_mon" || "$_mon" == "$_cache_monitor" ]] && continue
+            local _mon_cache="$MONITOR_STATE_DIR/${_mon}-colors.json"
+            if [[ -n "$theme_file" ]]; then
+                # Static theme file: same palette for all monitors
+                cp "$_cur_colors" "$_mon_cache"
+            else
+                local _mon_img
+                _mon_img=$(jq -r '.matugenPath // .thumbnailPath // .path // empty' "$_state_file" 2>/dev/null)
+                if [[ -n "$_mon_img" && -f "$_mon_img" ]]; then
+                    # Regenerate in background with this monitor's wallpaper + new mode/type
+                    (
+                        _mon_args=(--path "$_mon_img" --mode "$mode_flag")
+                        [[ -n "$type_flag" ]] && _mon_args+=(--scheme "$type_flag")
+                        _mon_args+=(--termscheme "$terminalscheme" --blend_bg_fg)
+                        _mon_args+=(--cache "$STATE_DIR/user/generated/color-${_mon}.txt")
+                        _mon_args+=(--json-out "$_mon_cache")
+                        source "${ILLOGICAL_IMPULSE_VIRTUAL_ENV/#\~/$HOME}/bin/activate"
+                        python3 "$SCRIPT_DIR/generate_colors_material.py" "${_mon_args[@]}" > /dev/null 2>&1
+                        deactivate
+                    ) &
+                else
+                    cp "$_cur_colors" "$_mon_cache"
+                fi
+            fi
+        done
+    fi
+
     # Pass screen width, height, and wallpaper path to post_process
     max_width_desired="$(hyprctl monitors -j | jq '([.[].width] | min)' | xargs)"
     max_height_desired="$(hyprctl monitors -j | jq '([.[].height] | min)' | xargs)"
@@ -543,7 +593,6 @@ switch() {
 }
 
 main() {
-    echo "[switchwall DEBUG] $$ called with: $*" >&2
     imgpath=""
     mode_flag=""
     type_flag=""

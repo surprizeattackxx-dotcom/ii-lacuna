@@ -5,6 +5,7 @@ import QtQuick.Effects
 import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
+import qs.modules.common
 import qs.modules.ii.bar as Bar
 import "../bar/WindowRegistry.js" as LayoutMath
 
@@ -33,26 +34,26 @@ PanelWindow {
     // --- Theme base (still reads M3 for consistency outside the island) ---
     Bar.MatugenColors { id: _theme }
 
-    // --- OSRS Color Palette (overrides for the island) ---
-    readonly property color osrsGold: "#FFB83F"
-    readonly property color osrsGoldDim: "#C48A2B"
-    readonly property color osrsParchment: "#E8D5B7"
-    readonly property color osrsParchmentDim: "#BFA786"
-    readonly property color osrsSurface: "#3D2B24"
-    readonly property color osrsSurfaceLight: "#4E362E"
-    readonly property color osrsBorder: "#1A110E"
-    readonly property color osrsBevel: "#5A3E34"
-    readonly property color osrsBevelHi: "#735144"
-    readonly property color osrsText: osrsParchment
-    readonly property color osrsTextDim: "#A0806A"
-    readonly property color osrsRed: "#D44444"
-    readonly property color osrsGreen: "#33AA33"
-    readonly property color osrsBlue: "#6699FF"
-    // --- Island / water colors ---
-    readonly property color islandShallows: "#1E3B40"
-    readonly property color islandDeep: "#0F2024"
-    readonly property color islandFoam: Qt.rgba(0.5, 0.85, 0.9, 0.12)
-    readonly property color islandReflect: Qt.rgba(0.15, 0.45, 0.5, 0.25)
+    // --- Glass Color Palette ---
+    readonly property color osrsGold: Appearance.m3colors.m3primary
+    readonly property color osrsGoldDim: Appearance.m3colors.m3primaryContainer
+    readonly property color osrsParchment: Appearance.m3colors.m3onSurface
+    readonly property color osrsParchmentDim: Appearance.m3colors.m3onSurfaceVariant
+    readonly property color osrsSurface: Appearance.colors.colLayer0
+    readonly property color osrsSurfaceLight: Qt.rgba(Appearance.m3colors.m3surfaceBright.r, Appearance.m3colors.m3surfaceBright.g, Appearance.m3colors.m3surfaceBright.b, 0.18)
+    readonly property color osrsBorder: Qt.rgba(Appearance.m3colors.m3outline.r, Appearance.m3colors.m3outline.g, Appearance.m3colors.m3outline.b, 0.25)
+    readonly property color osrsBevel: Qt.rgba(Appearance.m3colors.m3outline.r, Appearance.m3colors.m3outline.g, Appearance.m3colors.m3outline.b, 0.15)
+    readonly property color osrsBevelHi: Qt.rgba(1, 1, 1, 0.35)
+    readonly property color osrsText: Appearance.m3colors.m3onSurface
+    readonly property color osrsTextDim: Appearance.m3colors.m3onSurfaceVariant
+    readonly property color osrsRed: Appearance.m3colors.m3error
+    readonly property color osrsGreen: Appearance.m3colors.m3success
+    readonly property color osrsBlue: Appearance.m3colors.m3secondary
+    // --- Glass specular colors ---
+    readonly property color islandShallows: Qt.rgba(Appearance.m3colors.m3primaryContainer.r, Appearance.m3colors.m3primaryContainer.g, Appearance.m3colors.m3primaryContainer.b, 0.15)
+    readonly property color islandDeep: Qt.rgba(Appearance.m3colors.m3background.r, Appearance.m3colors.m3background.g, Appearance.m3colors.m3background.b, 0.05)
+    readonly property color islandFoam: Qt.rgba(1, 1, 1, 0.08)
+    readonly property color islandReflect: Qt.rgba(Appearance.m3colors.m3primary.r, Appearance.m3colors.m3primary.g, Appearance.m3colors.m3primary.b, 0.12)
 
     // --- State ---
     property bool expanded: false
@@ -226,9 +227,9 @@ PanelWindow {
 
                 gradient: Gradient {
                     orientation: Gradient.Vertical
-                    GradientStop { position: 0.0; color: expanded ? osrsSurfaceLight : osrsSurface }
-                    GradientStop { position: 0.5; color: expanded ? osrsSurface : osrsSurfaceLight }
-                    GradientStop { position: 1.0; color: expanded ? islandShallows : Qt.rgba(islandShallows.r, islandShallows.g, islandShallows.b, 0.6) }
+                    GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.1) }
+                    GradientStop { position: 0.4; color: osrsSurface }
+                    GradientStop { position: 1.0; color: islandShallows }
                 }
 
                 // Top glow — moonlight / sky hit on the island surface

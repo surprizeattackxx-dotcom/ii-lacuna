@@ -46,7 +46,7 @@ end
 -- ··· Centered floating apps ···
 hl.window_rule({ center = true, float = true, no_blur = true, name = "float-utils",
   match = { class = "^(blueman-manager|polkit-gnome-authentication-agent-1|org.gnome.polkit|lxpolkit)$" } })
-hl.window_rule({ center = true, float = true, name = "float-media", match = { class = "^(mpv|imv|vlc)$" } })
+hl.window_rule({ center = true, float = true, name = "float-media", match = { class = "^(mpv|imv|vlc|org\\.fooyin\\.fooyin)$" } })
 hl.window_rule({ center = true, float = true, name = "float-theme-tools", match = { class = "^(nwg-look|qt5ct|qt6ct|kvantummanager)$" } })
 hl.window_rule({ center = true, float = true, name = "float-qalculate", match = { class = "^(qalculate-gtk)$" } })
 hl.window_rule({ float = true, name = "float-mc", match = { class = "^(Minecraft.*|com\\.adamcake\\.Bolt|net\\.runelite\\.client\\.RuneLite)$" } })
@@ -136,7 +136,7 @@ local layer_ignore_alpha = {
   { ns = "sideright[0-9]*", a = 0.6 },
   { ns = "sideleft[0-9]*", a = 0.6 },
   { ns = "osk[0-9]*", a = 0.6 },
-  { ns = "quickshell:.*", a = 0.79 },
+  { ns = "quickshell:.*", a = 0.1 },
 }
 for _, r in ipairs(layer_ignore_alpha) do
   hl.layer_rule({ ignore_alpha = r.a, match = { namespace = r.ns } })

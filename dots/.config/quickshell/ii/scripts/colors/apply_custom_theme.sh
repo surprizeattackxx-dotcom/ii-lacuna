@@ -154,3 +154,12 @@ else
     KDE_DYNAMIC
 fi
 
+# Propagate theme to all per-monitor color caches so focus switching doesn't revert it
+MONITOR_STATE_DIR="$STATE_DIR/user/generated/wallpaper/monitors"
+if [[ -d "$MONITOR_STATE_DIR" ]]; then
+    for _moncolors in "$MONITOR_STATE_DIR"/*-colors.json; do
+        [[ -f "$_moncolors" ]] || continue
+        cp "$COLORS_JSON" "$_moncolors"
+    done
+fi
+

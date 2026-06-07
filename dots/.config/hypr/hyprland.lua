@@ -23,5 +23,7 @@ dofile(cfg .. "rules.lua")
 dofile(cfg .. "binds.lua")
 dofile(cfg .. "variables.lua")
 dofile(cfg .. "hyprland/colors.lua") -- matugen wallpaper-derived border/bg colors (must be last to win)
+local _overrides = cfg .. "hyprland/shellOverrides/main.lua"
+if io.open(_overrides, "r") then dofile(_overrides) end
 
 hl.permission("/usr/(bin|local/bin)/hyprpm", "plugin", "allow")

@@ -23,6 +23,19 @@ hl.config({
       range = 2,
       render_power = 3
     },
+    inactive_opacity = 0.75,
+    active_opacity = 0.88,
+    blur = {
+      enabled = true,
+      size = 14,
+      passes = 4,
+      xray = true,
+      noise = 0.02,
+      contrast = 0.9,
+      brightness = 1.1,
+      vibrancy = 0.9,
+      vibrancy_darkness = 0.3,
+    },
     rounding = 18,
     rounding_power = 4,
     shadow = {

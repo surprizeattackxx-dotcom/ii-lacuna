@@ -34,14 +34,14 @@ QuickToggleModel {
                 "decoration:rounding",
                 "general:allow_tearing",
             ]);
-            refetchTimer.restart();
         }
+        reloadTimer.restart();
     }
 
     Timer {
-        id: refetchTimer
-        interval: 500
-        onTriggered: confOpt.fetch()
+        id: reloadTimer
+        interval: 100
+        onTriggered: Quickshell.execDetached(["hyprctl", "reload"])
     }
 
     HyprlandConfigOption {

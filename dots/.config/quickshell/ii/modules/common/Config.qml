@@ -807,6 +807,10 @@ Singleton {
                             {
                                 "size": 2,
                                 "type": "nightLight"
+                            },
+                            {
+                                "size": 1,
+                                "type": "gameMode"
                             }
                         ]
                     }

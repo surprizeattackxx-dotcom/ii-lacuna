@@ -30,6 +30,9 @@ resolve_color_source() {
     jq -r '.background.thumbnailPath // .background.wallpaperPath // empty' "$SHELL_CONFIG_FILE" 2>/dev/null || true
 }
 
+silent_flag=""
+for _arg in "$@"; do [[ "$_arg" == "--silent" ]] && silent_flag="1"; done
+
 # Determine the target mode
 if [[ -n "$1" && "$1" =~ ^(dark|light)$ ]]; then
     mode="$1"
@@ -157,4 +160,4 @@ fi
 # ============================================================================
 # Notify user
 # ============================================================================
-notify-send -i "preferences-system-display" "Theme Updated" "Switched to $mode mode" 2>/dev/null || true
+[[ -z "$silent_flag" ]] && notify-send -i "preferences-system-display" "Theme Updated" "Switched to $mode mode" 2>/dev/null || true

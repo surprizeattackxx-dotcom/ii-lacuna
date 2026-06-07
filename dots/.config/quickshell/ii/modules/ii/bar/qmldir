@@ -24,6 +24,8 @@ Media 1.0 Media.qml
 NotificationHistoryPopup 1.0 NotificationHistoryPopup.qml
 NotificationUnreadCount 1.0 NotificationUnreadCount.qml
 NetworkPopup 1.0 NetworkPopup.qml
+NetworkSpeed 1.0 NetworkSpeed.qml
+NetworkSpeedPopup 1.0 NetworkSpeedPopup.qml
 PoliciesPanelButton 1.0 PoliciesPanelButton.qml
 RecordIndicator 1.0 RecordIndicator.qml
 Resource 1.0 Resource.qml
