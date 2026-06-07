@@ -48,6 +48,12 @@ git clone https://github.com/surprizeattackxx-dotcom/ii-lacuna.git --recurse-sub
 ./setup-ii-lacuna.sh
 ```
 
+Optionally, install the wallpapers pack (~1.7GB):
+
+```
+./setup-ii-lacuna.sh --wallpapers
+```
+
 Tip: You can see all flags with `--help`:
 ```
 ./setup-ii-lacuna.sh --help

@@ -54,6 +54,10 @@ FORCE_INSTALL=false
 BACKUP=true
 FULL_INSTALL=false
 NO_CONFIRM=false
+INSTALL_WALLPAPERS=false
+
+WALLPAPERS_URL="https://github.com/surprizeattackxx-dotcom/ii-lacuna/releases/download/wallpapers-v1/ii-lacuna-wallpapers.tar.gz"
+WALLPAPERS_DIR="$HOME/Pictures/Wallpapers"
 
 for arg in "$@"; do
     case $arg in
@@ -76,6 +80,9 @@ for arg in "$@"; do
             NO_CONFIRM=true
             FORCE_INSTALL=true
             ;;
+        --wallpapers)
+            INSTALL_WALLPAPERS=true
+            ;;
         *)
             echo -e "${RED}Unknown flag: $arg${NC}"
             echo "Usage: $0 [OPTIONS]"
@@ -86,6 +93,7 @@ for arg in "$@"; do
             echo "  --force-install    Skip illogical-impulse check"
             echo "  --full-install     Install original dots first, then ii-lacuna"
             echo "  --no-confirm       Skip all confirmations and checks"
+            echo "  --wallpapers       Download and install the wallpapers pack (~1.7GB)"
             echo "  -v, --verbose      Enable verbose output"
             exit 1
             ;;
@@ -433,6 +441,22 @@ if [ ! -f "$WEATHER_KEY_FILE" ]; then
     else
         echo -e "${YELLOW}⚠ No-confirm mode: skipping weather API key prompt.${NC}"
         echo -e "${YELLOW}  Add it manually: echo -n 'YOUR_KEY' > $WEATHER_KEY_FILE${NC}"
+    fi
+fi
+
+if [ "$INSTALL_WALLPAPERS" = true ]; then
+    echo ""
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo -e "${CYAN}       Wallpapers Pack (~1.7GB)   ${NC}"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+    echo ""
+    mkdir -p "$WALLPAPERS_DIR"
+    echo -e "${BLUE}• Downloading wallpapers to $WALLPAPERS_DIR...${NC}"
+    if curl -L --progress-bar "$WALLPAPERS_URL" | tar -xz -C "$HOME/Pictures"; then
+        echo -e "${GREEN}✓ Wallpapers installed to $WALLPAPERS_DIR${NC}"
+    else
+        echo -e "${RED}✗ Failed to download wallpapers. Try manually:${NC}"
+        echo -e "${YELLOW}  curl -L \"$WALLPAPERS_URL\" | tar -xz -C ~/Pictures${NC}"
     fi
 fi
 
