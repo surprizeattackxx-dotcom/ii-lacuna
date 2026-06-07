@@ -9,8 +9,14 @@ StyledPopup {
     id: root
     property bool compact: false
 
+    Item {
+        id: content
+        implicitWidth: 300
+        implicitHeight: col.implicitHeight
+
     ColumnLayout {
-        anchors.centerIn: parent
+        id: col
+        anchors.fill: parent
         spacing: 8
 
         StyledPopupHeaderRow {
@@ -50,5 +56,6 @@ StyledPopup {
             horizontalAlignment: Text.AlignHCenter
             Layout.fillWidth: true
         }
+    }
     }
 }

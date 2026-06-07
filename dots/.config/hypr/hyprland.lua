@@ -22,5 +22,6 @@ dofile(cfg .. "workspaces.lua")
 dofile(cfg .. "rules.lua")
 dofile(cfg .. "binds.lua")
 dofile(cfg .. "variables.lua")
+dofile(cfg .. "hyprland/colors.lua") -- matugen wallpaper-derived border/bg colors (must be last to win)
 
 hl.permission("/usr/(bin|local/bin)/hyprpm", "plugin", "allow")

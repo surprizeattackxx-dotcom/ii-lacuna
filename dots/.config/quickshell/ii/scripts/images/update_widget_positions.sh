@@ -57,7 +57,7 @@ run_lbr() {
         --width  "$rw" \
         --height "$rh" \
         --stride 10 \
-        2>/dev/null
+        2>&1
 }
 
 # ---------------------------------------------------------------------------
@@ -73,7 +73,7 @@ run_find_regions() {
         --image "$wp" \
         --min-width  "$rw" \
         --min-height "$rh" \
-        2>/dev/null)
+        2>&1)
 
     if [[ -z "$raw" || "$raw" == "[]" ]]; then
         echo ""
@@ -101,6 +101,8 @@ process_monitor() {
     local sw="$3"
     local sh="$4"
     local out="{}"
+
+    local consecutive_errors=0
 
     # Track placed regions as "x y w h" strings to avoid overlap
     local placed_regions=()
@@ -155,6 +157,20 @@ process_monitor() {
                 return
             fi
         done
+        # Spiral-out offset attempts before giving up
+        for dy in -50 50; do
+            for dx in -50 50; do
+                local sx=$(( cx + dx )) sy=$(( cy + dy ))
+                (( sx < 0 )) && sx=0
+                (( sx > sw )) && sx=$sw
+                (( sy < 0 )) && sy=0
+                (( sy > sh )) && sy=$sh
+                if ! overlaps_placed "$sx" "$sy" "$rw" "$rh"; then
+                    echo "$sx $sy"
+                    return
+                fi
+            done
+        done
         # Last resort: return original even if overlapping
         echo "$cx $cy"
     }
@@ -178,21 +194,34 @@ process_monitor() {
             result=$(run_find_regions "$wp" "$rw" "$rh")
         fi
 
-        [[ -z "$result" ]] && { echo "[widget-pos] [$monitor] $widget: no result, skipping." >&2; continue; }
+        if [[ -z "$result" ]]; then
+            (( consecutive_errors++ ))
+            echo "[widget-pos] [$monitor] $widget: no result, skipping. (err#${consecutive_errors})" >&2
+            continue
+        fi
 
         cx=$(echo "$result" | jq -r '.center_x // empty')
         cy=$(echo "$result" | jq -r '.center_y // empty')
-        [[ -z "$cx" || -z "$cy" ]] && { echo "[widget-pos] [$monitor] $widget: bad JSON output." >&2; continue; }
+        if [[ -z "$cx" || -z "$cy" ]]; then
+            (( consecutive_errors++ ))
+            echo "[widget-pos] [$monitor] $widget: bad JSON output. (err#${consecutive_errors})" >&2
+            continue
+        fi
 
         # Resolve overlap with previously placed widgets
         read -r cx cy <<< "$(find_non_overlapping "$cx" "$cy" "$rw" "$rh")"
 
         hw=${WIDGET_HALF_W[$widget]}
         hh=${WIDGET_HALF_H[$widget]}
-        x=$(awk "BEGIN{ x=$cx-$hw; if(x<0)x=0; if(x>$sw-$rw)x=$sw-$rw; printf \"%d\",x }")
-        y=$(awk "BEGIN{ y=$cy-$hh; if(y<0)y=0; if(y>$sh-$rh)y=$sh-$rh; printf \"%d\",y }")
+        x=$(( cx - hw ))
+        (( x < 0 )) && x=0
+        (( x > sw - rw )) && x=$(( sw - rw ))
+        y=$(( cy - hh ))
+        (( y < 0 )) && y=0
+        (( y > sh - rh )) && y=$(( sh - rh ))
 
         echo "[widget-pos] [$monitor] $widget: $strategy → center=(${cx},${cy}) → pos=(${x},${y})" >&2
+        consecutive_errors=0
 
         # Record this region as placed
         placed_regions+=("$cx $cy $rw $rh")

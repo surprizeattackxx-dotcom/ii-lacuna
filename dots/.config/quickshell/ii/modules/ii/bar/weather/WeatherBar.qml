@@ -12,6 +12,7 @@ MouseArea {
     id: root
     property bool vertical: false
     property bool hovered: false
+    property bool latched: false
     implicitWidth: rowLayout.implicitWidth + 10 * 2.5
     implicitHeight: rowLayout.implicitHeight + 10 * 2
 
@@ -21,12 +22,15 @@ MouseArea {
     onPressed: {
         if (mouse.button === Qt.RightButton) {
             Weather.getData();
-            Quickshell.execDetached(["notify-send", 
-                Translation.tr("Weather"), 
+            Quickshell.execDetached(["notify-send",
+                Translation.tr("Weather"),
                 Translation.tr("Refreshing (manually triggered)")
                 , "-a", "Shell"
             ])
-            mouse.accepted = false
+            mouse.accepted = true
+        } else if (mouse.button === Qt.LeftButton) {
+            root.latched = !root.latched
+            mouse.accepted = true
         }
     }
 
@@ -57,5 +61,6 @@ MouseArea {
     WeatherPopup {
         compact: Config.options.bar.tooltips.compactPopups
         hoverTarget: root
+        open: root.latched || root.containsMouse || popupHovered
     }
 }

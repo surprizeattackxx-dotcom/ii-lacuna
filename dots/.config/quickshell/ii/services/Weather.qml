@@ -53,8 +53,11 @@ Singleton {
         lastRefresh: "",
     })
 
-    // forecast: list of { dayLabel, wCode, tempMin, tempMax, description }
+    // forecast: list of { dayLabel, wCode, tempMin, tempMax, precipProb, description }
     property var forecast: []
+
+    // hourly: next ~12 hours, list of { hourLabel, wCode, temp, precipProb, isNow }
+    property var hourly: []
 
     // alerts: list of { event }
     property var alerts: []
@@ -146,6 +149,7 @@ Singleton {
         const cloudPct     = cur.cloud_cover       ?? 0;
         const tempC        = cur.temperature_2m    ?? 0;
         const feelsC       = cur.apparent_temperature ?? 0;
+        const dewC         = cur.dew_point_2m      ?? 0;
         const windKmh      = windSpeedMs * 3.6;
 
         let temp = {};
@@ -156,7 +160,6 @@ Singleton {
         temp.city        = cityName;
         temp.description = wmoToDescription(wmo);
         temp.cloudCover  = cloudPct + "%";
-        temp.dewPoint    = "";
         temp.sunrise     = isoTimeToHHMM((daily.sunrise || [])[0] || "");
         temp.sunset      = isoTimeToHHMM((daily.sunset  || [])[0] || "");
 
@@ -173,6 +176,7 @@ Singleton {
             temp.tempFeelsLike = cToF(feelsC) + "°F";
             temp.tempMin       = cToF(dailyMinC) + "°F";
             temp.tempMax       = cToF(dailyMaxC) + "°F";
+            temp.dewPoint      = cToF(dewC) + "°F";
         } else {
             temp.wind          = windKmh.toFixed(1) + " km/h";
             temp.precip        = precipMM.toFixed(1) + " mm";
@@ -182,6 +186,7 @@ Singleton {
             temp.tempFeelsLike = Math.round(feelsC) + "°C";
             temp.tempMin       = Math.round(dailyMinC) + "°C";
             temp.tempMax       = Math.round(dailyMaxC) + "°C";
+            temp.dewPoint      = Math.round(dewC) + "°C";
         }
 
         temp.lastRefresh = DateTime.time + " • " + DateTime.date;
@@ -196,6 +201,7 @@ Singleton {
         const codes    = daily.weather_code      || [];
         const mins     = daily.temperature_2m_min || [];
         const maxs     = daily.temperature_2m_max || [];
+        const probs    = daily.precipitation_probability_max || [];
         const todayStr = new Date().toISOString().slice(0, 10);
         const unit     = root.useUSCS ? "°F" : "°C";
 
@@ -205,15 +211,47 @@ Singleton {
             const wmo    = codes[i] ?? 0;
             const rawMin = mins[i]  ?? 0;
             const rawMax = maxs[i]  ?? 0;
+            const prob = probs[i] ?? 0;
             days.push({
                 dayLabel:    isoDateToDayLabel(times[i]),
                 wCode:       wmoToWCode(wmo),
                 tempMin:     (root.useUSCS ? cToF(rawMin) : Math.round(rawMin)) + unit,
                 tempMax:     (root.useUSCS ? cToF(rawMax) : Math.round(rawMax)) + unit,
+                precipProb:  prob,
                 description: wmoToDescription(wmo),
             });
         }
         root.forecast = days;
+    }
+
+    function refineHourly(parsed) {
+        const h = parsed.hourly || {};
+        const times = h.time                    || [];
+        const temps = h.temperature_2m          || [];
+        const codes = h.weather_code            || [];
+        const probs = h.precipitation_probability || [];
+        const nowH  = new Date().getHours();
+
+        let start = 0;
+        for (let i = 0; i < times.length; i++) {
+            if (new Date(times[i]).getHours() === nowH && times[i].slice(0, 10) === new Date().toISOString().slice(0, 10)) { start = i; break; }
+            if (new Date(times[i]).getTime() >= Date.now()) { start = i; break; }
+        }
+
+        const out = [];
+        for (let i = start; i < times.length && out.length < 12; i++) {
+            const hr = new Date(times[i]).getHours();
+            const ampm = hr < 12 ? "AM" : "PM";
+            const h12 = hr % 12 === 0 ? 12 : hr % 12;
+            out.push({
+                hourLabel: (out.length === 0 ? Translation.tr("Now") : h12 + " " + ampm),
+                wCode:     wmoToWCode(codes[i] ?? 0),
+                temp:      (root.useUSCS ? cToF(temps[i] ?? 0) : Math.round(temps[i] ?? 0)) + "°",
+                precipProb: probs[i] ?? 0,
+                isNow:     out.length === 0,
+            });
+        }
+        root.hourly = out;
     }
 
     function generateAlerts(cur) {
@@ -249,7 +287,7 @@ Singleton {
     // ── Fetch ─────────────────────────────────────────────────────────────────
 
     // Open-Meteo params (wind in m/s, visibility in meters, pressure in hPa)
-    readonly property string _weatherParams: "current=temperature_2m,apparent_temperature,relative_humidity_2m,wind_speed_10m,wind_direction_10m,precipitation,cloud_cover,pressure_msl,visibility,uv_index,weather_code&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_sum&timezone=auto&forecast_days=6&wind_speed_unit=ms"
+    readonly property string _weatherParams: "current=temperature_2m,apparent_temperature,relative_humidity_2m,dew_point_2m,wind_speed_10m,wind_direction_10m,precipitation,cloud_cover,pressure_msl,visibility,uv_index,weather_code&hourly=temperature_2m,weather_code,precipitation_probability&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_sum,precipitation_probability_max&timezone=auto&forecast_days=6&wind_speed_unit=ms"
 
     function getData() {
         let command;
@@ -306,6 +344,7 @@ curl -sf "https://api.open-meteo.com/v1/forecast?latitude=$LAT&longitude=$LON&${
                     }
                     root.refineData(parsed);
                     root.refineForecast(parsed);
+                    root.refineHourly(parsed);
                 } catch (e) {
                     root.hasError     = true;
                     root.errorMessage = e.message;
@@ -346,7 +385,7 @@ curl -sf "https://api.open-meteo.com/v1/forecast?latitude=$LAT&longitude=$LON&${
     // wall-clock time every minute — so it also catches sleep/wake gaps that
     // Qt's interval timers miss, without a second parallel poller.
     Timer {
-        running: root.ready && !root.gpsActive
+        running: root.ready
         repeat: true
         interval: 60000
         triggeredOnStart: true

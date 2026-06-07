@@ -10,12 +10,12 @@ hl.on("hyprland.start", function()
   -- ─── Desktop Services ───────────────────────────
   hl.exec_cmd("nm-applet")
   hl.exec_cmd("kdeconnectd")
-  -- quickshell now runs as a systemd user service (quickshell-ii.service) for a
-  -- persistent raised FD limit; enabled via WantedBy=graphical-session.target
-  hl.exec_cmd("systemctl --user start quickshell-ii.service")
+  hl.exec_cmd("pypr")
+  -- quickshell (ii) replaced by waybar to reclaim ~30% idle GPU on triple-4K.
+  -- To revert: re-enable the service and remove the waybar line below.
+  -- hl.exec_cmd("systemctl --user start quickshell-ii.service")
   hl.exec_cmd("~/.config/hypr/hyprland/scripts/start_geoclue_agent.sh")
-  hl.exec_cmd("~/.config/hypr/custom/scripts/__restore_video_wallpaper.sh")
-  hl.exec_cmd("sleep 3 && bash ~/.config/quickshell/ii/scripts/colors/switchwall.sh --restore")
+  hl.exec_cmd("sleep 1 && ~/.config/waybar/scripts/wallpaper.sh --restore")
 
   -- ─── Auth & Keyring ─────────────────────────────
   hl.exec_cmd("gnome-keyring-daemon --start --components=secrets")
@@ -24,6 +24,8 @@ hl.on("hyprland.start", function()
 
   -- ─── Audio & Clipboard ──────────────────────────
   hl.exec_cmd("easyeffects --hide-window --service-mode")
+  -- Android notification ding on every notification
+  hl.exec_cmd("~/.config/hypr/scripts/osrs-notify-sound.sh")
   hl.exec_cmd("wl-paste --type text --watch bash -c 'cliphist store && qs -c $qsConfig ipc call cliphistService update'")
   hl.exec_cmd("wl-paste --type image --watch bash -c 'cliphist store && qs -c $qsConfig ipc call cliphistService update'")
 

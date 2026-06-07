@@ -9,3 +9,12 @@ function fish_greeting; end
 
 abbr -a cachy-update 'cachy-update --devel'
 abbr -a arch-update 'arch-update --devel'
+
+function qwen35 --wraps=ollama
+    OLLAMA_NUM_GPU_LAYERS=8 ollama run qwen3.5:35b $argv
+end
+
+# Added by LM Studio CLI (lms)
+set -gx PATH $PATH /home/donnie/.lmstudio/bin
+# End of LM Studio CLI section
+

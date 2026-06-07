@@ -30,7 +30,6 @@ ShellRoot {
         Qt.application.organization = "illogical-impulse"
         Qt.application.domain = "ii-lacuna"
         MaterialThemeLoader.reapplyTheme()
-        Quickshell.execDetached(["bash", "-c", "pgrep awww-daemon > /dev/null || awww-daemon"])
     }
 
     // Apply colors on startup so kitty theme is resolved before any terminal opens

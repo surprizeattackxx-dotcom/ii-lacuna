@@ -16,6 +16,7 @@ PanelWindow {
     Process {
         id: themeApplyProc
         onExited: (code, status) => {
+            console.log(`[BA DEBUG] themeApplyProc onExited: code=${code}, status=${status}`);
             MaterialThemeLoader.reapplyTheme()
             chromeReloadProc.running = true
         }
@@ -63,6 +64,7 @@ PanelWindow {
     Connections {
         target: Persistent
         function onReadyChanged() {
+            console.log(`[BA DEBUG] Persistent.onReadyChanged: ready=${Persistent.ready}, activeTheme=${GlobalStates.activeTheme}`);
             if (Persistent.ready && GlobalStates.activeTheme !== "Matugen")
                 root.applyTheme(GlobalStates.activeTheme)
         }
@@ -71,6 +73,7 @@ PanelWindow {
     // Fallback: if Persistent.ready is already true by the time this panel
     // is constructed (common on QS reload), onReadyChanged never fires.
     Component.onCompleted: {
+        console.log(`[BA DEBUG] Component.onCompleted: ready=${Persistent.ready}, activeTheme=${GlobalStates.activeTheme}`);
         if (Persistent.ready && GlobalStates.activeTheme !== "Matugen")
             root.applyTheme(GlobalStates.activeTheme)
     }
@@ -153,6 +156,7 @@ PanelWindow {
     }
 
     function applyTheme(themeName) {
+        console.log(`[BA DEBUG] applyTheme called with: ${themeName}`);
         if (themeName === "Matugen") {
             themeApplyProc.command = ["bash", Directories.wallpaperSwitchScriptPath, "--noswitch", "--mode", "dark"];
         } else {
@@ -320,7 +324,7 @@ PanelWindow {
                                     MouseArea {
                                         anchors.fill: parent
                                         cursorShape: Qt.PointingHandCursor
-                                        onClicked: { GlobalStates.activeTheme = themeChip.modelData; root.applyTheme(themeChip.modelData) }
+                                        onClicked: { console.log(`[BA DEBUG] Chip clicked: ${themeChip.modelData}`); GlobalStates.activeTheme = themeChip.modelData; root.applyTheme(themeChip.modelData) }
                                     }
                                 }
                             }

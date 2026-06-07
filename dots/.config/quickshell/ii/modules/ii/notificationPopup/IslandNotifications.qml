@@ -48,6 +48,11 @@ PanelWindow {
     readonly property color osrsRed: "#D44444"
     readonly property color osrsGreen: "#33AA33"
     readonly property color osrsBlue: "#6699FF"
+    // --- Island / water colors ---
+    readonly property color islandShallows: "#1E3B40"
+    readonly property color islandDeep: "#0F2024"
+    readonly property color islandFoam: Qt.rgba(0.5, 0.85, 0.9, 0.12)
+    readonly property color islandReflect: Qt.rgba(0.15, 0.45, 0.5, 0.25)
 
     // --- State ---
     property bool expanded: false
@@ -117,6 +122,8 @@ PanelWindow {
         width: expanded ? expandedWidth : collapsedWidth
         height: expanded ? expandedHeight : collapsedHeight
 
+        transform: Translate { id: islandFloat; y: 0 }
+
         Behavior on width { enabled: false }
         Behavior on height { enabled: false }
 
@@ -146,7 +153,52 @@ PanelWindow {
             }
         }
 
+        // ─── Floating island bob (gentle wave drift) ───
+        SequentialAnimation {
+            id: floatAnim
+            running: expanded
+            loops: Animation.Infinite
+            NumberAnimation { target: islandFloat; property: "y"; to: -4; duration: 2200; easing.type: Easing.InOutSine }
+            NumberAnimation { target: islandFloat; property: "y"; to: 0; duration: 2200; easing.type: Easing.InOutSine }
+        }
+
         // ─── OSRS Panel: beveled border stack ───
+
+        // Water reflection glow (hovers beneath the island)
+        Rectangle {
+            anchors.fill: parent
+            anchors.topMargin: s(8)
+            radius: height / 2
+            color: "transparent"
+
+            Rectangle {
+                anchors.fill: parent
+                anchors.margins: -s(12)
+                radius: height / 1.5
+                color: islandReflect
+                opacity: expanded ? 0.5 : 0.3
+
+                layer.enabled: true
+                layer.smooth: true
+                layer.effect: MultiEffect {
+                    blurEnabled: true
+                    blurMax: 64
+                    blurMultiplier: 8
+                    saturation: 0.3
+                }
+            }
+
+            NumberAnimation on opacity {
+                id: reflectPulse
+                from: 0.6; to: 1.0
+                duration: 3000
+                easing.type: Easing.InOutSine
+                running: expanded
+                loops: Animation.Infinite
+            }
+        }
+
+        // ─── Island body ───
 
         // Outermost: dark border
         Rectangle {
@@ -165,23 +217,31 @@ PanelWindow {
                 border.color: osrsBevelHi
             }
 
-            // Surface background
+            // Surface background — sand-to-ocean gradient (island cross-section)
             Rectangle {
                 anchors.fill: parent
                 anchors.margins: borderW
                 radius: parent.radius - borderW
                 color: expanded ? osrsSurface : osrsSurfaceLight
 
-                // Inner shadow bevel (bottom edge darker)
+                gradient: Gradient {
+                    orientation: Gradient.Vertical
+                    GradientStop { position: 0.0; color: expanded ? osrsSurfaceLight : osrsSurface }
+                    GradientStop { position: 0.5; color: expanded ? osrsSurface : osrsSurfaceLight }
+                    GradientStop { position: 1.0; color: expanded ? islandShallows : Qt.rgba(islandShallows.r, islandShallows.g, islandShallows.b, 0.6) }
+                }
+
+                // Top glow — moonlight / sky hit on the island surface
                 Rectangle {
                     anchors.fill: parent
                     anchors.margins: 0
                     radius: parent.radius
                     gradient: Gradient {
                         orientation: Gradient.Vertical
-                        GradientStop { position: 0.0; color: Qt.rgba(1, 1, 1, 0.04) }
+                        GradientStop { position: 0.0; color: Qt.rgba(osrsGold.r, osrsGold.g, osrsGold.b, 0.05) }
                         GradientStop { position: 0.3; color: "transparent" }
-                        GradientStop { position: 1.0; color: Qt.rgba(0, 0, 0, 0.15) }
+                        GradientStop { position: 0.7; color: "transparent" }
+                        GradientStop { position: 1.0; color: Qt.rgba(islandDeep.r, islandDeep.g, islandDeep.b, 0.3) }
                     }
                 }
             }
@@ -199,15 +259,15 @@ PanelWindow {
                 visible: expanded
             }
 
-            // Shadow effect
+            // Shadow effect — deeper offset for floating island feel
             layer.enabled: true
             layer.smooth: true
             layer.effect: MultiEffect {
                 shadowEnabled: true
                 shadowColor: "#000000"
-                shadowOpacity: 0.45
-                shadowBlur: 1.0
-                shadowVerticalOffset: 6
+                shadowOpacity: 0.55
+                shadowBlur: expanded ? 2.0 : 1.2
+                shadowVerticalOffset: expanded ? s(12) : s(6)
             }
         }
 
@@ -466,16 +526,85 @@ PanelWindow {
                 }
             }
 
-            // Small gold accent bar at bottom (like OSRS UI dividers)
-            Rectangle {
+            // ─── Wave foam / shoreline ───
+            Item {
                 anchors {
                     bottom: parent.bottom; bottomMargin: -s(4)
-                    left: parent.left; leftMargin: s(4)
-                    right: parent.right; rightMargin: s(4)
+                    left: parent.left; leftMargin: s(8)
+                    right: parent.right; rightMargin: s(8)
                 }
-                height: 1
-                color: Qt.rgba(osrsGold.r, osrsGold.g, osrsGold.b, 0.2)
+                height: s(6)
                 visible: expanded
+                clip: true
+
+                // Multiple foam bands with staggered wave animations
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.bottomMargin: s(2)
+                    radius: height / 2
+                    color: islandFoam
+                    opacity: 0.4
+
+                    SequentialAnimation on opacity {
+                        loops: Animation.Infinite
+                        running: expanded
+                        NumberAnimation { from: 0.2; to: 0.6; duration: 2400; easing.type: Easing.InOutSine }
+                        NumberAnimation { from: 0.6; to: 0.2; duration: 2400; easing.type: Easing.InOutSine }
+                    }
+                }
+                Rectangle {
+                    anchors.fill: parent
+                    anchors.topMargin: s(2)
+                    radius: height / 2
+                    color: islandFoam
+                    opacity: 0.2
+
+                    SequentialAnimation on opacity {
+                        loops: Animation.Infinite
+                        running: expanded
+                        NumberAnimation { from: 0.1; to: 0.4; duration: 3200; easing.type: Easing.InOutSine }
+                        NumberAnimation { from: 0.4; to: 0.1; duration: 3200; easing.type: Easing.InOutSine }
+                    }
+                }
+            }
+
+            // ─── Tiny palm tree accent (bottom-right) ───
+            Item {
+                anchors {
+                    bottom: parent.bottom; bottomMargin: s(1)
+                    right: parent.right; rightMargin: s(10)
+                }
+                width: s(14); height: s(16)
+                visible: expanded
+                opacity: 0.5
+
+                // Trunk — short curved line
+                Rectangle {
+                    x: parent.width / 2 - 0.5
+                    y: s(6)
+                    width: 1; height: s(9)
+                    radius: 0.5
+                    color: osrsBevelHi
+                }
+                // Fronds — 3 small angled lines
+                Rectangle {
+                    x: parent.width / 2 - s(5); y: s(2)
+                    width: s(10); height: 1; radius: 0.5
+                    color: Qt.rgba(0.4, 0.8, 0.4, 0.5)
+                    transform: Rotation { angle: -15; origin.x: s(7); origin.y: 0 }
+                }
+                Rectangle {
+                    x: parent.width / 2 - s(5); y: s(4)
+                    width: s(10); height: 1; radius: 0.5
+                    color: Qt.rgba(0.4, 0.8, 0.4, 0.5)
+                    transform: Rotation { angle: 10; origin.x: s(7); origin.y: 0 }
+                }
+                Rectangle {
+                    x: parent.width / 2 - s(3); y: s(3)
+                    width: s(7); height: 1; radius: 0.5
+                    color: Qt.rgba(0.4, 0.8, 0.4, 0.5)
+                    transform: Rotation { angle: -40; origin.x: s(5); origin.y: 0 }
+                }
             }
         }
 

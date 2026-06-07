@@ -486,7 +486,7 @@ Item {
 
 
                 WorkspaceBackgroundIndicator {
-                    visible: !root.pillStyle
+                    visible: !root.pillStyle && (!root.showIcons || !(root.monitorWindows?.some(w => w.workspace === workspaceValue) ?? false))
                     workspaceValue: workspaceOffset + workspaceGroup * workspacesShown + index + 1
                     activeWorkspace: monitor?.activeWorkspace?.id === workspaceValue
                 }
@@ -638,7 +638,7 @@ Item {
         width: root.workspaceDotSize
         height: width
         radius: width / 2
-        visible: layout.implicitHeight + 8 < root.iconBoxWrapperSize || root.showNumbersByMs
+        visible: (!root.showIcons || !(root.monitorWindows?.some(w => w.workspace === workspaceValue) ?? false)) && (layout.implicitHeight + 8 < root.iconBoxWrapperSize || root.showNumbersByMs || showNumbers)
         color: !showNumbers ?  indColor : "transparent"
 
         Behavior on color {

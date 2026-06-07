@@ -8,10 +8,7 @@
 
 -- ··· Global behaviour ···
 hl.window_rule({ match = { class = ".*" }, name = "suppress-maximize-events", suppress_event = "maximize" })
-hl.window_rule({ match = { class = ".*" }, name = "disable-blur-all", no_blur = true })
-hl.window_rule({ match = { class = "^$", title = "^$" }, name = "disable-blur-xwayland-menus", no_blur = true })
 hl.window_rule({ match = { class = "^$", title = "^$", xwayland = true }, name = "fix-xwayland-drags", no_focus = true })
-hl.window_rule({ match = { class = "firefox" }, name = "firefox-idle-inhibit", idle_inhibit = "focus" })
 
 -- ··· Floating dialogs ···
 local floating_dialogs = {
@@ -96,20 +93,14 @@ for _, r in ipairs(workspaces) do
 end
 
 -- ··· Steam ···
-hl.window_rule({ float = true, name = "steam-app-float", match = { class = "steam_app_.*" } })
 hl.window_rule({ float = true, name = "steam-negative-float", match = { class = "^steam$", title = "negative:^Steam$" } })
-hl.window_rule({ float = true, name = "steam-sub-float", match = { class = "^(steam)$" } })
 hl.window_rule({ float = false, workspace = "2 silent", name = "ws-steam", match = { class = "^(steam)$", title = "^(Steam)$" } })
-hl.window_rule({ center = true, name = "steam-sub-center", match = { class = "^(steam)$", float = true } })
-hl.window_rule({ center = true, float = true, name = "steam-settings-float", match = { class = "^(steam)$", title = ".*(Properties|Settings|Game Settings).*" } })
-hl.window_rule({ center = true, float = true, name = "steam-sub-float-2", match = { class = "^(steam)$", title = "^((?!Steam$).*)$" } })
 
 -- ··· App-specific tweaks ···
 hl.window_rule({ float = true, no_initial_focus = true, move = "999999 999999", name = "plasma-changeicons", match = { class = "^(plasma-changeicons)$" } })
 hl.window_rule({ move = "40 80", name = "dolphin-copy", match = { title = "^(Copying — Dolphin)$" } })
 hl.window_rule({ tile = true, name = "warp-tile", match = { class = "^dev\\.warp\\.Warp$" } })
 hl.window_rule({ float = true, move = "20 monitor_h-120", name = "move-hyprland-run", match = { class = "hyprland-run" } })
-hl.window_rule({ no_blur = true, opacity = 0.95, xray = true, name = "kitty-opacity", match = { class = "^(kitty)$" } })
 hl.window_rule({ size = { 800, 500 }, name = "float-blueman", match = { class = "^(blueman-manager)$" } })
 hl.window_rule({ no_initial_focus = true, name = "jetbrains-fix", match = { class = "^jetbrains-.*$", float = true, title = "^$|^\\s$|^win\\d+$" } })
 

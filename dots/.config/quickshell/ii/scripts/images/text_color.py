@@ -24,17 +24,20 @@ def get_color_from_stdin():
     img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     h, w, _ = img_rgb.shape
 
-    # 1. Sample corner pixels (The background anchors)
-    corners = np.array([
-        img_rgb[0, 0],
-        img_rgb[0, w-1],
-        img_rgb[h-1, 0],
-        img_rgb[h-1, w-1]
-    ])
+    # 1. Sample pixels along all four edges for background estimation
+    samples = []
+    n = 20
+    for i in range(n):
+        x = int(w * (i + 0.5) / n)
+        samples.append(img_rgb[0, x])
+        samples.append(img_rgb[h-1, x])
+    for i in range(1, n - 1):
+        y = int(h * (i + 0.5) / n)
+        samples.append(img_rgb[y, 0])
+        samples.append(img_rgb[y, w-1])
 
     # 2. Determine single dominant background
-    # Using median handles noise/gradients better than a simple average
-    bg_color = np.median(corners, axis=0).astype(int)
+    bg_color = np.median(samples, axis=0).astype(int)
 
     # 3. Find the Text Color
     pixels = img_rgb.reshape(-1, 3).astype(int)

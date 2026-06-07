@@ -1,5 +1,4 @@
 import QtQuick
-import QtQuick.Layouts
 import QtQuick.Effects
 import Quickshell
 import Quickshell.Wayland
@@ -10,10 +9,10 @@ PanelWindow {
     id: island
     anchors { top: true; right: true }
     margins { top: 200; right: 16 }
-
-    implicitHeight: islandShape.height + 16
-    implicitWidth: islandShape.width + 16
     color: "transparent"
+
+    implicitWidth: islandShape.width + 24
+    implicitHeight: islandShape.height + 24
 
     WlrLayershell.namespace: "qs-popups"
     exclusionMode: ExclusionMode.Ignore
@@ -23,108 +22,127 @@ PanelWindow {
 
     property var popupList: Notifications.popupList
     property var currentPopup: popupList.length > 0 ? popupList[0] : null
+    property var notif: currentPopup ? currentPopup.notification : null
     property bool expanded: currentPopup !== null
 
-    onCurrentPopupChanged: if (currentPopup) cycleTimer.restart()
+    readonly property real expandedWidth: 380
+    readonly property real expandedHeight: 92
 
-    Timer {
-        id: cycleTimer
-        interval: 5000
-        onTriggered: {
-            if (popupList.length > 0) Notifications.discardNotification(popupList[0].notificationId)
-        }
-    }
-
-    Rectangle {
+    Item {
         id: islandShape
-        x: 8; y: 8
-        width: expanded ? mainLayout.implicitWidth + 48 : 0
-        height: expanded ? mainLayout.implicitHeight + 36 : 0
-        radius: 18
-        color: _theme.surface0
-        clip: true
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.topMargin: 12
+        anchors.rightMargin: 12
 
-        Behavior on width { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
-        Behavior on height { NumberAnimation { duration: 250; easing.type: Easing.OutCubic } }
+        width: expanded ? expandedWidth : 0
+        height: expanded ? expandedHeight : 0
 
-        layer.enabled: true
-        layer.effect: MultiEffect {
-            shadowEnabled: true
-            shadowBlur: 0.5
-            shadowOpacity: 0.35
-            shadowVerticalOffset: 8
-            shadowColor: "#000"
-        }
-
-        visible: width > 0
+        Behavior on width  { NumberAnimation { duration: 380; easing.type: Easing.Bezier; easing.bezierCurve: [0.16, 1, 0.3, 1] } }
+        Behavior on height { NumberAnimation { duration: 380; easing.type: Easing.Bezier; easing.bezierCurve: [0.16, 1, 0.3, 1] } }
 
         Rectangle {
-            anchors.left: parent.left
-            anchors.top: parent.top
-            anchors.bottom: parent.bottom
-            width: 3
-            radius: 1.5
-            color: _theme.blue
-            anchors.leftMargin: 6
-            anchors.topMargin: 12
-            anchors.bottomMargin: 12
-        }
+            id: islandBg
+            anchors.fill: parent
+            radius: height / 2
+            clip: true
+            visible: width > 1
+            color: Qt.rgba(_theme.base.r, _theme.base.g, _theme.base.b, 0.95)
+            border.width: 1
+            border.color: Qt.rgba(_theme.mauve.r, _theme.mauve.g, _theme.mauve.b, 0.4)
 
-        ColumnLayout {
-            id: mainLayout
-            x: 20; y: 18
-            width: parent.width - 40
-            spacing: 4
-            visible: parent.width > 0
+            layer.enabled: true
+            layer.smooth: true
+            layer.effect: MultiEffect {
+                shadowEnabled: true
+                shadowColor: "#000000"
+                shadowBlur: 1.0
+                shadowOpacity: 0.45
+                shadowVerticalOffset: 8
+            }
 
-            RowLayout {
-                id: topRow
-                spacing: 12
-                Layout.fillWidth: true
+            Item {
+                id: expandedContent
+                anchors.fill: parent
+                anchors.margins: 12
+                opacity: expanded ? 1 : 0
+                visible: opacity > 0.01
+
+                Behavior on opacity { NumberAnimation { duration: 260; easing.type: Easing.OutQuad } }
+
+                transform: Translate {
+                    y: expanded ? 0 : 10
+                    Behavior on y { NumberAnimation { duration: 340; easing.type: Easing.OutBack; easing.overshoot: 1.1 } }
+                }
 
                 Rectangle {
-                    width: 24; height: 24; radius: 7
-                    color: _theme.surface2
+                    id: iconContainer
+                    width: 48; height: 48; radius: 12
+                    color: _theme.surface0
+                    anchors.left: parent.left
+                    anchors.verticalCenter: parent.verticalCenter
+
                     Image {
+                        id: appIcon
                         anchors.fill: parent; anchors.margins: 4
-                        source: currentPopup ? "image://icon/" + currentPopup.appIcon : ""
-                        sourceSize { width: 16; height: 16 }
+                        source: currentPopup && currentPopup.appIcon ? "image://icon/" + currentPopup.appIcon : ""
+                        sourceSize { width: 40; height: 40 }
                         fillMode: Image.PreserveAspectFit
                         asynchronous: true
                     }
+
+                    Text {
+                        anchors.centerIn: parent
+                        text: "notifications"
+                        font.family: "Material Symbols Rounded"
+                        font.pixelSize: 24
+                        color: _theme.mauve
+                        visible: appIcon.status !== Image.Ready
+                    }
                 }
 
-                Text {
-                    text: currentPopup ? (currentPopup.appName || "System") : ""
-                    color: _theme.text
-                    font.pixelSize: 13
-                    font.weight: Font.Medium
-                    elide: Text.ElideRight
-                    Layout.fillWidth: true
+                Column {
+                    anchors.left: iconContainer.right
+                    anchors.leftMargin: 12
+                    anchors.right: parent.right
+                    anchors.verticalCenter: parent.verticalCenter
+                    spacing: 2
+
+                    Text {
+                        width: parent.width
+                        text: currentPopup ? (currentPopup.appName || "System") : ""
+                        font.pixelSize: 11
+                        font.weight: Font.Medium
+                        color: _theme.overlay1
+                        elide: Text.ElideRight
+                    }
+                    Text {
+                        width: parent.width
+                        text: notif ? (notif.summary || "") : ""
+                        font.pixelSize: 14
+                        font.weight: Font.Bold
+                        color: _theme.text
+                        elide: Text.ElideRight
+                        visible: text.length > 0
+                    }
+                    Text {
+                        width: parent.width
+                        text: notif ? (notif.body || "") : ""
+                        font.pixelSize: 12
+                        color: _theme.subtext0
+                        wrapMode: Text.Wrap
+                        elide: Text.ElideRight
+                        maximumLineCount: 2
+                        visible: text.length > 0
+                    }
                 }
             }
+        }
 
-            Text {
-                text: currentPopup && currentPopup.notification ? currentPopup.notification.summary || "" : ""
-                color: _theme.text
-                font.pixelSize: 12
-                font.weight: Font.DemiBold
-                wrapMode: Text.Wrap
-                elide: Text.ElideRight
-                Layout.fillWidth: true
-                Layout.maximumHeight: 36
-                visible: text.length > 0
-            }
-
-            Text {
-                text: currentPopup && currentPopup.notification ? currentPopup.notification.body || "" : ""
-                color: _theme.subtext0
-                font.pixelSize: 12
-                wrapMode: Text.Wrap
-                elide: Text.ElideRight
-                Layout.fillWidth: true
-                Layout.maximumHeight: 40
-            }
+        MouseArea {
+            anchors.fill: parent
+            enabled: expanded
+            onClicked: if (currentPopup) Notifications.timeoutNotification(currentPopup.notificationId)
         }
     }
 }

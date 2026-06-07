@@ -16,7 +16,7 @@ ProgressBar {
     property color highlightColor: Appearance?.colors.colPrimary ?? "#685496"
     property color trackColor: Appearance?.m3colors.m3secondaryContainer ?? "#F1D3F9"
     property bool wavy: false // If true, the progress bar will have a wavy fill effect
-    property bool animateWave: true
+    property bool animateWave: false
     property real waveAmplitudeMultiplier: wavy ? 0.5 : 0
     property real waveFrequency: 6
     property real waveFps: 60

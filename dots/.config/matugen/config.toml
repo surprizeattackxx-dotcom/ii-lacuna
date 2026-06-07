@@ -5,6 +5,19 @@ version_check = false
 input_path = '~/.config/matugen/templates/colors.json'
 output_path = '~/.local/state/quickshell/user/generated/colors.json'
 
+[templates.hamr]
+input_path = '~/.config/matugen/templates/colors.json'
+output_path = '~/.config/hamr/colors.json'
+
+[templates.waybar]
+input_path = '~/.config/matugen/templates/waybar/colors.css'
+output_path = '~/.config/waybar/colors.css'
+
+[templates.waybar_theme]
+input_path = '~/.config/matugen/templates/waybar/theme.css'
+output_path = '~/.config/waybar/theme.css'
+post_hook = 'killall -SIGUSR2 waybar 2>/dev/null || true'
+
 [templates.hyprland]
 input_path = '~/.config/matugen/templates/hyprland/colors.lua'
 output_path = '~/.config/hypr/hyprland/colors.lua'
@@ -32,3 +45,7 @@ output_path = '~/.local/state/quickshell/user/generated/color.txt'
 [templates.wallpaper]
 input_path = '~/.config/matugen/templates/wallpaper.txt'
 output_path = '~/.local/state/quickshell/user/generated/wallpaper/path.txt'
+
+[templates.discord]
+input_path = '~/.config/matugen/templates/discord/MidnightM3.theme.css'
+output_path = '~/.config/BetterDiscord/themes/MidnightM3.theme.css'

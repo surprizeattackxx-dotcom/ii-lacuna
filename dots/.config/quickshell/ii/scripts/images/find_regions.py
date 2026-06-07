@@ -32,12 +32,14 @@ def non_max_suppression(regions, iou_threshold=0.7):
         regions = [r for r in regions if iou(current, r) < iou_threshold]
     return keep
 
-def find_regions(image_path, min_width, min_height, max_width=None, max_height=None, quality=False, k=150, min_size=20, sigma=0.8, resize_factor=1.0):
+def find_regions(image_path, min_width, min_height, max_width=None, max_height=None, quality=False, k=3000, min_size=50, sigma=0.6, resize_factor=0.1, iou_threshold=0.7):
     image = cv2.imread(image_path)
     if image is None:
         print(f'Error: Could not load image {image_path}', file=sys.stderr)
         sys.exit(1)
     orig_h, orig_w = image.shape[:2]
+    orig_image = image.copy()
+    resize_factor = max(resize_factor, 0.01)
     if resize_factor != 1.0:
         image = cv2.resize(image, (int(orig_w * resize_factor), int(orig_h * resize_factor)), interpolation=cv2.INTER_AREA)
     ss = cv2.ximgproc.segmentation.createSelectiveSearchSegmentation()
@@ -62,8 +64,8 @@ def find_regions(image_path, min_width, min_height, max_width=None, max_height=N
             if (max_width is None or w < max_width) and (max_height is None or h < max_height):
                 regions.append({'x': int(x), 'y': int(y), 'width': int(w), 'height': int(h)})
     # Remove duplicates/overlaps
-    regions = non_max_suppression(regions, iou_threshold=0.7)
-    return regions, cv2.imread(image_path)  # Return original image for drawing
+    regions = non_max_suppression(regions, iou_threshold=iou_threshold)
+    return regions, orig_image
 
 def draw_regions(image, regions, output_path):
     for region in regions:
@@ -91,6 +93,7 @@ def main():
     parser.add_argument('--min-size', type=int, default=50, help='Segmentation parameter min_size (default: 50)')
     parser.add_argument('--sigma', type=float, default=0.6, help='Segmentation parameter sigma (default: 0.6)')
     parser.add_argument('--resize-factor', type=float, default=0.1, help='Resize factor for input image before processing (default: 0.1, e.g. 0.5 for half size)')
+    parser.add_argument('--iou-threshold', type=float, default=0.7, help='IoU threshold for non-max suppression (default: 0.7)')
     parser.add_argument('--hyprctl', action='store_true', help='Mimics hyprctl\'s window output, like {"at": [x, y], "size": [w, h]}')
     args = parser.parse_args()
 
@@ -104,7 +107,8 @@ def main():
         k=args.k,
         min_size=args.min_size,
         sigma=args.sigma,
-        resize_factor=args.resize_factor
+        resize_factor=args.resize_factor,
+        iou_threshold=args.iou_threshold
     )
     if args.single and regions:
         largest = max(regions, key=lambda r: r['width'] * r['height'])

@@ -15,6 +15,16 @@ AbstractBackgroundWidget {
     implicitHeight: backgroundShape.implicitHeight
     implicitWidth: backgroundShape.implicitWidth
 
+    readonly property bool isDay: {
+        DateTime.time
+        const sr = Weather.data?.sunrise, ss = Weather.data?.sunset
+        if (!sr || !ss) return true
+        const p = s => { const a = s.split(":"); return parseInt(a[0]) * 60 + parseInt(a[1]) }
+        const now = new Date()
+        const cur = now.getHours() * 60 + now.getMinutes()
+        return cur >= p(sr) && cur < p(ss)
+    }
+
     StyledDropShadow {
         target: backgroundShape
     }
@@ -25,6 +35,18 @@ AbstractBackgroundWidget {
         shape: MaterialShape.Shape.Pill
         color: Appearance.colors.colPrimaryContainer
         implicitSize: 200
+
+        Rectangle {
+            anchors.fill: parent
+            radius: Math.min(width, height) / 2
+            clip: true
+            color: "transparent"
+            WeatherEffects {
+                wCode: Weather.data?.wCode ?? 0
+                isDay: root.isDay
+                active: false
+            }
+        }
 
         StyledText {
             font {

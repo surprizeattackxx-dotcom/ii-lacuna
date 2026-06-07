@@ -459,9 +459,15 @@ color244              ${error}
 color245              ${outline_variant}
 KITTYEOF
 
-    # Live-reload all running kitty instances via remote control (gentle, no signal)
+    # Live-reload every running kitty via its remote-control socket.
+    # kitty.conf sets `listen_on unix:/tmp/kitty`, so each instance listens on
+    # /tmp/kitty-<pid>. --all hits every window/tab, --configured persists it
+    # as the new default for windows opened later.
     if command -v kitty &>/dev/null; then
-        kitty @ set-colors "$kitty_theme_file" 2>/dev/null || true
+        for sock in /tmp/kitty-*; do
+            [[ -S "$sock" ]] || continue
+            kitty @ --to "unix:$sock" set-colors --all --configured "$kitty_theme_file" 2>/dev/null || true
+        done
     fi
 }
 

@@ -12,6 +12,7 @@ Item {
     property bool hasPendingTransfer: LocalSend.currentTransfer !== null
     property bool hasDroppedFiles: LocalSend.droppedFiles.length > 0
     property bool isActive: hasPendingTransfer || hasDroppedFiles
+    property bool latched: false
 
     Connections {
         target: LocalSend
@@ -65,10 +66,16 @@ Item {
         id: mouseArea
         anchors.fill: parent
         hoverEnabled: !Config.options.bar.tooltips.clickToShow
+        onClicked: {
+            root.latched = !root.latched
+            if (LocalSend.available && !LocalSend.serverRunning)
+                LocalSend.startServer()
+        }
 
         LocalSendWidgetPopup {
             compact: Config.options.bar.tooltips.compactPopups
             hoverTarget: mouseArea
+            open: root.latched || mouseArea.containsMouse || popupHovered
         }
     }
 }

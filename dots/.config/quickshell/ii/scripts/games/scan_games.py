@@ -395,8 +395,108 @@ def find_native_games(steam_names):
             })
     return games
 
+SKIP_EXE = re.compile(
+    r'(unins|setup|redist|vc_?redist|directx|dxsetup|dxwebsetup|dotnet|oalinst|'
+    r'crashhandler|crashpad|unitycrashhandler|notification_helper|'
+    r'python|ffmpeg|7z|quicksfv|touchup)', re.IGNORECASE)
+
+LOCAL_SKIP_DIRS = {'Steam', 'Heroic', 'Lutris', 'EpicGames', 'GOG Galaxy', 'Origin', 'EA Games'}
+
+def steam_installdirs():
+    dirs = set()
+    for lib in find_steam_libraries():
+        for m in (Path(lib) / 'steamapps').glob('appmanifest_*.acf'):
+            d = re.search(r'"installdir"\s+"([^"]*)"', m.read_text('utf-8', errors='replace'))
+            if d:
+                dirs.add(d.group(1).lower())
+    return dirs
+
+STEAM_INSTALLDIRS = steam_installdirs()
+
+def local_game_dirs():
+    env = os.environ.get('GAME_LAUNCHER_DIR')
+    roots = ([Path(p).expanduser() for p in env.split(':') if p] if env
+             else [HOME / 'Games'])
+    roots += [Path(lib) / 'steamapps' / 'common' for lib in find_steam_libraries()]
+    seen, out = set(), []
+    for r in roots:
+        rp = r.resolve()
+        if rp not in seen:
+            seen.add(rp)
+            out.append(r)
+    return out
+
+def is_elf(fp):
+    try:
+        with open(fp, 'rb') as f:
+            return f.read(4) == b'\x7fELF'
+    except OSError:
+        return False
+
+def pick_launch_target(game_dir):
+    native, exes = [], []
+    for dp, dn, fn in os.walk(game_dir):
+        if len(Path(dp).relative_to(game_dir).parts) > 3:
+            dn[:] = []
+            continue
+        for f in fn:
+            low = f.lower()
+            if SKIP_EXE.search(low):
+                continue
+            fp = Path(dp) / f
+            if low.endswith('.exe'):
+                exes.append(fp)
+            elif low.endswith(('.sh', '.appimage', '.x86_64', '.x86')) or (
+                    '.' not in f and is_elf(fp)):
+                native.append(fp)
+    cands = native or exes
+    if not cands:
+        return None, None
+    name = game_dir.name.lower()
+    def score(fp):
+        stem = fp.stem.lower()
+        match = name in stem or stem in name
+        try:
+            size = fp.stat().st_size
+        except OSError:
+            size = 0
+        return (not match, len(fp.relative_to(game_dir).parts), -size)
+    cands.sort(key=score)
+    return cands[0], ('native' if native else 'wine')
+
+def find_local_games():
+    import shlex
+    games = []
+    for root in local_game_dirs():
+        if not root.is_dir():
+            continue
+        for entry in sorted(root.iterdir()):
+            if entry.name.startswith('.') or not entry.is_dir():
+                continue
+            if entry.name.lower() in STEAM_INSTALLDIRS or entry.name in LOCAL_SKIP_DIRS:
+                continue
+            target, mode = pick_launch_target(entry)
+            if not target:
+                continue
+            if mode == 'native':
+                launch = ('bash ' + shlex.quote(str(target))
+                          if target.suffix.lower() == '.sh' else shlex.quote(str(target)))
+            else:
+                slug = re.sub(r'[^a-z0-9]+', '-', entry.name.lower()).strip('-')
+                prefix = root / '.prefixes' / slug
+                launch = 'env GAMEID=0 WINEPREFIX=%s umu-run %s' % (
+                    shlex.quote(str(prefix)), shlex.quote(str(target)))
+            icon = resolve_icon(entry.name) or resolve_icon(entry.name.lower())
+            games.append({
+                'name': entry.name, 'appId': 'local_' + entry.name, 'platform': 'native',
+                'art': icon, 'iconArt': bool(icon), 'installed': True, 'launch': launch,
+                'lastPlayed': 0, 'playMinutes': 0, 'hero': None, 'storeUrl': None, 'size': 0,
+            })
+    return games
+
 steam_games, steam_installed_ids = find_steam_games()
 steam_names = {g['name'] for g in steam_games}
 games = (steam_games + find_steam_uninstalled(steam_installed_ids)
-         + find_heroic_games() + find_appimages() + find_native_games(steam_names))
+         + find_heroic_games() + find_appimages() + find_native_games(steam_names)
+         + find_local_games())
 print(json.dumps(games, indent=2))

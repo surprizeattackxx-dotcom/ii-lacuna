@@ -42,6 +42,7 @@ Item {
     property bool isSearchPaused: false
     property bool hasSearched: false 
     property var colorMap: ({})
+    property var brightnessMap: ({})
     property int cacheVersion: 0 
     
     // Download and Status Tracking Properties
@@ -76,14 +77,34 @@ Item {
         { name: "Purple", hex: "#8A2BE2", label: "" },
         { name: "Pink", hex: "#FF69B4", label: "" },
         { name: "Monochrome", hex: "#A9A9A9", label: "" },
+        { name: "Light", hex: "#F5F0E8", label: "" },
+        { name: "Dark", hex: "#1A1A2E", label: "" },
         { name: "Search", hex: "", label: "Search" } 
     ]
+
+    function setColorModeForWallpaper(fileName) {
+        if (!fileName) return;
+        let brightness = window.brightnessMap[String(fileName)];
+        if (brightness === undefined) {
+            let hex = window.colorMap[String(fileName)];
+            brightness = hex !== undefined ? window.computeBrightness(hex) : -1;
+        }
+        if (brightness >= 0) {
+            let newMode = brightness > 0.45 ? "light" : "dark";
+            if (Config.options.appearance.colorMode !== newMode) {
+                Config.options.appearance.colorMode = newMode;
+                Quickshell.execDetached([Directories.darkModeToggleScriptPath, newMode]);
+            }
+        }
+    }
 
     // -------------------------------------------------------------------------
     // GLOBAL ACTION: APPLY WALLPAPER
     // -------------------------------------------------------------------------
     function applyWallpaper(safeFileName, isVideo) {
         if (!safeFileName || window.isApplying) return;
+
+        window.setColorModeForWallpaper(safeFileName);
         
         // 1. STRICT LOCK: Instantly block all further mouse and keyboard input
         window.isApplying = true; 
@@ -621,15 +642,36 @@ Item {
         return "Monochrome";
     }
 
+    function computeBrightness(hexStr) {
+        if (!hexStr) return -1;
+        hexStr = String(hexStr).trim().replace(/#/g, '');
+        if (hexStr.length > 6) hexStr = hexStr.substring(0, 6);
+        if (hexStr.length !== 6) return -1;
+        let r = parseInt(hexStr.substring(0,2), 16) / 255;
+        let g = parseInt(hexStr.substring(2,4), 16) / 255;
+        let b = parseInt(hexStr.substring(4,6), 16) / 255;
+        if (isNaN(r) || isNaN(g) || isNaN(b)) return -1;
+        return 0.299 * r + 0.587 * g + 0.114 * b;
+    }
+
     function checkItemMatchesFilter(fileName, isVid, cv, filter) {
-        if (filter === "Search") return true; 
+        if (filter === "Search") return true;
 
         if (filter === "All") return true;
         if (filter === "Video") return isVid;
-        
+        if (filter === "Light" || filter === "Dark") {
+            let brightness = window.brightnessMap[String(fileName)];
+            if (brightness === undefined) {
+                let hex = window.colorMap[String(fileName)];
+                brightness = hex !== undefined ? window.computeBrightness(hex) : -1;
+            }
+            if (brightness < 0) return false;
+            return filter === "Light" ? brightness > 0.45 : brightness <= 0.45;
+        }
+
         let hexColor = window.colorMap[String(fileName)];
         if (!hexColor) return filter === "Monochrome";
-        
+
         return window.getHexBucket(hexColor) === filter;
     }
 
@@ -643,6 +685,28 @@ Item {
         onStatusChanged: {
             if (status === FolderListModel.Ready) window.processMarkers()
         }
+    }
+
+    function processBrightnessMarkers() {
+        let newMap = {};
+        for (let i = 0; i < brightnessModel.count; i++) {
+            let markerName = brightnessModel.get(i, "fileName") || "";
+            if (!markerName) continue;
+            let splitIdx = markerName.lastIndexOf("_BRIGHT_");
+            if (splitIdx !== -1) {
+                let val = parseFloat(markerName.substring(splitIdx + 8));
+                if (!isNaN(val)) newMap[markerName.substring(0, splitIdx)] = val;
+            }
+        }
+        window.brightnessMap = newMap;
+    }
+
+    FolderListModel {
+        id: brightnessModel
+        folder: "file://" + Quickshell.env("HOME") + "/.cache/wallpaper_picker/brightness_markers"
+        showDirs: false; nameFilters: ["*_BRIGHT_*"]
+        onCountChanged: window.processBrightnessMarkers()
+        onStatusChanged: { if (status === FolderListModel.Ready) window.processBrightnessMarkers() }
     }
 
     FolderListModel {
@@ -712,6 +776,18 @@ Item {
                     fi
                 fi
             done
+            BRIGHT_DIR="$HOME/.cache/wallpaper_picker/brightness_markers"
+            mkdir -p "$BRIGHT_DIR"
+            for file in "$THUMBS"/*; do
+                if [ -f "$file" ]; then
+                    filename=$(basename "$file"); found=0
+                    for marker in "$BRIGHT_DIR/$filename"_BRIGHT_*; do [ -e "$marker" ] && found=1 && break; done
+                    if [ $found -eq 0 ]; then
+                        bright=$($CMD "$file" -colorspace Gray -resize "1x1^" -gravity center -extent 1x1 -format "%[fx:mean]" info: 2>/dev/null)
+                        [ -n "$bright" ] && touch "$BRIGHT_DIR/$filename""_BRIGHT_$bright"
+                    fi
+                fi
+            done
         `;
         Quickshell.execDetached(["bash", "-c", extractScript]);
     }
@@ -746,7 +822,7 @@ Item {
             return;
         }
 
-        let filterOrder = ["All", "Video", "Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Pink", "Monochrome"];
+        let filterOrder = ["All", "Video", "Red", "Orange", "Yellow", "Green", "Blue", "Purple", "Pink", "Monochrome", "Light", "Dark"];
         let currentFilterIdx = filterOrder.indexOf(window.currentFilter);
 
         if (currentFilterIdx === -1) {
@@ -1686,6 +1762,7 @@ Item {
 
         view.forceActiveFocus();
         window.processMarkers();
+        window.processBrightnessMarkers();
         window.triggerColorExtraction();
     }
 
