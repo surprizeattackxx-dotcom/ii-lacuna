@@ -91,7 +91,13 @@ RESTORE_SCRIPT_DIR="$CUSTOM_DIR/scripts"
 RESTORE_SCRIPT="$RESTORE_SCRIPT_DIR/__restore_video_wallpaper.sh"
 THUMBNAIL_DIR="$RESTORE_SCRIPT_DIR/mpvpaper_thumbnails"
 VIDEO_OPTS="no-audio loop hwdec=auto scale=bilinear interpolation=no video-sync=display-resample panscan=1.0 video-scale-x=1.0 video-scale-y=1.0 video-align-x=0.5 video-align-y=0.5 load-scripts=no"
-PREFERRED_MATUGEN_MONITOR="${PREFERRED_MATUGEN_MONITOR:-DP-1}"
+# Monitor whose wallpaper drives matugen theming. Override with the env var;
+# otherwise prefer DP-1, then the focused monitor, then the first connected one.
+PREFERRED_MATUGEN_MONITOR="${PREFERRED_MATUGEN_MONITOR:-$(hyprctl monitors -j 2>/dev/null | jq -r '
+    (.[] | select(.name == "DP-1") | .name),
+    ([.[] | select(.focused == true) | .name][0]),
+    (.[0].name)' 2>/dev/null | grep -v '^null$' | head -n1)}"
+[ -z "$PREFERRED_MATUGEN_MONITOR" ] && PREFERRED_MATUGEN_MONITOR="DP-1"
 MATUGEN_WALLPAPER_PATH_FILE="$STATE_DIR/user/generated/wallpaper/path.txt"
 MONITOR_STATE_DIR="$STATE_DIR/user/generated/wallpaper/monitors"
 
