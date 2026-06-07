@@ -5,14 +5,15 @@ import qs.modules.common
 import qs.modules.common.functions
 import qs.modules.common.widgets
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
 
 Item {
     id: root
     property real padding: 4
-    implicitWidth: row.implicitWidth + padding * 2
-    implicitHeight: row.implicitHeight + padding * 2
+    implicitWidth: 1400
+    implicitHeight: 900
     // Excellent symbol explaination and source :
     // http://xahlee.info/comp/unicode_computing_symbols.html
     // https://www.nerdfonts.com/cheat-sheet
@@ -76,153 +77,18 @@ Item {
       Config.options.cheatsheet.useMouseSymbol ? mouseSymbolMap : {},
     )
 
-    Row { // Keybind columns
-        id: row
-        spacing: root.spacing
-        
-        Repeater {
-            model: keybinds.children
-            
-            delegate: Column { // Keybind sections
-                spacing: root.spacing
-                required property var modelData
-                anchors.top: row.top
-
-                Repeater {
-                    model: modelData.children
-
-                    delegate: Item { // Section with real keybinds
-                        id: keybindSection
-                        required property var modelData
-                        implicitWidth: sectionColumn.implicitWidth
-                        implicitHeight: sectionColumn.implicitHeight
-
-                        Column {
-                            id: sectionColumn
-                            anchors.centerIn: parent
-                            spacing: root.titleSpacing
-                            
-                            StyledText {
-                                id: sectionTitle
-                                font {
-                                    family: Appearance.font.family.title
-                                    pixelSize: Appearance.font.pixelSize.title
-                                    variableAxes: Appearance.font.variableAxes.title
-                                }
-                                color: Appearance.colors.colOnLayer0
-                                text: keybindSection.modelData.name
-                            }
-
-                            GridLayout {
-                                id: keybindGrid
-                                columns: 2
-                                columnSpacing: 4
-                                rowSpacing: 4
-
-                                Repeater {
-                                    model: {
-                                        var result = [];
-                                        for (var i = 0; i < keybindSection.modelData.keybinds.length; i++) {
-                                            const keybind = keybindSection.modelData.keybinds[i];
-                                            let mods = keybind.mods.slice();
-                                            let key = keybind.key;
-
-                                            if (!Config.options.cheatsheet.splitButtons) {
-                                                for (var j = 0; j < mods.length; j++) {
-                                                    mods[j] = keySubstitutions[mods[j]] || mods[j];
-                                                }
-                                                let combined = mods.join(' ');
-                                                if (!keyBlacklist.includes(key) && combined.length) combined += ' ';
-                                                if (!keyBlacklist.includes(key)) combined += (keySubstitutions[key] || key);
-                                                mods = [combined];
-                                            } 
-
-                                            result.push({
-                                                "type": "keys",
-                                                "mods": mods,
-                                                "key": key,
-                                            });
-                                            result.push({
-                                                "type": "comment",
-                                                "comment": keybind.comment,
-                                            });
-                                        }
-                                        return result;
-                                    }
-                                    delegate: Item {
-                                        required property var modelData
-                                        implicitWidth: keybindLoader.implicitWidth
-                                        implicitHeight: keybindLoader.implicitHeight
-
-                                        Loader {
-                                            id: keybindLoader
-                                            sourceComponent: (modelData.type === "keys") ? keysComponent : commentComponent
-                                        }
-
-                                        Component {
-                                            id: keysComponent
-                                            Row {
-                                                spacing: 4
-                                                Repeater {
-                                                    model: modelData.mods
-                                                    delegate: KeyboardKey {
-                                                        required property var modelData
-                                                        key: keySubstitutions[modelData] || modelData
-                                                        pixelSize: Config.options.cheatsheet.fontSize.key
-                                                    }
-                                                }
-                                                StyledText {
-                                                    id: keybindPlus
-                                                    visible: Config.options.cheatsheet.splitButtons && !keyBlacklist.includes(modelData.key) && modelData.mods.length > 0
-                                                    text: "+"
-                                                }
-                                                KeyboardKey {
-                                                    id: keybindKey
-                                                    visible: Config.options.cheatsheet.splitButtons && !keyBlacklist.includes(modelData.key)
-                                                    key: keySubstitutions[modelData.key] || modelData.key
-                                                    pixelSize: Config.options.cheatsheet.fontSize.key
-                                                    color: Appearance.colors.colOnLayer0
-                                                }
-                                            }
-                                        }
-
-                                        Component {
-                                            id: commentComponent
-                                            Item {
-                                                id: commentItem
-                                                implicitWidth: commentText.implicitWidth + 8 * 2
-                                                implicitHeight: commentText.implicitHeight
-
-                                                StyledText {
-                                                    id: commentText
-                                                    anchors.centerIn: parent
-                                                    font.pixelSize: Config.options.cheatsheet.fontSize.comment || Appearance.font.pixelSize.smaller
-                                                    text: modelData.comment
-                                                }
-                                            }
-                                        }
-                                    }
-
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-
     StyledFlickable {
         id: flickable
         anchors.fill: parent
         anchors.margins: Appearance.rounding.small
+        contentWidth: Math.max(width, flow.implicitWidth)
         contentHeight: height
-        contentWidth: flow.implicitWidth
+        ScrollBar.horizontal: StyledScrollBar {}
         Flow {
             id: flow
             height: flickable.height
             flow: Flow.TopToBottom
-            spacing: 10
+            spacing: 6
             Repeater {
                 model: [...HyprlandKeybinds.keybindCategories, ""]
                 delegate: CheatsheetKeybindsCategory {

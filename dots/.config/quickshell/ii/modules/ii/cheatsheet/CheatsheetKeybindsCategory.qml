@@ -13,8 +13,8 @@ Column {
     required property string categoryName
     readonly property bool isCategorized: categoryName?.length > 0
     property int maxBindWidth: 0
-    property real columnSpacing: 40
-    property real titleSpacing: 7
+    property real columnSpacing: 20
+    property real titleSpacing: 4
 
     // Excellent symbol explaination and source :
     // http://xahlee.info/comp/unicode_computing_symbols.html
@@ -100,14 +100,75 @@ Column {
         font.pixelSize: Appearance.font.pixelSize.title
     }
 
+    function _isDigitKey(k) {
+        return k && k.length === 1 && k >= "0" && k <= "9";
+    }
+
+    function formatKeyRange(keys) {
+        var nums = keys.filter(k => _isDigitKey(k)).map(k => parseInt(k === "0" ? 10 : k));
+        nums.sort((a, b) => a - b);
+        if (nums.length === 0) return keys.join(",");
+        var ranges = [];
+        var start = nums[0];
+        var end = nums[0];
+        for (var i = 1; i < nums.length; i++) {
+            if (nums[i] === end + 1) {
+                end = nums[i];
+            } else {
+                ranges.push(start === end ? _rangeLabel(start) : _rangeLabel(start) + "-" + _rangeLabel(end));
+                start = nums[i];
+                end = nums[i];
+            }
+        }
+        ranges.push(start === end ? _rangeLabel(start) : _rangeLabel(start) + "-" + _rangeLabel(end));
+        return "{" + ranges.join(",") + "}";
+    }
+
+    function _rangeLabel(n) { return n === 10 ? "0" : String(n); }
+
+    function collapseBinds(binds) {
+        if (!binds) return [];
+        var groupsMap = {};
+        for (var i = 0; i < binds.length; i++) {
+            var b = binds[i];
+            var key = b.modmask + "|" + b.description;
+            if (!groupsMap[key]) groupsMap[key] = [];
+            groupsMap[key].push(b);
+        }
+        var groupKeys = Object.keys(groupsMap);
+        var result = [];
+        for (var gk = 0; gk < groupKeys.length; gk++) {
+            var g = groupsMap[groupKeys[gk]];
+            if (g.length > 2 && g.every(x => _isDigitKey(x.key))) {
+                var rangeKeys = g.map(x => x.key);
+                var collapsed = {
+                    modmask: g[0].modmask,
+                    key: formatKeyRange(rangeKeys),
+                    description: g[0].description,
+                    category: g[0].category,
+                    _grouped: true,
+                };
+                result.push(collapsed);
+            } else {
+                for (var j = 0; j < g.length; j++) {
+                    result.push(g[j]);
+                }
+            }
+        }
+        return result;
+    }
+
     Column {
-        spacing: 4
+        spacing: 2
         Repeater {
             model: {
+                var filtered;
                 if (!root.isCategorized) {
-                    return HyprlandKeybinds.keybinds.filter(bind => bind.description?.length > 0 && bind.description.indexOf(":") === -1);
+                    filtered = HyprlandKeybinds.keybinds.filter(bind => !bind.category);
+                } else {
+                    filtered = HyprlandKeybinds.keybinds.filter(bind => bind.category === root.categoryName);
                 }
-                return HyprlandKeybinds.keybinds.filter(bind => bind.description?.length > 0 && bind.description.substring(0, bind.description.indexOf(":")) === root.categoryName);
+                return root.collapseBinds(filtered);
             }
             delegate: BindLine {
                 required property var modelData
@@ -169,10 +230,7 @@ Column {
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.left: parent.left
                     font.pixelSize: Config.options.cheatsheet.fontSize.comment || Appearance.font.pixelSize.smaller
-                    text: {
-                        const regex = new RegExp("\\s*" + bindLine.categoryName + "\\s*:\\s*");
-                        return bindLine.keyData.description.replace(regex, "");
-                    }
+                    text: bindLine.keyData.description || ""
                 }
             }
         }

@@ -8,56 +8,85 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Hyprland
 
-/**
- * A service that provides access to Hyprland keybinds.
- * Uses the `get_keybinds.py` script to parse comments in config files in a certain format and convert to JSON.
- */
 Singleton {
     id: root
-    property string keybindParserPath: FileUtils.trimFileProtocol(`${Directories.scriptPath}/hyprland/get_keybinds.py`)
-    // The parser does not resolve `source=` includes, so point it at the real bind files.
-    property string defaultKeybindConfigPath: FileUtils.trimFileProtocol(`${Directories.config}/hypr/hyprland/keybinds.conf`)
-    property string userKeybindConfigPath: FileUtils.trimFileProtocol(`${Directories.config}/hypr/custom/keybinds.conf`)
-    property var defaultKeybinds: {"children": []}
-    property var userKeybinds: {"children": []}
-    property var keybinds: ({
-        children: [
-            ...(defaultKeybinds.children ?? []),
-            ...(userKeybinds.children ?? []),
-        ]
-    })
+
+    property var keybinds: []
+    property var keybindCategories: []
+
+    property string scriptPath: FileUtils.trimFileProtocol(`${Directories.scriptPath}/hyprland/parse_binds_lua.py`)
+    property string bindsPath: FileUtils.trimFileProtocol(`${Directories.config}/hypr/binds.lua`)
+
+    property bool _hyprctlDone: false
+    property var _hyprctlData: []
+    property bool _luaDone: false
+    property var _luaData: []
+
+    function merge() {
+        if (!root._hyprctlDone || !root._luaDone) return
+
+        var hyprBinds = root._hyprctlData
+        var luaBinds = root._luaData
+
+        var cats = []
+        for (var i = 0; i < hyprBinds.length; i++) {
+            var lua = i < luaBinds.length ? luaBinds[i] : null
+            hyprBinds[i].category = lua ? (lua.category || "") : ""
+            hyprBinds[i].description = lua ? (lua.description || "") : ""
+
+            if (hyprBinds[i].category && !cats.includes(hyprBinds[i].category)) {
+                cats.push(hyprBinds[i].category)
+            }
+        }
+
+        root.keybinds = hyprBinds
+        root.keybindCategories = cats
+    }
 
     Connections {
         target: Hyprland
-
         function onRawEvent(event) {
             if (event.name == "configreloaded") {
-                getKeybinds.running = true
+                root._hyprctlDone = false
+                root._luaDone = false
+                hyprctlBinds.running = true
             }
         }
     }
 
     Process {
-        id: getKeybinds
+        id: hyprctlBinds
         running: true
         command: ["hyprctl", "binds", "-j"]
-        
+
         stdout: StdioCollector {
             onStreamFinished: {
                 try {
-                    root.keybinds = JSON.parse(text)
-                    var groups = []
-                    for (var i = 0; i < root.keybinds.length; i++) {
-                        var bind = root.keybinds[i].description
-                        var group = bind.substring(0, bind.indexOf(":"))
-                        if (!groups.includes(group) && group.length > 0) {
-                            groups.push(group)
-                        }
-                    }
-                    root.keybindCategories = groups
+                    root._hyprctlData = JSON.parse(text)
+                    root._hyprctlDone = true
+                    luaBinds.running = true
                 } catch (e) {
-                    console.error("[CheatsheetKeybinds] Error parsing keybinds:", e)
+                    console.error("[HyprlandKeybinds] Error parsing hyprctl output:", e)
                 }
+            }
+        }
+    }
+
+    Process {
+        id: luaBinds
+        running: false
+        command: ["python3", root.scriptPath, root.bindsPath]
+
+        stdout: StdioCollector {
+            onStreamFinished: {
+                try {
+                    root._luaData = JSON.parse(text)
+                } catch (e) {
+                    root._luaData = []
+                    console.error("[HyprlandKeybinds] Error parsing Lua binds:", e)
+                }
+                root._luaDone = true
+                root.merge()
             }
         }
     }
