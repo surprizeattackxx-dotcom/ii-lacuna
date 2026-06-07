@@ -1,94 +1,97 @@
-# ii-lacuna
+<div align="center">
+     <h1>  [ ii-lacuna hyprland dots ] </h1>
+</div>
 
-A fork of [illogical-impulse](https://github.com/end-4/dots-hyprland) — Hyprland + Quickshell desktop with Material You theming, a built-in settings GUI, and a one-command install.
+> [!WARNING]  
+> Hyprland 0.55 update:
+> If you are still on the versions before 0.55, you should not update the shell, or use the pre-luaification release on the releases page.
 
-![Preview](assets/preview.png)
+<div align="center"> 
+     <h2>• screenshots •</h2>
 
----
+| Overall view of widgets | Overlay and AI sidebar |
+| ----------- | ----------- |
+| <img width="1919" height="1078" alt="image" src="https://github.com/user-attachments/assets/9297bec7-63b4-47bf-8905-9a4baa8de4e9" /> | <img width="1916" height="1078" alt="image" src="https://github.com/user-attachments/assets/53c3b4be-9ba0-40dc-8570-c6a3a80c18cf" /> |  
 
-## What's included
+| Media mode | Sharp style |
+| ----------- | ----------- |
+| <img width="1920" height="1077" alt="image" src="https://github.com/user-attachments/assets/a966c5ca-ef0a-4ecf-882b-e7ef55dde74e" /> | <img width="1918" height="1078" alt="image" src="https://github.com/user-attachments/assets/745aafcd-246e-4433-a81f-37a88ac5c1ee" /> |
 
-- **Material You theming** — change your wallpaper, everything recolors automatically (shell, GTK, Qt, Discord, Hyprland borders)
-- **Settings GUI** — no config file editing required for common tweaks
-- **Per-monitor wallpapers** — pick a different wallpaper for each display
-- **Music player** — album art widget with playback controls
-- **Notifications sidebar** — persistent history + popup toasts
-- **Workspace overview** — visual switcher with inline wallpaper picker
-- **App thumbnail taskbar** — hover an app, see a live preview
-- **System widgets** — updates, weather, calendar, clock
-- **vynx CLI** — manage, restart, and update the shell from the terminal
-- **Google Calendar sync** — optional, one script setup
+</div>
 
-| Settings | Taskbar | Overview |
-|----------|---------|----------|
-| ![Settings](assets/feature-5.png) | ![Taskbar](assets/feature-6.png) | ![Overview](assets/feature-7.png) |
+<div align="center">
+    <h2>• warning •</h2>
+</div>
 
----
+These dots are based on **illogical-impulse**. You can access original **illogical-impulse** dots from [here](https://github.com/end-4/dots-hyprland)
 
-## Requirements
+This dots contains my tweaks to original illogical-impulse dots. It's mostly up to date with original dots and my daily driver. However there may be bugs and stability issues. You can join this [ii-vynx channel](https://discord.com/channels/1393080422245863506/1457739857240653961) in end-4's official discord server to report the bugs and chat about this repository. Use [Github Issues](https://github.com/surprizeattackxx-dotcom/ii-lacuna/issues) for real issues though.
 
-- Arch Linux (or Arch-based — CachyOS, EndeavourOS, etc.)
-- [Hyprland](https://hyprland.org/)
-- [illogical-impulse](https://github.com/end-4/dots-hyprland) installed first (base dots)
-- `quickshell`, `matugen`, `lua`
+Before saying "these dots are bloated," keep in mind that there's a toggle for everything.
 
----
+<div align="center">
+    <h2>• installation •</h2>
+</div>
 
-## Install
 
-```bash
-git clone https://github.com/surprizeattackxx-dotcom/ii-lacuna.git
-cd ii-lacuna
-bash setup-ii-lacuna.sh
+1. Clone this repository like this:
+
+```
+git clone https://github.com/surprizeattackxx-dotcom/ii-lacuna.git --recurse-submodules
 ```
 
-That's it. The script will:
-1. Pull the latest changes
-2. Back up your existing Quickshell config
-3. Symlink the new configs
-4. Restart Hyprland + Quickshell
+2. Run the setup script and follow the instructions:
 
-### Full install (no existing dots)
-
-If you haven't installed illogical-impulse yet:
-
-```bash
-bash setup-ii-lacuna.sh --full-install
+```
+./setup-ii-lacuna.sh
 ```
 
-### Flags
-
-| Flag | What it does |
-|------|-------------|
-| `--no-pull` | Skip git pull |
-| `--no-backup` | Overwrite without backing up |
-| `--force-install` | Skip illogical-impulse check |
-| `--no-confirm` | No prompts, just go |
-| `-v` | Verbose output |
-
----
-
-## Updating
-
-```bash
-cd ii-lacuna && git pull && bash setup-ii-lacuna.sh --no-confirm
+Tip: You can see all flags with `--help`:
+```
+./setup-ii-lacuna.sh --help
 ```
 
----
+<div align="center">
+    <h2>• updating •</h2>
+</div>
 
-## Google Calendar
+Run the setup script:
 
-```bash
-bash setup-google-calendar.sh
+```
+./setup-ii-lacuna.sh
 ```
 
----
+Run the cli (if it's installed):
+  
+```bash
+vynx update
+```
 
-## Issues / Contributing
+Use the update button _that runs the update script in background_:
+  
+<img width="354" height="78" alt="image" src="https://github.com/user-attachments/assets/77d9d962-00b3-48a4-b9d5-1d3d0c053e86" />
 
-- [Bug reports & feature requests](https://github.com/surprizeattackxx-dotcom/ii-lacuna/issues)
-- PRs welcome
 
----
+<div align="center">
+    <h2>• documentation •</h2>
+</div>
 
-> Based on [end-4/dots-hyprland](https://github.com/end-4/dots-hyprland). See [licenses/](licenses/) for attribution.
+Please refer to [this repository's wiki](https://github.com/surprizeattackxx-dotcom/ii-lacuna/wiki) for detailed component descriptions and further information.
+
+Please refer to [this wiki page about limitations](https://github.com/surprizeattackxx-dotcom/ii-lacuna/wiki/Known-Issues-and-Limitations) to see current bugs, the details of known issues about this repo and limitations of hyprscrolling plugin implementation.
+
+
+<div align="center">
+    <h2>• credits •</h2>
+</div>
+
+### **[end-4](https://github.com/end-4):** Creator of illogical-impulse, alien
+
+**[ii](https://github.com/end-4/dots-hyprland):** A perfect hyprland dots in material-3 style
+
+**[Quickshell](https://quickshell.org/):** Qt-Quick based widget system for hyprland
+
+**[Hyprland](https://hypr.land/):** Loves-to-crash wayland compositor
+
+
+**Since you scrolled all the way down here, can I get your star? ⭐**
