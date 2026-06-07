@@ -293,11 +293,14 @@ Item {
     }
 
     function triggerColorExtraction() {
+        let src = StringUtils.shellSingleQuoteEscape(Wallpapers.effectiveDirectory || root.srcDir);
         Quickshell.execDetached(["bash", "-c", `
+            SRC='${src}'
             COLOR_DIR="$HOME/.cache/wallpaper_picker/colors_markers"
-            THUMBS="$HOME/.cache/wallpaper_picker/thumbs"
+            BRIGHT_DIR="$HOME/.cache/wallpaper_picker/brightness_markers"
             CSV="$HOME/.cache/wallpaper_picker/colors.csv"
-            mkdir -p "$COLOR_DIR"
+            mkdir -p "$COLOR_DIR" "$BRIGHT_DIR"
+            [ -d "$SRC" ] || exit 0
             if [ -f "$CSV" ]; then
                 while IFS=, read -r fname hexcode; do
                     cleanhex=$(echo "$hexcode" | tr -d '\r#' | cut -c 1-6)
@@ -306,28 +309,28 @@ Item {
                 mv "$CSV" "$CSV.bak" 2>/dev/null
             fi
             if command -v magick &> /dev/null; then CMD="magick"; else CMD="convert"; fi
-            for file in "$THUMBS"/*; do
-                if [ -f "$file" ]; then
-                    filename=$(basename "$file"); found=0
-                    for marker in "$COLOR_DIR/$filename"_HEX_*; do [ -e "$marker" ] && found=1 && break; done
-                    if [ $found -eq 0 ]; then
-                        hex=$($CMD "$file" -modulate 100,200 -resize "1x1^" -gravity center -extent 1x1 -depth 8 -format "%[hex:p{0,0}]" info:- 2>/dev/null | grep -oE '[0-9A-Fa-f]{6}' | head -n 1)
-                        [ -n "$hex" ] && touch "$COLOR_DIR/$filename""_HEX_$hex"
-                    fi
+
+            extract_one() {
+                file="$1"
+                filename=$(basename "$file")
+                found=0
+                for marker in "$COLOR_DIR/$filename"_HEX_*; do [ -e "$marker" ] && found=1 && break; done
+                if [ "$found" -eq 0 ]; then
+                    hex=$(nice -n 19 "$CMD" "$file" -modulate 100,200 -resize "1x1^" -gravity center -extent 1x1 -depth 8 -format "%[hex:p{0,0}]" info:- 2>/dev/null | grep -oiE '[0-9a-f]{6}' | head -n 1)
+                    [ -n "$hex" ] && touch "$COLOR_DIR/$filename""_HEX_$hex"
                 fi
-            done
-            BRIGHT_DIR="$HOME/.cache/wallpaper_picker/brightness_markers"
-            mkdir -p "$BRIGHT_DIR"
-            for file in "$THUMBS"/*; do
-                if [ -f "$file" ]; then
-                    filename=$(basename "$file"); found=0
-                    for marker in "$BRIGHT_DIR/$filename"_BRIGHT_*; do [ -e "$marker" ] && found=1 && break; done
-                    if [ $found -eq 0 ]; then
-                        bright=$($CMD "$file" -colorspace Gray -resize "1x1^" -gravity center -extent 1x1 -format "%[fx:mean]" info: 2>/dev/null)
-                        [ -n "$bright" ] && touch "$BRIGHT_DIR/$filename""_BRIGHT_$bright"
-                    fi
+                found=0
+                for marker in "$BRIGHT_DIR/$filename"_BRIGHT_*; do [ -e "$marker" ] && found=1 && break; done
+                if [ "$found" -eq 0 ]; then
+                    bright=$(nice -n 19 "$CMD" "$file" -colorspace Gray -resize "1x1^" -gravity center -extent 1x1 -format "%[fx:mean]" info: 2>/dev/null)
+                    [ -n "$bright" ] && touch "$BRIGHT_DIR/$filename""_BRIGHT_$bright"
                 fi
-            done
+            }
+            export -f extract_one
+            export COLOR_DIR BRIGHT_DIR CMD
+
+            JOBS=$(( $(nproc) / 2 )); [ "$JOBS" -lt 2 ] && JOBS=2
+            find "$SRC" -maxdepth 1 -type f \\( -iname '*.jpg' -o -iname '*.jpeg' -o -iname '*.png' -o -iname '*.webp' -o -iname '*.gif' \\) -print0 | ionice -c 3 xargs -0 -r -P "$JOBS" -I {} bash -c 'extract_one "$@"' _ {}
         `]);
     }
 
@@ -363,7 +366,12 @@ Item {
     Connections {
         target: Wallpapers.folderModel
         function onCountChanged() { root.syncLocalModel() }
-        function onStatusChanged() { if (Wallpapers.folderModel.status === FolderListModel.Ready) root.syncLocalModel(); }
+        function onStatusChanged() {
+            if (Wallpapers.folderModel.status === FolderListModel.Ready) {
+                root.syncLocalModel();
+                root.triggerColorExtraction();
+            }
+        }
     }
 
     FolderListModel {
