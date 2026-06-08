@@ -14,6 +14,7 @@ import qs.modules.ii.sidebarDashboard.quickToggles
 import qs.modules.ii.sidebarDashboard.quickToggles.classicStyle
 
 import qs.modules.ii.sidebarDashboard.bluetoothDevices
+import qs.modules.ii.sidebarDashboard.buds
 import qs.modules.ii.sidebarDashboard.nightLight
 import qs.modules.ii.sidebarDashboard.volumeMixer
 import qs.modules.ii.sidebarDashboard.wifiNetworks
@@ -95,6 +96,13 @@ Item {
                 sourceComponent: AndroidQuickPanel {
                     editMode: root.editMode
                 }
+            }
+
+            Loader {
+                Layout.fillWidth: true
+                active: Config.options.sidebar.budsControls.enable && Buds.available
+                visible: active
+                sourceComponent: BudsControls {}
             }
 
             CenterWidgetGroup {

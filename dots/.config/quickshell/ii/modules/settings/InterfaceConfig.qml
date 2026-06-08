@@ -1109,6 +1109,19 @@ ContentPage {
         }
 
         ContentSubsection {
+            title: Translation.tr("Galaxy Buds")
+
+            ConfigSwitch {
+                buttonIcon: "earbuds"
+                text: Translation.tr("Show controls when connected")
+                checked: Config.options.sidebar.budsControls.enable
+                onCheckedChanged: {
+                    Config.options.sidebar.budsControls.enable = checked;
+                }
+            }
+        }
+
+        ContentSubsection {
             title: Translation.tr("Corner open")
             tooltip: Translation.tr("Allows you to open sidebars by clicking or hovering screen corners regardless of bar position")
             ConfigRow {

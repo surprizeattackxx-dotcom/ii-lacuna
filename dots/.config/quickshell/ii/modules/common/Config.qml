@@ -811,6 +811,10 @@ Singleton {
                             {
                                 "size": 1,
                                 "type": "gameMode"
+                            },
+                            {
+                                "size": 1,
+                                "type": "kdeConnect"
                             }
                         ]
                     }
@@ -822,6 +826,9 @@ Singleton {
                     property bool showGamma: true
                     property bool showVolume: true
                     property bool showBrightness: false // gamma setting also works for brightness
+                }
+                property JsonObject budsControls: JsonObject {
+                    property bool enable: true // Galaxy Buds inline controls (only shown when connected)
                 }
             }
 
@@ -911,7 +918,7 @@ Singleton {
                     property bool leftAlignApps: false
                 }
                 property JsonObject actionCenter: JsonObject {
-                    property list<string> toggles: ["network", "bluetooth", "easyEffects", "powerProfile", "idleInhibitor", "nightLight", "darkMode", "antiFlashbang", "cloudflareWarp", "mic", "musicRecognition", "notifications", "onScreenKeyboard", "gameMode", "screenSnip", "colorPicker"]
+                    property list<string> toggles: ["network", "bluetooth", "easyEffects", "powerProfile", "idleInhibitor", "nightLight", "darkMode", "antiFlashbang", "cloudflareWarp", "kdeConnect", "mic", "musicRecognition", "notifications", "onScreenKeyboard", "gameMode", "screenSnip", "colorPicker"]
                 }
                 property JsonObject calendar: JsonObject {
                     property bool force2CharDayOfWeek: true
