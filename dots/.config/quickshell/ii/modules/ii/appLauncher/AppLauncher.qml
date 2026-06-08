@@ -47,24 +47,17 @@ Scope {
 
         Rectangle {
             anchors.fill: parent
-            color: Qt.rgba(0, 0, 0, 0.4)
-
-            MouseArea {
-                anchors.fill: parent
-                onClicked: panelWindow.hide()
-            }
+            color: Qt.rgba(0, 0, 0, 0.55)
         }
 
         Loader {
             id: contentLoader
             active: GlobalStates.appLauncherOpen
             asynchronous: true
-            anchors.centerIn: parent
-            width: Math.min(560, parent.width - 80)
-            height: Math.min(540, parent.height - 80)
+            anchors.fill: parent
             focus: GlobalStates.appLauncherOpen
 
-            sourceComponent: AppLauncherContent {
+            sourceComponent: SphereLauncher {
                 onCloseRequested: panelWindow.hide()
             }
         }
