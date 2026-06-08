@@ -69,8 +69,18 @@ Run the setup script:
 ./setup-ii-lacuna.sh
 ```
 
-Run the cli (if it's installed):
-  
+Use the `lacuna` CLI (recommended):
+
+```bash
+lacuna update        # pull + relink + restart shell
+lacuna run           # start Quickshell
+lacuna restart       # restart shell
+lacuna status        # check everything
+lacuna install-cli   # install to ~/.local/bin
+```
+
+Or the legacy `vynx` CLI:
+
 ```bash
 vynx update
 ```
