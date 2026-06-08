@@ -26,9 +26,11 @@ Singleton {
     property string uptime: "0h, 0m"
 
     Timer {
-        interval: Config.options?.resources?.updateInterval ?? 3000
+        // Uptime is minute-granular; no need to poll /proc/uptime every 3s.
+        interval: 60000
         running: true
         repeat: true
+        triggeredOnStart: true
         onTriggered: {
             fileUptime.reload();
             const textUptime = fileUptime.text();

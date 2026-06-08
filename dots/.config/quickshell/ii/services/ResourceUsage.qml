@@ -23,6 +23,7 @@ Singleton {
     property real diskUsed: 0
     property real diskUsedPercentage: diskTotal > 0 ? (diskUsed / diskTotal) : 0
     property real cpuUsage: 0
+    property real gpuUsage: 0
     property var previousCpuStats
     property string cpuModel: "Unknown CPU"
     property string cpuFreq: "-- MHz"
@@ -178,9 +179,28 @@ Singleton {
         onTriggered: diskProc.running = true
     }
 
+    // GPU usage, polled once for the whole shell instead of per-bar (×monitors).
+    Process {
+        id: gpuProc
+        command: ["bash", "-c", "nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const val = parseFloat(text.trim())
+                if (!isNaN(val)) root.gpuUsage = val / 100
+            }
+        }
+    }
+
+    Timer {
+        interval: Config.options?.resources?.updateInterval ?? 3000
+        running: true
+        repeat: true
+        onTriggered: gpuProc.running = true
+    }
+
 
     Component.onCompleted: {
         diskProc.running = true
-        
+        gpuProc.running = true
     }
 }

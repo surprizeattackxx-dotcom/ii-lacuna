@@ -3,7 +3,6 @@ import qs.services
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Io
 
 MouseArea {
     id: root
@@ -11,55 +10,8 @@ MouseArea {
     implicitHeight: Appearance.sizes.barHeight
     hoverEnabled: !Config.options.bar.tooltips.clickToShow
 
-    // ── Disk usage (shell-backed) ─────────────────────────────────────────────
-    property real diskPercentage: 0.0
-
-    QtObject {
-        id: diskBackend
-
-        property var diskProc: Process {
-            command: ["bash", "-c", "df -k / | awk 'NR==2{print $2, $3}'"]
-            running: true
-            stdout: SplitParser {
-                onRead: (line) => {
-                    const parts = line.trim().split(" ");
-                    const total = parseInt(parts[0]);
-                    const used  = parseInt(parts[1]);
-                    root.diskPercentage = used / total;
-                }
-            }
-        }
-
-        property var diskTimer: Timer {
-            interval: 10000; repeat: true; running: true
-            onTriggered: diskBackend.diskProc.running = true
-        }
-    }
-
-    // ── GPU usage (shell-backed) ──────────────────────────────────────────────
-    property real gpuPercentage: 0.0
-
-    QtObject {
-        id: gpuBackend
-
-        property var gpuProc: Process {
-            command: ["bash", "-c",
-            "nvidia-smi --query-gpu=utilization.gpu --format=csv,noheader,nounits"]
-            running: true
-            stdout: SplitParser {
-                onRead: (line) => {
-                    const val = parseFloat(line.trim());
-                    if (!isNaN(val))
-                        root.gpuPercentage = val / 100;
-                }
-            }
-        }
-
-        property var gpuTimer: Timer {
-            interval: 3000; repeat: true; running: true
-            onTriggered: gpuBackend.gpuProc.running = true
-        }
-    }
+    // Disk + GPU usage come from the ResourceUsage singleton (polled once for the
+    // whole shell) instead of each bar spawning its own df/nvidia-smi per monitor.
 
     RowLayout {
         id: rowLayout
@@ -93,7 +45,7 @@ MouseArea {
 
         Resource {
             iconName: "display_settings"
-            percentage: root.gpuPercentage
+            percentage: ResourceUsage.gpuUsage
             shown: true
             Layout.leftMargin: shown ? 6 : 0
             warningThreshold: 90
@@ -101,7 +53,7 @@ MouseArea {
 
         Resource {
             iconName: "hard_drive"
-            percentage: root.diskPercentage
+            percentage: ResourceUsage.diskUsedPercentage
             shown: true
             Layout.leftMargin: shown ? 6 : 0
             warningThreshold: Config.options.bar.resources.diskWarningThreshold ?? 90
