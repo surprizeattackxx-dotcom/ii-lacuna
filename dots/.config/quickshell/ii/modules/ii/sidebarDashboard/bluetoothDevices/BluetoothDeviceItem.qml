@@ -36,7 +36,7 @@ DialogListItem {
 
             MaterialSymbol {
                 iconSize: Appearance.font.pixelSize.larger
-                text: Icons.getBluetoothDeviceMaterialSymbol(root.device?.icon || "")
+                text: Icons.getBluetoothDeviceMaterialSymbol(root.device?.icon || "", root.device?.name || "")
                 color: Appearance.colors.colOnSurfaceVariant
             }
 

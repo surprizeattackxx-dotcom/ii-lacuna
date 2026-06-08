@@ -4,6 +4,7 @@ import Quickshell
 import qs.modules.common
 import qs.modules.ii.background
 import qs.modules.ii.bar
+import qs.modules.ii.bluetoothPopup
 import qs.modules.ii.cheatsheet
 import qs.modules.ii.dock
 import qs.modules.ii.lock
@@ -54,6 +55,7 @@ Scope {
     PanelLoader { component: Lock {} }
     PanelLoader { component: MediaControls {} }
     PanelLoader { component: NotificationPopup {} }
+    PanelLoader { component: BluetoothPopup {} }
     PanelLoader { component: OnScreenDisplay {} }
     PanelLoader { component: OnScreenKeyboard {} }
     PanelLoader { component: Overlay {} }

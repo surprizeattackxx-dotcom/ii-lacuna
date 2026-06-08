@@ -19,17 +19,33 @@ Singleton {
         return "battery_android_0";
     }
 
-    function getBluetoothDeviceMaterialSymbol(systemIconName: string): string {
-        if (systemIconName.includes("headset") || systemIconName.includes("headphones"))
+    function getBluetoothDeviceMaterialSymbol(systemIconName: string, deviceName: string): string {
+        const icon = (systemIconName || "").toLowerCase();
+        const name = (deviceName || "").toLowerCase();
+        const hay = icon + " " + name;
+        const has = arr => arr.some(p => hay.includes(p));
+
+        // In-ear / earbuds
+        if (has(["airpod", "earpod", "earbud", "earphone", "buds", "freebuds", "freelace",
+                 "wf-", "liberty", "melomania", "qcy", "tws", "nothing ear", "linkbuds"]))
+            return "earbuds";
+
+        // Over-ear / on-ear headphones & headsets
+        if (icon.includes("headset") || icon.includes("headphone")
+            || has(["headphone", "headset", "wh-", "quietcomfort", "xm3", "xm4", "xm5",
+                    "arctis", "hyperx", "ath-", "px7", "px8", "momentum", "studio", "k371"]))
             return "headphones";
-        if (systemIconName.includes("audio"))
+
+        // Speakers / soundbars
+        if (icon.includes("audio") || has(["speaker", "soundbar", "soundlink", "flip ", "charge ", "boombox"]))
             return "speaker";
-        if (systemIconName.includes("phone"))
-            return "smartphone";
-        if (systemIconName.includes("mouse"))
-            return "mouse";
-        if (systemIconName.includes("keyboard"))
-            return "keyboard";
+
+        if (icon.includes("phone") || hay.includes("phone")) return "smartphone";
+        if (icon.includes("watch") || has(["watch", "band ", "miband"])) return "watch";
+        if (icon.includes("mouse") || hay.includes("mouse")) return "mouse";
+        if (icon.includes("keyboard") || hay.includes("keyboard")) return "keyboard";
+        if (icon.includes("input-gaming") || has(["controller", "gamepad", "dualsense", "dualshock", "xbox"]))
+            return "stadia_controller";
         return "bluetooth";
     }
 
