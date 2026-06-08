@@ -375,6 +375,14 @@ Variants {
                 imageSource: bgRoot.wallpaperSafetyTriggered ? "" : bgRoot.wallpaperPath
                 animated: !bgRoot.wallpaperIsVideo
                 fillMode: Image.PreserveAspectCrop
+                // Decode at display resolution, not the wallpaper's native size.
+                // Stable (uses non-animated bgRoot props) so it never re-decodes mid-transition.
+                sourceSize: Qt.size(
+                    Math.ceil(bgRoot.wallpaperWidth / bgRoot.wallpaperToScreenRatio * bgRoot.effectiveWallpaperScale),
+                    Math.ceil(bgRoot.wallpaperHeight / bgRoot.wallpaperToScreenRatio * bgRoot.effectiveWallpaperScale))
+                // No zoom (workspaceZoom=1) means the wallpaper renders ~1:1, so the
+                // mipmap chain is never sampled — skip it to save texture memory.
+                mipmap: bgRoot.effectiveWallpaperScale > 1
                 Behavior on x {
                     NumberAnimation {
                         duration: 600
