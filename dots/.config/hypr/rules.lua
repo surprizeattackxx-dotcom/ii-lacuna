@@ -117,7 +117,7 @@ local layer_blur = {
   "session[0-9]*", "bar[0-9]*", "barcorner.*", "dock[0-9]*",
   "indicator.*", "overview[0-9]*", "cheatsheet[0-9]*",
   "sideright[0-9]*", "sideleft[0-9]*", "osk[0-9]*",
-  "quickshell:.*", "quickshell:session",
+  "quickshell:(?!appLauncher).*", "quickshell:session",
 }
 for _, ns in ipairs(layer_blur) do
   hl.layer_rule({ blur = true, match = { namespace = ns } })
