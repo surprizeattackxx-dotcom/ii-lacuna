@@ -1,6 +1,7 @@
 pragma Singleton
 pragma ComponentBehavior: Bound
 
+import qs.modules.common
 import QtQuick
 import Quickshell
 import Quickshell.Io
