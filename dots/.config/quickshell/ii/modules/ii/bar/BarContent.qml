@@ -94,7 +94,6 @@ Item { // Bar content region
     MouseArea { // Right-click to open Bar Applets overlay
         anchors.fill: parent
         z: -5
-        enabled: root.showBarBackground
         acceptedButtons: Qt.RightButton
         onClicked: event => {
             if (event.button === Qt.RightButton)
@@ -104,7 +103,7 @@ Item { // Bar content region
 
     FocusedScrollMouseArea { // Left side | scroll to change brightness
         id: barLeftSideMouseArea
-        enabled: root.showBarBackground
+        acceptedButtons: root.showBarBackground ? Qt.LeftButton : Qt.NoButton
 
         anchors {
             top: parent.top
@@ -270,6 +269,7 @@ Item { // Bar content region
 
     FocusedScrollMouseArea { // Right side | scroll to change volume
         id: barRightSideMouseArea
+        acceptedButtons: root.showBarBackground ? Qt.LeftButton : Qt.NoButton
 
         z: -1
         anchors {
@@ -283,7 +283,6 @@ Item { // Bar content region
         onScrollDown: Audio.decrementVolume();
         onScrollUp: Audio.incrementVolume();
         onMovedAway: GlobalStates.osdVolumeOpen = false;
-        enabled: root.showBarBackground
 
         onPressed: event => {
             if (event.button === Qt.LeftButton) {
