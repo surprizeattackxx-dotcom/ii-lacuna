@@ -73,7 +73,7 @@ PanelWindow {
 
     IpcHandler {
         target: "bluetoothPopup"
-        function show(): void {
+        function open(): void {
             const dev = BluetoothStatus.firstActiveDevice ?? BluetoothStatus.connectedDevices[0] ?? null;
             if (dev) root.show(dev);
         }
