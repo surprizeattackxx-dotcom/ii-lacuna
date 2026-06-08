@@ -143,6 +143,7 @@ Singleton {
                 property string colorMode: "dark"
                 property int defaultBorderRadius: 18
                 property bool toggleWindowRounding: true // Changes Hyprland window rounding to 0 if sharpMode is true
+                property bool disableHyprlandBorders: false
                 property JsonObject fonts: JsonObject {
                     property bool enableCustom: false
                     property string main: "Google Sans Flex"

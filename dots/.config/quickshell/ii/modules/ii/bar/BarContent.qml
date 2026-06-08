@@ -14,6 +14,8 @@ import Quickshell.Io
 Item { // Bar content region
     id: root
 
+    signal sectionGeometryChanged()
+
     property var screen: root.QsWindow.window?.screen
     property int monitorIndex
     property var brightnessMonitor: Brightness.getMonitorForScreen(screen)
@@ -105,31 +107,6 @@ Item { // Bar content region
         }
     }
 
-    Item {
-        anchors.fill: barLeftSideMouseArea
-        Rectangle {
-            anchors.fill: parent
-            color: "red"
-            opacity: 0.5
-            z: 10
-        }
-        Rectangle {
-            anchors.centerIn: parent
-            width: parent.width
-            height: 20
-            color: "transparent"
-            border.color: "red"
-            border.width: 2
-        }
-        Text {
-            anchors.centerIn: parent
-            text: "LEFT MOUSE AREA"
-            color: "white"
-            font.bold: true
-            z: 11
-        }
-    }
-
     FocusedScrollMouseArea { // Left side | scroll to change brightness
         id: barLeftSideMouseArea
 
@@ -177,6 +154,8 @@ Item { // Bar content region
         y: leftSection.y
         width: leftSection.width
         height: leftSection.height
+        onXChanged: root.sectionGeometryChanged()
+        onWidthChanged: root.sectionGeometryChanged()
     }
 
     RowLayout { // Left section
@@ -211,6 +190,8 @@ Item { // Bar content region
         anchors.horizontalCenter: parent.horizontalCenter
         height: parent.height
         width: centerCenter.width + (middleLeftRepeater.count > 0 ? 4 : 0) + (middleRightRepeater.count > 0 ? 4 : 0)
+        onXChanged: root.sectionGeometryChanged()
+        onWidthChanged: root.sectionGeometryChanged()
 
         RowLayout {
             anchors.right: centerCenter.left
@@ -299,6 +280,8 @@ Item { // Bar content region
         y: rightSection.y
         width: rightSection.width
         height: rightSection.height
+        onXChanged: root.sectionGeometryChanged()
+        onWidthChanged: root.sectionGeometryChanged()
     }
 
     Item {
@@ -309,31 +292,6 @@ Item { // Bar content region
             right: parent.right
         }
         width: 1
-    }
-
-    Item {
-        anchors.fill: barRightSideMouseArea
-        Rectangle {
-            anchors.fill: parent
-            color: "blue"
-            opacity: 0.5
-            z: 10
-        }
-        Rectangle {
-            anchors.centerIn: parent
-            width: parent.width
-            height: 20
-            color: "transparent"
-            border.color: "blue"
-            border.width: 2
-        }
-        Text {
-            anchors.centerIn: parent
-            text: "RIGHT MOUSE AREA"
-            color: "white"
-            font.bold: true
-            z: 11
-        }
     }
 
     FocusedScrollMouseArea { // Right side | scroll to change volume

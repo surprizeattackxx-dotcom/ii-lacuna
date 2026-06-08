@@ -19,7 +19,7 @@ hl.config({
     dim_special = 0.2,
     dim_strength = 0.05,
     glow = {
-      enabled = true,
+      enabled = false,
       range = 2,
       render_power = 3
     },
@@ -40,7 +40,7 @@ hl.config({
     rounding_power = 4,
     shadow = {
       color = "rgba(00000027)",
-      enabled = true,
+      enabled = false,
       offset = {
         0,
         4

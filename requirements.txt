@@ -1,0 +1,42 @@
+# ii-lacuna Requirements
+# Generated from sdata/uv/requirements.in
+
+# Core dependencies for ii-lacuna system
+build==1.2.2.post1
+certifi==2026.2.25
+cffi==1.17.1
+charset-normalizer==3.4.7
+click==8.2.1
+cryptography==46.0.0
+dbus-python==1.4.0
+google-auth==2.49.1
+idna==3.11
+kde-material-you-colors==1.10.1
+libsass==0.23.0
+loguru==0.7.3
+material-color-utilities==0.2.1
+materialyoucolor==2.0.10
+numpy==2.2.2
+opencv-contrib-python==4.12.0.88
+packaging==24.2
+pillow==11.1.0
+psutil==6.1.1
+pyasn1==0.6.3
+pyasn1-modules==0.4.2
+pycairo==1.28.0
+pycparser==2.22
+pygobject==3.52.3
+pyproject-hooks==1.2.0
+pywayland==0.4.18
+requests==2.33.1
+setproctitle==1.3.4
+setuptools==80.9.0
+setuptools-scm==8.1.0
+tqdm==4.67.1
+urllib3==2.6.3
+wheel==0.45.1
+
+# MCP Bridge dependencies (optional)
+mcp>=1.8.0
+fastapi>=0.115.0
+uvicorn[standard]>=0.32.0

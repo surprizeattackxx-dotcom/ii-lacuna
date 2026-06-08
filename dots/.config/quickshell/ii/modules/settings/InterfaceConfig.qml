@@ -1546,6 +1546,31 @@ ContentPage {
                 onCheckedChanged: { Config.options.windows.centerTitle = checked; }
             }
         }
+
+        ConfigSwitch {
+            buttonIcon: "border_clear"
+            text: Translation.tr("Enable Hyprland window borders")
+            checked: !Config.options.appearance.disableHyprlandBorders
+            onCheckedChanged: {
+                let enabled = checked;
+                if (Config.options.appearance.disableHyprlandBorders === !enabled) return;
+                
+                Config.options.appearance.disableHyprlandBorders = !enabled;
+                
+                if (!enabled) {
+                    // Disable borders
+                    HyprlandSettings.changeKey("general:border_size", 0)
+                    Quickshell.execDetached(["hyprctl", "keyword", "general:border_size", "0"])
+                } else {
+                    // Enable borders
+                    HyprlandSettings.resetAndReload("general:border_size")
+                    // Trigger theme refresh to restore border colors
+                    Quickshell.execDetached(["bash", "-c", Quickshell.env("HOME") + "/.config/quickshell/ii/scripts/colors/applycolor.sh"])
+                    // Re-apply original border size (3)
+                    Quickshell.execDetached(["hyprctl", "keyword", "general:border_size", "3"])
+                }
+            }
+        }
     }
 
     ContentSection {

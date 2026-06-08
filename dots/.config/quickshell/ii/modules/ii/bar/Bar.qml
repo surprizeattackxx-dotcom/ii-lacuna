@@ -79,10 +79,7 @@ Scope {
                     Appearance.sizes.baseBarHeight + (Config.options.bar.cornerStyle === 1 ? Appearance.sizes.hyprlandGapsOut : 0)
                 WlrLayershell.namespace: "quickshell:bar"
                 implicitHeight: Appearance.sizes.barHeight + (Config.options.bar.cornerStyle === 0 ? Appearance.rounding.screenRounding : 0)
-                mask: barContent.showBarBackground ? fullMask : narrowMask
-
-                Region { id: fullMask; item: hoverMaskRegion }
-                Region { id: narrowMask; item: barContent.middleMaskRegionItem }
+                mask: null // Rebuilt dynamically in _rebuildMask
                 color: "transparent"
 
                 // Positioning
@@ -101,6 +98,7 @@ Scope {
                 // Include in focus grab
                 Component.onCompleted: {
                     GlobalFocusGrab.addPersistent(barRoot);
+                    barRoot._rebuildMask();
                 }
                 Component.onDestruction: {
                     GlobalFocusGrab.removePersistent(barRoot);
@@ -173,6 +171,36 @@ Scope {
                                 anchors.topMargin: 0
                                 anchors.bottomMargin: (Config?.options.bar.autoHide.enable && !mustShow) ? -Appearance.sizes.barHeight : 0
                             }
+                        }
+                    }
+
+                    // Dynamic mask rebuild — Quickshell Region children don't propagate
+                    // geometry changes, so we rebuild the mask from JS on section resize.
+                    Timer {
+                        id: maskRebuildTimer
+                        interval: 50
+                        onTriggered: barRoot._rebuildMask()
+                    }
+
+                    function _rebuildMask() {
+                        if (barRoot.showBarBackground) {
+                            barRoot.mask = Qt.createQmlObject('import Quickshell.Wayland; Region { item: hoverMaskRegion }', barRoot);
+                        } else {
+                            barRoot.mask = Qt.createQmlObject(`
+                                import Quickshell.Wayland
+                                Region {
+                                    Region { item: barContent.leftMaskRegionItem }
+                                    Region { item: barContent.middleMaskRegionItem }
+                                    Region { item: barContent.rightMaskRegionItem }
+                                }
+                            `, barRoot);
+                        }
+                    }
+
+                    Connections {
+                        target: barContent
+                        function onSectionGeometryChanged() {
+                            if (!barRoot.showBarBackground) maskRebuildTimer.restart()
                         }
                     }
 

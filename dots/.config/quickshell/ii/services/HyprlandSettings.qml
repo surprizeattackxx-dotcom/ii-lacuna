@@ -67,6 +67,14 @@ Singleton {
         Quickshell.execDetached([Directories.cliPath, "hyprset", "reset", key])
     }
 
+    function resetAndReload(key) {
+        if (/['"\\`$|&;]/.test(String(key))) {
+            console.error("[HyprlandSettings] Unsafe characters rejected:", key)
+            return
+        }
+        Quickshell.execDetached(["bash", "-c", Directories.cliPath + " hyprset reset " + key + " && hyprctl reload"])
+    }
+
     function resetKeys(keys) {
         var parts = []
         for (var i = 0; i < keys.length; i++) {
