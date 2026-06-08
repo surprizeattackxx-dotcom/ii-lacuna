@@ -50,6 +50,7 @@ hl.window_rule({ center = true, float = true, name = "float-media", match = { cl
 hl.window_rule({ center = true, float = true, name = "float-theme-tools", match = { class = "^(nwg-look|qt5ct|qt6ct|kvantummanager)$" } })
 hl.window_rule({ center = true, float = true, name = "float-qalculate", match = { class = "^(qalculate-gtk)$" } })
 hl.window_rule({ float = true, name = "float-mc", match = { class = "^(Minecraft.*|com\\.adamcake\\.Bolt|net\\.runelite\\.client\\.RuneLite)$" } })
+hl.window_rule({ center = true, float = true, no_blur = true, opacity = 1.0, size = { 680, 760 }, name = "float-kdeconnect", match = { class = "^(kde-connect-tui)$" } })
 hl.window_rule({ center = true, name = "default-float-center", match = { float = true } })
 
 -- ··· Picture-in-picture ···
