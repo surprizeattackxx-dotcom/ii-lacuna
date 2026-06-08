@@ -53,7 +53,10 @@ Singleton {
         for (const key in json) {
             if (json.hasOwnProperty(key)) {
                 const camelCaseKey = key.replace(/_([a-z])/g, (g) => g[1].toUpperCase())
-                Appearance.m3colors[`m3${camelCaseKey}`] = json[key]
+                // Unknown matugen keys (surface_tint, *_fixed, inverse_primary…) aren't
+                // declared on m3colors and throw — catch so one bad key can't abort the
+                // whole loop and freeze every later color on the hardcoded defaults.
+                try { Appearance.m3colors[`m3${camelCaseKey}`] = json[key] } catch (e) {}
             }
         }
         Appearance.m3colors.darkmode = (Appearance.m3colors.m3background.hslLightness < 0.5)

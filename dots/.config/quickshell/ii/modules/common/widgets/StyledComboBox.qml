@@ -1,13 +1,17 @@
 pragma ComponentBehavior: Bound
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Templates as T
 import QtQuick.Layouts
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
 
-ComboBox {
+// Use the unstyled template — every visual piece is overridden below, and the
+// org.kde.desktop styled ComboBox throws positionToRectangle errors on our
+// non-editable custom contentItem.
+T.ComboBox {
     id: root
 
     property string buttonIcon: ""

@@ -24,6 +24,8 @@ Item {
     readonly property bool useGradientMask: Config.options.bar.mediaPlayer.lyrics.useGradientMask ?? false
     readonly property string lyricsStyle: Config.options.bar.mediaPlayer.lyrics.style
     readonly property bool artworkEnabled: Config.options.bar.mediaPlayer.artwork.enable
+    readonly property int artworkBoxSize: Appearance.sizes.barHeight - 8
+    readonly property int artworkContentPadding: 8
 
     Layout.fillHeight: true
     implicitWidth: LyricsService.hasSyncedLines && root.lyricsEnabled ? lyricsCustomSize : customSize
@@ -56,7 +58,7 @@ Item {
                 anchors.fill: parent
                 source: root.artSource
                 fillMode: Image.PreserveAspectCrop
-                cache: false
+                cache: true
                 antialiasing: true
                 asynchronous: true
                 width: parent.width
