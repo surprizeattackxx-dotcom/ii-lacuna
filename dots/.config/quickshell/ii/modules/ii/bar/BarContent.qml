@@ -105,15 +105,39 @@ Item { // Bar content region
         }
     }
 
+    Item {
+        anchors.fill: barLeftSideMouseArea
+        Rectangle {
+            anchors.fill: parent
+            color: "red"
+            opacity: 0.5
+            z: 10
+        }
+        Rectangle {
+            anchors.centerIn: parent
+            width: parent.width
+            height: 20
+            color: "transparent"
+            border.color: "red"
+            border.width: 2
+        }
+        Text {
+            anchors.centerIn: parent
+            text: "LEFT MOUSE AREA"
+            color: "white"
+            font.bold: true
+            z: 11
+        }
+    }
+
     FocusedScrollMouseArea { // Left side | scroll to change brightness
         id: barLeftSideMouseArea
-        visible: root.showBarBackground
 
         anchors {
             top: parent.top
             bottom: parent.bottom
             left: parent.left
-            right: middleSection.left
+            right: leftSection.right
         }
         implicitHeight: Appearance.sizes.baseBarHeight
 
@@ -287,15 +311,39 @@ Item { // Bar content region
         width: 1
     }
 
+    Item {
+        anchors.fill: barRightSideMouseArea
+        Rectangle {
+            anchors.fill: parent
+            color: "blue"
+            opacity: 0.5
+            z: 10
+        }
+        Rectangle {
+            anchors.centerIn: parent
+            width: parent.width
+            height: 20
+            color: "transparent"
+            border.color: "blue"
+            border.width: 2
+        }
+        Text {
+            anchors.centerIn: parent
+            text: "RIGHT MOUSE AREA"
+            color: "white"
+            font.bold: true
+            z: 11
+        }
+    }
+
     FocusedScrollMouseArea { // Right side | scroll to change volume
         id: barRightSideMouseArea
-        visible: root.showBarBackground
 
         z: -1
         anchors {
             top: parent.top
             bottom: parent.bottom
-            left: middleSection.right
+            left: rightSection.left
             right: parent.right
         }
         implicitHeight: Appearance.sizes.baseBarHeight

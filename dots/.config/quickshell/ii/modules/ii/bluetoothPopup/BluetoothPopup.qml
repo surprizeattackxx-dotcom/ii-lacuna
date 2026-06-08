@@ -16,6 +16,7 @@ PanelWindow {
     WlrLayershell.namespace: "qs-popups"
     exclusionMode: ExclusionMode.Ignore
     focusable: false
+    visible: root.shown
 
     Bar.MatugenColors { id: theme }
 
