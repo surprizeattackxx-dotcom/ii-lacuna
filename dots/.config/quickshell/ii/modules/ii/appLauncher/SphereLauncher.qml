@@ -269,14 +269,35 @@ Item {
     }
 
     readonly property var hiddenApps: frecency.hidden || ({})
+    property bool hiddenPanelOpen: false
 
     function hideApp(appId) {
         if (!appId) return;
-        const h = frecency.hidden || {};
+        const h = Object.assign({}, frecency.hidden || {});
         h[appId] = true;
-        frecency.hidden = h;
+        frecency.hidden = h;   // new object ref so hiddenApps binding updates
         frecencyFile.writeAdapter();
         window.rebuildApps();
+    }
+
+    function unhideApp(appId) {
+        const h = Object.assign({}, frecency.hidden || {});
+        delete h[appId];
+        frecency.hidden = h;
+        frecencyFile.writeAdapter();
+        if (Object.keys(h).length === 0) window.hiddenPanelOpen = false;
+        window.rebuildApps();
+    }
+
+    // [{ appId, name, icon }] for the hidden-apps panel.
+    function hiddenAppList() {
+        const out = [];
+        for (const id in window.hiddenApps) {
+            const e = DesktopEntries.byId(id);
+            out.push({ appId: id, name: e ? e.name : id, icon: e ? window.appIcon(e) : "" });
+        }
+        out.sort((a, b) => a.name.localeCompare(b.name));
+        return out;
     }
 
     function frecencyScore(appId) {
@@ -446,6 +467,7 @@ Item {
             // Clean click on empty space dismisses; a drag (rotate) does not.
             onClicked: {
                 if (sceneMouse.dragged) return;
+                if (window.hiddenPanelOpen) { window.hiddenPanelOpen = false; return; }
                 if (window.searchQuery === "") closeSequence.start();
                 else searchInput.forceActiveFocus();
             }
@@ -874,6 +896,131 @@ Item {
                     onClicked: {
                         searchInput.text = "";
                         searchInput.forceActiveFocus();
+                    }
+                }
+            }
+        }
+    }
+
+    // ── Hidden-apps toggle pill (left of the search bar) ──────────────────────
+    Rectangle {
+        id: hiddenToggle
+        visible: Object.keys(window.hiddenApps).length > 0 && window.introPhase > 0.01
+        height: window._s40
+        width: hiddenRow.implicitWidth + window._s20
+        anchors.verticalCenter: searchContainer.verticalCenter
+        anchors.right: searchContainer.left
+        anchors.rightMargin: window._s12
+        radius: window._s20
+        opacity: window.introPhase
+        color: window.hiddenPanelOpen ? Qt.alpha(window.blue, 0.18)
+                                      : Qt.rgba(window.mantle.r, window.mantle.g, window.mantle.b, 0.92)
+        border.color: window.hiddenPanelOpen ? window.blue : window.surface1
+        border.width: window.s(1.5)
+        Behavior on border.color { ColorAnimation { duration: 150 } }
+
+        Row {
+            id: hiddenRow
+            anchors.centerIn: parent
+            spacing: window._s5
+            Text {
+                anchors.verticalCenter: parent.verticalCenter
+                text: "Hidden"
+                font.family: "JetBrains Mono"; font.pixelSize: window._s12; font.weight: Font.Medium
+                color: window.hiddenPanelOpen ? window.blue : window.subtext0
+            }
+            Rectangle {
+                anchors.verticalCenter: parent.verticalCenter
+                width: countText.implicitWidth + window._s8; height: window._s18
+                radius: height / 2; color: Qt.alpha(window.blue, 0.22)
+                Text {
+                    id: countText; anchors.centerIn: parent
+                    text: Object.keys(window.hiddenApps).length
+                    font.family: "JetBrains Mono"; font.pixelSize: window._s11; font.weight: Font.Bold
+                    color: window.blue
+                }
+            }
+        }
+        MouseArea {
+            anchors.fill: parent; cursorShape: Qt.PointingHandCursor
+            onClicked: window.hiddenPanelOpen = !window.hiddenPanelOpen
+        }
+    }
+
+    // ── Hidden-apps restore panel (above the search bar) ──────────────────────
+    Rectangle {
+        id: hiddenPanel
+        visible: opacity > 0.01
+        opacity: (window.hiddenPanelOpen && Object.keys(window.hiddenApps).length > 0) ? window.introPhase : 0
+        Behavior on opacity { NumberAnimation { duration: 180; easing.type: Easing.OutCubic } }
+        width: window.s(440)
+        height: Math.min(window.s(380), hiddenListView.contentHeight + headerText.height + window._s28)
+        anchors.bottom: searchContainer.top
+        anchors.bottomMargin: window._s20
+        anchors.horizontalCenter: searchContainer.horizontalCenter
+        radius: window._s16
+        color: Qt.rgba(window.mantle.r, window.mantle.g, window.mantle.b, 0.96)
+        border.color: window.surface1
+        border.width: window.s(1.5)
+
+        MouseArea { anchors.fill: parent }   // absorb clicks so they don't dismiss
+
+        Column {
+            anchors.fill: parent
+            anchors.margins: window._s12
+            spacing: window._s8
+
+            Text {
+                id: headerText
+                width: parent.width
+                text: "Hidden apps — click to restore"
+                font.family: "JetBrains Mono"; font.pixelSize: window._s12; font.weight: Font.DemiBold
+                color: window.subtext0
+            }
+
+            ListView {
+                id: hiddenListView
+                width: parent.width
+                height: parent.height - headerText.height - window._s8
+                clip: true
+                spacing: window._s4
+                model: window.hiddenPanelOpen ? window.hiddenAppList() : []
+                delegate: Rectangle {
+                    id: hiddenDelg
+                    required property var modelData
+                    width: hiddenListView.width
+                    height: window._s40
+                    radius: window._s8
+                    color: rowMa.containsMouse ? Qt.alpha(window.blue, 0.14) : "transparent"
+                    Row {
+                        anchors.left: parent.left; anchors.right: restoreLabel.left
+                        anchors.leftMargin: window._s8; anchors.verticalCenter: parent.verticalCenter
+                        spacing: window._s8
+                        Image {
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: window._s28; height: window._s28
+                            source: hiddenDelg.modelData.icon
+                            fillMode: Image.PreserveAspectFit; asynchronous: true; smooth: true
+                        }
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            width: hiddenListView.width - window._s104
+                            text: hiddenDelg.modelData.name
+                            color: window.text; font.family: "JetBrains Mono"; font.pixelSize: window._s12
+                            elide: Text.ElideRight
+                        }
+                    }
+                    Text {
+                        id: restoreLabel
+                        anchors.right: parent.right; anchors.rightMargin: window._s12
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "Restore"
+                        color: window.blue; font.family: "JetBrains Mono"; font.pixelSize: window._s11; font.weight: Font.DemiBold
+                    }
+                    MouseArea {
+                        id: rowMa; anchors.fill: parent; hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: window.unhideApp(hiddenDelg.modelData.appId)
                     }
                 }
             }
