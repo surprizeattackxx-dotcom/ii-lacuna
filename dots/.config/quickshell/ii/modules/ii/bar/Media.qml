@@ -113,9 +113,12 @@ Item {
         id: mediaCircProg
         visible: true
 
-        anchors.left: parent.left
+        // With artwork on, the album art takes the left slot, so move the
+        // progress ring to the right edge (a hard anchors.left used to pin it
+        // behind the artwork, overriding the intended x).
         anchors.verticalCenter: parent.verticalCenter
-        x: artworkEnabled ? root.width - width : 0
+        anchors.left: artworkEnabled ? undefined : parent.left
+        anchors.right: artworkEnabled ? parent.right : undefined
 
         lineWidth: Appearance.rounding.unsharpen
         value: activePlayer?.position / activePlayer?.length
