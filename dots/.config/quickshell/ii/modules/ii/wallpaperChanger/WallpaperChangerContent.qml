@@ -48,6 +48,39 @@ Item {
     property var brightnessMap: ({})
     property int cacheVersion: 0
 
+    readonly property var _previewItem: {
+        let tm = getModelForFilter(currentFilter);
+        if (!tm || view.currentIndex < 0 || view.currentIndex >= tm.count) return null;
+        return tm.get(view.currentIndex);
+    }
+    readonly property bool previewIsVideo: _previewItem ? String(_previewItem.fileName || "").startsWith("000_") : false
+    readonly property bool previewIsWpe: _previewItem ? _previewItem.isWpe === true : false
+    readonly property bool previewUseThumb: previewIsVideo || previewIsWpe
+    readonly property string previewSource: {
+        let it = _previewItem;
+        if (!it) return "";
+        if (previewIsWpe) return it.previewPath || "";
+        if (previewIsVideo) return it.filePath || (srcDir + "/" + getCleanName(String(it.fileName || "")));
+        return it.fileUrl || "";
+    }
+    // Plain absolute path for the live background preview (images & WPE preview images only;
+    // videos don't preview as a still in the background — the coverflow card plays them).
+    readonly property string previewPlainPath: {
+        if (previewIsVideo) return "";
+        let it = _previewItem;
+        if (!it) return "";
+        if (previewIsWpe) return it.previewPath || "";
+        let fp = it.filePath || "";
+        if (fp.length > 0) return fp;
+        return String(it.fileUrl || "").replace(/^file:\/\//, "");
+    }
+    onPreviewPlainPathChanged: {
+        if (GlobalStates.wallpaperChangerOpen) {
+            GlobalStates.wallpaperPreviewMonitor = Hyprland.focusedMonitor?.name ?? "";
+            GlobalStates.wallpaperPreviewPath = previewPlainPath;
+        }
+    }
+
     property bool isDownloadingWallpaper: false
     property string currentDownloadName: ""
     property bool isApplying: false
@@ -435,6 +468,11 @@ Item {
         }
 
         let path = fullPath || (srcDir + "/" + getCleanName(safeFileName));
+        if (!previewIsVideo && !previewIsWpe) {
+            GlobalStates.wallpaperPreviewMonitor = Hyprland.focusedMonitor?.name ?? "";
+            GlobalStates.wallpaperPreviewPath = path;
+            GlobalStates.wallpaperPreviewCommitted = true;
+        }
         Wallpapers.apply(path, Wallpapers.preferredDarkMode, Hyprland.focusedMonitor?.name ?? "", true);
         GlobalStates.wallpaperChangerOpen = false;
     }
@@ -990,6 +1028,9 @@ Item {
             isDownloadingWallpaper = false;
             currentDownloadName = "";
             if (exitCode === 0) {
+                GlobalStates.wallpaperPreviewMonitor = Hyprland.focusedMonitor?.name ?? "";
+                GlobalStates.wallpaperPreviewPath = searchDownloadProc.destFile;
+                GlobalStates.wallpaperPreviewCommitted = true;
                 Wallpapers.apply(searchDownloadProc.destFile, Wallpapers.preferredDarkMode, Hyprland.focusedMonitor?.name ?? "", true);
                 GlobalStates.wallpaperChangerOpen = false;
             } else {

@@ -17,10 +17,10 @@ Scope {
 
         sourceComponent: PanelWindow {
             id: panelWindow
-            
+
             // Center the window on the screen
             screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0]
-            
+
             exclusionMode: ExclusionMode.Ignore
             WlrLayershell.namespace: "quickshell:wallpaperChanger"
             WlrLayershell.layer: WlrLayer.Overlay
@@ -45,6 +45,28 @@ Scope {
 
             WallpaperChangerContent {
                 id: changerContent
+            }
+        }
+    }
+
+    // Hold the committed preview briefly so it stays visible until switchwall.sh updates the
+    // real per-monitor wallpaper state, instead of flashing back to the old wallpaper.
+    Timer {
+        id: previewClearTimer
+        interval: 1500
+        onTriggered: GlobalStates.wallpaperPreviewPath = ""
+    }
+
+    Connections {
+        target: GlobalStates
+        function onWallpaperChangerOpenChanged() {
+            if (GlobalStates.wallpaperChangerOpen) {
+                previewClearTimer.stop()
+            } else if (GlobalStates.wallpaperPreviewCommitted) {
+                GlobalStates.wallpaperPreviewCommitted = false
+                previewClearTimer.restart()
+            } else {
+                GlobalStates.wallpaperPreviewPath = ""
             }
         }
     }

@@ -37,6 +37,14 @@ Singleton {
     property bool wallpaperSelectorOpen: false
     property bool wallpaperChangerOpen: false
     property bool wallpaperTransitioning: false
+    // Live (non-persisted) wallpaper preview path, set while browsing the wallpaperChanger.
+    // Empty string = no preview, background shows the real wallpaper.
+    property string wallpaperPreviewPath: ""
+    // Name of the monitor the preview targets (the focused one), so other monitors don't preview.
+    property string wallpaperPreviewMonitor: ""
+    // True when the changer closed because a wallpaper was committed (Enter/click), so the
+    // preview is held briefly until switchwall.sh updates the real state instead of flashing.
+    property bool wallpaperPreviewCommitted: false
     property bool workspaceShowNumbers: true
     property bool isScrollingLayout: false
 

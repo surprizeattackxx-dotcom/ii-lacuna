@@ -52,7 +52,12 @@ Variants {
                 return Config.options.background.wallpaperPath;
             }
         }
+        // Live wallpaperChanger preview — when set, render it as the background (image-only,
+        // non-persisted) until the user commits with Enter. Treated as a still image.
+        readonly property bool previewActive: (GlobalStates.wallpaperPreviewPath ?? "").length > 0
+            && GlobalStates.wallpaperPreviewMonitor === (monitor?.name ?? "")
         readonly property bool wallpaperIsWpe: {
+            if (previewActive) return false;
             const raw = wallpaperStateFile?.text() ?? "";
             try {
                 return JSON.parse(raw)?.wpe === true;
@@ -60,8 +65,8 @@ Variants {
                 return false;
             }
         }
-        property bool wallpaperIsVideo: perMonitorWallpaperPath.endsWith(".mp4") || perMonitorWallpaperPath.endsWith(".webm") || perMonitorWallpaperPath.endsWith(".mkv") || perMonitorWallpaperPath.endsWith(".avi") || perMonitorWallpaperPath.endsWith(".mov")
-        property string wallpaperPath: wallpaperIsVideo ? Config.options.background.thumbnailPath : perMonitorWallpaperPath
+        property bool wallpaperIsVideo: !previewActive && (perMonitorWallpaperPath.endsWith(".mp4") || perMonitorWallpaperPath.endsWith(".webm") || perMonitorWallpaperPath.endsWith(".mkv") || perMonitorWallpaperPath.endsWith(".avi") || perMonitorWallpaperPath.endsWith(".mov"))
+        property string wallpaperPath: previewActive ? GlobalStates.wallpaperPreviewPath : (wallpaperIsVideo ? Config.options.background.thumbnailPath : perMonitorWallpaperPath)
         property bool wallpaperSafetyTriggered: {
             const enabled = Config.options.workSafety.enable.wallpaper;
             const sensitiveWallpaper = (CF.StringUtils.stringListContainsSubstring(wallpaperPath.toLowerCase(), Config.options.workSafety.triggerCondition.fileKeywords));

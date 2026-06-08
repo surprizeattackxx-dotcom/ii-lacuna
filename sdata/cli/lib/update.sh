@@ -46,7 +46,7 @@ if [ -d "$BASE_DIR" ]; then
         echo -e "${GREEN}Vynx repo updated successfully!${NC}"
     fi
     
-    bash setup-ii-vynx.sh $SETUP_FLAGS
+    bash setup-ii-lacuna.sh $SETUP_FLAGS
 else
     echo -e "${RED}Error: Cannot find install path.${NC}"
     exit 1

@@ -79,7 +79,15 @@ cmd_update() {
             rel="${src#"$LOCAL_SRC"/}"
             target="$HOME/.local/$rel"
             mkdir -p "$(dirname "$target")"
-            [ -L "$target" ] && rm -f "$target"
+            if [ -L "$target" ]; then
+                rm -f "$target"
+            elif [ -e "$target" ]; then
+                if [[ "$BACKUP" == true ]]; then
+                    mv "$target" "${target}_backup_$(date +%Y%m%d_%H%M%S)"
+                else
+                    rm -rf "$target"
+                fi
+            fi
             ln -s "$src" "$target"
         done < <(find "$LOCAL_SRC" -type f -print0)
     fi
@@ -124,15 +132,16 @@ cmd_status() {
         echo -e "${RED}  Shell:${NC}   Not running"
     fi
 
-    if [ -L "$HOME/.config/quickshell/ii" ]; then
+    local QS_PATH="$HOME/.config/quickshell"
+    if [ -L "$QS_PATH" ]; then
         local TARGET
-        TARGET=$(readlink "$HOME/.config/quickshell/ii")
-        if [[ "$TARGET" == "$SCRIPT_DIR/dots/.config/quickshell/ii" ]]; then
+        TARGET=$(readlink "$QS_PATH")
+        if [[ "$TARGET" == "$SCRIPT_DIR/dots/.config/quickshell" ]]; then
             echo -e "${GREEN}  Config:${NC}  Linked → $TARGET"
         else
             echo -e "${YELLOW}  Config:${NC}  Linked elsewhere → $TARGET"
         fi
-    elif [ -d "$HOME/.config/quickshell/ii" ]; then
+    elif [ -d "$QS_PATH" ]; then
         echo -e "${YELLOW}  Config:${NC}  Directory (not a symlink)"
     else
         echo -e "${RED}  Config:${NC}  Missing"
