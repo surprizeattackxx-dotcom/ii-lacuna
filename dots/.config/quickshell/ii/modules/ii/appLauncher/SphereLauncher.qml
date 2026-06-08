@@ -202,57 +202,18 @@ Item {
 
     property var entries: []
 
-    // Filesystem icon index (basename -> path) for pixmaps/flatpak/hicolor dirs
-    // that Qt's iconPath doesn't search — mirrors how hamr resolves icons.
-    property var iconIndex: ({})
-
-    Process {
-        id: iconIndexProc
-        running: true
-        command: ["bash", "-c",
-            'find /usr/share/pixmaps /usr/share/icons/hicolor ' +
-            '"$HOME/.local/share/icons/hicolor" ' +
-            '/var/lib/flatpak/exports/share/icons/hicolor ' +
-            '"$HOME/.local/share/flatpak/exports/share/icons/hicolor" ' +
-            '-maxdepth 4 -type f \\( -iname "*.svg" -o -iname "*.png" -o -iname "*.xpm" \\) 2>/dev/null']
-        stdout: StdioCollector {
-            onStreamFinished: {
-                const map = {};
-                for (const line of text.split("\n")) {
-                    if (!line) continue;
-                    const base = line.split("/").pop().replace(/\.(png|svg|xpm)$/i, "");
-                    // First hit wins, but let an svg upgrade a raster match.
-                    if (!(base in map) || (line.endsWith(".svg") && !map[base].endsWith(".svg")))
-                        map[base] = line;
-                }
-                window.iconIndex = map;
-                // Patch in place so the sphere doesn't rebuild/reshuffle.
-                for (let i = 0; i < appModel.count && i < window.entries.length; i++)
-                    appModel.setProperty(i, "icon", window.appIcon(window.entries[i]));
-            }
+    // Re-resolve icons in place when the shared index lands/refreshes mid-session
+    // (no model rebuild, so the sphere doesn't reshuffle).
+    Connections {
+        target: AppIconIndex
+        function onIndexChanged() {
+            for (let i = 0; i < appModel.count && i < window.entries.length; i++)
+                appModel.setProperty(i, "icon", window.appIcon(window.entries[i]));
         }
-    }
-
-    function lookupIconIndex(iconName, appName) {
-        const idx = window.iconIndex;
-        if (!idx) return "";
-        const cands = [];
-        if (iconName) {
-            cands.push(iconName, iconName.toLowerCase());
-            if (iconName.includes(".")) {
-                const last = iconName.split(".").pop();
-                cands.push(last, last.toLowerCase());
-            }
-            cands.push(iconName.toLowerCase().replace(/\s+/g, "-"));
-            cands.push(iconName.toLowerCase().replace(/_/g, "-"));
-        }
-        if (appName) cands.push(appName.toLowerCase().replace(/\s+/g, "-"));
-        for (const c of cands) if (c && idx[c]) return idx[c];
-        return "";
     }
 
     // Resolve a desktop entry's icon: absolute path → Qt theme (+ guessIcon
-    // variations) → filesystem index → cog fallback.
+    // variations) → shared filesystem index → cog fallback. See AppIconIndex.
     function appIcon(entry) {
         const raw = entry.icon || "";
         if (raw.startsWith("/")) return "file://" + raw;
@@ -261,7 +222,7 @@ Item {
         const guessed = AppSearch.guessIcon(raw.length > 0 ? raw : entry.id);
         if (Quickshell.iconPath(guessed, true).length > 0)
             return Quickshell.iconPath(guessed);
-        const fromIndex = window.lookupIconIndex(raw.length > 0 ? raw : entry.id, entry.name);
+        const fromIndex = AppIconIndex.resolve(raw.length > 0 ? raw : entry.id, entry.name);
         if (fromIndex) return "file://" + fromIndex;
         return Quickshell.iconPath(AppSearch.guessIcon(entry.name), "application-x-executable");
     }
