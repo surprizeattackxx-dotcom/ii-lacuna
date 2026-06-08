@@ -125,19 +125,12 @@ Item {
     onRotXChanged: { projDirty = true; rebuildProjCache(); }
     onRotYChanged: { projDirty = true; rebuildProjCache(); }
 
-    function project3D(bx, by, bz) {
-        let rx = window.rotX;
-        let ry = window.rotY;
-        let y1 = by * Math.cos(rx) - bz * Math.sin(rx);
-        let z1 = by * Math.sin(rx) + bz * Math.cos(rx);
-        let x2 = bx * Math.cos(ry) + z1 * Math.sin(ry);
-        let z2 = -bx * Math.sin(ry) + z1 * Math.cos(ry);
-        return { x: x2, y: y1, z: z2 };
-    }
-
     Timer {
         interval: 16
+        // Idle spin — but hold still while dragging, snapping, or zoomed on a
+        // searched app (otherwise it drifts off the app you just centered).
         running: !sceneMouse.pressed && !searchRotXAnim.running && !searchRotYAnim.running
+                 && window.selectedAppIndex < 0
         repeat: true
         onTriggered: window.rotY -= 0.002
     }
