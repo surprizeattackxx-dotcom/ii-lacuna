@@ -1,0 +1,188 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+CYAN='\033[1;36m'
+NC='\033[0m'
+
+SCRIPT_DIR="$(cd "$(dirname "$(readlink -f "$0")")" && pwd)"
+VERBOSE=false
+
+logv() { [[ "$VERBOSE" == true ]] && echo -e "${BLUE}[DEBUG] $1${NC}"; }
+
+show_help() {
+    cat <<EOF
+${CYAN}lacuna${NC} — ii-lacuna shell manager
+
+${BLUE}Usage:${NC}
+  lacuna update       Pull latest configs and restart shell
+  lacuna run          Start Quickshell (kills existing first)
+  lacuna restart      Kill + restart Quickshell
+  lacuna status       Show current shell state and repo info
+  lacuna install-cli  Symlink this CLI to ~/.local/bin
+  lacuna remove-cli   Remove symlink from ~/.local/bin
+  lacuna help         Show this message
+
+${BLUE}Flags:${NC}
+  -v, --verbose  More output
+EOF
+}
+
+cmd_update() {
+    local DO_PULL=true BACKUP=true
+
+    for arg in "$@"; do
+        case "$arg" in
+            --no-pull)   DO_PULL=false ;;
+            --no-backup) BACKUP=false ;;
+            *) echo -e "${RED}Unknown: $arg${NC}"; exit 1 ;;
+        esac
+    done
+
+    CONFIG_DIR="$HOME/.config"
+    SOURCE_DIR="$SCRIPT_DIR/dots/.config"
+
+    if [[ "$DO_PULL" == true ]] && [ -d "$SCRIPT_DIR/.git" ]; then
+        echo -e "${BLUE}• Pulling latest...${NC}"
+        git -C "$SCRIPT_DIR" pull
+        echo -e "${GREEN}✓ Repo updated${NC}"
+    fi
+
+    echo -e "${BLUE}• Linking configs...${NC}"
+    for src in "$SOURCE_DIR"/*; do
+        [ -e "$src" ] || continue
+        name="$(basename "$src")"
+        target="$CONFIG_DIR/$name"
+
+        if [ -L "$target" ]; then
+            rm -f "$target"
+        elif [ -e "$target" ]; then
+            if [[ "$BACKUP" == true ]]; then
+                backup="${target}_backup_$(date +%Y%m%d_%H%M%S)"
+                mv "$target" "$backup"
+                echo -e "${YELLOW}  Backed up → $backup${NC}"
+            else
+                rm -rf "$target"
+            fi
+        fi
+
+        ln -s "$src" "$target"
+        echo -e "${GREEN}  ✓ $name${NC}"
+    done
+
+    LOCAL_SRC="$SCRIPT_DIR/dots/.local"
+    if [ -d "$LOCAL_SRC" ]; then
+        while IFS= read -r -d '' src; do
+            rel="${src#"$LOCAL_SRC"/}"
+            target="$HOME/.local/$rel"
+            mkdir -p "$(dirname "$target")"
+            [ -L "$target" ] && rm -f "$target"
+            ln -s "$src" "$target"
+        done < <(find "$LOCAL_SRC" -type f -print0)
+    fi
+
+    echo -e "${BLUE}• Restarting shell...${NC}"
+    pkill -x qs 2>/dev/null || true
+    hyprctl reload 2>/dev/null || true
+    sleep 1
+    nohup qs -c ii > /dev/null 2>&1 &
+    echo -e "${GREEN}✓ Done${NC}"
+}
+
+cmd_run() {
+    echo -e "${BLUE}• Starting Quickshell...${NC}"
+    pkill -x qs 2>/dev/null || true
+    hyprctl reload 2>/dev/null || true
+    sleep 1
+    nohup qs -c ii > /dev/null 2>&1 &
+    echo -e "${GREEN}✓ Quickshell started${NC}"
+}
+
+cmd_restart() {
+    cmd_run
+}
+
+cmd_status() {
+    local REPO_URL
+    REPO_URL=$(git -C "$SCRIPT_DIR" remote get-url origin 2>/dev/null || echo "unknown")
+
+    echo -e "${CYAN}ii-lacuna status${NC}"
+    echo -e "${BLUE}  Repo:${NC}    $SCRIPT_DIR"
+    echo -e "${BLUE}  Origin:${NC}  $REPO_URL"
+
+    if git -C "$SCRIPT_DIR" rev-parse HEAD &>/dev/null; then
+        echo -e "${BLUE}  Commit:${NC}  $(git -C "$SCRIPT_DIR" log --oneline -1 2>/dev/null)"
+        echo -e "${BLUE}  Branch:${NC}  $(git -C "$SCRIPT_DIR" branch --show-current 2>/dev/null)"
+    fi
+
+    if pgrep -x qs &>/dev/null; then
+        echo -e "${GREEN}  Shell:${NC}   Running"
+    else
+        echo -e "${RED}  Shell:${NC}   Not running"
+    fi
+
+    if [ -L "$HOME/.config/quickshell/ii" ]; then
+        local TARGET
+        TARGET=$(readlink "$HOME/.config/quickshell/ii")
+        if [[ "$TARGET" == "$SCRIPT_DIR/dots/.config/quickshell/ii" ]]; then
+            echo -e "${GREEN}  Config:${NC}  Linked → $TARGET"
+        else
+            echo -e "${YELLOW}  Config:${NC}  Linked elsewhere → $TARGET"
+        fi
+    elif [ -d "$HOME/.config/quickshell/ii" ]; then
+        echo -e "${YELLOW}  Config:${NC}  Directory (not a symlink)"
+    else
+        echo -e "${RED}  Config:${NC}  Missing"
+    fi
+}
+
+cmd_install_cli() {
+    local BIN="$HOME/.local/bin/lacuna"
+    mkdir -p "$HOME/.local/bin"
+    ln -sf "$SCRIPT_DIR/lacuna" "$BIN"
+    echo -e "${GREEN}✓ Installed → $BIN${NC}"
+    if [[ ":$PATH:" != *":$HOME/.local/bin:"* ]]; then
+        echo -e "${YELLOW}⚠ ~/.local/bin not in PATH — add 'export PATH=\"\$HOME/.local/bin:\$PATH\"'${NC}"
+    fi
+}
+
+cmd_remove_cli() {
+    local BIN="$HOME/.local/bin/lacuna"
+    if [ -L "$BIN" ]; then
+        rm "$BIN"
+        echo -e "${GREEN}✓ Removed $BIN${NC}"
+    else
+        echo -e "${YELLOW}Not installed at $BIN${NC}"
+    fi
+}
+
+# --- arg parsing ---
+TEMP_ARGS=()
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        -v|--verbose) VERBOSE=true; shift ;;
+        *) TEMP_ARGS+=("$1"); shift ;;
+    esac
+done
+set -- "${TEMP_ARGS[@]}"
+
+COMMAND="${1:-help}"
+shift || true
+
+case "$COMMAND" in
+    update)       cmd_update "$@" ;;
+    run)          cmd_run "$@" ;;
+    restart)      cmd_restart "$@" ;;
+    status)       cmd_status "$@" ;;
+    install-cli)  cmd_install_cli "$@" ;;
+    remove-cli)   cmd_remove_cli "$@" ;;
+    help|--help|-h) show_help ;;
+    *)
+        echo -e "${RED}Unknown command: $COMMAND${NC}"
+        show_help
+        exit 1
+        ;;
+esac
