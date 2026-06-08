@@ -158,13 +158,15 @@ Rectangle {
                             colBackground: Appearance.colors.colSurfaceContainerHighest
                             colBackgroundHover: Appearance.colors.colLayer2Hover
                             releaseAction: () => Buds.setEqualizer(modelData.id)
-                            contentItem: StyledText {
-                                id: eqLabel
-                                anchors.centerIn: parent
-                                text: ebtn.modelData.label
-                                font.pixelSize: Appearance.font.pixelSize.smaller
-                                font.weight: ebtn.toggled ? Font.DemiBold : Font.Normal
-                                color: ebtn.toggled ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer1
+                            contentItem: Item {
+                                StyledText {
+                                    id: eqLabel
+                                    anchors.centerIn: parent
+                                    text: ebtn.modelData.label
+                                    font.pixelSize: Appearance.font.pixelSize.smaller
+                                    font.weight: ebtn.toggled ? Font.DemiBold : Font.Normal
+                                    color: ebtn.toggled ? Appearance.colors.colOnPrimary : Appearance.colors.colOnLayer1
+                                }
                             }
                         }
                     }
