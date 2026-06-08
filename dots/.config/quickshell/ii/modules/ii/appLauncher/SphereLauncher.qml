@@ -232,6 +232,7 @@ Item {
         const list = DesktopEntries.applications.values.filter(a => {
             if (!a.name || a.name.length === 0) return false;
             if (seen.has(a.id)) return false;
+            if (window.hiddenApps[a.id]) return false;   // user-hidden via right-click
             seen.add(a.id); return true;
         }).sort((a, b) => {
             // Frequently/recently used apps cluster near the start of the spiral.
@@ -262,8 +263,20 @@ Item {
         }
         adapter: JsonAdapter {
             id: frecency
-            property var apps: ({})   // { [appId]: { count, last } }
+            property var apps: ({})    // { [appId]: { count, last } }
+            property var hidden: ({})  // { [appId]: true } — right-click hidden
         }
+    }
+
+    readonly property var hiddenApps: frecency.hidden || ({})
+
+    function hideApp(appId) {
+        if (!appId) return;
+        const h = frecency.hidden || {};
+        h[appId] = true;
+        frecency.hidden = h;
+        frecencyFile.writeAdapter();
+        window.rebuildApps();
     }
 
     function frecencyScore(appId) {
@@ -761,7 +774,11 @@ Item {
                         anchors.fill: parent
                         hoverEnabled: true
                         cursorShape: Qt.PointingHandCursor
-                        onClicked: window.launchApp(index)
+                        acceptedButtons: Qt.LeftButton | Qt.RightButton
+                        onClicked: mouse => {
+                            if (mouse.button === Qt.RightButton) window.hideApp(model.appId);
+                            else window.launchApp(index);
+                        }
                     }
                 }
             }
