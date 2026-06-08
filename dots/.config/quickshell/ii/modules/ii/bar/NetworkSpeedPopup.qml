@@ -44,11 +44,10 @@ StyledPopup {
             icon: Network.ethernet ? "lan" : "wifi"
             title: Network.ethernet ? Translation.tr("Ethernet") : Translation.tr("Wi-Fi")
             subtitle: Network.networkName || Translation.tr("Connected")
-            
+
             compactMode: true
             adaptiveWidth: true
-            
-            // Show signal strength in the pill if wifi
+
             pillText: !Network.ethernet ? (Network.networkStrength + "%") : ""
             pillIcon: !Network.ethernet ? "signal_wifi_4_bar" : ""
         }

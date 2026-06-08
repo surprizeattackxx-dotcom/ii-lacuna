@@ -277,131 +277,23 @@ MouseArea {
 
         ColumnLayout {
             anchors.centerIn: parent
-            width: 260
-            spacing: 10
+            spacing: 12
 
-            StyledPopupHeaderRow {
-                Layout.fillWidth: true
-                icon: "system_update_alt"; label: Translation.tr("System Updates")
-                count: Updates.count; countColor: root.accentColor; timestamp: root.lastChecked
-            }
-
-            // Hero status card
-            Rectangle {
-                Layout.fillWidth: true
-                implicitHeight: heroCol.implicitHeight + 22
-                radius: Appearance.rounding.normal
-                color:  Appearance.m3colors.m3surfaceContainerHigh
-                border.width: 1
-                border.color: Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.40)
-
-                ColumnLayout {
-                    id: heroCol; anchors.centerIn: parent; spacing: 4
-
-                    // Icon + spinning arc ring
-                    Item {
-                        Layout.alignment: Qt.AlignHCenter
-                        width: 52; height: 52
-
-                        // Track ring (always visible, dim)
-                        Canvas {
-                            id: trackRing2
-                            renderStrategy: Canvas.Cooperative
-                            anchors.fill: parent
-                            onPaint: {
-                                var ctx = getContext("2d")
-                                ctx.clearRect(0, 0, width, height)
-                                ctx.beginPath()
-                                ctx.arc(width/2, height/2, 22, 0, Math.PI * 2)
-                                ctx.strokeStyle = Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.15)
-                                ctx.lineWidth = 3
-                                ctx.stroke()
-                            }
-                            Connections {
-                                target: root
-                                function onAccentColorChanged() { trackRing2.requestPaint() }
-                            }
-                        }
-
-                        // Spinning arc (only while checking)
-                        Canvas {
-                            id: spinArc
-                            renderStrategy: Canvas.Cooperative
-                            anchors.fill: parent
-                            visible: Updates.checking
-                            opacity: Updates.checking ? 1.0 : 0.0
-                            Behavior on opacity { NumberAnimation { duration: 250 } }
-
-                            property real angle: 0
-                            onAngleChanged: requestPaint()
-                            onPaint: {
-                                var ctx = getContext("2d")
-                                ctx.clearRect(0, 0, width, height)
-                                ctx.beginPath()
-                                var start = (angle - 90) * Math.PI / 180
-                                var end   = start + Math.PI * 1.1
-                                ctx.arc(width/2, height/2, 22, start, end)
-                                ctx.strokeStyle = Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 1.0)
-                                ctx.lineWidth = 3
-                                ctx.lineCap = "round"
-                                ctx.stroke()
-                            }
-                            Connections {
-                                target: root
-                                function onAccentColorChanged() { spinArc.requestPaint() }
-                            }
-
-                            NumberAnimation on angle {
-                                running: Updates.checking
-                                from: 0; to: 360; duration: 900; loops: Animation.Infinite
-                            }
-                        }
-
-                        // Checkmark/done ring fade-in when check completes
-                        Canvas {
-                            id: doneArc
-                            renderStrategy: Canvas.Cooperative
-                            anchors.fill: parent
-                            visible: !Updates.checking && Updates.count === 0
-                            opacity: visible ? 1.0 : 0.0
-                            Behavior on opacity { NumberAnimation { duration: 400 } }
-                            onPaint: {
-                                var ctx = getContext("2d")
-                                ctx.clearRect(0, 0, width, height)
-                                ctx.beginPath()
-                                ctx.arc(width/2, height/2, 22, 0, Math.PI * 2)
-                                ctx.strokeStyle = Qt.rgba(root.accentColor.r, root.accentColor.g, root.accentColor.b, 0.7)
-                                ctx.lineWidth = 3
-                                ctx.stroke()
-                            }
-                            onVisibleChanged: if (visible) requestPaint()
-                        }
-
-                        MaterialSymbol {
-                            anchors.centerIn: parent
-                            text: Updates.checking ? "autorenew" : Updates.count === 0 ? "check_circle" : "update"
-                            iconSize: 26; color: root.accentColor
-                            RotationAnimator on rotation {
-                                running: Updates.checking
-                                from: 0; to: 360; duration: 1200; loops: Animation.Infinite
-                            }
-                            NumberAnimation on rotation {
-                                running: !Updates.checking
-                                to: 0; duration: 400; easing.type: Easing.OutCubic
-                            }
-                        }
-                    }
-
-                    StyledText {
-                        Layout.alignment: Qt.AlignHCenter
-                        text: Updates.checking ? Translation.tr("Checking…")
+            HeroCard {
+                icon: Updates.checking ? "autorenew" : Updates.count === 0 ? "check_circle" : "update"
+                title: Updates.checking ? "…" : Updates.count.toString()
+                subtitle: Updates.checking ? Translation.tr("Checking…")
                         : Updates.count === 0 ? Translation.tr("Up to date")
                         : Updates.count + " " + Translation.tr("updates available")
-                        font { pixelSize: Appearance.font.pixelSize.normal; weight: Font.DemiBold }
-                        color: root.accentColor
-                    }
-                }
+                compactMode: true
+                adaptiveWidth: true
+                pillText: root.lastChecked !== "Never" ? Translation.tr("Checked: ") + root.lastChecked : ""
+                pillIcon: "schedule"
             }
+
+            ColumnLayout {
+                Layout.fillWidth: true
+                spacing: 8
 
             // Package list
             Rectangle {
@@ -489,6 +381,7 @@ MouseArea {
                 color: Appearance.colors.colSubtext; opacity: 0.5
             }
         }
+    }
     }
     } // Component updatesPopupFull
 

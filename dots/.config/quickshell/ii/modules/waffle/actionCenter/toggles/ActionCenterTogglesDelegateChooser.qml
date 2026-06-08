@@ -76,6 +76,13 @@ DelegateChooser {
         }
     }
     DelegateChoice {
+        roleValue: "kdeConnect"
+        ActionCenterToggleButton {
+            toggleModel: KdeConnectToggle {}
+            icon: "phone-Android"
+        }
+    }
+    DelegateChoice {
         roleValue: "idleInhibitor"
         ActionCenterToggleButton {
             toggleModel: IdleInhibitorToggle {}

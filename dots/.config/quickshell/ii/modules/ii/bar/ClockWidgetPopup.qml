@@ -49,34 +49,28 @@ StyledPopup {
     // Fixed-width column — drives popup size, never reads parent.width
     ColumnLayout {
         anchors.centerIn: parent
-        spacing: 8
+        spacing: 12
 
-        StyledPopupHeaderRow {
-            Layout.fillWidth: true
+        HeroCard {
             icon:  "calendar_month"
-            label: root.formattedDate
+            title: root.formattedTime
+            subtitle: root.formattedDate
+            compactMode: true
+            adaptiveWidth: true
         }
 
-        // Divider
-        Rectangle {
-            Layout.fillWidth: true; height: 1
-            color: Qt.rgba(Appearance.colors.colPrimary.r,
-                           Appearance.colors.colPrimary.g,
-                           Appearance.colors.colPrimary.b, 0.15)
-        }
-
-        StyledPopupValueRow {
+        ColumnLayout {
             Layout.fillWidth: true
-            icon:  "timelapse"
-            label: Translation.tr("System uptime:")
-            value: root.formattedUptime
-        }
+            spacing: 8
 
-        Rectangle {
-            Layout.fillWidth: true; height: 1
-            color: Qt.rgba(Appearance.colors.colPrimary.r,
-                           Appearance.colors.colPrimary.g,
-                           Appearance.colors.colPrimary.b, 0.10)
+            InfoPill {
+                icon: "timelapse"
+                text: Translation.tr("System uptime: ") + root.formattedUptime
+                containerColor: Appearance.colors.colPrimaryContainer
+                shapeColor: Appearance.colors.colPrimary
+                symbolColor: Appearance.colors.colOnPrimary
+                textColor: Appearance.colors.colOnPrimaryContainer
+            }
         }
 
         // To-do section

@@ -80,116 +80,62 @@ StyledPopup {
         ColumnLayout {
             id: mainLayout
             anchors.fill: parent
-            spacing: 8
+            spacing: 12
 
-            StyledPopupHeaderRow {
-                Layout.fillWidth: true
+            HeroCard {
                 icon: "memory"
-                label: Translation.tr("System Resources")
+                title: Math.round(ResourceUsage.cpuUsage * 100) + "%"
+                subtitle: "CPU · RAM " + Math.round(ResourceUsage.memoryUsedPercentage * 100) + "%"
+                compactMode: true
+                adaptiveWidth: true
             }
 
-            component ResourceCard: Rectangle {
-                property color  accent:       Appearance.colors.colPrimary
-                property string resourceName: ""
-                property real   ratio:        0
-                property var    stats:        []
-
+            ColumnLayout {
                 Layout.fillWidth: true
-                implicitHeight:   cardCol.implicitHeight + 14
-                radius:           Appearance.rounding.small
-                color:            Appearance.m3colors.m3surfaceContainerHigh
-                border.width:     1
-                border.color:     Qt.rgba(accent.r, accent.g, accent.b, 0.30)
+                spacing: 8
 
-                ColumnLayout {
-                    id: cardCol
-                    anchors { fill: parent; leftMargin: 10; rightMargin: 10; topMargin: 7; bottomMargin: 7 }
-                    spacing: 5
-
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 8
-
-                        Rectangle {
-                            implicitWidth:  nameLabel.implicitWidth + 10
-                            implicitHeight: nameLabel.implicitHeight + 4
-                            radius: 4
-                            color:  Qt.rgba(accent.r, accent.g, accent.b, 0.20)
-                            border.width: 1
-                            border.color: Qt.rgba(accent.r, accent.g, accent.b, 0.35)
-                            StyledText {
-                                id: nameLabel
-                                anchors.centerIn: parent
-                                text: resourceName
-                                font { pixelSize: 10; weight: Font.Bold }
-                                color: accent
-                            }
-                        }
-
-                        Repeater {
-                            model: stats
-                            RowLayout {
-                                spacing: 3
-                                StyledText { text: modelData.label; font.pixelSize: 10; color: Appearance.colors.colSubtext }
-                                StyledText { text: modelData.value; font.pixelSize: 10; font.weight: Font.Medium; color: modelData.color ?? Appearance.colors.colOnLayer1 }
-                            }
-                        }
-                        Item { Layout.fillWidth: true }
-                    }
-
-                    Rectangle {
-                        Layout.fillWidth: true; height: 4; radius: 2
-                        color: Qt.rgba(accent.r, accent.g, accent.b, 0.15)
-                        Rectangle {
-                            width:  Math.max(radius*2, parent.width * Math.min(1.0, ratio))
-                            height: parent.height; radius: parent.radius; color: accent
-                            Behavior on width { SmoothedAnimation { velocity: 60 } }
-                            Behavior on color { ColorAnimation { duration: 400 } }
-                        }
-                    }
-                }
+            InfoPill {
+                icon: "memory"
+                text: Translation.tr("RAM: ") + content.formatKB(ResourceUsage.memoryUsed) + " / " + content.formatKB(ResourceUsage.memoryTotal)
+                containerColor: Appearance.colors.colSecondaryContainer
+                shapeColor: Appearance.m3colors.sapphire
+                symbolColor: Appearance.colors.colOnSecondary
+                textColor: Appearance.colors.colOnSecondaryContainer
             }
-
-            ResourceCard {
-                accent: Appearance.m3colors.sapphire; resourceName: "RAM"; ratio: ResourceUsage.memoryUsedPercentage
-                stats: [
-                    {label:"Used",  value:content.formatKB(ResourceUsage.memoryUsed),  color:content.usageColor(ResourceUsage.memoryUsedPercentage)},
-                    {label:"Free",  value:content.formatKB(ResourceUsage.memoryFree)},
-                    {label:"Total", value:content.formatKB(ResourceUsage.memoryTotal),  color:Appearance.colors.colSubtext}
-                ]
+            InfoPill {
+                visible: Config.options.bar.tooltips.showSwap && ResourceUsage.swapTotal > 0
+                icon: "swap_horiz"
+                text: Translation.tr("Swap: ") + content.formatKB(ResourceUsage.swapUsed) + " / " + content.formatKB(ResourceUsage.swapTotal)
+                containerColor: Appearance.m3colors.m3primaryContainer
+                shapeColor: Appearance.m3colors.mauve
+                symbolColor: Appearance.m3colors.m3onPrimary
+                textColor: Appearance.m3colors.m3onPrimaryContainer
             }
-            ResourceCard {
-                visible: ResourceUsage.swapTotal > 0
-                accent: Appearance.m3colors.mauve; resourceName: "Swap"; ratio: ResourceUsage.swapUsedPercentage
-                stats: [
-                    {label:"Used",  value:content.formatKB(ResourceUsage.swapUsed),  color:content.usageColor(ResourceUsage.swapUsedPercentage)},
-                    {label:"Free",  value:content.formatKB(ResourceUsage.swapFree)},
-                    {label:"Total", value:content.formatKB(ResourceUsage.swapTotal),  color:Appearance.colors.colSubtext}
-                ]
+            InfoPill {
+                icon: "speed"
+                text: Translation.tr("CPU: ") + Math.round(ResourceUsage.cpuUsage * 100) + "% · " + content.cpuFreq + " · " + content.cpuTemp
+                containerColor: Appearance.colors.colTertiaryContainer
+                shapeColor: Appearance.m3colors.peach
+                symbolColor: Appearance.colors.colOnTertiary
+                textColor: Appearance.colors.colOnTertiaryContainer
             }
-            ResourceCard {
-                accent: Appearance.m3colors.peach; resourceName: "CPU"; ratio: ResourceUsage.cpuUsage
-                stats: [
-                    {label:"Load", value:Math.round(ResourceUsage.cpuUsage*100)+"%", color:content.usageColor(ResourceUsage.cpuUsage)},
-                    {label:"Freq", value:content.cpuFreq},
-                    {label:"Temp", value:content.cpuTemp, color:content.tempColor(content.cpuTempVal)}
-                ]
+            InfoPill {
+                icon: "manufacturing"
+                text: Translation.tr("GPU: ") + content.gpuLoad + " · " + content.gpuVramUsed + " · " + content.gpuTemp
+                containerColor: Appearance.m3colors.m3successContainer
+                shapeColor: Appearance.m3colors.teal
+                symbolColor: Appearance.m3colors.m3onSuccess
+                textColor: Appearance.m3colors.m3onSuccessContainer
             }
-            ResourceCard {
-                accent: Appearance.m3colors.teal; resourceName: "GPU"; ratio: content.gpuUsage
-                stats: [
-                    {label:"Load", value:content.gpuLoad,     color:content.usageColor(content.gpuUsage)},
-                    {label:"VRAM", value:content.gpuVramUsed, color:content.usageColor(content.gpuRatio)},
-                    {label:"Temp", value:content.gpuTemp,     color:content.tempColor(content.gpuTempVal)}
-                ]
-            }
-            ResourceCard {
-                accent: Appearance.m3colors.green; resourceName: "Disk"; ratio: content.diskRatio
-                stats: [
-                    {label:"Used", value:content.diskUsed,                              color:content.usageColor(content.diskRatio)},
-                    {label:"Free", value:content.diskFree}
-                ]
+            InfoPill {
+                icon: "storage"
+                text: Translation.tr("Disk: ") + content.diskUsed + " / " + content.diskTotal
+                containerColor: Appearance.m3colors.m3successContainer
+                shapeColor: Appearance.m3colors.green
+                symbolColor: Appearance.m3colors.m3onSuccess
+                textColor: Appearance.m3colors.m3onSuccessContainer
             }
         }
+    }
     }
 }
