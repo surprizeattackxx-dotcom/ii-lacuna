@@ -1,30 +1,86 @@
+# ─────────────────────────────────────────────────────────────
+# ii-lacuna .gitignore
+# Packaging build artifacts (Arch/Fedora) are handled by the
+# scoped .gitignore files under sdata/dist-*/. Don't add global
+# src/ or pkg/ rules here — top-level src/ is tracked.
+# ─────────────────────────────────────────────────────────────
+
+# ── Project-specific ──
 /diagnose.result
 /cache
-
-# Ignore Python cache files
-__pycache__/
-*.py[cod]
-
-/dots/.config/quickshell/ii/.qmlls.ini
-
-# exp-update
 /.update-lock
-
-# custom os-release
 /os-release
-
-# Emacs auto backup file
-*~
-
-# vexp index (binary SQLite db — never commit)
 /.vexp/
 
-# IDE / editor tool configs (local-only)
+# ── Logs ──
+*.log
+log.txt
+
+# ── OS junk ──
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+.fuse_hidden*
+.nfs*
+Thumbs.db
+ehthumbs.db
+desktop.ini
+
+# ── Editor / IDE (local-only) ──
+*~
+*.swp
+*.swo
+*.tmp
+*.orig
+*.rej
 /.cursor/
 /.vscode/
+/.idea/
 .superpowers/
+*.sublime-workspace
+/dots/.config/quickshell/ii/.qmlls.ini
 
-# User-specific monitor config (auto-generated, machine-dependent)
+# ── Python ──
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+env/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.pdm-python
+
+# ── Node ──
+node_modules/
+npm-debug.log*
+yarn-error.log*
+
+# ── Nix ──
+/result
+/result-*
+
+# ── Local AI / CLI agent config (personal — never commit) ──
+# NOTE: repo-level AGENTS.md + .github/copilot-instructions.md are
+# intentionally tracked; these guard against personal config leaking.
+CLAUDE.md
+CLAUDE.local.md
+.claude/
+.mcp.json
+.claude.json
+settings.local.json
+GEMINI.md
+.gemini/
+.opencode/
+.aider*
+.codeium/
+.continue/
+
+# ── User-specific / auto-generated ──
 /dots/.config/hypr/monitors.lua
 /dots/.config/hypr/monitors.lua.bak
 /dots/.config/hypr/monitor-state.lua
