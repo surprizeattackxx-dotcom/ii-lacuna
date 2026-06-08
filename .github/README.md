@@ -59,12 +59,6 @@ Run the setup script:
 ./setup-ii-lacuna.sh
 ```
 
-Run the cli (if it's installed):
-  
-```bash
-vynx update
-```
-
 Use the update button _that runs the update script in background_.
 
 
