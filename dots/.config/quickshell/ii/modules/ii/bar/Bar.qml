@@ -79,9 +79,10 @@ Scope {
                     Appearance.sizes.baseBarHeight + (Config.options.bar.cornerStyle === 1 ? Appearance.sizes.hyprlandGapsOut : 0)
                 WlrLayershell.namespace: "quickshell:bar"
                 implicitHeight: Appearance.sizes.barHeight + (Config.options.bar.cornerStyle === 0 ? Appearance.rounding.screenRounding : 0)
-                mask: Region {
-                    item: hoverMaskRegion
-                }
+                mask: barContent.showBarBackground ? fullMask : narrowMask
+
+                Region { id: fullMask; item: hoverMaskRegion }
+                Region { id: narrowMask; item: barContent.middleMaskRegionItem }
                 color: "transparent"
 
                 // Positioning
@@ -112,6 +113,17 @@ Scope {
                         fill: parent
                         rightMargin: (Config.options.interactions.deadPixelWorkaround.enable && barRoot.anchors.right) * 1
                         bottomMargin: (Config.options.interactions.deadPixelWorkaround.enable && barRoot.anchors.bottom) * 1
+                    }
+
+                    onWheel: event => {
+                        if (event.angleDelta.y === 0) return
+                        if (event.x < width / 2) {
+                            if (event.angleDelta.y > 0) Brightness.increaseBrightness()
+                            else Brightness.decreaseBrightness()
+                        } else {
+                            if (event.angleDelta.y > 0) Audio.incrementVolume()
+                            else Audio.decrementVolume()
+                        }
                     }
 
                     Item {

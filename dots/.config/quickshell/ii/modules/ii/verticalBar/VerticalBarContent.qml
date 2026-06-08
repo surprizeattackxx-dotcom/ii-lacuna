@@ -77,6 +77,8 @@ Item { // Bar content region
 
     FocusedScrollMouseArea { // Top section | scroll to change brightness
         id: barTopSectionMouseArea
+        anchors.top: parent.top
+        
 
         anchors {
             top: parent.top

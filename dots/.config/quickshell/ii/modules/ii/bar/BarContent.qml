@@ -20,6 +20,10 @@ Item { // Bar content region
     property real useShortenedForm: (Appearance.sizes.barHellaShortenScreenWidthThreshold >= screen?.width) ? 2 : (Appearance.sizes.barShortenScreenWidthThreshold >= screen?.width) ? 1 : 0
     readonly property int centerSideModuleWidth: (useShortenedForm == 2) ? Appearance.sizes.barCenterSideModuleWidthHellaShortened : (useShortenedForm == 1) ? Appearance.sizes.barCenterSideModuleWidthShortened : Appearance.sizes.barCenterSideModuleWidth
 
+    readonly property alias leftMaskRegionItem: leftMaskRegion
+    readonly property alias middleMaskRegionItem: middleSection
+    readonly property alias rightMaskRegionItem: rightMaskRegion
+
     property bool hasActiveWindows: false
     property bool showBarBackground: root.hasActiveWindows && Config.options.bar.barBackgroundStyle === 2 || Config.options.bar.barBackgroundStyle === 1
 
@@ -103,7 +107,7 @@ Item { // Bar content region
 
     FocusedScrollMouseArea { // Left side | scroll to change brightness
         id: barLeftSideMouseArea
-        acceptedButtons: root.showBarBackground ? Qt.LeftButton : Qt.NoButton
+        visible: root.showBarBackground
 
         anchors {
             top: parent.top
@@ -141,6 +145,14 @@ Item { // Bar content region
             leftMargin: Math.ceil(Appearance.rounding.screenRounding / 2)
         }
         width: 1
+    }
+
+    Item {
+        id: leftMaskRegion
+        x: leftSection.x
+        y: leftSection.y
+        width: leftSection.width
+        height: leftSection.height
     }
 
     RowLayout { // Left section
@@ -258,6 +270,14 @@ Item { // Bar content region
 
 
     Item {
+        id: rightMaskRegion
+        x: rightSection.x
+        y: rightSection.y
+        width: rightSection.width
+        height: rightSection.height
+    }
+
+    Item {
         id: rightStopper
         anchors {
             top: parent.top
@@ -269,7 +289,7 @@ Item { // Bar content region
 
     FocusedScrollMouseArea { // Right side | scroll to change volume
         id: barRightSideMouseArea
-        acceptedButtons: root.showBarBackground ? Qt.LeftButton : Qt.NoButton
+        visible: root.showBarBackground
 
         z: -1
         anchors {
@@ -283,7 +303,6 @@ Item { // Bar content region
         onScrollDown: Audio.decrementVolume();
         onScrollUp: Audio.incrementVolume();
         onMovedAway: GlobalStates.osdVolumeOpen = false;
-
         onPressed: event => {
             if (event.button === Qt.LeftButton) {
                 GlobalStates.sidebarRightOpen = !GlobalStates.sidebarRightOpen;
