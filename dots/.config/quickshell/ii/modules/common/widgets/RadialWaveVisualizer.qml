@@ -17,9 +17,20 @@ Canvas { // Visualizer
     property real waveOpacity: 0.15
     property real waveBlur: 1
 
+    // When not live, every frame draws the same flat ring (sp.fill(0)). cava keeps
+    // streaming on silence, so this would re-raster + re-blur identical pixels ~60fps.
+    // Draw the idle ring once, then skip until playback resumes.
+    property bool _idleDrawn: false
     onPointsChanged: () => {
+        if (!root.live && root._idleDrawn) return
+        if (!root.live) root._idleDrawn = true
         root.requestPaint()
     }
+    onLiveChanged: {
+        root._idleDrawn = false
+        root.requestPaint()
+    }
+    onColorChanged: if (!root.live) root.requestPaint()
 
     anchors.fill: parent
     onPaint: {

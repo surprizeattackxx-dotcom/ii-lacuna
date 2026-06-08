@@ -1,6 +1,7 @@
 pragma Singleton
 pragma ComponentBehavior: Bound
 
+import qs
 import qs.modules.common.functions as CF
 import qs.modules.common
 import qs.services
@@ -3637,7 +3638,10 @@ echo "SCREENSHOT_OFFSET:\${SS_OFFSET_X}:\${SS_OFFSET_Y}"
 
     Timer {
         id: contextRefreshTimer
-        running: true
+        // Context is only consumed by the AI chat — only refresh (3 subprocs/10s)
+        // while its sidebar is open. triggeredOnStart refreshes the instant it opens.
+        running: GlobalStates.sidebarLeftOpen && Config.options.policies.ai !== 0
+        triggeredOnStart: true
         repeat: true
         interval: 10000
         onTriggered: {
@@ -3805,7 +3809,8 @@ echo "SCREENSHOT_OFFSET:\${SS_OFFSET_X}:\${SS_OFFSET_Y}"
 
     Timer {
         id: schedulerTimer
-        running: true
+        // Only poll the AI memory schedule when AI is enabled at all.
+        running: Config.options.policies.ai !== 0
         repeat: true
         interval: 60000
         onTriggered: {

@@ -14,9 +14,18 @@ Canvas { // Visualizer
     property bool live: true
     property color color: Appearance.m3colors.m3primary
 
+    // Idle draws the same flat ring every cava frame — draw it once, skip until live.
+    property bool _idleDrawn: false
     onPointsChanged: () => {
+        if (!root.live && root._idleDrawn) return
+        if (!root.live) root._idleDrawn = true
         root.requestPaint()
     }
+    onLiveChanged: {
+        root._idleDrawn = false
+        root.requestPaint()
+    }
+    onColorChanged: if (!root.live) root.requestPaint()
 
     anchors.fill: parent
     onPaint: {
