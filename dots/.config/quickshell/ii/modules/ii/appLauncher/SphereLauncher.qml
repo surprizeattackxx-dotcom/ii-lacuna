@@ -82,7 +82,11 @@ Item {
     property real sphereZoom: 1.0
     Behavior on sphereZoom { NumberAnimation { duration: 400; easing.type: Easing.OutCubic } }
 
-    property real sphereRadius: baseSphereRadius
+    // Manual scroll-wheel zoom, stacks under the search zoom.
+    property real userZoom: 1.0
+    Behavior on userZoom { NumberAnimation { duration: 150; easing.type: Easing.OutCubic } }
+
+    property real sphereRadius: baseSphereRadius * userZoom
 
     property real rotX: -0.2
     property real rotY: 0
@@ -444,11 +448,15 @@ Item {
             anchors.fill: parent
             property real lastX: 0
             property real lastY: 0
+            property real pressX: 0
+            property real pressY: 0
+            property bool dragged: false
             onPressed: mouse => {
                 searchRotXAnim.stop();
                 searchRotYAnim.stop();
-                lastX = mouse.x;
-                lastY = mouse.y;
+                lastX = mouse.x; lastY = mouse.y;
+                pressX = mouse.x; pressY = mouse.y;
+                dragged = false;
             }
             onPositionChanged: mouse => {
                 if (!pressed) return;
@@ -459,8 +467,18 @@ Item {
                 window.rotX = Math.max(-1.45, Math.min(1.45, newRotX));
                 lastX = mouse.x;
                 lastY = mouse.y;
+                if (Math.abs(mouse.x - pressX) + Math.abs(mouse.y - pressY) > 6) dragged = true;
             }
-            onClicked: searchInput.forceActiveFocus()
+            // Clean click on empty space dismisses; a drag (rotate) does not.
+            onClicked: {
+                if (sceneMouse.dragged) return;
+                if (window.searchQuery === "") closeSequence.start();
+                else searchInput.forceActiveFocus();
+            }
+            onWheel: wheel => {
+                let step = wheel.angleDelta.y > 0 ? 1.12 : 1 / 1.12;
+                window.userZoom = Math.max(0.55, Math.min(2.2, window.userZoom * step));
+            }
         }
 
         Item {
