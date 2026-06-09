@@ -2,6 +2,7 @@ import qs
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
+import qs.modules.common.functions
 import QtQuick
 import Quickshell
 import Quickshell.Io
@@ -49,12 +50,15 @@ Scope {
         }
     }
 
-    // Hold the committed preview briefly so it stays visible until switchwall.sh updates the
-    // real per-monitor wallpaper state, instead of flashing back to the old wallpaper.
+    property bool _awaitingStateWrite: false
+
     Timer {
         id: previewClearTimer
-        interval: 1500
-        onTriggered: GlobalStates.wallpaperPreviewPath = ""
+        interval: 15000
+        onTriggered: {
+            _awaitingStateWrite = false
+            GlobalStates.wallpaperPreviewPath = ""
+        }
     }
 
     Connections {
@@ -62,10 +66,24 @@ Scope {
         function onWallpaperChangerOpenChanged() {
             if (GlobalStates.wallpaperChangerOpen) {
                 previewClearTimer.stop()
+                _awaitingStateWrite = false
             } else if (GlobalStates.wallpaperPreviewCommitted) {
                 GlobalStates.wallpaperPreviewCommitted = false
+                _awaitingStateWrite = true
                 previewClearTimer.restart()
             } else {
+                _awaitingStateWrite = false
+                GlobalStates.wallpaperPreviewPath = ""
+            }
+        }
+    }
+
+    Connections {
+        target: Wallpapers
+        function onApplyFinished() {
+            if (_awaitingStateWrite) {
+                previewClearTimer.stop()
+                _awaitingStateWrite = false
                 GlobalStates.wallpaperPreviewPath = ""
             }
         }

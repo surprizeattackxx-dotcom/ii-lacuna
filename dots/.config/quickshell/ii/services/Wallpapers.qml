@@ -57,7 +57,10 @@ Singleton {
     // Executions
     Process {
         id: applyProc
+        onExited: root.applyFinished(exitCode, exitStatus)
     }
+
+    signal applyFinished(int exitCode, int exitStatus)
 
     Connections {
         target: Config

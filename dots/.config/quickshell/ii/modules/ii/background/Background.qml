@@ -47,6 +47,9 @@ Variants {
             try {
                 const parsed = JSON.parse(raw);
                 const p = parsed?.path ?? "";
+                if (bgRoot.monitor?.name === (Hyprland.focusedMonitor?.name ?? "")) {
+                    console.log(`[BG DEBUG] perMonitorWallpaperPath on ${bgRoot.monitor?.name}: "${p.substring(0,50)}"`);
+                }
                 return p !== "" ? p : Config.options.background.wallpaperPath;
             } catch (e) {
                 return Config.options.background.wallpaperPath;
@@ -138,9 +141,11 @@ Variants {
         }
 
         onWallpaperPathChanged: {
+            console.log(`[BG DEBUG] wallpaperPath changed: ${bgRoot._lastWp} → ${bgRoot.wallpaperPath}`);
+            bgRoot._lastWp = bgRoot.wallpaperPath;
             bgRoot.updateZoomScale();
-            // Clock position gets updated after zoom scale is updated
         }
+        property string _lastWp: ""
 
         // Wallpaper zoom scale
         function updateZoomScale() {
@@ -208,7 +213,11 @@ Variants {
             path: bgRoot.wallpaperStatePath
             blockLoading: true
             watchChanges: true
-            onFileChanged: reload()
+            onFileChanged: {
+                console.log(`[BG DEBUG] state file changed for ${bgRoot.monitor?.name}: reloading`);
+                reload();
+            }
+            onLoaded: console.log(`[BG DEBUG] state file loaded for ${bgRoot.monitor?.name}: ${text().substring(0,100)}`)
         }
 
         // Helpers — return per-monitor x/y if available, otherwise fall back to Config
