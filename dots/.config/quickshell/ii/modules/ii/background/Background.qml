@@ -141,7 +141,7 @@ Variants {
         }
 
         onWallpaperPathChanged: {
-            console.log(`[BG DEBUG] wallpaperPath changed: ${bgRoot._lastWp} → ${bgRoot.wallpaperPath}`);
+            console.log(`[BG DEBUG] wallpaperPath changed on ${bgRoot.monitor?.name ?? "?"}: ${bgRoot._lastWp.substring(0,70)} → ${bgRoot.wallpaperPath.substring(0,70)}`);
             bgRoot._lastWp = bgRoot.wallpaperPath;
             bgRoot.updateZoomScale();
         }

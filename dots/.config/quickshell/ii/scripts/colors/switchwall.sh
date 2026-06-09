@@ -295,9 +295,9 @@ write_monitor_state() {
     local wpe_id="$6"
     local wpe_path="$7"
 
-    [[ -z "$monitor" ]] && { echo "[SWDBG] write_monitor_state: empty monitor, returning" >&2; return; }
+    [[ -z "$monitor" ]] && { logger -t switchwall-debug "write_monitor_state: empty monitor, returning"; return; }
 
-    echo "[SWDBG] write_monitor_state: monitor=$monitor path=$wallpaper_path kind=$kind dir=$MONITOR_STATE_DIR" >&2
+    logger -t switchwall-debug "write_monitor_state: monitor=$monitor path=$wallpaper_path kind=$kind dir=$MONITOR_STATE_DIR"
     mkdir -p "$MONITOR_STATE_DIR"
 
     jq -n \
@@ -324,8 +324,8 @@ write_monitor_state() {
         } else {} end)' > "${MONITOR_STATE_DIR}/${monitor}.tmp" &&
         mv "${MONITOR_STATE_DIR}/${monitor}.tmp" "${MONITOR_STATE_DIR}/${monitor}.json"
     local jq_exit=$?
-    echo "[SWDBG] write_monitor_state: jq+mv exit code=$jq_exit" >&2
-    echo "[SWDBG] write_monitor_state: file mtime now: $(stat -c '%y' "${MONITOR_STATE_DIR}/${monitor}.json" 2>/dev/null || echo 'stat failed')" >&2
+    logger -t switchwall-debug "write_monitor_state: jq+mv exit code=$jq_exit"
+    logger -t switchwall-debug "write_monitor_state: file mtime: $(stat -c '%y' "${MONITOR_STATE_DIR}/${monitor}.json" 2>/dev/null || echo 'stat failed')"
 }
 
 save_wallpaper_copy() {
@@ -472,7 +472,7 @@ switch() {
             remove_restore
 
             # Iris-close transition — skipped when --noswitch (palette-only change)
-            echo "[SWDBG] noswitch=$noswitch_flag nosave=$no_save_flag monitor=$monitor_flag imgpath=$imgpath" >&2
+            logger -t switchwall-debug "apply: noswitch=$noswitch_flag nosave=$no_save_flag monitor=$monitor_flag imgpath=$imgpath"
             if [[ -z "$noswitch_flag" ]] && command -v awww &>/dev/null; then
                 local _awww_output
                 if [[ -n "$monitor_flag" ]]; then
@@ -480,7 +480,7 @@ switch() {
                 else
                     _awww_output=$(hyprctl monitors -j | jq -r '.[] | select(.focused) | .name' 2>/dev/null)
                 fi
-                echo "[SWDBG] _awww_output=$_awww_output" >&2
+                logger -t switchwall-debug "apply: _awww_output=$_awww_output"
                 ensure_awww_daemon
                 qs ipc -c ii call wallpaper transition 2>/dev/null || true
                 awww img "$imgpath" \
@@ -491,14 +491,13 @@ switch() {
                     --transition-fps 60 \
                     --transition-step 90
                 awww_exit=$?
-                echo "[SWDBG] awww exit code: $awww_exit" >&2
-                echo "[SWDBG] About to call write_monitor_state with: monitor=$_awww_output path=$imgpath dir=$MONITOR_STATE_DIR" >&2
-                ls -la "$MONITOR_STATE_DIR/" >&2
+                logger -t switchwall-debug "apply: awww exit code=$awww_exit"
+                logger -t switchwall-debug "apply: about to write_monitor_state monitor=$_awww_output path=$imgpath dir=$MONITOR_STATE_DIR"
+                ls -la "$MONITOR_STATE_DIR/" >&2 & # send to journal as logline
                 [[ -n "$_awww_output" ]] && write_monitor_state "$_awww_output" "$imgpath" "$imgpath" "$imgpath" "image"
                 local wms_exit=$?
-                echo "[SWDBG] write_monitor_state exit code: $wms_exit" >&2
-                echo "[SWDBG] After write_monitor_state, ls -la:" >&2
-                ls -la "$MONITOR_STATE_DIR/" >&2
+                logger -t switchwall-debug "apply: write_monitor_state exit code=$wms_exit"
+                logger -t switchwall-debug "apply: after write: $(ls -la "$MONITOR_STATE_DIR/" 2>&1 | tr '\n' ';')"
             fi
         fi
     fi

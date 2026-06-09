@@ -102,7 +102,7 @@ PanelWindow {
         return BarComponentRegistry.allComponents.filter(c => !usedIds.includes(c.id))
     }
 
-    readonly property var themeNames: ["Matugen", "Mocha", "Frappe", "Latte", "Macchiato", "Dracula", "Nord", "Rose_pine", "Gruvbox", "Glass", "Kanagawa"]
+    readonly property var themeNames: ["Matugen", "Mocha", "Frappe", "Latte", "Macchiato", "Dracula", "Nord", "Rose_pine", "Gruvbox", "Glass", "Kanagawa", "Gemini"]
 
     function moveUp(section, index) {
         if (index === 0) return
@@ -164,6 +164,11 @@ PanelWindow {
             // hardcoded PREFERRED_MATUGEN_MONITOR (DP-1) fallback in switchwall.sh.
             const mon = Hyprland.focusedMonitor?.name ?? "";
             themeApplyProc.command = ["bash", Directories.wallpaperSwitchScriptPath, "--noswitch", "--mode", "dark"]
+                .concat(mon.length > 0 ? ["--monitor", mon] : []);
+        } else if (themeName === "Gemini") {
+            // Call Gemini AI to generate M3 colors from the focused monitor's wallpaper
+            const mon = Hyprland.focusedMonitor?.name ?? "";
+            themeApplyProc.command = ["bash", Directories.scriptPath + "/colors/gemini-generate-theme.sh"]
                 .concat(mon.length > 0 ? ["--monitor", mon] : []);
         } else {
             const path = Directories.defaultThemes + "/" + themeName.toLowerCase() + ".json";
