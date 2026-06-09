@@ -114,6 +114,16 @@ kill_existing_mpvpaper() {
     pkill -f -9 mpvpaper || true
 }
 
+# awww paints the actual compositor wallpaper; if the daemon died, `awww img`
+# silently fails and the switch appears to revert. Make sure it's up first.
+ensure_awww_daemon() {
+    command -v awww-daemon &>/dev/null || return 0
+    if ! pgrep -x awww-daemon >/dev/null; then
+        awww-daemon >/dev/null 2>&1 &
+        sleep 0.3
+    fi
+}
+
 create_restore_script() {
     local video_path=$1
     cat > "$RESTORE_SCRIPT.tmp" << EOF
@@ -481,6 +491,7 @@ switch() {
                 else
                     _awww_output=$(hyprctl monitors -j | jq -r '.[] | select(.focused) | .name' 2>/dev/null)
                 fi
+                ensure_awww_daemon
                 awww img "$imgpath" \
                     ${_awww_output:+--outputs "$_awww_output"} \
                     --transition-type grow \
@@ -566,7 +577,7 @@ fi
         > "$STATE_DIR"/user/generated/material_colors.scss
     sleep 1
     touch "$STATE_DIR/user/generated/colors.json"
-    "$SCRIPT_DIR"/applycolor.sh
+    bash "$SCRIPT_DIR/applycolor.sh"
     curl -X POST http://localhost:8080/reload || true
     deactivate
 
