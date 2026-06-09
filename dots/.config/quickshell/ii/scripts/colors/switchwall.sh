@@ -494,7 +494,24 @@ switch() {
     matugen_prefer="darkness"
     [[ "$mode_flag" == "light" ]] && matugen_prefer="lightness"
     if [[ "$color_flag" != "1" ]]; then
-        matugen_source_path="$(resolve_matugen_source_path)"
+        # Pick the color source explicitly when we know it, so multi-monitor setups
+        # don't always fall back to PREFERRED_MATUGEN_MONITOR (DP-1) and theme from the
+        # wrong background. Priority: --matugen-source > the picked --image > the
+        # targeted --monitor's wallpaper > the general resolver (focused/preferred/…).
+        matugen_source_path=""
+        if [[ -n "$matugen_source_override" ]]; then
+            matugen_source_path="$matugen_source_override"
+        elif [[ -n "$explicit_image" && -f "$imgpath" ]]; then
+            # Videos can't be read by matugen — leave the thumbnail set by the video branch.
+            is_video "$imgpath" || matugen_source_path="$imgpath"
+        elif [[ -n "$monitor_flag" ]]; then
+            matugen_source_path="$(get_monitor_state_path "$monitor_flag")"
+        fi
+        # Fall back to the resolver only when nothing explicit applied and we didn't
+        # intentionally defer to a video thumbnail.
+        if [[ -z "$matugen_source_path" && -z "$explicit_image" ]]; then
+            matugen_source_path="$(resolve_matugen_source_path)"
+        fi
         if [[ -n "$matugen_source_path" && "$matugen_source_path" != "null" && "$matugen_source_path" != "--restore" ]]; then
             set_matugen_wallpaper_path_file "$matugen_source_path"
             matugen_args=(image "$matugen_source_path")
@@ -607,6 +624,8 @@ main() {
     noswitch_flag=""
     no_save_flag=""
     monitor_flag=""
+    explicit_image=""
+    matugen_source_override=""
 
     get_type_from_config() {
         jq -r '.appearance.palette.type' "$SHELL_CONFIG_FILE" 2>/dev/null || echo "auto"
@@ -659,6 +678,11 @@ main() {
                 ;;
             --image)
                 imgpath="$2"
+                explicit_image="1"
+                shift 2
+                ;;
+            --matugen-source)
+                matugen_source_override="$2"
                 shift 2
                 ;;
             --restore)

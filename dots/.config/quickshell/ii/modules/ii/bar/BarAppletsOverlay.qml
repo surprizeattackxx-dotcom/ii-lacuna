@@ -6,6 +6,7 @@ import Quickshell.Io
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
+import Quickshell.Hyprland
 import qs
 import qs.modules.common
 import qs.modules.common.functions
@@ -159,7 +160,11 @@ PanelWindow {
     function applyTheme(themeName) {
         console.log(`[BA DEBUG] applyTheme called with: ${themeName}`);
         if (themeName === "Matugen") {
-            themeApplyProc.command = ["bash", Directories.wallpaperSwitchScriptPath, "--noswitch", "--mode", "dark"];
+            // Pass the focused monitor so colors derive from ITS wallpaper, not the
+            // hardcoded PREFERRED_MATUGEN_MONITOR (DP-1) fallback in switchwall.sh.
+            const mon = Hyprland.focusedMonitor?.name ?? "";
+            themeApplyProc.command = ["bash", Directories.wallpaperSwitchScriptPath, "--noswitch", "--mode", "dark"]
+                .concat(mon.length > 0 ? ["--monitor", mon] : []);
         } else {
             const path = Directories.defaultThemes + "/" + themeName.toLowerCase() + ".json";
             themeApplyProc.command = ["bash", Directories.applyCustomThemeScriptPath, path, themeName];
