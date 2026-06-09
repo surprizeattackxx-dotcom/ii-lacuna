@@ -16,6 +16,10 @@ hl.bind("SUPER + ALT + SPACE", hl.dsp.exec_cmd("python3 ~/.config/hypr/scripts/d
 hl.bind("SUPER + S", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle_suspend_games.sh"))
 hl.bind("SUPER + SEMICOLON", hl.dsp.layout("splitratio -0.1"))
 hl.bind("SUPER + APOSTROPHE", hl.dsp.layout("splitratio +0.1"))
+hl.bind("CTRL + SUPER + T", hl.dsp.global("quickshell:wallpaperSelectorToggle"),
+        { description = "Shell: Toggle wallpaper selector" })
+hl.bind("CTRL + SUPER + ALT + T", hl.dsp.global("quickshell:wallpaperSelectorRandom"),
+        { description = "Shell: Select random wallpaper" })
 
 -- ─── Cursor Zoom ───────────────────────────────
 hl.bind("SUPER + EQUAL", hl.dsp.exec_cmd("~/.config/hypr/scripts/zoom.sh increase 0.5"))

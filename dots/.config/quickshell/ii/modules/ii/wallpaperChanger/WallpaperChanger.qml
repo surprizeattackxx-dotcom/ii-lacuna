@@ -61,11 +61,26 @@ Scope {
         }
     }
 
+    // Brief delay so Background's FileView watcher picks up the new state file
+    // before we clear the preview path — otherwise perMonitorWallpaperPath reads
+    // stale content and wallpaperPath briefly flips to the old image.
+    Timer {
+        id: applyFlushTimer
+        interval: 200
+        onTriggered: {
+            if (_awaitingStateWrite) {
+                _awaitingStateWrite = false
+                GlobalStates.wallpaperPreviewPath = ""
+            }
+        }
+    }
+
     Connections {
         target: GlobalStates
         function onWallpaperChangerOpenChanged() {
             if (GlobalStates.wallpaperChangerOpen) {
                 previewClearTimer.stop()
+                applyFlushTimer.stop()
                 _awaitingStateWrite = false
             } else if (GlobalStates.wallpaperPreviewCommitted) {
                 GlobalStates.wallpaperPreviewCommitted = false
@@ -83,8 +98,7 @@ Scope {
         function onApplyFinished() {
             if (_awaitingStateWrite) {
                 previewClearTimer.stop()
-                _awaitingStateWrite = false
-                GlobalStates.wallpaperPreviewPath = ""
+                applyFlushTimer.restart()
             }
         }
     }
