@@ -297,6 +297,13 @@ write_monitor_state() {
 
     [[ -z "$monitor" ]] && { logger -t switchwall-debug "write_monitor_state: empty monitor, returning"; return; }
 
+    local _existing_mon
+    _existing_mon="$(jq -r '.monitor // empty' "${MONITOR_STATE_DIR}/${monitor}.json" 2>/dev/null || true)"
+    if [[ -n "$_existing_mon" && "$_existing_mon" != "$monitor" ]]; then
+        logger -t switchwall-debug "write_monitor_state: MISMATCH — file has monitor=$_existing_mon but called with $monitor, rejecting"
+        return
+    fi
+
     logger -t switchwall-debug "write_monitor_state: monitor=$monitor path=$wallpaper_path kind=$kind dir=$MONITOR_STATE_DIR"
     mkdir -p "$MONITOR_STATE_DIR"
 

@@ -58,6 +58,7 @@ Scope {
                 anchors {
                     fill: parent
                 }
+                selectedMonitor: panelWindow.monitor?.name ?? ""
             }
         }
     }

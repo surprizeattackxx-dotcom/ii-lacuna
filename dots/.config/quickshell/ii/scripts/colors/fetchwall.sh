@@ -259,6 +259,13 @@ write_monitor_state() {
 
     [[ -z "$monitor" ]] && return
 
+    local _existing_mon
+    _existing_mon="$(jq -r '.monitor // empty' "${MONITOR_STATE_DIR}/${monitor}.json" 2>/dev/null || true)"
+    if [[ -n "$_existing_mon" && "$_existing_mon" != "$monitor" ]]; then
+        logger -t switchwall-debug "fetchwall write_monitor_state: MISMATCH — file has $_existing_mon but called with $monitor, rejecting"
+        return
+    fi
+
     mkdir -p "$MONITOR_STATE_DIR"
 
     jq -n \
