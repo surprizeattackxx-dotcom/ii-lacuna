@@ -711,4 +711,19 @@ apply_icons() {
 
 apply_icons &
 
+# ---------------------------------------------------------------------------
+# Discord (BetterDiscord "Midnight M3") — generated from the live scheme so it
+# tracks custom themes and wallpaper colors alike. BetterDiscord hot-reloads.
+# ---------------------------------------------------------------------------
+apply_discord() {
+    local theme_dir="$HOME/.config/BetterDiscord/themes"
+    local colors_json="$STATE_DIR/user/generated/colors.json"
+    [[ -d "$theme_dir" && -f "$colors_json" ]] || return 0
+    python3 "$SCRIPT_DIR/generate_discord_theme.py" "$colors_json" \
+        "$theme_dir/MidnightM3.theme.css" 2>/dev/null \
+        && echo "[applycolor] Discord theme written"
+}
+
+apply_discord &
+
 wait

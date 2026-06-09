@@ -45,7 +45,3 @@ output_path = '~/.local/state/quickshell/user/generated/color.txt'
 [templates.wallpaper]
 input_path = '~/.config/matugen/templates/wallpaper.txt'
 output_path = '~/.local/state/quickshell/user/generated/wallpaper/path.txt'
-
-[templates.discord]
-input_path = '~/.config/matugen/templates/discord/MidnightM3.theme.css'
-output_path = '~/.config/BetterDiscord/themes/MidnightM3.theme.css'

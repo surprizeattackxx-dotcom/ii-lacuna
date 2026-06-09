@@ -544,7 +544,7 @@ switch() {
         cp "$theme_file" "$STATE_DIR/user/generated/colors.json"
         echo "[switchwall.sh] Applied theme: $type_flag"
     else
-        matugen "${matugen_args[@]}"
+        echo "1" | matugen "${matugen_args[@]}"
         source "${ILLOGICAL_IMPULSE_VIRTUAL_ENV/#\~/$HOME}/bin/activate"
         python3 "$SCRIPT_DIR/generate_colors_material.py" "${generate_colors_material_args[@]}" \
             > "$STATE_DIR"/user/generated/material_colors.scss
