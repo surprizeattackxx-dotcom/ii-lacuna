@@ -78,6 +78,11 @@ Singleton {
 
     function apply(path, darkMode = root.preferredDarkMode, monitor = "", persistSelection = false) {
         if (!path || path.length === 0) return
+            // A deliberate wallpaper pick leaves any custom theme behind and goes back to
+            // wallpaper-derived colors. Without this, MaterialThemeLoader's activeTheme==="Matugen"
+            // guard ignores the freshly generated colors.json and the shell doesn't fully switch.
+            // Gated on persistSelection so boot/restore/per-monitor reapplies don't clobber a custom theme.
+            if (persistSelection) GlobalStates.activeTheme = "Matugen"
             root.aboutToChange(path)
             const args = [
                 Directories.wallpaperSwitchScriptPath,

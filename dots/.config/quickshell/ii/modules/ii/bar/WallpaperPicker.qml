@@ -6,7 +6,8 @@ import Qt.labs.folderlistmodel
 import QtMultimedia
 import Quickshell
 import Quickshell.Io
-import qs.modules.ii.bar 
+import qs.modules.common
+import qs.modules.ii.bar
 
 Item {
     id: window
@@ -103,6 +104,10 @@ Item {
     // -------------------------------------------------------------------------
     function applyWallpaper(safeFileName, isVideo) {
         if (!safeFileName || window.isApplying) return;
+
+        // Picking a wallpaper drops any active custom theme back to wallpaper-derived
+        // colors, so MaterialThemeLoader applies the regenerated colors.json to the shell.
+        GlobalStates.activeTheme = "Matugen";
 
         window.setColorModeForWallpaper(safeFileName);
         
