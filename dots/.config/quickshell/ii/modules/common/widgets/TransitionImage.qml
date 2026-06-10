@@ -12,7 +12,12 @@ Item {
 
     property string transitionType: Config.options.background.transitionType ?? "radial"
 
-    property int animationDuration: transitionType === "radial" ? 1100 : 1000
+    // "random" rolls a new shape from the pool on every wallpaper change
+    readonly property var randomPool: ["crossfade", "radial", "outer", "wipe", "slash", "diamond", "wave", "split", "blinds", "checker", "clock", "star", "heart"]
+    property string randomChoice: "radial"
+    readonly property string effectiveType: transitionType === "random" ? randomChoice : transitionType
+
+    property int animationDuration: effectiveType === "radial" ? 1100 : 1000
     property var fillMode: Image.PreserveAspectCrop
     property bool animated: Config.options.background.animateWallpaperChanges
 
@@ -42,6 +47,10 @@ Item {
 
     function fadeTo(newSrc) {
         if (!newSrc || newSrc === backImg.source) return
+
+        if (root.transitionType === "random") {
+            root.randomChoice = randomPool[Math.floor(Math.random() * randomPool.length)]
+        }
 
         if (root.animated && ready && root.width > 0 && root.height > 0) {
             cleanupTransition()
@@ -131,7 +140,7 @@ Item {
     Loader {
         id: effectLoader
         anchors.fill: parent
-        source: "transitions/" + (root.transitionType.charAt(0).toUpperCase() + root.transitionType.slice(1)) + ".qml"
+        source: "transitions/" + (root.effectiveType.charAt(0).toUpperCase() + root.effectiveType.slice(1)) + ".qml"
 
         onLoaded: {
             item.frontImg = Qt.binding(function() { return root.frontImg })

@@ -56,13 +56,20 @@ ContentPage {
                         Config.options.background.transitionType = newValue;
                     }
                     options: [
+                        { displayName: Translation.tr("Random"), icon: "shuffle", value: "random" },
                         { displayName: Translation.tr("Crossfade"), icon: "transition_fade", value: "crossfade" },
                         { displayName: Translation.tr("Radial"), icon: "adjust", value: "radial" },
                         { displayName: Translation.tr("Outer"), icon: "all_out", value: "outer" },
                         { displayName: Translation.tr("Wipe"), icon: "arrow_right_alt", value: "wipe" },
                         { displayName: Translation.tr("Slash"), icon: "call_made", value: "slash" },
                         { displayName: Translation.tr("Diamond"), icon: "diamond", value: "diamond" },
-                        { displayName: Translation.tr("Wave"), icon: "waves", value: "wave" }
+                        { displayName: Translation.tr("Wave"), icon: "waves", value: "wave" },
+                        { displayName: Translation.tr("Split"), icon: "door_sliding", value: "split" },
+                        { displayName: Translation.tr("Blinds"), icon: "blinds", value: "blinds" },
+                        { displayName: Translation.tr("Checker"), icon: "apps", value: "checker" },
+                        { displayName: Translation.tr("Clock"), icon: "schedule", value: "clock" },
+                        { displayName: Translation.tr("Star"), icon: "star", value: "star" },
+                        { displayName: Translation.tr("Heart"), icon: "favorite", value: "heart" }
                     ]
                 }
             }
