@@ -2,7 +2,7 @@
 apps = {
     terminal    = "kitty",
     fileManager = "dolphin",
-    browser     = "google-chrome-stable",
+    browser     = "google-chrome-stable --remote-debugging-port=9222 --user-data-dir=/home/donnie/.config/google-chrome",
     launcher    = "hamr",
     editor      = "kate",}
 

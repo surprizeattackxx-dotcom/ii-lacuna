@@ -5,7 +5,7 @@
 
 hl.bind("SUPER + RETURN", hl.dsp.exec_cmd("kitty"))
 hl.bind("SUPER + E", hl.dsp.exec_cmd("dolphin"))
-hl.bind("SUPER + B", hl.dsp.exec_cmd("google-chrome-stable"))
+hl.bind("SUPER + B", hl.dsp.exec_cmd("google-chrome-stable --remote-debugging-port=9222 --user-data-dir=/home/donnie/.config/google-chrome"))
 hl.bind("SUPER + R", hl.dsp.exec_cmd("hamr"))
 hl.bind("SUPER + Q", hl.dsp.window.close())
 hl.bind("ALT + F4", hl.dsp.window.close())
