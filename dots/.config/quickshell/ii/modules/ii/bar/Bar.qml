@@ -79,8 +79,31 @@ Scope {
                     Appearance.sizes.baseBarHeight + (Config.options.bar.cornerStyle === 1 ? Appearance.sizes.hyprlandGapsOut : 0)
                 WlrLayershell.namespace: "quickshell:bar"
                 implicitHeight: Appearance.sizes.barHeight + (Config.options.bar.cornerStyle === 0 ? Appearance.rounding.screenRounding : 0)
-                mask: null // Rebuilt dynamically in _rebuildMask
+                mask: null
                 color: "transparent"
+
+                property Component _regionComponent: Component { Region {} }
+                property var _currentMask: null
+
+                function _rebuildMask() {
+                    if (_currentMask) { _currentMask.destroy(); _currentMask = null }
+                    let left  = barContent.leftMaskRegionItem
+                    let mid   = barContent.middleMaskRegionItem
+                    let right = barContent.rightMaskRegionItem
+                    let items = [left, mid, right].filter(i => i.width > 0 && i.height > 0)
+                    if (items.length === 0) { barRoot.mask = null; return }
+                    let parent = _regionComponent.createObject(barRoot, {})
+                    let regions = items.map(i => {
+                        let p = i.mapToItem(barRoot, 0, 0)
+                        return _regionComponent.createObject(parent, {
+                            x: p.x, y: p.y,
+                            width: i.width, height: 40
+                        })
+                    })
+                    parent.regions = regions
+                    _currentMask = parent
+                    barRoot.mask = parent
+                }
 
                 // Positioning
                 anchors {
@@ -180,21 +203,6 @@ Scope {
                         id: maskRebuildTimer
                         interval: 50
                         onTriggered: barRoot._rebuildMask()
-                    }
-
-                    function _rebuildMask() {
-                        if (barRoot.showBarBackground) {
-                            barRoot.mask = Qt.createQmlObject('import Quickshell.Wayland; Region { item: hoverMaskRegion }', barRoot);
-                        } else {
-                            barRoot.mask = Qt.createQmlObject(`
-                                import Quickshell.Wayland
-                                Region {
-                                    Region { item: barContent.leftMaskRegionItem }
-                                    Region { item: barContent.middleMaskRegionItem }
-                                    Region { item: barContent.rightMaskRegionItem }
-                                }
-                            `, barRoot);
-                        }
                     }
 
                     Connections {

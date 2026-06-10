@@ -43,7 +43,8 @@ Variants {
 
         // Wallpaper — per-monitor path from awww state, falls back to global config
         readonly property string perMonitorWallpaperPath: {
-            const raw = wallpaperStateFile?.text() ?? "";
+            _stateFileVersion;
+            const raw = _wallpaperStateText;
             try {
                 const parsed = JSON.parse(raw);
                 const p = parsed?.path ?? "";
@@ -60,8 +61,9 @@ Variants {
         readonly property bool previewActive: (GlobalStates.wallpaperPreviewPath ?? "").length > 0
             && GlobalStates.wallpaperPreviewMonitor === (monitor?.name ?? "")
         readonly property bool wallpaperIsWpe: {
+            _stateFileVersion;
             if (previewActive) return false;
-            const raw = wallpaperStateFile?.text() ?? "";
+            const raw = _wallpaperStateText;
             try {
                 return JSON.parse(raw)?.wpe === true;
             } catch (e) {
@@ -155,13 +157,21 @@ Variants {
         Process {
             id: getWallpaperSizeProc
             property string path: bgRoot.wallpaperPath
-            command: ["magick", "identify", "-format", "%w %h", path]
+            command: ["magick", "identify", "-format", "%w %h", `${path}[0]`]
             stdout: StdioCollector {
                 id: wallpaperSizeOutputCollector
                 onStreamFinished: {
-                    const output = wallpaperSizeOutputCollector.text;
-                    const [width, height] = output.split(" ").map(Number);
+                    const output = wallpaperSizeOutputCollector.text.trim();
+                    const match = output.match(/^(\d+)\s+(\d+)$/);
                     const [screenWidth, screenHeight] = [bgRoot.screen.width, bgRoot.screen.height];
+                    const width = match ? Number(match[1]) : 0;
+                    const height = match ? Number(match[2]) : 0;
+                    if (!width || !height) {
+                        bgRoot.wallpaperWidth = screenWidth;
+                        bgRoot.wallpaperHeight = screenHeight;
+                        bgRoot.effectiveWallpaperScale = 1;
+                        return;
+                    }
                     bgRoot.wallpaperWidth = width;
                     bgRoot.wallpaperHeight = height;
 
@@ -208,6 +218,8 @@ Variants {
             const stateDir = CF.FileUtils.trimFileProtocol(Directories.state).replace(/\/$/, "");
             return `${stateDir}/user/generated/wallpaper/monitors/${bgRoot.monitor.name}.json`;
         }
+        property int _stateFileVersion: 0
+        property string _wallpaperStateText: ""
         FileView {
             id: wallpaperStateFile
             path: bgRoot.wallpaperStatePath
@@ -217,7 +229,15 @@ Variants {
                 console.log(`[BG DEBUG] state file changed for ${bgRoot.monitor?.name}: reloading`);
                 reload();
             }
-            onLoaded: console.log(`[BG DEBUG] state file loaded for ${bgRoot.monitor?.name}: ${text().substring(0,100)}`)
+            onLoaded: {
+                bgRoot._wallpaperStateText = text() ?? "";
+                bgRoot._stateFileVersion++;
+                console.log(`[BG DEBUG] state file loaded for ${bgRoot.monitor?.name}: ${text().substring(0,100)}`);
+            }
+            onLoadFailed: {
+                bgRoot._wallpaperStateText = "";
+                bgRoot._stateFileVersion++;
+            }
         }
 
         // Helpers — return per-monitor x/y if available, otherwise fall back to Config

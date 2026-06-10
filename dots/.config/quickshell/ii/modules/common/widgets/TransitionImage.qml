@@ -80,7 +80,7 @@ Item {
         }
     }
 
-    Image {
+    AnimatedImage {
         id: imgA
         anchors.fill: parent
         visible: root.imgAIsBack || (!root.transitionActive || !effectLoader.item || effectLoader.item.hideFront === false)
@@ -90,6 +90,7 @@ Item {
         fillMode: root.fillMode
         sourceSize: root.sourceSize
         cache: root.cache; antialiasing: root.antialiasing; asynchronous: root.asynchronous; smooth: root.smooth; mipmap: root.mipmap
+        playing: visible
 
         onStatusChanged: {
             let wait = effectLoader.item ? effectLoader.item.waitForReady !== false : true
@@ -103,7 +104,7 @@ Item {
         }
     }
 
-    Image {
+    AnimatedImage {
         id: imgB
         anchors.fill: parent
         visible: !root.imgAIsBack || (!root.transitionActive || !effectLoader.item || effectLoader.item.hideFront === false)
@@ -113,6 +114,7 @@ Item {
         fillMode: root.fillMode
         sourceSize: root.sourceSize
         cache: root.cache; antialiasing: root.antialiasing; asynchronous: root.asynchronous; smooth: root.smooth; mipmap: root.mipmap
+        playing: visible
 
         onStatusChanged: {
             let wait = effectLoader.item ? effectLoader.item.waitForReady !== false : true

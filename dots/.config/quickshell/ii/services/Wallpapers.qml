@@ -1,3 +1,4 @@
+import qs
 import qs.modules.common
 import qs.modules.common.models
 import qs.modules.common.functions
@@ -302,6 +303,9 @@ Singleton {
         }
         function applyToMonitor(path: string, monitor: string): void {
             root.apply(path, Appearance.m3colors.darkmode, monitor);
+        }
+        function applyPersist(path: string, monitor: string): void {
+            root.apply(path, root.preferredDarkMode, monitor, true);
         }
         function fetchPerMonitor(): void {
             root.fetchPerMonitor();

@@ -187,6 +187,22 @@ EOF
     mv "$RESTORE_SCRIPT.tmp" "$RESTORE_SCRIPT"
 }
 
+set_wallpaper_and_thumbnail() {
+    local wp_path="$1"
+    local thumb_path="$2"
+    # Never save special flags or empty strings as the wallpaper path
+    if [[ -z "$wp_path" || "$wp_path" == "--restore" || "$wp_path" == "null" ]]; then
+        wp_path=""
+    fi
+    if [ -f "$SHELL_CONFIG_FILE" ]; then
+        jq --indent 4 \
+           --arg wp "$wp_path" \
+           --arg th "$thumb_path" \
+           '.background.wallpaperPath = $wp | .background.thumbnailPath = $th' \
+           "$SHELL_CONFIG_FILE" > "$SHELL_CONFIG_FILE.tmp" && mv "$SHELL_CONFIG_FILE.tmp" "$SHELL_CONFIG_FILE"
+    fi
+}
+
 set_wallpaper_path() {
     local path="$1"
     # Never save special flags or empty strings as the wallpaper path
@@ -434,8 +450,10 @@ switch() {
                 exit 0
             fi
 
-            # Set wallpaper path
-            [[ -z "$no_save_flag" && -z "$noswitch_flag" ]] && set_wallpaper_path "$imgpath"
+            # Set wallpaper and thumbnail atomically
+            if [[ -z "$no_save_flag" && -z "$noswitch_flag" ]]; then
+                set_wallpaper_and_thumbnail "$imgpath" "$thumbnail"
+            fi
 
             # Set video wallpaper
             local video_path="$imgpath"

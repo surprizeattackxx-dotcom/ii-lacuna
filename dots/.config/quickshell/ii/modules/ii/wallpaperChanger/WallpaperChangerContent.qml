@@ -29,6 +29,11 @@ Item {
 
     MatugenColors { id: _theme }
 
+    // Monitor the changer was opened on — preview and apply must both target
+    // this, not Hyprland.focusedMonitor, which follows the mouse and can point
+    // at a different monitor by the time the user commits.
+    property string targetMonitor: Hyprland.focusedMonitor?.name ?? ""
+
     property string originalWallpaper: ""
     property string targetWallName: ""
     property bool initialFocusSet: false
@@ -76,7 +81,7 @@ Item {
     }
     onPreviewPlainPathChanged: {
         if (GlobalStates.wallpaperChangerOpen) {
-            GlobalStates.wallpaperPreviewMonitor = Hyprland.focusedMonitor?.name ?? "";
+            GlobalStates.wallpaperPreviewMonitor = root.targetMonitor;
             GlobalStates.wallpaperPreviewPath = previewPlainPath;
         }
     }
@@ -469,11 +474,11 @@ Item {
 
         let path = fullPath || (srcDir + "/" + getCleanName(safeFileName));
         if (!previewIsVideo && !previewIsWpe) {
-            GlobalStates.wallpaperPreviewMonitor = Hyprland.focusedMonitor?.name ?? "";
+            GlobalStates.wallpaperPreviewMonitor = root.targetMonitor;
             GlobalStates.wallpaperPreviewPath = path;
             GlobalStates.wallpaperPreviewCommitted = true;
         }
-        Wallpapers.apply(path, Wallpapers.preferredDarkMode, Hyprland.focusedMonitor?.name ?? "", true);
+        Wallpapers.apply(path, Wallpapers.preferredDarkMode, root.targetMonitor, true);
         GlobalStates.wallpaperChangerOpen = false;
     }
 
@@ -1028,10 +1033,10 @@ Item {
             isDownloadingWallpaper = false;
             currentDownloadName = "";
             if (exitCode === 0) {
-                GlobalStates.wallpaperPreviewMonitor = Hyprland.focusedMonitor?.name ?? "";
+                GlobalStates.wallpaperPreviewMonitor = root.targetMonitor;
                 GlobalStates.wallpaperPreviewPath = searchDownloadProc.destFile;
                 GlobalStates.wallpaperPreviewCommitted = true;
-                Wallpapers.apply(searchDownloadProc.destFile, Wallpapers.preferredDarkMode, Hyprland.focusedMonitor?.name ?? "", true);
+                Wallpapers.apply(searchDownloadProc.destFile, Wallpapers.preferredDarkMode, root.targetMonitor, true);
                 GlobalStates.wallpaperChangerOpen = false;
             } else {
                 isApplying = false;

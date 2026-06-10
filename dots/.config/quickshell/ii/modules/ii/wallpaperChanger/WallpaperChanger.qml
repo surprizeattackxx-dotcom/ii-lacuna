@@ -34,7 +34,14 @@ Scope {
 
             mask: Region { item: changerContent }
 
-            Component.onCompleted: GlobalFocusGrab.addDismissable(panelWindow)
+            // Pin the screen chosen at open time — the binding above tracks
+            // focusedMonitor, so without this the window (and the apply target)
+            // follows the mouse to whatever monitor the cursor wanders onto.
+            Component.onCompleted: {
+                const s = panelWindow.screen;
+                panelWindow.screen = s;
+                GlobalFocusGrab.addDismissable(panelWindow)
+            }
             Component.onDestruction: GlobalFocusGrab.removeDismissable(panelWindow)
 
             Connections {
@@ -46,15 +53,19 @@ Scope {
 
             WallpaperChangerContent {
                 id: changerContent
+                targetMonitor: panelWindow.screen?.name ?? ""
             }
         }
     }
 
     property bool _awaitingStateWrite: false
 
+    // Safety net only — normal clear happens via applyFlushTimer after
+    // applyFinished. Must outlast a slow switchwall run (matugen + applycolor
+    // on 4K can take >15s); firing early reverts the background mid-apply.
     Timer {
         id: previewClearTimer
-        interval: 15000
+        interval: 60000
         onTriggered: {
             _awaitingStateWrite = false
             GlobalStates.wallpaperPreviewPath = ""
@@ -66,7 +77,7 @@ Scope {
     // stale content and wallpaperPath briefly flips to the old image.
     Timer {
         id: applyFlushTimer
-        interval: 200
+        interval: 1000
         onTriggered: {
             if (_awaitingStateWrite) {
                 _awaitingStateWrite = false
@@ -95,7 +106,12 @@ Scope {
 
     Connections {
         target: Wallpapers
-        function onApplyFinished() {
+        function onApplyFinished(exitCode, exitStatus) {
+            console.log(`[WallpaperChanger DEBUG] applyFinished: exitCode=${exitCode} _awaitingStateWrite=${_awaitingStateWrite}`);
+            if (exitCode !== 0) {
+                Quickshell.execDetached(["notify-send", "-a", "Wallpaper changer",
+                    "Wallpaper apply failed", `switchwall.sh exited with code ${exitCode} — background reverted`]);
+            }
             if (_awaitingStateWrite) {
                 previewClearTimer.stop()
                 applyFlushTimer.restart()
