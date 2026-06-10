@@ -14,7 +14,7 @@ VENV_PYTHON="${ILLOGICAL_IMPULSE_VIRTUAL_ENV:-$HOME/.local/state/quickshell/.ven
 VENV_PYTHON="${VENV_PYTHON/#\~/$HOME}"
 RESIZED_IMG_PATH="/tmp/quickshell/ai/theme-wallpaper.jpg"
 RAW_JSON_PATH="/tmp/quickshell/ai/theme-raw.json"
-MODEL="${GEMINI_THEME_MODEL:-gemini-3.1-flash-lite}"
+MODEL="${GEMINI_THEME_MODEL:-gemini-flash-lite-latest}"
 MONITOR_STATE_DIR="$STATE_DIR/user/generated/wallpaper/monitors"
 
 # Parse --monitor argument

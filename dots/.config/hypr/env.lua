@@ -30,6 +30,7 @@ hl.env("XDG_SESSION_DESKTOP", "Hyprland")
 hl.env("GBM_BACKEND", "nvidia-drm")
 hl.env("__GLX_VENDOR_LIBRARY_NAME", "nvidia")
 hl.env("LIBVA_DRIVER_NAME", "nvidia")
+hl.env("NVD_BACKEND", "direct")
 
 -- ─── Theme & Icons ─────────────────────────────
 hl.env("XCURSOR_THEME", "oreo_red_cursors")
