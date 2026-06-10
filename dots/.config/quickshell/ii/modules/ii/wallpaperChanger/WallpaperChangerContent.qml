@@ -759,7 +759,7 @@ Item {
 
             width: matchesFilter ? (targetWidth + spacing) : 0
             visible: width > 0.1 || opacity > 0.01
-            opacity: matchesFilter ? (isVisuallyEnlarged ? 1.0 : 0.6) : 0.0
+            opacity: matchesFilter ? 1.0 : 0.0
             scale: matchesFilter ? 1.0 : 0.5
             height: matchesFilter ? targetHeight : 0
             anchors.verticalCenter: parent?.verticalCenter ?? undefined; anchors.verticalCenterOffset: s(15)

@@ -23,8 +23,8 @@ hl.config({
       range = 2,
       render_power = 3
     },
-    inactive_opacity = 0.75,
-    active_opacity = 0.88,
+    inactive_opacity = 1.0,
+    active_opacity = 1.0,
     blur = {
       enabled = true,
       size = 14,
