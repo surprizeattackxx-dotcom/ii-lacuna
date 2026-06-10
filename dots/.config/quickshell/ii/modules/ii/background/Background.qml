@@ -375,7 +375,7 @@ Variants {
             TransitionImage {
                 id: wallpaper
                 visible: opacity > 0 && !blurLoader.active && !bgRoot.wallpaperIsVideo && !bgRoot.wallpaperIsWpe
-                opacity: (status === Image.Ready && !bgRoot.wallpaperIsVideo && !bgRoot.wallpaperIsWpe && !GlobalStates.wallpaperTransitioning) ? 1 : 0
+                opacity: (status === Image.Ready && !bgRoot.wallpaperIsVideo && !bgRoot.wallpaperIsWpe) ? 1 : 0
                 // Range = groups that workspaces span on
                 property int chunkSize: Config?.options.bar.workspaces.shown ?? 10
                 property int lower: Math.floor(bgRoot.firstWorkspaceId / chunkSize) * chunkSize

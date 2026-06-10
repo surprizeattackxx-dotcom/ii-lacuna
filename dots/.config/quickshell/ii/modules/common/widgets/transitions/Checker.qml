@@ -43,6 +43,7 @@ Item {
 
     Item {
         id: maskContainer
+        layer.textureSize: Qt.size(Math.max(1, Math.round(width / 2)), Math.max(1, Math.round(height / 2)))
         width: effect.width
         height: effect.height
         visible: false
@@ -54,16 +55,16 @@ Item {
                 required property int index
                 readonly property int col: index % effect.cols
                 readonly property int row: Math.floor(index / effect.cols)
-                readonly property real cellW: effect.width / effect.cols
-                readonly property real cellH: effect.height / effect.rows
                 // Checkerboard parity first, then a diagonal sweep within each parity group
                 readonly property real delay: ((col + row) % 2) * 0.18
                     + ((col + row) / (effect.cols + effect.rows)) * (1 - effect.cellWindow - 0.18)
-                readonly property real cellScale: Math.max(0, Math.min(1, (effect.progress - delay) / effect.cellWindow))
-                width: cellW * cellScale + (cellScale >= 1 ? 1 : 0)
-                height: cellH * cellScale + (cellScale >= 1 ? 1 : 0)
-                x: col * cellW + (cellW - width) / 2
-                y: row * cellH + (cellH - height) / 2
+                // Static geometry with a slight overlap; only scale animates per frame
+                width: effect.width / effect.cols + 1
+                height: effect.height / effect.rows + 1
+                x: col * (effect.width / effect.cols)
+                y: row * (effect.height / effect.rows)
+                transformOrigin: Item.Center
+                scale: Math.max(0, Math.min(1, (effect.progress - delay) / effect.cellWindow))
                 color: "black"
             }
         }

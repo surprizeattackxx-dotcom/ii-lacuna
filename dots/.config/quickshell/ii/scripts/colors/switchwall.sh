@@ -507,14 +507,11 @@ switch() {
                 fi
                 logger -t switchwall-debug "apply: _awww_output=$_awww_output"
                 ensure_awww_daemon
-                qs ipc -c ii call wallpaper transition 2>/dev/null || true
+                # No awww animation: the shell's Background covers this surface and
+                # runs its own QML shape transition — animating both doubles GPU load.
                 awww img "$imgpath" \
                     ${_awww_output:+--outputs "$_awww_output"} \
-                    --transition-type grow \
-                    --transition-pos "${cursorposx},${cursorposy}" \
-                    --transition-duration 0.8 \
-                    --transition-fps 60 \
-                    --transition-step 90
+                    --transition-type none
                 awww_exit=$?
                 logger -t switchwall-debug "apply: awww exit code=$awww_exit"
                 logger -t switchwall-debug "apply: about to write_monitor_state monitor=$_awww_output path=$imgpath dir=$MONITOR_STATE_DIR"

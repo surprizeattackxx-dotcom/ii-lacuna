@@ -55,6 +55,7 @@ Item {
 
     Item {
         id: maskContainer
+        layer.textureSize: Qt.size(Math.max(1, Math.round(width / 2)), Math.max(1, Math.round(height / 2)))
         width: effect.width
         height: effect.height
         visible: false
