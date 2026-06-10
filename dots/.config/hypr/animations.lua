@@ -21,4 +21,4 @@ hl.animation({ leaf = "fadeLayers",   enabled = true, speed = 10, bezier = "defa
 hl.animation({ leaf = "workspaces",   enabled = true, speed = 7,  bezier = "overshot", style = "slidevert" })
 hl.animation({ leaf = "border",       enabled = true, speed = 1,  bezier = "liner" })
 hl.animation({ leaf = "layers",       enabled = true, speed = 4,  bezier = "bounce", style = "slidevert right" })
-hl.animation({ leaf = "borderangle",  enabled = true, speed = 30, bezier = "liner", style = "loop" })
+hl.animation({ leaf = "borderangle",  enabled = true, speed = 10, bezier = "liner", style = "once" })

@@ -13,7 +13,7 @@ hl.animation({ leaf = "windowsIn",    enabled = true, speed = 5,   bezier = "win
 hl.animation({ leaf = "windowsOut",   enabled = true, speed = 3,   bezier = "smoothOut",style = "slide" })
 hl.animation({ leaf = "windowsMove",  enabled = true, speed = 5,   bezier = "wind",     style = "slide" })
 hl.animation({ leaf = "border",       enabled = true, speed = 1,   bezier = "liner" })
-hl.animation({ leaf = "borderangle",  enabled = true, speed = 180, bezier = "liner",    style = "loop" }) -- used by rainbow borders and rotating colors
+hl.animation({ leaf = "borderangle",  enabled = true, speed = 10, bezier = "liner",    style = "once" }) -- used by rainbow borders and rotating colors
 hl.animation({ leaf = "fade",         enabled = true, speed = 3,   bezier = "smoothOut" })
 hl.animation({ leaf = "workspaces",   enabled = true, speed = 5,   bezier = "overshot" })
 

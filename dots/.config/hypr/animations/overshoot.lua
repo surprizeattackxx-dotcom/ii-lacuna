@@ -24,7 +24,7 @@ hl.animation({ leaf = "layersIn",      enabled = true, speed = 5, bezier = "bigS
 hl.animation({ leaf = "layersOut",     enabled = true, speed = 2, bezier = "menu_accel" })
 
 hl.animation({ leaf = "border",        enabled = true, speed = 1,  bezier = "liner" })
-hl.animation({ leaf = "borderangle",   enabled = true, speed = 30, bezier = "liner", style = "loop" })
+hl.animation({ leaf = "borderangle",   enabled = true, speed = 10, bezier = "liner", style = "once" })
 
 hl.animation({ leaf = "workspaces",       enabled = true, speed = 7, bezier = "bigShot",   style = "slide" })
 hl.animation({ leaf = "specialWorkspace", enabled = true, speed = 6, bezier = "bigShotIn", style = "slidevert" })
