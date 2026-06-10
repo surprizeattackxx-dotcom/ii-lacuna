@@ -13,6 +13,7 @@ TERMSCHEME="$SCRIPT_DIR/terminal/scheme-base.json"
 VENV_PYTHON="${ILLOGICAL_IMPULSE_VIRTUAL_ENV:-$HOME/.local/state/quickshell/.venv}/bin/python3"
 VENV_PYTHON="${VENV_PYTHON/#\~/$HOME}"
 RESIZED_IMG_PATH="/tmp/quickshell/ai/theme-wallpaper.jpg"
+RAW_JSON_PATH="/tmp/quickshell/ai/theme-raw.json"
 MODEL="${GEMINI_THEME_MODEL:-gemini-3.1-flash-lite}"
 MONITOR_STATE_DIR="$STATE_DIR/user/generated/wallpaper/monitors"
 
@@ -88,43 +89,78 @@ else
 fi
 B64DATA="$(base64 "$B64FLAGS" "$RESIZED_IMG_PATH")"
 
-# Prompt: asks Gemini to study the wallpaper and produce M3 colors
-PROMPT='You are a Material 3 color scheme generator. Study this wallpaper and generate a cohesive dark Material 3 color palette that captures its mood and dominant colors.
+# Required Material 3 keys — Catppuccin aliases are derived locally afterwards
+M3_KEYS=(
+    background surface surface_dim surface_bright
+    surface_container_lowest surface_container_low surface_container surface_container_high surface_container_highest
+    surface_variant surface_tint
+    on_background on_surface on_surface_variant
+    primary primary_container primary_fixed primary_fixed_dim
+    on_primary on_primary_container on_primary_fixed on_primary_fixed_variant
+    secondary secondary_container secondary_fixed secondary_fixed_dim
+    on_secondary on_secondary_container on_secondary_fixed on_secondary_fixed_variant
+    tertiary tertiary_container tertiary_fixed tertiary_fixed_dim
+    on_tertiary on_tertiary_container on_tertiary_fixed on_tertiary_fixed_variant
+    error error_container on_error on_error_container
+    outline outline_variant
+    shadow scrim
+    inverse_surface inverse_on_surface inverse_primary
+    success on_success success_container on_success_container
+)
 
-Return ONLY a JSON object with these exact keys — all hex colors in #rrggbb lowercase format, dark theme:
+# Analyze the wallpaper (reuses scheme_for_image.py) so Gemini knows whether
+# to go muted or punchy instead of guessing from a 400px thumbnail alone
+STATS_LINE=""
+if [[ -x "$VENV_PYTHON" && -f "$SCRIPT_DIR/scheme_for_image.py" ]]; then
+    CF=$("$VENV_PYTHON" "$SCRIPT_DIR/scheme_for_image.py" "$RESIZED_IMG_PATH" --colorfulness 2>/dev/null)
+    BR=$("$VENV_PYTHON" "$SCRIPT_DIR/scheme_for_image.py" "$RESIZED_IMG_PATH" --brightness 2>/dev/null)
+    if [[ "$CF" =~ ^[0-9.]+$ && "$BR" =~ ^[0-9.]+$ ]]; then
+        CVIBE=$(awk -v c="$CF" 'BEGIN{
+            if (c<20) print "near-greyscale and very muted: keep the palette subdued and low-saturation with one gentle accent";
+            else if (c<40) print "low colour: favour soft neutral tones with restrained accents";
+            else if (c<70) print "moderately colourful: aim for a balanced, naturalistic palette";
+            else if (c<100) print "vivid: use expressive, saturated accents";
+            else print "extremely colourful: go bold with punchy high-chroma accents";
+        }')
+        BVIBE=$(awk -v b="$BR" 'BEGIN{
+            if (b<64) print "very dark"; else if (b<128) print "dark";
+            else if (b<200) print "bright"; else print "very bright";
+        }')
+        STATS_LINE="Image analysis: colorfulness ${CF} (${CVIBE}). Average brightness ${BR}/255 (${BVIBE} image)."
+    fi
+fi
 
-background, surface, surface_dim, surface_bright,
-surface_container_lowest, surface_container_low, surface_container, surface_container_high, surface_container_highest,
-surface_variant, surface_tint,
-on_background, on_surface, on_surface_variant,
-primary, primary_container, primary_fixed, primary_fixed_dim,
-on_primary, on_primary_container, on_primary_fixed, on_primary_fixed_variant,
-secondary, secondary_container, secondary_fixed, secondary_fixed_dim,
-on_secondary, on_secondary_container, on_secondary_fixed, on_secondary_fixed_variant,
-tertiary, tertiary_container, tertiary_fixed, tertiary_fixed_dim,
-on_tertiary, on_tertiary_container, on_tertiary_fixed, on_tertiary_fixed_variant,
-error, error_container, on_error, on_error_container,
-outline, outline_variant,
-shadow, scrim,
-inverse_surface, inverse_on_surface, inverse_primary,
-success, on_success, success_container, on_success_container
+# Respect the configured color mode instead of hardcoding dark
+MODE_PREF=$(jq -r '.appearance.colorMode // "dark"' "$SHELL_CONFIG_FILE" 2>/dev/null)
+[[ "$MODE_PREF" == "light" ]] || MODE_PREF="dark"
+if [[ "$MODE_PREF" == "dark" ]]; then
+    MODE_RULES='- dark theme: background deep (~#101018 territory, tinted with the wallpaper hue, not pure black); surfaces deep but not pure black; on_* colors light'
+else
+    MODE_RULES='- light theme: background near-white (~#f6f2fb territory, tinted with the wallpaper hue, not pure white); surfaces light; on_* colors dark'
+fi
 
-Plus these Catppuccin aliases (same hex values as their M3 counterparts):
-mauve=primary, blue=secondary, teal=tertiary, red=error,
-base=background, mantle=surface_container_low, text=on_surface, subtext0=on_surface_variant,
-overlay0=outline, overlay1=surface_container_high, surface0=surface_container, surface1=surface_container_high, surface2=surface_container_highest
+PROMPT="You are a Material 3 color scheme generator. Study this wallpaper and generate a cohesive ${MODE_PREF} Material 3 color palette that captures its mood and dominant colors.
+${STATS_LINE}
+
+Fill every key in the response schema with a hex color in #rrggbb lowercase format.
 
 Rules:
-- dark theme (background ~#0f0a1a range, not light)
+${MODE_RULES}
 - primary should be the most distinctive/accent color from the wallpaper
-- secondary, tertiary should harmonize — analogous or complementary to primary
-- surfaces should be deep but not pure black
-- on_* colors must contrast well against their container
-- Extract actual colors from the wallpaper, dont invent them'
+- secondary and tertiary should harmonize — analogous or complementary to primary
+- surface_container_lowest through surface_container_highest must form a smooth, evenly spaced tonal ramp tinted with the primary hue
+- every on_* color must contrast clearly (WCAG >= 4.5) against its counterpart
+- error stays reddish and success stays greenish, both tinted to fit the palette
+- Extract actual colors from the wallpaper, dont invent them"
+
+M3_KEYS_JSON=$(printf '%s\n' "${M3_KEYS[@]}" | jq -R . | jq -s .)
+SCHEMA=$(jq -n --argjson keys "$M3_KEYS_JSON" \
+    '{type: "OBJECT", properties: ($keys | map({(.): {type: "STRING"}}) | add), required: $keys}')
 
 payload=$(jq -n \
     --arg b64 "$B64DATA" \
     --arg prompt "$PROMPT" \
+    --argjson schema "$SCHEMA" \
     '{
         contents: [{
             parts: [
@@ -134,36 +170,126 @@ payload=$(jq -n \
         }],
         generationConfig: {
             responseMimeType: "application/json",
+            responseSchema: $schema,
             temperature: 0.3
         }
     }')
 
+mkdir -p "$(dirname "$COLORS_JSON")"
+export M3_KEYS_STR="${M3_KEYS[*]}"
+
+# Validate, contrast-fix, alias, and write colors.json; exits 1 on bad input
+validate_and_write() {
+    python3 - "$RAW_JSON_PATH" "$COLORS_JSON" << 'PYEOF'
+import json, os, re, sys
+
+req = os.environ["M3_KEYS_STR"].split()
+ALIASES = {
+    "mauve": "primary", "blue": "secondary", "teal": "tertiary", "red": "error",
+    "base": "background", "mantle": "surface_container_low",
+    "text": "on_surface", "subtext0": "on_surface_variant",
+    "overlay0": "outline", "overlay1": "surface_container_high",
+    "surface0": "surface_container", "surface1": "surface_container_high",
+    "surface2": "surface_container_highest",
+}
+
+def norm(v):
+    if not isinstance(v, str):
+        return None
+    v = v.strip().lower()
+    m = re.fullmatch(r'#?([0-9a-f]{6})', v)
+    if m:
+        return '#' + m.group(1)
+    m = re.fullmatch(r'#?([0-9a-f]{3})', v)
+    if m:
+        return '#' + ''.join(c * 2 for c in m.group(1))
+    return None
+
+def rgb(h):
+    return tuple(int(h[i:i+2], 16) for i in (1, 3, 5))
+
+def lum(h):
+    def f(c):
+        c /= 255
+        return c / 12.92 if c <= 0.03928 else ((c + 0.055) / 1.055) ** 2.4
+    r, g, b = rgb(h)
+    return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b)
+
+def ratio(a, b):
+    la, lb = sorted((lum(a), lum(b)), reverse=True)
+    return (la + 0.05) / (lb + 0.05)
+
+def blend(a, b, t):
+    ra, rb = rgb(a), rgb(b)
+    return '#%02x%02x%02x' % tuple(round(ra[i] + (rb[i] - ra[i]) * t) for i in range(3))
+
+with open(sys.argv[1]) as f:
+    raw = json.load(f)
+
+d = {}
+for k in req:
+    v = norm(raw.get(k))
+    if v is None:
+        print(f"[Gemini] invalid/missing key: {k} = {raw.get(k)!r}", file=sys.stderr)
+        sys.exit(1)
+    d[k] = v
+
+# Repair only clearly broken pairs (< 3.0); push them to a readable 4.5
+for k in req:
+    if not k.startswith('on_'):
+        continue
+    base = k[3:]
+    if base not in d or ratio(d[k], d[base]) >= 3.0:
+        continue
+    target = max(('#000000', '#ffffff'), key=lambda c: ratio(c, d[base]))
+    fixed = d[k]
+    for _ in range(12):
+        fixed = blend(fixed, target, 0.15)
+        if ratio(fixed, d[base]) >= 4.5:
+            break
+    d[k] = fixed
+
+for alias, src in ALIASES.items():
+    d[alias] = d[src]
+
+with open(sys.argv[2], 'w') as f:
+    json.dump(d, f, indent=4)
+PYEOF
+}
+
 echo "[Gemini] Sending wallpaper to Gemini ($MODEL)..." >&2
 
-response=$(curl -s "https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent" \
-    -H "x-goog-api-key: $API_KEY" \
-    -H 'Content-Type: application/json' \
-    -X POST \
-    -d "$payload")
+ok=""
+for attempt in 1 2; do
+    response=$(curl -s "https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent" \
+        -H "x-goog-api-key: $API_KEY" \
+        -H 'Content-Type: application/json' \
+        -X POST \
+        -d "$payload")
 
-generated=$(echo "$response" | jq -r '.candidates[0].content.parts[0].text' 2>/dev/null)
+    generated=$(echo "$response" | jq -r '.candidates[0].content.parts[0].text // empty' 2>/dev/null)
+    if [[ -z "$generated" ]]; then
+        echo "[Gemini] Attempt $attempt: empty response." >&2
+        echo "$response" | jq -r '.error.message // empty' >&2
+        continue
+    fi
 
-if [[ -z "$generated" || "$generated" == "null" ]]; then
-    echo "Error: Gemini returned empty response." >&2
-    echo "$response" | jq '.' >&2
+    if ! printf '%s' "$generated" | jq -e . > "$RAW_JSON_PATH" 2>/dev/null; then
+        echo "[Gemini] Attempt $attempt: invalid JSON." >&2
+        continue
+    fi
+
+    if validate_and_write; then
+        ok=1
+        break
+    fi
+    echo "[Gemini] Attempt $attempt: palette failed validation, retrying..." >&2
+done
+
+if [[ -z "$ok" ]]; then
+    echo "Error: Gemini did not return a usable palette after 2 attempts." >&2
     exit 1
 fi
-
-echo "$generated" | jq '.' > /dev/null 2>&1
-if [[ $? -ne 0 ]]; then
-    echo "Error: Invalid JSON from Gemini." >&2
-    echo "$generated" >&2
-    exit 1
-fi
-
-# Write colors.json
-mkdir -p "$(dirname "$COLORS_JSON")"
-echo "$generated" | jq '.' > "$COLORS_JSON"
 
 # Generate SCSS from colors.json (same camelCase conversion as apply_custom_theme.sh)
 python3 - "$COLORS_JSON" > "$SCSS_FILE" << 'PYEOF'
@@ -186,7 +312,7 @@ if jq -e '.term0' "$COLORS_JSON" > /dev/null 2>&1; then
     : # already in SCSS
 elif [[ -f "$TERMSCHEME" && -x "$VENV_PYTHON" ]]; then
     "$VENV_PYTHON" "$SCRIPT_DIR/generate_colors_material.py" \
-        --color "$PRIMARY" --mode "dark" \
+        --color "$PRIMARY" --mode "$MODE_PREF" \
         --termscheme "$TERMSCHEME" --blend_bg_fg 2>/dev/null \
         | grep -E '^\$term[0-9]+:' >> "$SCSS_FILE"
 fi
