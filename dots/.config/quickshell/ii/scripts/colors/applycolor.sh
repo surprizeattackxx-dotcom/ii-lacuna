@@ -736,6 +736,7 @@ apply_chrome() {
     if [ -f "$theme_json" ]; then
         python3 "$SCRIPT_DIR/generate_chrome_theme.py" "$theme_json" "$chrome_theme_dir"
         python3 "$SCRIPT_DIR/reload_chrome_theme.py" "$chrome_theme_dir"
+        python3 "$SCRIPT_DIR/sync_mynt_theme.py" "$theme_json"
     fi
 }
 
