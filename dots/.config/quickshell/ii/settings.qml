@@ -7,6 +7,7 @@
 //@ pragma Env QT_SCALE_FACTOR=1
 
 import QtQuick
+import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Window
 import Quickshell

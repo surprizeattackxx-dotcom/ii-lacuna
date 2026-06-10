@@ -45,6 +45,27 @@ ContentPage {
                     }
                 }
             }
+
+            ContentSubsection {
+                title: Translation.tr("Transition shape")
+                visible: Config.options.background.animateWallpaperChanges
+
+                ConfigSelectionArray {
+                    currentValue: Config.options.background.transitionType
+                    onSelected: newValue => {
+                        Config.options.background.transitionType = newValue;
+                    }
+                    options: [
+                        { displayName: Translation.tr("Crossfade"), icon: "transition_fade", value: "crossfade" },
+                        { displayName: Translation.tr("Radial"), icon: "adjust", value: "radial" },
+                        { displayName: Translation.tr("Outer"), icon: "all_out", value: "outer" },
+                        { displayName: Translation.tr("Wipe"), icon: "arrow_right_alt", value: "wipe" },
+                        { displayName: Translation.tr("Slash"), icon: "call_made", value: "slash" },
+                        { displayName: Translation.tr("Diamond"), icon: "diamond", value: "diamond" },
+                        { displayName: Translation.tr("Wave"), icon: "waves", value: "wave" }
+                    ]
+                }
+            }
         }
 
         ContentSection {
