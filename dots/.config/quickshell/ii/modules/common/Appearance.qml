@@ -111,11 +111,13 @@ Singleton {
         property color colSubtext: m3colors.subtext0
         // ... (remaining mappings unchanged from previous turn)
         property color colLayer0Base: m3colors.base
-        property color colLayer0: ColorUtils.transparentize(colLayer0Base, root.backgroundTransparency)
+        // Liquid glass: lift the fill toward white so blurred content reads as frosted material
+        property color colLayer0: ColorUtils.transparentize(root.darkmode ? ColorUtils.mix("#ffffff", colLayer0Base, 0.07) : colLayer0Base, root.backgroundTransparency)
         property color colOnLayer0: m3colors.text
         property color colLayer0Hover: ColorUtils.transparentize(ColorUtils.mix(colLayer0, colOnLayer0, 0.9, root.contentTransparency))
         property color colLayer0Active: ColorUtils.transparentize(ColorUtils.mix(colLayer0, colOnLayer0, 0.8, root.contentTransparency))
-        property color colLayer0Border: m3colors.overlay1
+        // Specular rim — bright edge highlight instead of an outline color
+        property color colLayer0Border: root.darkmode ? Qt.rgba(1, 1, 1, 0.22) : Qt.rgba(1, 1, 1, 0.7)
         property color colLayer1Base: m3colors.mantle
         property color colLayer1: ColorUtils.solveOverlayColor(colLayer0Base, colLayer1Base, 1 - root.contentTransparency);
         property color colOnLayer1: m3colors.subtext0;
@@ -191,14 +193,14 @@ Singleton {
     rounding: QtObject {
         property int unsharpen: Config.options.appearance.sharpMode ? 0 : 2
         property int unsharpenmore: Config.options.appearance.sharpMode ? 0 : 6
-        property int verysmall: Config.options.appearance.sharpMode ? 0 : 8
-        property int small: Config.options.appearance.sharpMode ? 0 : 12
-        property int normal: Config.options.appearance.sharpMode ? 0 : 17
-        property int large: Config.options.appearance.sharpMode ? 0 : 23
-        property int verylarge: Config.options.appearance.sharpMode ? 0 : 30
+        property int verysmall: Config.options.appearance.sharpMode ? 0 : 10
+        property int small: Config.options.appearance.sharpMode ? 0 : 14
+        property int normal: Config.options.appearance.sharpMode ? 0 : 20
+        property int large: Config.options.appearance.sharpMode ? 0 : 28
+        property int verylarge: Config.options.appearance.sharpMode ? 0 : 36
         property int full: Config.options.appearance.sharpMode ? 0 : 9999
         property int screenRounding: large
-        property int windowRounding: Config.options.appearance.sharpMode ? 0 : 18
+        property int windowRounding: Config.options.appearance.sharpMode ? 0 : 24
     }
 
     font: QtObject {

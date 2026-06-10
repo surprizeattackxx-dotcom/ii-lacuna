@@ -181,10 +181,20 @@ Scope {
                     width: dockRoot.sizing.backgroundWidth
                     height: dockRoot.sizing.backgroundHeight
 
-                    color: Appearance.colors.colLayer0
+                    color: "transparent"
                     border.width: 1
                     border.color: Appearance.colors.colLayer0Border
                     radius: Appearance.rounding.large
+
+                    GlassPanel {
+                        anchors.fill: parent
+                        anchors.margins: 1
+                        cornerRadius: dockVisualBackground.radius - 1
+                        screen: dockVisualBackground.QsWindow.window?.screen
+                        screenX: ((dockVisualBackground.QsWindow.window?.screen?.width ?? 0) - width) / 2
+                        screenY: (dockVisualBackground.QsWindow.window?.screen?.height ?? 0) - height - Appearance.sizes.hyprlandGapsOut
+                        tint: Appearance.colors.colLayer0
+                    }
 
                     DropArea {
                         id: fileDropArea

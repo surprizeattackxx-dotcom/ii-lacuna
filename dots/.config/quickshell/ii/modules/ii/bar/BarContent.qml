@@ -87,13 +87,25 @@ Item { // Bar content region
             fill: parent
             margins: Config.options.bar.cornerStyle === 1 ? (Appearance.sizes.hyprlandGapsOut) : 0 // idk why but +1 is needed
         }
-        color: root.showBarBackground ? Appearance.colors.colLayer0 : "transparent"
+        color: "transparent"
         radius: Config.options.bar.cornerStyle === 1 ? Appearance.rounding.windowRounding : 0
-        border.width: Config.options.bar.cornerStyle === 1 ? 1 : 0
-        border.color: root.showBarBackground ? Appearance.colors.colLayer0Border : "transparent"
 
-        Behavior on color {
-            animation: Appearance.animation.elementMoveFast.colorAnimation.createObject(this)
+        GlassPanel {
+            anchors.fill: parent
+            visible: root.showBarBackground
+            screen: root.screen
+            cornerRadius: barBackground.radius
+            screenX: barBackground.x + Appearance.sizes.hyprlandGapsOut
+            screenY: Config.options.bar.bottom ? ((root.screen?.height ?? 0) - root.height + barBackground.y) : barBackground.y
+            tint: Appearance.colors.colLayer0
+        }
+
+        Rectangle { // specular rim above the glass
+            anchors.fill: parent
+            radius: barBackground.radius
+            color: "transparent"
+            border.width: Config.options.bar.cornerStyle === 1 ? 1 : 0
+            border.color: root.showBarBackground ? Appearance.colors.colLayer0Border : "transparent"
         }
     }
 

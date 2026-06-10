@@ -111,6 +111,9 @@ hl.window_rule({ no_initial_focus = true, name = "jetbrains-fix", match = { clas
 
 -- ··· Global ···
 hl.layer_rule({ xray = true, match = { namespace = ".*" } })
+-- xray blur samples the background *level*, but the visible wallpaper is
+-- quickshell's Background on the bottom level — glass needs real sampling
+hl.layer_rule({ xray = false, match = { namespace = "quickshell:.*" } })
 
 -- ··· Blur ···
 local layer_blur = {
@@ -118,11 +121,12 @@ local layer_blur = {
   "session[0-9]*", "bar[0-9]*", "barcorner.*", "dock[0-9]*",
   "indicator.*", "overview[0-9]*", "cheatsheet[0-9]*",
   "sideright[0-9]*", "sideleft[0-9]*", "osk[0-9]*",
-  "quickshell:(?!appLauncher).*", "quickshell:session",
+  "quickshell:.*", "quickshell:session",
 }
 for _, ns in ipairs(layer_blur) do
   hl.layer_rule({ blur = true, match = { namespace = ns } })
 end
+hl.layer_rule({ blur = false, match = { namespace = "quickshell:appLauncher" } })
 
 -- ··· Ignore alpha ···
 local layer_ignore_alpha = {
