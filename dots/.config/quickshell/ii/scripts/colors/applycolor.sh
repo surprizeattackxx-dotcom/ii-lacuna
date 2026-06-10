@@ -731,7 +731,7 @@ ROFIEOF
 # ---------------------------------------------------------------------------
 apply_chrome() {
     local theme_json="$STATE_DIR/user/generated/colors.json"
-    local chrome_theme_dir="$HOME/.local/state/quickshell/chrome-theme"
+    local chrome_theme_dir="$HOME/Projects/chrome-theme"
     
     if [ -f "$theme_json" ]; then
         python3 "$SCRIPT_DIR/generate_chrome_theme.py" "$theme_json" "$chrome_theme_dir"

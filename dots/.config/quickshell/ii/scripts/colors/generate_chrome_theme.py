@@ -70,7 +70,11 @@ def main() -> None:
         "theme": {"colors": colors},
     }
 
-    (output_dir / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    # Replace a symlinked manifest (repo default) instead of writing through it
+    mf = output_dir / "manifest.json"
+    if mf.is_symlink():
+        mf.unlink()
+    mf.write_text(json.dumps(manifest, indent=2) + "\n")
 
 
 if __name__ == "__main__":
