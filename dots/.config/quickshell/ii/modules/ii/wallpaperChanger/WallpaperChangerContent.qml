@@ -79,10 +79,18 @@ Item {
         if (fp.length > 0) return fp;
         return String(it.fileUrl || "").replace(/^file:\/\//, "");
     }
-    onPreviewPlainPathChanged: {
-        if (GlobalStates.wallpaperChangerOpen) {
-            GlobalStates.wallpaperPreviewMonitor = root.targetMonitor;
-            GlobalStates.wallpaperPreviewPath = previewPlainPath;
+    // Debounced: swiping through the list fires per item, and each background
+    // preview costs a full-res decode + shape transition. Only preview the
+    // wallpaper the user actually rests on.
+    onPreviewPlainPathChanged: previewDebounce.restart()
+    Timer {
+        id: previewDebounce
+        interval: 250
+        onTriggered: {
+            if (GlobalStates.wallpaperChangerOpen) {
+                GlobalStates.wallpaperPreviewMonitor = root.targetMonitor;
+                GlobalStates.wallpaperPreviewPath = root.previewPlainPath;
+            }
         }
     }
 
