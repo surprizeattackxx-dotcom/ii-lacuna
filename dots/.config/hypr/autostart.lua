@@ -30,10 +30,10 @@ hl.on("hyprland.start", function()
   hl.exec_cmd("wl-paste --type image --watch bash -c 'cliphist store && qs -c $qsConfig ipc call cliphistService update'")
 
   -- ─── Apps ───────────────────────────────────────
-  hl.exec_cmd("sleep 1 && thunderbird")
-  hl.exec_cmd("sleep 2 && discord")
-  hl.exec_cmd("sleep 4 && steam")
-  hl.exec_cmd("openrgb --start-minimized --profile 'Default'")
+  hl.exec_cmd("sleep 1 && uwsm app -- thunderbird")
+  hl.exec_cmd("sleep 2 && uwsm app -- discord")
+  hl.exec_cmd("sleep 4 && uwsm app -- steam")
+  hl.exec_cmd("uwsm app -- openrgb --start-minimized --profile 'Default'")
 
   -- ─── Theme & Cursor ─────────────────────────────
   hl.exec_cmd("hyprctl setcursor oreo_red_cursors 24")
