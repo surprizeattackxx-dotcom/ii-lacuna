@@ -737,6 +737,7 @@ apply_chrome() {
         python3 "$SCRIPT_DIR/generate_chrome_theme.py" "$theme_json" "$chrome_theme_dir"
         python3 "$SCRIPT_DIR/reload_chrome_theme.py" "$chrome_theme_dir"
         python3 "$SCRIPT_DIR/sync_mynt_theme.py" "$theme_json"
+        python3 "$SCRIPT_DIR/chrome_seed_color.py" "$theme_json"
     fi
 }
 
