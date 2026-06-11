@@ -172,8 +172,6 @@ Singleton {
     function runNightLightThemeSync() {
         if (!Persistent.ready || !Persistent.states.followNightLight)
             return;
-        if (GlobalStates.activeTheme !== "Matugen")
-            return;
         // Wait for Config before syncing — colorMode may not be resolved yet.
         if (!Config.ready) {
             nightLightThemeDebounce.restart();
@@ -184,8 +182,12 @@ Singleton {
         root.reEvaluate();
         root.ensureState();
         // Night light on (warm filter) → dark shell; off → light.
+        // Judge by the actual palette, not colorMode — the flag can desync from
+        // the generated colors (e.g. Gemini self-corrects it after generation).
         const wantDark = root.temperatureActive;
-        if (wantDark === Appearance.m3colors.darkmode) {
+        const bg = Appearance.m3colors.m3background;
+        const paletteIsDark = (0.299 * bg.r + 0.587 * bg.g + 0.114 * bg.b) < 0.5;
+        if (wantDark === paletteIsDark) {
             MaterialThemeLoader.reloadAfterExternalColorChange();
             return;
         }

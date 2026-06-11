@@ -102,7 +102,13 @@ ACTIVE_THEME="Matugen"
 STATE_FILE="$XDG_STATE_HOME/quickshell/states.json"
 [[ -f "$STATE_FILE" ]] && ACTIVE_THEME=$(jq -r '.activeTheme // "Matugen"' "$STATE_FILE" 2>/dev/null || echo "Matugen")
 
-if [[ "$ACTIVE_THEME" != "Matugen" ]]; then
+if [[ "$ACTIVE_THEME" == "Gemini" ]]; then
+    # Gemini theme has no preset json — regenerate via AI; the script reads
+    # .appearance.colorMode to decide dark vs light, so set it first
+    jq --arg m "$mode" '.appearance.colorMode = $m' "$SHELL_CONFIG_FILE" > "$SHELL_CONFIG_FILE.tmp" && mv "$SHELL_CONFIG_FILE.tmp" "$SHELL_CONFIG_FILE"
+    bash "$SCRIPT_DIR/gemini-generate-theme.sh" --monitor "$PREFERRED_MATUGEN_MONITOR"
+    qs -c ii ipc call theme reload 2>/dev/null || true
+elif [[ "$ACTIVE_THEME" != "Matugen" ]]; then
     # Re-apply the preset theme — keeps colors.json in sync, applies KDE scheme, etc.
     THEME_FILE="$(dirname "$SCRIPT_DIR")/defaults/themes/${ACTIVE_THEME,,}.json"
     if [[ -f "$THEME_FILE" ]]; then
