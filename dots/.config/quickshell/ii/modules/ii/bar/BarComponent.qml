@@ -84,7 +84,7 @@ Item {
     })
 
     property real startRadius: {
-        if (barGroupStyle === 0 || barGroupStyle === 1) return Appearance.rounding.full
+        if (barGroupStyle === 0) return Appearance.rounding.full
         if (barSection === 0) {
             if (originalIndex == 0) return Appearance.rounding.full
                 return Appearance.rounding.verysmall
@@ -99,7 +99,7 @@ Item {
     }
 
     property real endRadius: {
-        if (barGroupStyle === 0 || barGroupStyle === 1) return Appearance.rounding.full
+        if (barGroupStyle === 0) return Appearance.rounding.full
         if (barSection === 2) {
             if (originalIndex == list.length - 1) return Appearance.rounding.full
                 return Appearance.rounding.verysmall
@@ -132,7 +132,6 @@ Item {
 
             startRadius: rootItem.startRadius
             endRadius: rootItem.endRadius
-            islandStyle: rootItem.barGroupStyle === 1
             colBackground: primaryBackgroundComps.includes(modelData.id) ? rootItem.colBackgroundHighlight : rootItem.colBackground
             backgroundAlpha: barGroupStyle === 0 ? 0.82 : 1.0
 

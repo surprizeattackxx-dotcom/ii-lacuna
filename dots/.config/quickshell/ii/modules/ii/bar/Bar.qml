@@ -13,6 +13,12 @@ import qs.modules.common.widgets
 Scope {
     id: bar
 
+    // "Island" group style swaps the entire bar for the islands shell
+    // (TopBar + Dynamic Island), launched as its own qs instance via ~/.local/bin/islands
+    readonly property bool islandsMode: Config.options.bar.barGroupStyle === 1
+    onIslandsModeChanged: Quickshell.execDetached(["bash", "-c", "~/.local/bin/islands " + (islandsMode ? "start" : "stop")])
+    Component.onCompleted: Quickshell.execDetached(["bash", "-c", "~/.local/bin/islands " + (islandsMode ? "start" : "stop")])
+
     Variants {
         // For each monitor
         id: barVariant
@@ -28,7 +34,7 @@ Scope {
         model: variantModel
         LazyLoader {
             id: barLoader
-            active: GlobalStates.barOpen && !GlobalStates.screenLocked
+            active: GlobalStates.barOpen && !GlobalStates.screenLocked && !bar.islandsMode
             required property ShellScreen modelData
             property int monitorIndex: barVariant.variantModel.indexOf(modelData)
             component: PanelWindow { // Bar window

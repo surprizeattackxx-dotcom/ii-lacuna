@@ -1,0 +1,12 @@
+KeyboardApplet 1.0 KeyboardApplet.qml
+WifiApplet 1.0 WifiApplet.qml
+BluetoothApplet 1.0 BluetoothApplet.qml
+BatteryApplet 1.0 BatteryApplet.qml
+PowerApplet 1.0 PowerApplet.qml
+PulseApplet 1.0 PulseApplet.qml
+SystemTrayApplet 1.0 SystemTrayApplet.qml
+WorkspacesApplet 1.0 WorkspacesApplet.qml
+SpacerApplet 1.0 SpacerApplet.qml
+SeparatorApplet 1.0 SeparatorApplet.qml
+PluginApplet 1.0 PluginApplet.qml
+AvatarApplet 1.0 AvatarApplet.qml

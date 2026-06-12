@@ -237,7 +237,7 @@ ContentPage {
 
             ContentSubsection {
                 title: Translation.tr("Group style")
-                tooltip: Translation.tr("Island style makes the group background opaque when bar is transparent")
+                tooltip: Translation.tr("Island replaces the bar with the islands shell (TopBar + Dynamic Island)")
                 Layout.fillWidth: false
 
                 ConfigSelectionArray {

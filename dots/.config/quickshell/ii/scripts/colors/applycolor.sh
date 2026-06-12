@@ -298,6 +298,16 @@ apply_hamr() {
 }
 
 # ---------------------------------------------------------------------------
+# islands (Dynamic Island shell) — qs_colors.json in catppuccin-name shape,
+# inotify-watched by its Theme singleton so it re-themes live.
+# ---------------------------------------------------------------------------
+apply_islands() {
+    local gen="$HOME/.config/hypr/scripts/quickshell/gen_qs_colors.py"
+    [[ -f "$gen" ]] || return 0
+    python3 "$gen" && echo "[applycolor] islands colors written"
+}
+
+# ---------------------------------------------------------------------------
 # GTK3 — gtk-3.0/gtk.css @define-color block. applycolor already does GTK4 via
 # a separate colors.css; GTK3 has no auto-imported colors file, so we own gtk.css.
 # ---------------------------------------------------------------------------
@@ -837,6 +847,7 @@ apply_gtk4 &        # GTK4 colors.css — picked up automatically by running app
 apply_gtk3 &         # GTK3 gtk.css @define-color block
 apply_hyprlock &     # Hyprlock lock-screen colors
 apply_hamr &         # hamr launcher colors
+apply_islands &      # Dynamic Island qs_colors.json
 apply_fuzzel &       # fuzzel launcher theme
 apply_kitty &        # Kitty terminal config + live reload
 apply_tmux &         # Tmux background and status bar colors

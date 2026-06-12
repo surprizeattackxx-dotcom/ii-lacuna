@@ -1,0 +1,11 @@
+BaseBubble 1.0 BaseBubble.qml
+ClockMiniBubble 1.0 ClockMiniBubble.qml
+MusicMiniBubble 1.0 MusicMiniBubble.qml
+RecordingMiniBubble 1.0 RecordingMiniBubble.qml
+DiscordMiniBubble 1.0 DiscordMiniBubble.qml
+GameMiniBubble 1.0 GameMiniBubble.qml
+NotifMiniBubble 1.0 NotifMiniBubble.qml
+StashMiniBubble 1.0 StashMiniBubble.qml
+TimerMiniBubble 1.0 TimerMiniBubble.qml
+StopwatchMiniBubble 1.0 StopwatchMiniBubble.qml
+VpnMiniBubble 1.0 VpnMiniBubble.qml
