@@ -18,7 +18,6 @@ Item {
     property bool translatorEnabled: Config.options.policies.translator !== 0
     property bool animeEnabled: Config.options.policies.weeb !== 0  
     property bool animeCloset: Config.options.policies.weeb === 2  
-    property bool wallpapersEnabled: Config.options.policies.wallpapers !== 0
 
     property bool _sidebarExtended: scopeRoot.extend
     property int _maxTextTabs: _sidebarExtended ? 4 : 3

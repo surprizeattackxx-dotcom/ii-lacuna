@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Widgets
 import qs.modules.ii.overlay
+import qs
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets

@@ -1,24 +1,10 @@
-# ii-vynx Extension System
+# ii-vynx Extensions
 
 Extensions allow third-party QML components to be dynamically loaded into various shell surfaces — the bar, sidebar, background, overlay canvas — and to run background services. Everything is managed live from the Extensions settings page with no shell restart required.
 
----
+> [!WARNING]  
+> By submitting or developing an extension for ii-vynx Hyprland shell, you grant the shell developer the right to use, modify, redistribute, and integrate the extension, in whole or in part, for any purpose without restriction.
 
-## Table of Contents
-
-- [Quick Start](#quick-start)
-- [extension.json Schema](#extensionjson-schema)
-- [Contribution Points](#contribution-points)
-  - [services](#1-services)
-  - [barComponents](#2-barcomponents)
-  - [sidebarLeftPages](#3-sidebarleftpages)
-  - [sidebarRightBottom](#4-sidebarrightbottom)
-  - [backgroundWidgets](#5-backgroundwidgets)
-  - [overlayWidgets](#6-overlaywidgets)
-- [Lifecycle](#lifecycle)
-- [Persistence](#persistence)
-- [Best Practices](#best-practices)
-- [Publishing](#publishing)
 ---
 
 ## Quick Start
@@ -36,8 +22,6 @@ my-extension/
 ```
 
 **Minimal `extension.json`:**
-
-You can also check official and other extensions' `extension.json` to see what `extension.json` looks like when its fully filled.
 
 ```json
 {
@@ -59,6 +43,8 @@ You can also check official and other extensions' `extension.json` to see what `
 ```
 
 **Test locally:** Open Extensions settings, paste the absolute path to your extension directory, click Install. The extension appears instantly — toggle it on to see your widget in the bar.
+
+For rapid iteration, use the **Reload** button (local extensions only) to pick up changes without reinstalling.
 
 ---
 
@@ -98,7 +84,7 @@ Each key is a contribution point name. The value is always an **array of contrib
 
 ### 1. `services`
 
-Background processes that run for the lifetime of the extension.
+Long-running background processes that live for the lifetime of the extension.
 
 **Descriptor fields:**
 
@@ -152,8 +138,6 @@ QtObject {
 }
 ```
 
-**Consumer:** `ExtensionManager.qml` → `ExtensionServices.qml`
-
 ---
 
 ### 2. `barComponents`
@@ -172,7 +156,7 @@ Custom widgets that appear alongside built-in bar components.
 
 **QML contract:**
 
-The root item receives an `extensionId` property injected at runtime on load. No other special properties are required.
+The root item receives an `extensionId` property injected at runtime on load. Use `Appearance.sizes.barHeight` for height and `Appearance.sizes.verticalBarWidth` for width:
 
 ```qml
 // bar/MyWidget.qml
@@ -185,8 +169,7 @@ Item {
     // property string extensionId: "..."
 
     implicitWidth: 200
-    implicitHeight: Appearance.sizes.barHeight // It's recommended to use ---.barHeight when setting the height in the horizontal component
-                                               // And ---.verticalBarWidth when setting the width in the vertical component
+    implicitHeight: Appearance.sizes.barHeight
 
     Text {
         anchors.centerIn: parent
@@ -213,8 +196,6 @@ Item {
 }
 ```
 
-**Consumer:** `BarComponentRegistry.qml` (caches both horizontal and vertical components) → `BarComponent.qml` (renders via component ID lookup)
-
 ---
 
 ### 3. `sidebarLeftPages`
@@ -232,7 +213,7 @@ Custom pages/tabs in the left (policies) sidebar, alongside AI Chat, Translator,
 
 **QML contract:**
 
-The root item receives an `extensionId` property injected at runtime on load.
+Use `anchors.fill: parent` to fill the available space:
 
 ```qml
 // sidebar/MyPage.qml
@@ -240,7 +221,6 @@ import QtQuick
 
 Item {
     id: root
-    // Use `anchors.fill`
     anchors.fill: parent
     // Injected automatically:
     // property string extensionId: "..."
@@ -269,8 +249,6 @@ Item {
 }
 ```
 
-**Consumer:** `SidebarPoliciesContent.qml` (renders tab buttons + creates `Loader` per page)
-
 ---
 
 ### 4. `sidebarRightBottom`
@@ -288,15 +266,14 @@ Custom tabs in the bottom panel of the right sidebar, alongside Calendar, To-Do,
 
 **QML contract:**
 
-The root item receives an `extensionId` property injected at runtime on load.
+Use `anchors.fill: parent` to fill the available space:
 
 ```qml
 // sidebarBottom/MyTab.qml
 import QtQuick
 
 Item {
-    // Use `anchors.fill`
-    anchors.fill: parent 
+    anchors.fill: parent
     // Injected automatically:
     // property string extensionId: "..."
 
@@ -324,8 +301,6 @@ Item {
 }
 ```
 
-**Consumer:** `BottomWidgetGroup.qml` (renders nav buttons + `Loader` for content)
-
 ---
 
 ### 5. `backgroundWidgets`
@@ -344,11 +319,11 @@ Widgets drawn on the wallpaper canvas — useful for clocks, media players, weat
 | `y` | number | No | Default y position (pixels). Default: `100`. |
 | `placementStrategy` | string | No | `"free"` (default), `"leastBusy"` (not recommended), or `"mostBusy"` (not recommended). |
 
-**Persistence:** Position (x, y) and enable state are saved per-widget via `extensionWidgetConfigs`. See [Persistence](#persistence).
+**Persistence:** Position (x, y) and enable state are saved per-widget. Changes propagate automatically.
 
 **QML contract:**
 
-The root item receives these properties injected at runtime:
+Your root component **must** extend `AbstractBackgroundWidget`. Injected properties:
 
 | Property | Type | Description |
 |---|---|---|
@@ -363,15 +338,9 @@ The root item receives these properties injected at runtime:
 ```qml
 // bg/MyBgWidget.qml
 import QtQuick
+import qs.modules.ii.background.widgets
 
-// You must use AbstractBackgroundWidget as a root component
 AbstractBackgroundWidget {
-    // Injected automatically:
-    // property QtObject configEntry: ...
-    // property string extensionId: "..."
-    // property real screenWidth: ...
-    // property real screenHeight: ...
-
     width: 200
     height: 100
 
@@ -409,8 +378,6 @@ AbstractBackgroundWidget {
 }
 ```
 
-**Consumer:** `Background.qml` (creates into `widgetCanvas`)
-
 ---
 
 ### 6. `overlayWidgets`
@@ -423,7 +390,7 @@ Floating, draggable, resizable widgets that sit above all shell surfaces — aki
 |---|---|---|---|
 | `identifier` | string | **Yes** | Unique ID within this extension. |
 | `title` | string | **Yes** | Display name. |
-| `icon` | string | No | Fallback icon. If `materialSymbol` is not set, this is used. |
+| `icon` | string | No | Fallback icon. |
 | `materialSymbol` | string | No | Icon shown in the overlay taskbar. Falls back to `icon`, then `"extension"`. |
 | `component` | string | **Yes** | Relative path to the QML widget file. |
 | `x` | number | No | Default x position. Default: `100`. |
@@ -433,18 +400,16 @@ Floating, draggable, resizable widgets that sit above all shell surfaces — aki
 | `pinned` | boolean | No | Whether the widget stays open persistently. Default: `false`. |
 | `clickthrough` | boolean | No | Whether mouse clicks pass through the widget. Default: `true`. |
 
-**Persistence:** Position, size, pinned, and clickthrough are saved per-widget via `extensionOverlayConfigs`. See [Persistence](#persistence).
+**Persistence:** Position, size, pinned, and clickthrough are saved per-widget. Changes propagate automatically.
 
 **QML contract:**
 
-The root item receives these properties injected at runtime:
+Your root component **must** extend `StyledOverlayWidget`. Do **not** set `width`/`height`/`x`/`y` yourself — the extension system handles positioning via `configEntry`. Bind to these values instead.
 
 | Property | Type | Description |
 |---|---|---|
 | `configEntry` | QtObject | Has `.pinned` (bool), `.clickthrough` (bool), `.x` (real), `.y` (real), `.width` (real), `.height` (real). Changes auto-save. |
 | `extensionId` | string | Extension ID. |
-
-The widget is created as a child of the overlay parent. You do **not** set `width`/`height`/`x`/`y` yourself — the extension system handles positioning via `configEntry`. Instead, bind to these values:
 
 ```qml
 // overlay/MyOverlay.qml
@@ -454,10 +419,8 @@ import QtQuick.Controls
 import qs.modules.ii.overlay
 import qs.modules.common.widgets
 
-// You must use StyledOverlayWidget as a root component
 StyledOverlayWidget {
     id: root
-    // You can also pass it manually
     property string extensionId: ""
 
     contentItem: Rectangle {
@@ -503,115 +466,15 @@ StyledOverlayWidget {
 }
 ```
 
-**Consumer:** `OverlayContext.qml` (collects widget list) → `ExtensionOverlayWidgetLoader.qml` (creates each widget) → `OverlayContent.qml` (renders) + `OverlayTaskbar.qml` (taskbar buttons)
-
----
-
-## Lifecycle
-
-### Installation
-
-1. **GitHub discovery:** Extensions tagged with `ii-vynx-extension` topic appear in Browse Extensions search results. Results are cached for 1 hour.
-2. **Custom URL:** Paste any GitHub repo URL → cloned via `git clone --depth 1`.
-3. **Local path:** Paste an absolute filesystem path → registered directly without git operations.
-
-On install, the extension's `extension.json` is parsed and stored in `plugins.json`. The extension is initially disabled.
-
-### Enable / Disable
-
-Toggling an extension:
-1. Deep-copies the extension entry with the new `enabled` state.
-2. Immediately writes to `plugins.json`.
-3. If enabling: loads `services` contributions.
-4. Emits `extensionToggled(extId)`, which triggers all consumers to refresh.
-
-### Uninstall
-
-1. For git-based extensions: `rm -rf <installedPath>`.
-2. For local extensions: only the registry entry is removed (files stay on disk).
-3. `services` contributions are unloaded.
-4. All config entries (`extensionConfigs`, `extensionWidgetConfigs`, `extensionOverlayConfigs`) for this extension are purged.
-5. Emits `extensionRemoved(extId)`.
-
-### Reload (Local Extensions Only)
-
-The Reload button appears only for locally-installed extensions (`isLocal: true`):
-
-1. Re-reads `extension.json` from disk via `cat`.
-2. **Disables** the extension (removes all components).
-3. Updates the stored entry with new `contributes` and `configDefaults`.
-4. **Re-enables** the extension (triggers full re-creation with fresh QML).
-
-### Update (Git Extensions)
-
-1. Disables the extension.
-2. Runs `git pull --ff-only` in the extension directory.
-3. Re-reads `extension.json` and updates the stored entry.
-4. Re-enables the extension.
-5. On failure: surfaces the error but still re-enables the extension.
-
-### Signals
-
-Extension-related signals on the singleton `ExtensionManager`:
-
-| Signal | Parameters | When |
-|---|---|---|
-| `refreshExtensions()` | — | Any extension state change (available, installed, toggled, etc.) |
-| `extensionInstalled(extId)` | string | After successful install |
-| `extensionRemoved(extId)` | string | After successful uninstall |
-| `extensionToggled(extId)` | string | After enable/disable |
-| `extensionSearchDone()` | — | After GitHub search completes |
-| `extensionJsonReady(repoId)` | int | After fetching extension.json for a browse result |
-| `updateCheckDone(extId, available, error)` | string, bool, string | After update check completes |
-
----
-
-## Persistence
-
-All extension state lives in `~/.config/illogical-impulse/extensions/plugins.json`.
-
-### File Structure
-
-```json
-{
-  "extensions": {
-    "<extId>": { ... full extension entry ... }
-  },
-  "extensionConfigs": {
-    "<extId>": { "key": "value", ... }
-  },
-  "extensionWidgetConfigs": {
-    "<extId>": {
-      "<widgetId>": { "enable": true, "x": 100, "y": 200 }
-    }
-  },
-  "extensionOverlayConfigs": {
-    "<extId>": {
-      "<widgetId>": { "x": 100, "y": 100, "width": 300, "height": 200, "pinned": false, "clickthrough": true }
-    }
-  },
-  "searchCache": {
-    "cachedAt": "2025-01-01T00:00:00.000Z",
-    "results": [ ... ]
-  }
-}
-```
-
-### Config Stores
-
-| Store | API | Used By |
-|---|---|---|
-| `extensionConfigs` | `getExtensionConfig(extId, key, default)` / `setExtensionConfig(extId, key, val)` / `resetExtensionConfig(extId)` | General-purpose key-value config per extension. `configDefaults` are applied on install/reload. |
-| `extensionWidgetConfigs` | `getExtensionWidgetConfig(extId, widgetId)` / `saveExtensionWidgetConfig(extId, widgetId, { enable, x, y })` | `backgroundWidgets` — position and enable state. |
-| `extensionOverlayConfigs` | `getExtensionOverlayConfig(extId, widgetId)` / `saveExtensionOverlayConfig(extId, widgetId, { x, y, width, height, pinned, clickthrough })` | `overlayWidgets` — position, size, pinned, clickthrough. |
-
-### Sync
-
-Every mutation calls `syncPluginsAdapter()` → `extensionsFileView.writeAdapter()`, which writes to disk immediately. The file is also watched — external modifications trigger a reload.
-
 ---
 
 ## Best Practices
+
+### Importing QML files
+
+You can directly use qml files in the file if they are in the folder as the main qml file. If not, you can use `import "./folderName"` to import a folder and use the files in that folder. 
+
+You can check official plugin to see an example for it from [here](https://github.com/vaguesyntax/vynx-wallpaper-browser/blob/main/src/WallpaperBrowserUI.qml).
 
 ### Naming
 
@@ -621,10 +484,28 @@ Every mutation calls `syncPluginsAdapter()` → `extensionsFileView.writeAdapter
 ### Testing Locally
 
 1. Create your extension directory anywhere on your filesystem.
-2. Open Extensions settings → click "Install from URL" (the toggle at the top).
+2. Open Extensions settings → click the link icon at the top to reveal the URL/path input.
 3. Paste the absolute path to your extension directory.
 4. The extension appears in the Installed list. Enable it to test.
-5. For rapid iteration: use the Reload button (local extensions only) to pick up changes without reinstalling.
+5. For rapid iteration: use the **Reload** button (local extensions only) to pick up changes without reinstalling.
+
+### Config Defaults
+
+Use `configDefaults` to provide initial values for your extension's config. These are applied automatically on install and reload:
+
+```json
+{
+  "configDefaults": {
+    "refreshInterval": 30,
+    "theme": "dark",
+    "maxItems": 10
+  }
+}
+```
+
+Users can change these from an extension settings UI (if you provide one) and they persist in `plugins.json`.
+
+---
 
 ## Publishing
 
@@ -633,7 +514,6 @@ To make your extension discoverable through Browse Extensions:
 1. Push your repository to GitHub.
 2. Add the topic `ii-vynx-extension` to your repository.
 3. Ensure `extension.json` is at the repository root.
-4. The system will automatically find you repo via GitHub API.
+4. The system will automatically find your repo via the GitHub API.
 
-
-Report any issue you have faced while developing an extension from [here](https://github.com/vaguesyntax/ii-vynx/issues)
+Report any issues you faced while developing an extension [here](https://github.com/vaguesyntax/ii-vynx/issues).

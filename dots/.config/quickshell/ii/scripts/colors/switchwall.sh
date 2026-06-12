@@ -58,6 +58,7 @@ post_process() {
     handle_kde_material_you_colors &
     "$SCRIPT_DIR/code/material-code-set-color.sh" &
     qs ipc -c ii call theme reload 2>/dev/null || true &
+    "$SCRIPT_DIR/../ytmusic/generate-ytmusic-theme.sh" > /dev/null 2>&1 &
 
     # Update leastBusy / mostBusy widget positions for the new wallpaper.
     # Runs in background so it doesn't block the wallpaper switch.
@@ -374,6 +375,16 @@ save_wallpaper_copy() {
     echo "[switchwall] Saved wallpaper copy → $save_dir/${name}${i}.${ext}"
 }
 
+categorize_wallpaper() {
+    local target_payload="$1"
+
+    if [[ -z "$ai_script" || ! -f "$target_payload" ]]; then
+        return
+    fi
+
+    "$ai_script" "$target_payload" >"$STATE_DIR/user/generated/wallpaper/category.txt" 2>"$STATE_DIR/user/generated/wallpaper/ai_error.log" &
+}
+
 switch() {
     imgpath="$1"
     mode_flag="$2"
@@ -385,12 +396,13 @@ switch() {
     # Start Gemini auto-categorization if enabled
     aiStylingEnabled=$(jq -r '.background.widgets.clock.cookie.aiStyling' "$SHELL_CONFIG_FILE")
     aiStylingModel=$(jq -r '.background.widgets.clock.cookie.aiStylingModel' "$SHELL_CONFIG_FILE")
+    ai_script=""
+
     if [[ "$aiStylingEnabled" == "true" ]]; then
         if [[ "$aiStylingModel" == "gemini" ]]; then
-            "$SCRIPT_DIR/../ai/gemini-categorize-wallpaper.sh" "$imgpath" > "$STATE_DIR/user/generated/wallpaper/category.txt" &
-        fi
-        if [[ "$aiStylingModel" == "openrouter" ]]; then
-            "$SCRIPT_DIR/../ai/openrouter-categorize-wallpaper.sh" "$imgpath" > "$STATE_DIR/user/generated/wallpaper/category.txt" &
+            ai_script="$SCRIPT_DIR/../ai/gemini-categorize-wallpaper.sh"
+        elif [[ "$aiStylingModel" == "openrouter" ]]; then
+            ai_script="$SCRIPT_DIR/../ai/openrouter-categorize-wallpaper.sh"
         fi
     fi
 
@@ -479,6 +491,8 @@ switch() {
                 matugen_args=(image "$thumbnail")
                 generate_colors_material_args=(--path "$thumbnail")
                 create_restore_script "$video_path"
+
+                categorize_wallpaper "$thumbnail"
             else
                 echo "Cannot create image to colorgen"
                 remove_restore
@@ -495,6 +509,8 @@ switch() {
             # Save a numbered copy to wallpapers folder
             [[ -z "$no_save_flag" && -z "$noswitch_flag" ]] && save_wallpaper_copy "$imgpath"
             remove_restore
+
+            categorize_wallpaper "$imgpath"
 
             # Iris-close transition — skipped when --noswitch (palette-only change)
             logger -t switchwall-debug "apply: noswitch=$noswitch_flag nosave=$no_save_flag monitor=$monitor_flag imgpath=$imgpath"

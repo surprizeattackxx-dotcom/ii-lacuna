@@ -4,6 +4,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs.services
 import qs.modules.common
 import qs.modules.common.functions
 
@@ -13,10 +14,8 @@ Singleton {
     signal refreshExtensions()
 
     property bool loading: false
-    property bool extensionJsonLoading: false
     property bool ready: false
     property string error: ""
-    property var availableExtensions: []
     property var installedExtensions: ({})
     property var updateStates: ({})
     property var extensionWidgetConfigs: ({}) // { extId: { widgetId: { enable, x, y } } }
@@ -25,22 +24,18 @@ Singleton {
     property var _updateQueue: ({}) // { extId: string, repoUrl: string, branch: string, step: string }
     property var _updateCheckQueue: []
     property bool _updateCheckRunning: false
-    property list<string> recommendedExtensions: [
-        "ii-vynx-test-extension"
-    ]
+    property bool watchFileChanges: true
 
-    onAvailableExtensionsChanged: { root.refreshExtensions() }
     onInstalledExtensionsChanged: { root.refreshExtensions() }
     onUpdateStatesChanged: { root.refreshExtensions() }
     onReadyChanged: { root.refreshExtensions() }
+    onExtensionWidgetConfigsChanged: { root.refreshExtensions() }
+    onExtensionOverlayConfigsChanged: { root.refreshExtensions() }
+    onExtensionConfigsChanged: { root.refreshExtensions() }
 
-    property var _extensionJsonQueue: []
-
-    signal extensionSearchDone()
     signal extensionInstalled(string extId)
     signal extensionRemoved(string extId)
     signal extensionToggled(string extId)
-    signal extensionJsonReady(int repoId)
     signal updateCheckDone(string extId, bool available, string error)
 
     Component.onCompleted: {
@@ -57,7 +52,12 @@ Singleton {
         extensionsFileView.writeAdapter()
     }
 
-    // ── Search cache ──
+    function writeSearchCache(cache) {
+        extensionsAdapter.searchCache = cache
+        extensionsFileView.writeAdapter()
+    }
+
+    // ── Extension widget config API ──
 
     function saveExtensionWidgetConfig(extId, widgetId, config) {
         let extConfigs = Object.assign({}, root.extensionWidgetConfigs)
@@ -109,127 +109,6 @@ Singleton {
         return root.extensionConfigs?.[extId]?.[key] ?? defaultValue
     }
 
-    // ── Search cache ──
-
-    function saveSearchCache(repos) {
-        extensionsAdapter.searchCache = { cachedAt: new Date().toISOString(), results: repos }
-        extensionsFileView.writeAdapter()
-    }
-
-    function isCacheValid(cachedAt) {
-        if (!cachedAt) return false
-        return (new Date() - new Date(cachedAt)) / (1000 * 60 * 60) < 1
-    }
-
-    // ── GitHub search ──
-
-    function refreshAvailableExtensions() {
-        if (root.loading) return
-        root.loading = true
-        root.error = ""
-        searchProc.exec(["curl", "-s",
-            "-H", "Accept: application/vnd.github+json",
-            "https://api.github.com/search/repositories?q=ii-vynx-extension+in:topic&per_page=50"
-        ])
-    }
-
-    function processSearchResults(jsonText) {
-        root.loading = false
-        try {
-            let resp = JSON.parse(jsonText)
-            if (!resp.items || resp.items.length === 0) {
-                root.availableExtensions = []
-                root.extensionSearchDone()
-                return
-            }
-            let repos = resp.items.map(item => ({
-                repoId: item.id,
-                name: item.name,
-                fullName: item.full_name,
-                description: item.description || "",
-                stars: item.stargazers_count,
-                owner: item.owner.login,
-                avatarUrl: item.owner.avatar_url,
-                repoUrl: item.clone_url,
-                htmlUrl: item.html_url,
-                defaultBranch: item.default_branch || "main",
-                icon: "",
-                hasExtensionJson: false,
-                extensionJson: null,
-                extensionJsonError: null
-            }))
-            root.saveSearchCache(repos)
-            root.availableExtensions = repos
-            root.extensionSearchDone()
-            root.startExtensionJsonFetchAll()
-        } catch (e) {
-            root.error = "Parse error: " + e
-            root.loading = false
-            root.availableExtensions = []
-            root.extensionSearchDone()
-        }
-    }
-
-    // ── ExtensionJson fetch ──
-
-    function fetchExtensionJson(repoId) {
-        if (root.extensionJsonLoading) return
-        root.extensionJsonLoading = true
-        root.error = ""
-
-        let repo = null
-        for (let i = 0; i < root.availableExtensions.length; i++) {
-            if (root.availableExtensions[i].repoId === repoId) {
-                repo = root.availableExtensions[i]
-                break
-            }
-        }
-        if (!repo) {
-            root.extensionJsonLoading = false
-            root._processExtensionJsonQueue()
-            return
-        }
-
-        let url = "https://raw.githubusercontent.com/" + repo.fullName + "/" + repo.defaultBranch + "/extension.json"
-        fetchExtensionJsonProc._pendingRepoId = repoId
-        fetchExtensionJsonProc.exec(["curl", "-s", "--connect-timeout", "5", url])
-    }
-
-    function processFetchedExtensionJson(repoId, jsonText) {
-        root.extensionJsonLoading = false
-        if (!jsonText || jsonText.length === 0) {
-            root.updateExtensionJsonInList(repoId, null, "Empty response")
-            return
-        }
-        try {
-            let extensionJson = JSON.parse(jsonText)
-            root.updateExtensionJsonInList(repoId, extensionJson, null)
-        } catch (e) {
-            root.updateExtensionJsonInList(repoId, null, "Invalid JSON: " + e)
-        }
-    }
-
-    function updateExtensionJsonInList(repoId, extensionJson, error) {
-        root.availableExtensions = root.availableExtensions.map(r =>
-            r.repoId !== repoId ? r : Object.assign({}, r, {
-                hasExtensionJson: !error && !!extensionJson,
-                extensionJson: extensionJson,
-                extensionJsonError: error ?? null,
-                icon: extensionJson && extensionJson.icon || r.icon || "",
-                shapeString: extensionJson && extensionJson.shapeString || r.shapeString || "",
-                description: extensionJson && extensionJson.description || r.description || "",
-                displayName: extensionJson && extensionJson.name || r.name || "",
-                version: extensionJson && extensionJson.version || ""
-            })
-        )
-        root.extensionJsonLoading = false
-        root.extensionJsonReady(repoId)
-        if (root._extensionJsonQueue.length === 0) {
-            root.saveSearchCache(root.availableExtensions)
-        }
-        root._processExtensionJsonQueue()
-    }
-
     // ── Install / Uninstall ──
 
     function installExtension(repoUrl, extId, defaultBranch, htmlUrl, isCustomUrl) {
@@ -273,12 +152,10 @@ Singleton {
 
             let wasEnabled = existing.enabled
 
-            // Disable first to remove all extension components from shell
             if (wasEnabled) {
                 root.toggleExtension(extId, false)
             }
 
-            // Update entry with new contributes
             let updated = Object.assign({}, root.installedExtensions[extId], {
                 name: extensionJson.name || existing.name,
                 description: extensionJson.description || existing.description,
@@ -287,13 +164,13 @@ Singleton {
                 icon: extensionJson.icon || existing.icon,
                 shapeString: extensionJson.shapeString || existing.shapeString,
                 contributes: extensionJson.contributes || {},
-                configDefaults: extensionJson.configDefaults || {}
+                configDefaults: extensionJson.configDefaults || {},
+                configSchema: extensionJson.configSchema || {}
             })
             root.installedExtensions = Object.assign({}, root.installedExtensions, { [extId]: updated })
             root.syncPluginsAdapter()
             root.applyExtensionConfigDefaults(extId)
 
-            // Re-enable to trigger full re-creation with fresh QML
             if (wasEnabled) {
                 root.toggleExtension(extId, true)
             }
@@ -305,15 +182,20 @@ Singleton {
         }
     }
 
-    /**
-     * Loads a QML component from a file path, bypassing QML engine cache
-     * by adding a unique query parameter to force recompilation.
-     */
     function loadExtensionQmlComponent(fullPath) {
         return Qt.createComponent("file://" + fullPath + "?_t=" + Date.now())
     }
 
     function registerInstalled(extId, dest, repoUrl, defaultBranch, htmlUrl, jsonText, isLocal, isCustomUrl) {
+        if (ExtensionAudit.blockedIds[extId]) {
+            let reason = ExtensionAudit.blockedIds[extId]
+            root.error = reason !== true
+                ? "Extension blocked: " + reason
+                : "This extension is blocked and cannot be installed"
+            root.loading = false
+            return
+        }
+
         try {
             let extensionJson = JSON.parse(jsonText)
             let entry = {
@@ -333,7 +215,8 @@ Singleton {
                 isLocal: isLocal || false,
                 isCustomUrl: isCustomUrl || false,
                 contributes: extensionJson.contributes || {},
-                configDefaults: extensionJson.configDefaults || {}
+                configDefaults: extensionJson.configDefaults || {},
+                configSchema: extensionJson.configSchema || {}
             }
             root.installedExtensions = Object.assign({}, root.installedExtensions, { [extId]: entry })
             root.syncPluginsAdapter()
@@ -386,7 +269,6 @@ Singleton {
         let entry = root.installedExtensions[extId]
         if (!entry) return
         if (entry.isLocal) {
-            // Local path extension — just remove from registry, keep files
             root.finalizeUninstall(extId)
             return
         }
@@ -399,11 +281,9 @@ Singleton {
         let ext = Object.assign({}, root.installedExtensions)
         delete ext[extId]
         root.installedExtensions = ext
-        // Clean up extension config
         let allConfigs = Object.assign({}, root.extensionConfigs)
         delete allConfigs[extId]
         root.extensionConfigs = allConfigs
-        // Also clean up widget configs
         let widgetConfigs = Object.assign({}, root.extensionWidgetConfigs)
         delete widgetConfigs[extId]
         root.extensionWidgetConfigs = widgetConfigs
@@ -431,7 +311,6 @@ Singleton {
 
     function toggleExtension(extId, enabled) {
         if (!root.installedExtensions[extId]) return
-        // Deep copy the entry to avoid mutating in place — QML won't fire bindings otherwise
         let updated = Object.assign({}, root.installedExtensions[extId], { enabled: enabled })
         root.installedExtensions = Object.assign({}, root.installedExtensions, { [extId]: updated })
         root.syncPluginsAdapter()
@@ -494,10 +373,8 @@ Singleton {
         root.error = ""
         root._updateQueue = { extId: extId, step: "disable" }
 
-        // Step 1: disable
         root.toggleExtension(extId, false)
 
-        // Step 2: pull (after toggle syncs)
         root._updateQueue.step = "pull"
         updatePullProc._pendingExtId = extId
         updatePullProc.exec(["git", "-C", ext.installedPath, "pull", "--ff-only"])
@@ -507,12 +384,10 @@ Singleton {
         if (exitCode !== 0) {
             root.error = "Update failed (exit " + exitCode + ")"
             root.loading = false
-            // Re-enable even if pull failed
             root.toggleExtension(extId, true)
             root._updateQueue = {}
             return
         }
-        // Re-read extension.json to update the entry
         let ext = root.installedExtensions[extId]
         if (ext) {
             updateReader._pendingExtId = extId
@@ -536,17 +411,16 @@ Singleton {
                 contributes: extensionJson.contributes || existing.contributes,
                 icon: extensionJson.icon || existing.icon,
                 shapeString: extensionJson.shapeString || existing.shapeString,
-                configDefaults: extensionJson.configDefaults || {}
+                configDefaults: extensionJson.configDefaults || {},
+                configSchema: extensionJson.configSchema || {}
             })
             root.installedExtensions = Object.assign({}, root.installedExtensions, { [extId]: updated })
             root.syncPluginsAdapter()
             root.applyExtensionConfigDefaults(extId)
-            // Clear update state since we just updated
             let states = Object.assign({}, root.updateStates)
             delete states[extId]
             root.updateStates = states
             root.updateCheckDone(extId, false, "")
-            // Re-enable the extension
             root.toggleExtension(extId, true)
         } catch (e) {
             root.error = "Failed to re-read extension.json: " + e
@@ -582,34 +456,7 @@ Singleton {
         }
     }
 
-    // ── ExtensionJson auto-fetch queue ──
-
-    function startExtensionJsonFetchAll() {
-        let ids = []
-        for (let i = 0; i < root.availableExtensions.length; i++) {
-            if (!root.availableExtensions[i].hasExtensionJson) {
-                ids.push(root.availableExtensions[i].repoId)
-            }
-        }
-        root._extensionJsonQueue = ids
-        if (ids.length > 0) root._processExtensionJsonQueue()
-    }
-
-    function _processExtensionJsonQueue() {
-        if (root._extensionJsonQueue.length === 0) return
-        if (root.extensionJsonLoading) {
-            extensionJsonQueueTimer.start()
-            return
-        }
-        root.fetchExtensionJson(root._extensionJsonQueue.shift())
-    }
-
-    Timer {
-        id: extensionJsonQueueTimer
-        interval: 500
-        repeat: false
-        onTriggered: root._processExtensionJsonQueue()
-    }
+    // ── Contribution points ──
 
     function getContributionPoint(pointName) {
         let result = []
@@ -653,30 +500,6 @@ Singleton {
     }
 
     // ── Processes ──
-
-    Process {
-        id: searchProc
-        stdout: StdioCollector {
-            onStreamFinished: root.processSearchResults(this.text)
-        }
-        stderr: StdioCollector {
-            onStreamFinished: if (this.text) { root.error = this.text; root.loading = false }
-        }
-    }
-
-    Process {
-        id: fetchExtensionJsonProc
-        property int _pendingRepoId: -1
-        stdout: StdioCollector {
-            onStreamFinished: root.processFetchedExtensionJson(fetchExtensionJsonProc._pendingRepoId, this.text)
-        }
-        stderr: StdioCollector {
-            onStreamFinished: if (this.text) {
-                root.extensionJsonLoading = false
-                root._processExtensionJsonQueue()
-            }
-        }
-    }
 
     Process {
         id: installProc
@@ -742,12 +565,16 @@ Singleton {
         }
     }
 
+    function reloadFromFile() {
+        extensionsFileView.reload()
+    }
+
     // ── File persistence ──
 
     FileView {
         id: extensionsFileView
         path: Directories.pluginsJsonPath
-        watchChanges: true
+        watchChanges: root.watchFileChanges
         onFileChanged: reload()
         onLoaded: {
             root.installedExtensions = extensionsAdapter.extensions || {}
@@ -755,12 +582,12 @@ Singleton {
             root.extensionOverlayConfigs = extensionsAdapter.extensionOverlayConfigs || {}
             root.extensionConfigs = extensionsAdapter.extensionConfigs || {}
             let cache = extensionsAdapter.searchCache
-            if (cache && cache.cachedAt && root.isCacheValid(cache.cachedAt) && cache.results) {
-                root.availableExtensions = cache.results
-                root.extensionSearchDone()
-                root.startExtensionJsonFetchAll()
+            ExtensionSearch.loadFromCache(cache)
+            ExtensionAudit.fetchAuditDatabase()
+
+            if (!root.ready) {
+                root.ready = true
             }
-            root.ready = true
             for (let id in root.installedExtensions) {
                 root.applyExtensionConfigDefaults(id)
                 if (root.installedExtensions[id].enabled) {
@@ -770,6 +597,7 @@ Singleton {
         }
         onLoadFailed: error => {
             if (error === FileViewError.FileNotFound) writeAdapter()
+            ExtensionAudit.fetchAuditDatabase()
             root.ready = true
         }
 

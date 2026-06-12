@@ -3,6 +3,8 @@ import QtQuick.Layouts
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
+import qs.modules.common.functions as CF
+import "."
 Item {
     id: root
     required property var modelData
@@ -38,15 +40,14 @@ Item {
         }
         return false
     }
+    readonly property string _auditState: {
+        ExtensionAudit.auditDbVersion
+        if (!ExtensionAudit.auditDatabaseReady || !ext.hasExtensionJson) return ""
+        return ExtensionAudit.getExtensionAuditState(ext.name)
+    }
 
-    property real topRadius: {
-        if (listCount == 1 || index == 0) return Appearance.rounding.large
-        return Appearance.rounding.verysmall
-    }
-    property real bottomRadius: {
-        if (listCount == 1 || index == listCount - 1) return Appearance.rounding.large
-        return Appearance.rounding.verysmall
-    }
+    property real topRadius: CF.LayoutUtils.listCardTopRadius(index, listCount, Appearance.rounding.large)
+    property real bottomRadius: CF.LayoutUtils.listCardBottomRadius(index, listCount, Appearance.rounding.large)
 
     Layout.fillWidth: true
     Layout.preferredHeight: 90
@@ -68,12 +69,22 @@ Item {
                 Layout.preferredWidth: 60
                 Layout.preferredHeight: 60
                 shapeString: ext.shapeString || ""
-                color: isEnabled ? Appearance.colors.colPrimaryContainer : Appearance.colors.colLayer3
+                color: isEnabled ? Appearance.colors.colPrimaryContainer : ExtensionAudit.isExtensionRecommended(ext.name) ? Appearance.colors.colTertiary : Appearance.colors.colLayer3
+                
+                HoverHandler {
+                    id: hover
+                }
+
+                StyledToolTip {
+                    extraVisibleCondition: hover.hovered && ExtensionAudit.isExtensionRecommended(ext.name)
+                    text: ExtensionAudit.isExtensionRecommended(ext.name) ? Translation.tr("Recommended by the ii-vynx developer based on user feedback") : ""
+                }
+
                 MaterialSymbol {
                     anchors.centerIn: parent
                     text: ext.icon || "extension"
                     iconSize: 28
-                    color: isEnabled ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colSubtext
+                    color: isEnabled ? Appearance.colors.colOnPrimaryContainer : ExtensionAudit.isExtensionRecommended(ext.name) ? Appearance.colors.colOnTertiary : Appearance.colors.colSubtext
                 }
             }
 
@@ -92,87 +103,27 @@ Item {
                         color: Appearance.colors.colOnLayer0
                         elide: Text.ElideRight
                     }
-                    Rectangle {
+                    ExtensionBadge {
+                        label: Translation.tr("Official")
+                        tooltip: Translation.tr("Created by the ii-vynx developer")
                         visible: ext.repoUrl && ext.repoUrl.includes("vaguesyntax")
-                        radius: Appearance.rounding.full
-                        color: Appearance.colors.colSecondaryContainer
-                        implicitWidth: childrenRect.width + 20
-                        implicitHeight: childrenRect.height + 8
-                        StyledText {
-                            x: 3; y: 1
-                            text: Translation.tr("Official")
-                            font.pixelSize: Appearance.font.pixelSize.smallest
-                            color: Appearance.colors.colOnSecondaryContainer
-                            anchors.centerIn: parent
-                        }
-                        HoverHandler {
-                            id: hoverOff
-                        }
-                        StyledToolTip { 
-                            extraVisibleCondition: hoverOff.hovered
-                            text: Translation.tr("Created by the ii-vynx developer") 
-                        }
                     }
-                    Rectangle {
+                    ExtensionBadge {
+                        icon: "link"
+                        tooltip: Translation.tr("Custom URL extension")
                         visible: isCustomUrlExtension
-                        radius: Appearance.rounding.full
-                        color: Appearance.colors.colSecondaryContainer
-                        implicitWidth: childrenRect.width + 20
-                        implicitHeight: childrenRect.height + 8
-                        MaterialSymbol {
-                            text: "link"
-                            iconSize: 14
-                            color: Appearance.colors.colOnSecondaryContainer
-                            anchors.centerIn: parent
-                        }
-                        HoverHandler {
-                            id: hoverCustomUrl
-                        }
-                        StyledToolTip { 
-                            extraVisibleCondition: hoverCustomUrl.hovered
-                            text: Translation.tr("Custom URL extension") 
-                        }
                     }
-                    Rectangle {
+                    ExtensionBadge {
+                        icon: "folder"
+                        tooltip: Translation.tr("Local path extension")
                         visible: isLocalExtension
-                        radius: Appearance.rounding.full
-                        color: Appearance.colors.colSecondaryContainer
-                        implicitWidth: childrenRect.width + 20
-                        implicitHeight: childrenRect.height + 8
-                        MaterialSymbol {
-                            text: "folder"
-                            iconSize: 14
-                            color: Appearance.colors.colOnSecondaryContainer
-                            anchors.centerIn: parent
-                        }
-                        HoverHandler {
-                            id: hoverLocal
-                        }
-                        StyledToolTip { 
-                            extraVisibleCondition: hoverLocal.hovered
-                            text: Translation.tr("Local path extension") 
-                        }
                     }
-                    Rectangle {
-                        visible: ExtensionManager.recommendedExtensions.includes(ext.name)
-                        radius: Appearance.rounding.full
-                        color: Appearance.colors.colTertiaryContainer
-                        implicitWidth: childrenRect.width + 20
-                        implicitHeight: childrenRect.height + 8
-                        StyledText {
-                            x: 3; y: 1
-                            text: Translation.tr("Recommended")
-                            font.pixelSize: Appearance.font.pixelSize.smallest
-                            color: Appearance.colors.colOnTertiaryContainer
-                            anchors.centerIn: parent
-                        }
-                        HoverHandler {
-                            id: hoverRec
-                        }
-                        StyledToolTip { 
-                            extraVisibleCondition: hoverRec.hovered
-                            text: Translation.tr("Recommended by the ii-vynx developer based on user feedback") 
-                        }
+                    ExtensionBadge {
+                        icon: root._auditState === "trusted" ? "verified" : "help"
+                        bgColor: root._auditState === "trusted" ? Appearance.m3colors.m3successContainer : Appearance.colors.colErrorContainer
+                        fgColor: root._auditState === "trusted" ? Appearance.m3colors.m3success : Appearance.colors.colError
+                        tooltip: root._auditState === "trusted" ? Translation.tr("This extension is trusted. You can safely use it") : Translation.tr("This extension has not been audited yet. It may have security vulnerabilities.")
+                        visible: root._auditState.length > 0 && root._auditState !== "blocked"
                     }
                 }
 
@@ -238,28 +189,22 @@ Item {
                     implicitHeight: 28
                     padding: 0
                     buttonRadius: Appearance.rounding.full
-                    colBackground: isInstalled ? Appearance.colors.colError : Appearance.colors.colPrimaryContainer
-                    colBackgroundHover: isInstalled ? Appearance.colors.colErrorHover : Appearance.colors.colPrimaryContainerHover
+                    colBackground: Appearance.colors.colPrimaryContainer
+                    colBackgroundHover: Appearance.colors.colPrimaryContainerHover
                     contentItem: StyledText {
                         anchors.centerIn: parent
                         horizontalAlignment: Text.AlignHCenter
                         verticalAlignment: Text.AlignVCenter
-                        text: isInstalled ? Translation.tr("Remove") : Translation.tr("Install")
+                        text: Translation.tr("Install")
                         font.pixelSize: Appearance.font.pixelSize.smaller
-                        color: isInstalled ? Appearance.colors.colOnError : Appearance.colors.colOnPrimaryContainer
+                        color: Appearance.colors.colOnPrimaryContainer
+                    }
+                    StyledToolTip {
+                        extraVisibleCondition: root._auditState !== "trusted"
+                        text: Translation.tr("This extension has not been audited yet. It may have security vulnerabilities.")
                     }
                     onClicked: {
-                        if (isInstalled) {
-                            for (let id in ExtensionManager.installedExtensions) {
-                                let e = ExtensionManager.installedExtensions[id]
-                                if (e.name === ext.name || e.id === ext.name) {
-                                    ExtensionManager.uninstallExtension(id)
-                                    break
-                                }
-                            }
-                        } else {
-                            ExtensionManager.installExtension(ext.repoUrl, ext.name, ext.defaultBranch || "main", ext.htmlUrl)
-                        }
+                        ExtensionManager.installExtension(ext.repoUrl, ext.name, ext.defaultBranch || "main", ext.htmlUrl)
                     }
                 }
             }
