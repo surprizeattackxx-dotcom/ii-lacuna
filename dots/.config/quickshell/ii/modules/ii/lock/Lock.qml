@@ -14,6 +14,9 @@ LockScreen {
     // Monitor name -> workspace id to restore on unlock (set when locking)
     property var savedWorkspaces: ({})
 
+    // dbus names of players we paused on lock, to resume on unlock
+    property var pausedByLock: []
+
     Timer {
         id: restoreTimer
         interval: 150
@@ -42,9 +45,14 @@ LockScreen {
         target: GlobalStates
         function onScreenLockedChanged() {
             if (GlobalStates.screenLocked) {
+                var paused = []
                 for (const player of MprisController.players) {
-                    if (player.isPlaying && player.canPause) player.pause()
+                    if (player.isPlaying && player.canPause) {
+                        player.pause()
+                        paused.push(player.dbusName)
+                    }
                 }
+                root.pausedByLock = paused
                 // Lock: save workspace per monitor and move all to temp workspace in one batch
                 var next = {}
                 var batch = "keyword animation workspaces,1,7,menu_decel,slidevert; "
@@ -61,6 +69,11 @@ LockScreen {
                 root.savedWorkspaces = next
                 Quickshell.execDetached(["bash", "-c", batch])
             } else {
+                for (const player of MprisController.players) {
+                    if (root.pausedByLock.includes(player.dbusName) && !player.isPlaying && player.canPlay)
+                        player.play()
+                }
+                root.pausedByLock = []
                 restoreTimer.start()
             }
         }
