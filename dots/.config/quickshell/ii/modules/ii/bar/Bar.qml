@@ -13,11 +13,8 @@ import qs.modules.common.widgets
 Scope {
     id: bar
 
-    // "Island" group style swaps the entire bar for the islands shell
-    // (TopBar + Dynamic Island), launched as its own qs instance via ~/.local/bin/islands
+    // "Island" group style swaps the bar for the islands shell (loaded in shell.qml)
     readonly property bool islandsMode: Config.options.bar.barGroupStyle === 1
-    onIslandsModeChanged: Quickshell.execDetached(["bash", "-c", "~/.local/bin/islands " + (islandsMode ? "start" : "stop")])
-    Component.onCompleted: Quickshell.execDetached(["bash", "-c", "~/.local/bin/islands " + (islandsMode ? "start" : "stop")])
 
     Variants {
         // For each monitor

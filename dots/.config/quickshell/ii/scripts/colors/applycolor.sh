@@ -302,7 +302,7 @@ apply_hamr() {
 # inotify-watched by its Theme singleton so it re-themes live.
 # ---------------------------------------------------------------------------
 apply_islands() {
-    local gen="$HOME/.config/hypr/scripts/quickshell/gen_qs_colors.py"
+    local gen="$HOME/.config/quickshell/ii/modules/islands/gen_qs_colors.py"
     [[ -f "$gen" ]] || return 0
     python3 "$gen" && echo "[applycolor] islands colors written"
 }

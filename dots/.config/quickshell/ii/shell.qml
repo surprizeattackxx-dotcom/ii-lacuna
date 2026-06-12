@@ -17,6 +17,7 @@ import "modules/common"
 import "services"
 import "panelFamilies"
 import "./modules/ii"
+import "./modules/islands" as IslandsShell
 
 import qs.modules.common
 import qs.modules.common.widgets
@@ -62,6 +63,12 @@ ShellRoot {
 
     PanelFamilyLoader { identifier: "ii"; component: IllogicalImpulseFamily {} }
     PanelFamilyLoader { identifier: "waffle"; component: WaffleFamily {} }
+
+    // Islands shell — bar "Island" group style swaps the bar for this
+    LazyLoader {
+        active: Config.ready && Config.options.bar.barGroupStyle === 1 && !GlobalStates.screenLocked
+        component: IslandsShell.Islands {}
+    }
 
     IpcHandler { target: "panelFamily"; function cycle(): void { root.cyclePanelFamily() } }
     IpcHandler {
