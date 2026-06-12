@@ -94,10 +94,10 @@ Scope {
                     if (items.length === 0) { barRoot.mask = null; return }
                     let parent = _regionComponent.createObject(barRoot, {})
                     let regions = items.map(i => {
-                        let p = i.mapToItem(barRoot, 0, 0)
+                        let p = i.mapToItem(barRoot.contentItem, 0, 0)
                         return _regionComponent.createObject(parent, {
                             x: p.x, y: p.y,
-                            width: i.width, height: 40
+                            width: i.width, height: i.height
                         })
                     })
                     parent.regions = regions

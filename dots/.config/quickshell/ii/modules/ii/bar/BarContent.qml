@@ -23,7 +23,7 @@ Item { // Bar content region
     readonly property int centerSideModuleWidth: (useShortenedForm == 2) ? Appearance.sizes.barCenterSideModuleWidthHellaShortened : (useShortenedForm == 1) ? Appearance.sizes.barCenterSideModuleWidthShortened : Appearance.sizes.barCenterSideModuleWidth
 
     readonly property alias leftMaskRegionItem: leftMaskRegion
-    readonly property alias middleMaskRegionItem: middleSection
+    readonly property alias middleMaskRegionItem: middleMaskRegion
     readonly property alias rightMaskRegionItem: rightMaskRegion
 
     property bool hasActiveWindows: false
@@ -292,6 +292,18 @@ Item { // Bar content region
         y: rightSection.y
         width: rightSection.width
         height: rightSection.height
+        onXChanged: root.sectionGeometryChanged()
+        onWidthChanged: root.sectionGeometryChanged()
+    }
+
+    Item {
+        // middleSection's width only counts centerCenter; the non-centered
+        // rows overflow it on both sides, so track childrenRect instead.
+        id: middleMaskRegion
+        x: middleSection.x + middleSection.childrenRect.x
+        y: middleSection.y
+        width: middleSection.childrenRect.width
+        height: middleSection.height
         onXChanged: root.sectionGeometryChanged()
         onWidthChanged: root.sectionGeometryChanged()
     }
