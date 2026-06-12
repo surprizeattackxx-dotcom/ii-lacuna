@@ -42,6 +42,9 @@ LockScreen {
         target: GlobalStates
         function onScreenLockedChanged() {
             if (GlobalStates.screenLocked) {
+                for (const player of MprisController.players) {
+                    if (player.isPlaying && player.canPause) player.pause()
+                }
                 // Lock: save workspace per monitor and move all to temp workspace in one batch
                 var next = {}
                 var batch = "keyword animation workspaces,1,7,menu_decel,slidevert; "
