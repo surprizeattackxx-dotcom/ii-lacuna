@@ -150,6 +150,18 @@ MouseArea {
         }
     }
 
+    // Notifications — swipe to dismiss, they stay in the sidebar
+    LockNotifications {
+        anchors {
+            top: parent.top
+            right: parent.right
+            topMargin: 20
+            rightMargin: 20
+        }
+        scale: root.toolbarScale
+        opacity: root.toolbarOpacity
+    }
+
     // Key presses
     property bool ctrlHeld: false
     Keys.onPressed: event => {

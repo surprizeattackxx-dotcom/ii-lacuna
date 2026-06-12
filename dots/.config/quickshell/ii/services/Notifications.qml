@@ -112,7 +112,8 @@ Singleton {
     component NotifTimer: Timer {
         required property int notificationId
         interval: 7000
-        running: true
+        // Paused while locked so popups stay on the lock screen until swiped
+        running: !GlobalStates.screenLocked
         onTriggered: {
             const index = root.list.findIndex((notif) => notif.notificationId === notificationId);
             const notifObject = root.list[index];
