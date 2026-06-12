@@ -582,6 +582,11 @@ Singleton {
                     property bool requirePasswordToPower: false
                 }
                 property bool materialShapeChars: true
+                property JsonObject idle: JsonObject {
+                    property bool enable: true
+                    property int lockTimeout: 1800 // seconds; 0 disables
+                    property int dpmsTimeout: 2700 // seconds; 0 disables
+                }
             }
 
             property JsonObject media: JsonObject {

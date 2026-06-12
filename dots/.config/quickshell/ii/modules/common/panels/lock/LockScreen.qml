@@ -119,6 +119,9 @@ Scope {
         function focus(): void {
             lockContext.shouldReFocus();
         }
+        function status(): string {
+            return GlobalStates.screenLocked ? "locked" : "unlocked";
+        }
     }
 
     GlobalShortcut {

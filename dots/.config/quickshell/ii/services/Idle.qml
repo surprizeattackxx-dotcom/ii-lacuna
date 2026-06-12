@@ -1,4 +1,5 @@
 pragma Singleton
+import qs
 import qs.modules.common
 import QtQuick
 import Quickshell
@@ -36,6 +37,28 @@ Singleton {
         root.inhibit = active !== null ? active : !root.inhibit
         Persistent.states.idle.inhibit = root.inhibit
         Persistent.states.idle.sessionId = root._sessionId
+    }
+
+    // Native idle handling (replaces hypridle, which crashes Hyprland here)
+    IdleMonitor {
+        enabled: Config.options.lock.idle.enable && Config.options.lock.idle.lockTimeout > 0
+        respectInhibitors: true
+        timeout: Config.options.lock.idle.lockTimeout
+        onIsIdleChanged: {
+            if (!isIdle || GlobalStates.screenLocked) return
+            if (Config.options.lock.useHyprlock) {
+                Quickshell.execDetached(["bash", "-c", "pidof hyprlock || hyprlock"])
+            } else {
+                GlobalStates.screenLocked = true
+            }
+        }
+    }
+
+    IdleMonitor {
+        enabled: Config.options.lock.idle.enable && Config.options.lock.idle.dpmsTimeout > 0
+        respectInhibitors: true
+        timeout: Config.options.lock.idle.dpmsTimeout
+        onIsIdleChanged: Quickshell.execDetached(["hyprctl", "dispatch", "dpms", isIdle ? "off" : "on"])
     }
 
     IdleInhibitor {
