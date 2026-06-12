@@ -788,7 +788,7 @@ Item {
                                                         }
                                                     }
                                                     let stateContent = "return {\n  active = {\n" + activeMonitors.join(",\n") + "\n  },\n  disabled = {\n" + disabledMonitors.join(",\n") + "\n  },\n  moved = {\n  }\n}\n";
-                                                    let stateFilePath = "~/.config/hypr/monitor-state.lua";
+                                                    let stateFilePath = "${XDG_STATE_HOME:-$HOME/.local/state}/hypr/monitor-state.lua";
                                                     let stateEncoded = Qt.btoa(stateContent);
                                                     let disabledVal = modelData.val;
                                                     let targetMon = monitorsModel.get(window.activeEditIndex).name;
@@ -1178,7 +1178,7 @@ Item {
                     stateContent += "  disabled = {\n" + disabledMonitors.join(",\n") + "\n  },\n";
                     stateContent += "  moved = {\n  }\n";
                     stateContent += "}\n";
-                    let stateFilePath = "~/.config/hypr/monitor-state.lua";
+                    let stateFilePath = "${XDG_STATE_HOME:-$HOME/.local/state}/hypr/monitor-state.lua";
                     let stateEncoded = Qt.btoa(stateContent);
 
                     // Build monitors_disabled.txt — one monitor name per line

@@ -4,11 +4,12 @@
 # Respects disabled-monitors list from toggle-tv.sh.
 
 SOCKET="$XDG_RUNTIME_DIR/hypr/$HYPRLAND_INSTANCE_SIGNATURE/.socket2.sock"
-STATE_FILE="$HOME/.config/hypr/monitor-state.lua"
+STATE_FILE="${XDG_STATE_HOME:-$HOME/.local/state}/hypr/monitor-state.lua"
 PID_FILE="/tmp/hypr-monitor-watch.pid"
 DISABLED_FILE="${XDG_STATE_HOME:-$HOME/.local/state}/quickshell/user/generated/wallpaper/monitors_disabled.txt"
 
 [[ -S "$SOCKET" ]] || { echo "No Hyprland socket at $SOCKET"; exit 1; }
+mkdir -p "$(dirname "$STATE_FILE")"
 
 # Workspace ranges — must match workspaces.lua
 declare -A WS_START WS_END
@@ -18,10 +19,12 @@ WS_START["HDMI-A-1"]=21; WS_END["HDMI-A-1"]=30
 FALLBACK_ORDER=("DP-1" "DP-2" "HDMI-A-1")
 KNOWN_MONS=("DP-1" "DP-2" "HDMI-A-1")
 
-# Kill existing instance if running
+# Kill existing instance if running (children too — the socat pipeline
+# outlives the main pid otherwise)
 if [[ -f "$PID_FILE" ]]; then
     old_pid=$(cat "$PID_FILE")
     if kill -0 "$old_pid" 2>/dev/null; then
+        pkill -P "$old_pid" 2>/dev/null
         kill "$old_pid" 2>/dev/null
         sleep 0.2
     fi
@@ -73,11 +76,12 @@ write_state() {
 read_state() {
     MOVED=()
     [[ ! -f "$STATE_FILE" ]] && return
-    local in_moved=0 mon=""
+    local in_moved=0
+    local entry_re='^[[:space:]]*\["([^"]+)"\][[:space:]]*=[[:space:]]*\{([^}]*)\}'
     while IFS= read -r line; do
         if [[ "$line" =~ ^[[:space:]]*moved[[:space:]]*=[[:space:]]*\{ ]]; then
             in_moved=1
-        elif [[ $in_moved -eq 1 && "$line" =~ \[\\\"(.+)\\\"\]\]\ *=\ *\{(.+)\},? ]]; then
+        elif [[ $in_moved -eq 1 && "$line" =~ $entry_re ]]; then
             MOVED["${BASH_REMATCH[1]}"]="${BASH_REMATCH[2]}"
         elif [[ $in_moved -eq 1 && "$line" =~ ^[[:space:]]*\} ]]; then
             in_moved=0
@@ -121,13 +125,6 @@ restore() {
     notify-send "Monitor: $mon connected" "Workspaces restored" -a "Hyprland"
 }
 
-# Restore hyprgamma config for this monitor if it was previously saved
-restore_gamma() {
-    local mon="$1"
-    local cfg="$HOME/.config/hypr/hyprgamma.json"
-    [[ -f "$cfg" ]] && hyprctl hyprgamma:reload &>/dev/null
-}
-
 # ── Event loop ───────────────────────────────────────────────────────
 
 read_state
@@ -139,19 +136,17 @@ socat -u "UNIX-CONNECT:$SOCKET" - 2>/dev/null | while IFS= read -r line; do
         echo "[$(date +%H:%M:%S)] removed: $mon"
         is_disabled "$mon" && continue
         evacuate "$mon"
-        restore_gamma "$mon"
     elif [[ "$line" == monitoradded'>>'* ]]; then
         mon="${line#*'>>'}"
         echo "[$(date +%H:%M:%S)] added: $mon"
-            if is_disabled "$mon"; then
-                hyprctl eval "hl.monitor({ output = \"$mon\", disabled = true })" &>/dev/null
-                write_state
-                notify-send "Monitor: $mon reconnected" "Re-disabled (in disabled list)" -a "Hyprland"
-                continue
-            fi
+        if is_disabled "$mon"; then
+            hyprctl eval "hl.monitor({ output = \"$mon\", disabled = true })" &>/dev/null
+            write_state
+            notify-send "Monitor: $mon reconnected" "Re-disabled (in disabled list)" -a "Hyprland"
+            continue
+        fi
         sleep 0.5
         restore "$mon"
-        restore_gamma "$mon"
     fi
 done
 

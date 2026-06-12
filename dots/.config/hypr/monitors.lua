@@ -6,8 +6,8 @@ hl.monitor({
     mode = "3840x2160@60",
     position = "3840x0",
     scale = 1,
-    bitdepth = 8,
-    cm = "auto",
+    bitdepth = 10,
+    cm = "adobe",
     sdrbrightness = 1.00,
     sdrsaturation = 0.99,
     disabled = false
@@ -20,7 +20,7 @@ hl.monitor({
     scale = 1,
     bitdepth = 8,
     cm = "auto",
-    sdrbrightness = 0.99,
+    sdrbrightness = 2.55,
     sdrsaturation = 0.96,
     disabled = false
 })

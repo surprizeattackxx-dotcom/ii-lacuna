@@ -5,7 +5,6 @@ local cfg = os.getenv("HOME") .. "/.config/hypr/"
 -- ─── Config Includes ───────────────────────────
 dofile(cfg .. "hyprland/variables.lua")
 dofile(cfg .. "monitors.lua")
-dofile(cfg .. "modules/dynamic-monitors.lua")
 dofile(cfg .. "hyprland/env.lua")
 dofile(cfg .. "hyprland/autostart.lua")
 dofile(cfg .. "hyprland/look-and-feel.lua")
