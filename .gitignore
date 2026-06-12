@@ -82,6 +82,8 @@ GEMINI.md
 .continue/
 
 # ── User-specific / auto-generated ──
+/dots/.config/systemd/user/minecraft*.service
+/dots/.config/systemd/user/default.target.wants/minecraft*.service
 /dots/.config/hypr/monitors.lua
 /dots/.config/hypr/monitors.lua.bak
 /dots/.config/hypr/monitor-state.lua
