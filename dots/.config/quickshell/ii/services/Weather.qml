@@ -6,6 +6,7 @@ import Quickshell.Io
 import QtQuick
 import QtPositioning
 
+import qs
 import qs.modules.common
 
 Singleton {
@@ -385,7 +386,7 @@ curl -sf "https://api.open-meteo.com/v1/forecast?latitude=$LAT&longitude=$LON&${
     // wall-clock time every minute — so it also catches sleep/wake gaps that
     // Qt's interval timers miss, without a second parallel poller.
     Timer {
-        running: root.ready
+        running: root.ready && !GlobalStates.screenLocked
         repeat: true
         interval: 60000
         triggeredOnStart: true

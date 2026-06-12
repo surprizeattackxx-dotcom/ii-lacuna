@@ -1,6 +1,7 @@
 pragma Singleton
 pragma ComponentBehavior: Bound
 
+import qs
 import qs.modules.common
 import QtQuick
 import Quickshell
@@ -76,7 +77,7 @@ Singleton {
 
 	Timer {
 		interval: Config.options?.resources?.updateInterval ?? 3000
-        running: true 
+        running: !GlobalStates.screenLocked
         repeat: true
 		onTriggered: {
             // Reload files
@@ -174,7 +175,7 @@ Singleton {
 
     Timer {
         interval: 60000
-        running: true
+        running: !GlobalStates.screenLocked
         repeat: true
         onTriggered: diskProc.running = true
     }
@@ -193,7 +194,7 @@ Singleton {
 
     Timer {
         interval: Config.options?.resources?.updateInterval ?? 3000
-        running: true
+        running: !GlobalStates.screenLocked
         repeat: true
         onTriggered: gpuProc.running = true
     }

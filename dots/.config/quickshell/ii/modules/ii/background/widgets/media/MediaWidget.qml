@@ -121,7 +121,7 @@ AbstractBackgroundWidget {
 
     Process {
         id: cavaProc
-        running: Config.options.background.widgets.media.visualizer.enable
+        running: Config.options.background.widgets.media.visualizer.enable && !GlobalStates.screenLocked
         onRunningChanged: {
             if (!cavaProc.running) {
                 root.visualizerPoints = [];

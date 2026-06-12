@@ -1,5 +1,6 @@
 pragma Singleton
 
+import qs
 import qs.modules.common
 import qs.modules.common.models
 import qs.modules.common.widgets
@@ -78,7 +79,7 @@ Singleton {
     
     // https://quickshell.org/docs/master/types/Quickshell.Services.Mpris/MprisPlayer/#position
     Timer {
-        running: root.activePlayer?.playbackState == MprisPlaybackState.Playing && root.hasSyncedLines && root.isInitialized
+        running: root.activePlayer?.playbackState == MprisPlaybackState.Playing && root.hasSyncedLines && root.isInitialized && !GlobalStates.screenLocked
         interval: 250
         repeat: true
         onTriggered: root.activePlayer.positionChanged()

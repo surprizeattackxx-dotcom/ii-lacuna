@@ -1,4 +1,5 @@
 pragma Singleton
+import qs
 import qs.modules.common
 import qs.modules.common.functions
 import QtQuick
@@ -32,7 +33,7 @@ Singleton {
         repeat: true
         running: true
         triggeredOnStart: true
-        onTriggered: root.refresh()
+        onTriggered: if (!GlobalStates.screenLocked) root.refresh()
     }
 
     Process {
