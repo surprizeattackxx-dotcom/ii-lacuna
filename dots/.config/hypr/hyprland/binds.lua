@@ -150,3 +150,6 @@ hl.bind("XF86AudioPrev", hl.dsp.exec_cmd("playerctl previous"), { locked = true 
 hl.bind("XF86AudioPlay", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
 hl.bind("XF86AudioPause", hl.dsp.exec_cmd("playerctl play-pause"), { locked = true })
 hl.bind("XF86AudioStop", hl.dsp.exec_cmd("playerctl stop"), { locked = true })
+
+-- Islands: toggle bar edit mode
+hl.bind("SUPER + SHIFT + E", hl.dsp.exec_cmd("printf 'edit' > /tmp/qs_island_toggle"))

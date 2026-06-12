@@ -66,6 +66,6 @@ Rectangle {
         anchors.fill: parent
         hoverEnabled: true
         enabled: !root.editMode
-        onClicked: Quickshell.execDetached(["bash", "-c", "~/.config/hypr/scripts/qs_manager.sh toggle network wifi"])
+        onClicked: Quickshell.execDetached(["qs", "-c", "ii", "ipc", "call", "sidebarRight", "toggle"])
     }
 }

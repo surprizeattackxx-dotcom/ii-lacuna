@@ -138,7 +138,10 @@ Singleton {
     .filter((notif) => notif.popup)
     .sort((a, b) => b.m3Priority - a.m3Priority)
 
-    property bool popupInhibited: (GlobalStates?.sidebarRightOpen ?? false) || silent
+    // In islands mode the Dynamic Island owns notification popups (via the
+    // /tmp/qs_island_notif bridge below); suppress ii's own popup cards.
+    readonly property bool islandsMode: Config.options.bar.barGroupStyle === 1
+    property bool popupInhibited: (GlobalStates?.sidebarRightOpen ?? false) || silent || islandsMode
     property var latestTimeForApp: ({})
 
     // ── Reply state ───────────────────────────────────────────────────────────
@@ -254,6 +257,18 @@ Singleton {
             }
             root.notify(newNotifObject);
             notifFileView.setText(stringifyList(root.list));
+
+            if (root.islandsMode) {
+                root.unread++;
+                Quickshell.execDetached(["bash", "-c",
+                    'printf "%s\n" "$1" > /tmp/qs_island_notif', "ii_notif_bridge",
+                    JSON.stringify({
+                        appName: notification.appName || "System",
+                        title: notification.summary || "",
+                        body: notification.body || "",
+                        icon: notification.appIcon || ""
+                    })]);
+            }
         }
     }
 

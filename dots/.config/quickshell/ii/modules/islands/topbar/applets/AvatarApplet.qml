@@ -42,6 +42,6 @@ Rectangle {
         hoverEnabled: true
         enabled: !root.editMode
         cursorShape: Qt.PointingHandCursor
-        onClicked: Quickshell.execDetached(["bash", "-c", "echo 'sysinfo' > /tmp/qs_widget_state"])
+        onClicked: Quickshell.execDetached(["qs", "-c", "ii", "ipc", "call", "sidebarRight", "toggle"])
     }
 }

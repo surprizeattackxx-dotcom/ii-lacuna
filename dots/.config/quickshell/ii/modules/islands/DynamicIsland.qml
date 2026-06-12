@@ -36,6 +36,7 @@ PanelWindow {
     // user has NOT explicitly pinned the island via AOT, hide it entirely:
     // both visually (opacity 0) and from input (empty mask).
     readonly property bool _hideForFullscreen: FullscreenService.active && !alwaysOnTop
+    readonly property bool isPrimaryIsland: screen === Quickshell.screens[0]
 
     Item    { id: emptyMaskItem; x: 0; y: 0; width: 0; height: 0 }
     Region  { id: emptyRegion;   item: emptyMaskItem }
@@ -1936,7 +1937,7 @@ PanelWindow {
         id: notifIpcWatcher; running: true
         command: ["bash", "-c",
             "inotifywait -qq -e close_write,moved_to --include 'qs_island_notif$' /tmp/ 2>/dev/null; " +
-            "if [ -f /tmp/qs_island_notif ]; then cat /tmp/qs_island_notif; rm -f /tmp/qs_island_notif; fi"
+            "[ -f /tmp/qs_island_notif ] && cat /tmp/qs_island_notif"
         ]
         stdout: StdioCollector {
             onStreamFinished: {
@@ -1958,7 +1959,7 @@ PanelWindow {
 
                         if (!islandWindow.dndEnabled) {
                             // Normal: show popup card + sound
-                            islandWindow.playSound("notification");
+                            if (islandWindow.isPrimaryIsland) islandWindow.playSound("notification");
                             islandWindow.notifData              = item;
                             islandWindow.wasExpandedBeforeNotif = islandWindow.expanded;
                             islandWindow.notifActive            = true;
@@ -1988,7 +1989,7 @@ PanelWindow {
         id: osdIpcWatcher; running: true
         command: ["bash", "-c",
             "inotifywait -qq -e close_write,moved_to --include 'qs_osd$' /tmp/ 2>/dev/null; " +
-            "[ -f /tmp/qs_osd ] && cat /tmp/qs_osd && rm -f /tmp/qs_osd"
+            "[ -f /tmp/qs_osd ] && cat /tmp/qs_osd"
         ]
         stdout: StdioCollector {
             onStreamFinished: {
@@ -2054,7 +2055,7 @@ PanelWindow {
         id: ipcWatcher; running: true
         command: ["bash", "-c",
             "inotifywait -qq -e close_write,moved_to --include 'qs_island_toggle$' /tmp/ 2>/dev/null; " +
-            "if [ -f /tmp/qs_island_toggle ]; then cat /tmp/qs_island_toggle; rm -f /tmp/qs_island_toggle; fi"
+            "[ -f /tmp/qs_island_toggle ] && cat /tmp/qs_island_toggle"
         ]
         stdout: StdioCollector {
             onStreamFinished: {

@@ -507,7 +507,7 @@ Variants {
             Process {
                 id: editModeWatcher
                 running: true
-                command: ["bash", "-c", "inotifywait -qq -e close_write,moved_to --include 'qs_bar_edit$' /tmp/ 2>/dev/null; " + "[ -f /tmp/qs_bar_edit ] && cat /tmp/qs_bar_edit && rm -f /tmp/qs_bar_edit"]
+                command: ["bash", "-c", "inotifywait -qq -e close_write,moved_to --include 'qs_bar_edit$' /tmp/ 2>/dev/null; " + "[ -f /tmp/qs_bar_edit ] && cat /tmp/qs_bar_edit"]
                 stdout: StdioCollector {
                     onStreamFinished: {
                         barWindow.barEditMode = (this.text.trim() === "1");
