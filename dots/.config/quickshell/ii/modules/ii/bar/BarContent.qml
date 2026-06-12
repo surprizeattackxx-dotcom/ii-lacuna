@@ -126,8 +126,8 @@ Item { // Bar content region
             top: parent.top
             bottom: parent.bottom
             left: parent.left
-            right: leftSection.right
         }
+        width: parent.width / 2
         implicitHeight: Appearance.sizes.baseBarHeight
 
         onScrollDown: Brightness.decreaseBrightness()
@@ -325,9 +325,9 @@ Item { // Bar content region
         anchors {
             top: parent.top
             bottom: parent.bottom
-            left: rightSection.left
             right: parent.right
         }
+        width: parent.width / 2
         implicitHeight: Appearance.sizes.baseBarHeight
 
         onScrollDown: Audio.decrementVolume();
