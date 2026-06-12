@@ -1,15 +1,17 @@
 -- Keybindings
--- Uses globals: apps, mainMod (defined in hyprland.lua)
+-- Uses globals: mainMod (hyprland.lua), app variables (variables.lua)
 
 -- ─── App Launchers ──────────────────────────────
 
-hl.bind("SUPER + RETURN", hl.dsp.exec_cmd("uwsm app -- kitty"))
-hl.bind("SUPER + E", hl.dsp.exec_cmd("uwsm app -- dolphin"))
-hl.bind("SUPER + B", hl.dsp.exec_cmd("uwsm app -- google-chrome-stable --remote-debugging-port=9222 --user-data-dir=/home/donnie/.config/google-chrome"))
+hl.bind("SUPER + RETURN", hl.dsp.exec_cmd("uwsm app -- " .. terminal))
+hl.bind("SUPER + E", hl.dsp.exec_cmd("uwsm app -- " .. fileManager))
+hl.bind("SUPER + B", hl.dsp.exec_cmd("uwsm app -- " .. browser))
+hl.bind("SUPER + C", hl.dsp.exec_cmd("uwsm app -- " .. codeEditor))
+hl.bind("CTRL + SHIFT + ESCAPE", hl.dsp.exec_cmd("uwsm app -- " .. taskManager))
 hl.bind("SUPER + R", hl.dsp.exec_cmd("hamr"))
 hl.bind("SUPER + Q", hl.dsp.window.close())
 hl.bind("ALT + F4", hl.dsp.window.close())
-hl.bind("SUPER + SHIFT + Q", hl.dsp.exec_cmd("hyprctl kill"))
+hl.bind("SUPER + SHIFT + Q", hl.dsp.exec_cmd("~/.config/hypr/scripts/kill_hovered.sh"))
 hl.bind("SUPER + P", hl.dsp.window.pin())
 hl.bind("SUPER + F", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle_fullscreen.sh"))
 hl.bind("SUPER + ALT + SPACE", hl.dsp.exec_cmd("python3 ~/.config/hypr/scripts/dvd-bounce.py"))
@@ -99,7 +101,7 @@ hl.bind("SUPER + W", hl.dsp.exec_cmd("qs -c ii ipc call wallpaperChanger toggle"
 hl.bind("SUPER + O", hl.dsp.global("quickshell:gameLauncherToggle"))
 hl.bind("SUPER + SPACE", hl.dsp.global("quickshell:appLauncherToggle"))
 hl.bind("SUPER + X", hl.dsp.global("quickshell:animations"))
-hl.bind("SUPER + I", hl.dsp.exec_cmd("qs -p ~/.config/quickshell/ii/settings-launcher.qml"))
+hl.bind("SUPER + I", hl.dsp.exec_cmd(settingsApp))
 hl.bind("SUPER + L", hl.dsp.global("quickshell:lock"))
 
 -- ─── System Actions ────────────────────────────
@@ -113,7 +115,7 @@ hl.bind("SUPER + SHIFT + X", hl.dsp.global("quickshell:regionOcr"))
 hl.bind("SUPER + SHIFT + T", hl.dsp.global("quickshell:screenTranslate"))
 hl.bind("SUPER + SHIFT + C", hl.dsp.exec_cmd("hyprpicker -a"))
 hl.bind("SUPER + SHIFT + R", hl.dsp.global("quickshell:regionRecord"))
-hl.bind("CTRL + SUPER + V", hl.dsp.exec_cmd("pavucontrol"))
+hl.bind("CTRL + SUPER + V", hl.dsp.exec_cmd(volumeMixer))
 hl.bind("CTRL + SUPER + R", hl.dsp.exec_cmd("~/.config/hypr/scripts/reload.sh"))
 hl.bind("CTRL + SUPER + SLASH", hl.dsp.exec_cmd("xdg-open ~/.config/illogical-impulse/config.json"))
 hl.bind("CTRL + SUPER + ALT + SLASH", hl.dsp.exec_cmd("xdg-open ~/.config/hypr/binds.lua"))
