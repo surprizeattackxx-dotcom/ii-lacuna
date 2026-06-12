@@ -15,7 +15,7 @@ Singleton {
     property var keybindCategories: []
 
     property string scriptPath: FileUtils.trimFileProtocol(`${Directories.scriptPath}/hyprland/parse_binds_lua.py`)
-    property string bindsPath: FileUtils.trimFileProtocol(`${Directories.config}/hypr/binds.lua`)
+    property string bindsPath: FileUtils.trimFileProtocol(`${Directories.config}/hypr/hyprland/binds.lua`)
 
     property bool _hyprctlDone: false
     property var _hyprctlData: []

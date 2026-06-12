@@ -118,7 +118,7 @@ hl.bind("SUPER + SHIFT + R", hl.dsp.global("quickshell:regionRecord"))
 hl.bind("CTRL + SUPER + V", hl.dsp.exec_cmd(volumeMixer))
 hl.bind("CTRL + SUPER + R", hl.dsp.exec_cmd("~/.config/hypr/scripts/reload.sh"))
 hl.bind("CTRL + SUPER + SLASH", hl.dsp.exec_cmd("xdg-open ~/.config/illogical-impulse/config.json"))
-hl.bind("CTRL + SUPER + ALT + SLASH", hl.dsp.exec_cmd("xdg-open ~/.config/hypr/binds.lua"))
+hl.bind("CTRL + SUPER + ALT + SLASH", hl.dsp.exec_cmd("xdg-open ~/.config/hypr/hyprland/binds.lua"))
 hl.bind("SUPER + SHIFT + M", hl.dsp.exec_cmd("pw-play ~/.local/share/sounds/osrs/death.ogg & sleep 3; command -v hyprshutdown >/dev/null 2>&1 && hyprshutdown || hyprctl dispatch exit"))
 
 -- ─── Media & Volume ────────────────────────────

@@ -3,6 +3,7 @@
 hl.on("hyprland.start", function()
   -- ─── Hardware & Services ────────────────────────
   hl.exec_cmd("hyprpm reload -n")
+  hl.exec_cmd("hypridle")
   hl.exec_cmd("~/.config/hypr/scripts/monitor-watch.sh")
   hl.exec_cmd("~/.config/hypr/scripts/update_notifier.sh")
   hl.exec_cmd("sleep 3 && bash -c 'STATE=\"$HOME/.config/hypr/monitor-state.lua\"; if [ -f \"$STATE\" ]; then   MONS=$(grep -oP '\"[A-Z0-9-]+\"' \"$STATE\" | tr -d \\'\"\\' | head -3);   IFS=$\\'\\n\\' read -r -a ARR <<< \"$MONS\";   [ ${#ARR[@]} -ge 2 ] && hyprctl dispatch moveworkspacetomonitor 11 ${ARR[1]};   [ ${#ARR[@]} -ge 3 ] && hyprctl dispatch moveworkspacetomonitor 21 ${ARR[2]};   [ ${#ARR[@]} -ge 1 ] && hyprctl dispatch focusmonitor ${ARR[0]}; fi'")
