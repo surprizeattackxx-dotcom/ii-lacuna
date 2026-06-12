@@ -28,6 +28,7 @@ Item { // Bar content region
 
     property bool hasActiveWindows: false
     property bool showBarBackground: root.hasActiveWindows && Config.options.bar.barBackgroundStyle === 2 || Config.options.bar.barBackgroundStyle === 1
+    readonly property real groupGap: Config.options.bar.barGroupStyle === 1 ? 8 : 4
 
     Connections {
         enabled: Config.options.bar.barBackgroundStyle === 2
@@ -185,7 +186,7 @@ Item { // Bar content region
             bottom: parent.bottom
             left: leftStopper.right
         }
-        spacing: 4
+        spacing: root.groupGap
 
         Repeater {
             id: leftRepeater
@@ -207,8 +208,9 @@ Item { // Bar content region
 
         RowLayout {
             anchors.right: centerCenter.left
-            anchors.rightMargin: 4
+            anchors.rightMargin: root.groupGap
             height: parent.height
+            spacing: root.groupGap
             Repeater {
                 id: middleLeftRepeater
                 model: root.leftList
@@ -222,6 +224,7 @@ Item { // Bar content region
 
         RowLayout { // center
             id: centerCenter
+            spacing: root.groupGap
             anchors {
                 top: parent.top
                 bottom: parent.bottom
@@ -242,8 +245,9 @@ Item { // Bar content region
                 top: parent.top
                 bottom: parent.bottom
                 left: centerCenter.right
-                leftMargin: 4
+                leftMargin: root.groupGap
             }
+            spacing: root.groupGap
             Repeater {
                 id: middleRightRepeater
                 model: root.rightList
@@ -273,7 +277,7 @@ Item { // Bar content region
             right: rightStopper.left
             rightMargin: Math.ceil(Appearance.rounding.screenRounding / 2)
         }
-        spacing: 4
+        spacing: root.groupGap
 
         Repeater {
             id: rightRepeater

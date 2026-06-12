@@ -39,6 +39,10 @@ Item {
         enabled: root.islandStyle
     }
 
+    // Bubble hover lift (scale doesn't affect layout, so neighbors stay put)
+    scale: root.islandHovered ? 1.03 : 1.0
+    Behavior on scale { NumberAnimation { duration: 280; easing.type: Easing.OutExpo } }
+
     // Floating-island drop shadow (ActivSpot style) — blurred dark slab behind the pill
     Rectangle {
         visible: root.islandStyle
@@ -82,18 +86,21 @@ Item {
         }
         color: {
             if (root.islandStyle) {
-                const base = Appearance.m3colors.m3background;
-                // Light themes read as a glaring slab at high alpha; dark can afford more fill
+                // ActivSpot pill recipe: elevated near-opaque surface on dark,
+                // translucent base on light so it doesn't read as a glaring slab
+                const base = Appearance.m3colors.darkmode
+                    ? Appearance.m3colors.m3surfaceContainerLow
+                    : Appearance.m3colors.m3background;
                 const a = Appearance.m3colors.darkmode
-                    ? (root.islandHovered ? 0.95 : 0.78)
-                    : (root.islandHovered ? 0.82 : 0.66);
+                    ? (root.islandHovered ? 1.0 : 0.94)
+                    : (root.islandHovered ? 0.88 : 0.78);
                 return Qt.rgba(base.r, base.g, base.b, a);
             }
             return Qt.rgba(root.colBackground.r, root.colBackground.g, root.colBackground.b, root.backgroundAlpha);
         }
         border.width: 1
         border.color: root.islandStyle
-            ? Qt.rgba(Appearance.colors.colOnLayer0.r, Appearance.colors.colOnLayer0.g, Appearance.colors.colOnLayer0.b, root.islandHovered ? 0.15 : 0.06)
+            ? Qt.rgba(Appearance.colors.colOnLayer0.r, Appearance.colors.colOnLayer0.g, Appearance.colors.colOnLayer0.b, root.islandHovered ? 0.18 : 0.10)
             : Appearance.colors.colLayer0Border
         Behavior on border.color { ColorAnimation { duration: 300 } }
         topLeftRadius: startRadius
