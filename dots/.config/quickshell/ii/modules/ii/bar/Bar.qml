@@ -79,31 +79,9 @@ Scope {
                     Appearance.sizes.baseBarHeight + (Config.options.bar.cornerStyle === 1 ? Appearance.sizes.hyprlandGapsOut : 0)
                 WlrLayershell.namespace: "quickshell:bar"
                 implicitHeight: Appearance.sizes.barHeight + (Config.options.bar.cornerStyle === 0 ? Appearance.rounding.screenRounding : 0)
-                mask: null
+                // Full-strip mask so scrolling on empty bar space still hits the wheel handler
+                mask: Region { item: barContent }
                 color: "transparent"
-
-                property Component _regionComponent: Component { Region {} }
-                property var _currentMask: null
-
-                function _rebuildMask() {
-                    if (_currentMask) { _currentMask.destroy(); _currentMask = null }
-                    let left  = barContent.leftMaskRegionItem
-                    let mid   = barContent.middleMaskRegionItem
-                    let right = barContent.rightMaskRegionItem
-                    let items = [left, mid, right].filter(i => i.width > 0 && i.height > 0)
-                    if (items.length === 0) { barRoot.mask = null; return }
-                    let parent = _regionComponent.createObject(barRoot, {})
-                    let regions = items.map(i => {
-                        let p = i.mapToItem(barRoot.contentItem, 0, 0)
-                        return _regionComponent.createObject(parent, {
-                            x: p.x, y: p.y,
-                            width: i.width, height: i.height
-                        })
-                    })
-                    parent.regions = regions
-                    _currentMask = parent
-                    barRoot.mask = parent
-                }
 
                 // Positioning
                 anchors {
@@ -121,7 +99,6 @@ Scope {
                 // Include in focus grab
                 Component.onCompleted: {
                     GlobalFocusGrab.addPersistent(barRoot);
-                    barRoot._rebuildMask();
                 }
                 Component.onDestruction: {
                     GlobalFocusGrab.removePersistent(barRoot);
@@ -194,21 +171,6 @@ Scope {
                                 anchors.topMargin: 0
                                 anchors.bottomMargin: (Config?.options.bar.autoHide.enable && !mustShow) ? -Appearance.sizes.barHeight : 0
                             }
-                        }
-                    }
-
-                    // Dynamic mask rebuild — Quickshell Region children don't propagate
-                    // geometry changes, so we rebuild the mask from JS on section resize.
-                    Timer {
-                        id: maskRebuildTimer
-                        interval: 50
-                        onTriggered: barRoot._rebuildMask()
-                    }
-
-                    Connections {
-                        target: barContent
-                        function onSectionGeometryChanged() {
-                            if (!barRoot.showBarBackground) maskRebuildTimer.restart()
                         }
                     }
 
