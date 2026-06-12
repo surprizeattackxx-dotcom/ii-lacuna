@@ -1069,7 +1069,7 @@ Variants {
                     bar: barWindow
                     appletOrder: barWindow.leftAppletOrder
                     editMode: barWindow.barEditMode
-                    showGroupFrames: false
+                    showGroupFrames: true
                     subtleBackdrop: true
                     anchors.left: parent.left
                     anchors.right: centerBox.left
@@ -1085,7 +1085,7 @@ Variants {
                     bar: barWindow
                     appletOrder: barWindow.rightAppletOrder
                     editMode: barWindow.barEditMode
-                    showGroupFrames: false
+                    showGroupFrames: true
                     subtleBackdrop: true
                     anchors.right: parent.right
                     anchors.left: centerBox.right

@@ -38,6 +38,15 @@ Item {
         { id: "spacer",    label: "Spacer",      icon: "󱐋" },
         { id: "separator", label: "Separator",   icon: "│" },
         { id: "avatar",    label: "Profile",     icon: "󰀄" },
+        { id: "activewin", label: "Active Window", icon: "󱂬" },
+        { id: "sysmon",    label: "System Monitor", icon: "" },
+        { id: "weather",   label: "Weather",     icon: "󰖐" },
+        { id: "updates",   label: "Updates",     icon: "󰚰" },
+        { id: "netspeed",  label: "Net Speed",   icon: "󰓅" },
+        { id: "localsend", label: "LocalSend",   icon: "󰒢" },
+        { id: "policies",  label: "Left Panel",  icon: "󰍜" },
+        { id: "dash",      label: "Dashboard",   icon: "󰕮" },
+        { id: "utils",     label: "Utilities",   icon: "󰦬" },
     ]
 
     // Full registry: built-ins + installed plugins
