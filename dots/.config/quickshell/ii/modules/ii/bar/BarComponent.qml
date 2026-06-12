@@ -132,6 +132,7 @@ Item {
 
             startRadius: rootItem.startRadius
             endRadius: rootItem.endRadius
+            islandStyle: rootItem.barGroupStyle === 1
             colBackground: primaryBackgroundComps.includes(modelData.id) ? rootItem.colBackgroundHighlight : rootItem.colBackground
             backgroundAlpha: barGroupStyle === 0 ? 0.82 : 1.0
 
