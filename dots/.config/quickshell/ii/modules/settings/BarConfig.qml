@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
@@ -200,6 +201,46 @@ ContentPage {
                     to: 1000
                     stepSize: 20
                     onValueChanged: { Config.options.bar.autoHide.showWhenPressingSuper.delay = value; }
+                }
+            }
+        }
+
+        ContentSubsection {
+            title: Translation.tr("Per-monitor side")
+            tooltip: Translation.tr("Override which side the vertical bar sits on for each display. Only applies in vertical mode.")
+            visible: Config.options.bar.vertical
+
+            Repeater {
+                model: Quickshell.screens
+                delegate: RowLayout {
+                    required property var modelData
+                    Layout.fillWidth: true
+                    spacing: 8
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: modelData.name
+                        color: Appearance.colors.colOnLayer1
+                    }
+
+                    ConfigSelectionArray {
+                        Layout.fillWidth: false
+                        currentValue: {
+                            const overrides = Config.options.bar.verticalSideOverrides ?? [];
+                            const match = overrides.find(o => o.monitor === modelData.name);
+                            if (match) return match.side;
+                            return Config.options.bar.bottom ? "right" : "left";
+                        }
+                        onSelected: newValue => {
+                            const overrides = (Config.options.bar.verticalSideOverrides ?? []).filter(o => o.monitor !== modelData.name);
+                            overrides.push({ monitor: modelData.name, side: newValue });
+                            Config.options.bar.verticalSideOverrides = overrides;
+                        }
+                        options: [
+                            { displayName: Translation.tr("Left"), icon: "arrow_back", value: "left" },
+                            { displayName: Translation.tr("Right"), icon: "arrow_forward", value: "right" }
+                        ]
+                    }
                 }
             }
         }

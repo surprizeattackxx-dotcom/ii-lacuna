@@ -332,6 +332,7 @@ Singleton {
                 }
 
                 property bool bottom: false // Instead of top
+                property list<var> verticalSideOverrides: [] // Per-monitor vertical bar side, e.g. [{ monitor: "DP-1", side: "right" }]. Falls back to 'bottom' (false=left, true=right).
                 property int cornerStyle: 1 // 0: Hug | 1: Float | 2: Plain rectangle
                 property bool floatStyleShadow: true // Show shadow behind bar when cornerStyle == 1 (Float)
                 property int barGroupStyle: 0 // 0: Pills | 1: Island (opaque) | 2: Transparent (or maybe line-separated in the future)

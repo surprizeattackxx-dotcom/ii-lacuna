@@ -47,6 +47,14 @@ Scope {
                 }
                 visible: !monitorFullscreen
 
+                property bool onRight: {
+                    const name = barLoader.modelData?.name;
+                    const overrides = Config.options.bar.verticalSideOverrides;
+                    const match = overrides?.find(o => o.monitor === name);
+                    if (match) return match.side === "right";
+                    return Config.options.bar.bottom;
+                }
+
                 Connections {
                     enabled: Config.options.bar.barBackgroundStyle === 2
                     target: HyprlandData
@@ -94,8 +102,8 @@ Scope {
 
                 // Positioning
                 anchors {
-                    left: !Config.options.bar.bottom
-                    right: Config.options.bar.bottom
+                    left: !barRoot.onRight
+                    right: barRoot.onRight
                     top: true
                     bottom: true
                 }
@@ -142,7 +150,7 @@ Scope {
 
                         states: State {
                             name: "right"
-                            when: Config.options.bar.bottom
+                            when: barRoot.onRight
                             AnchorChanges {
                                 target: barContent
                                 anchors {
@@ -174,7 +182,7 @@ Scope {
 
                         states: State {
                             name: "right"
-                            when: Config.options.bar.bottom
+                            when: barRoot.onRight
                             AnchorChanges {
                                 target: roundDecorators
                                 anchors {
@@ -202,7 +210,7 @@ Scope {
                                 corner: RoundCorner.CornerEnum.TopLeft
                                 states: State {
                                     name: "bottom"
-                                    when: Config.options.bar.bottom
+                                    when: barRoot.onRight
                                     PropertyChanges {
                                         topCorner.corner: RoundCorner.CornerEnum.TopRight
                                     }
@@ -212,8 +220,8 @@ Scope {
                                 id: bottomCorner
                                 anchors {
                                     bottom: parent.bottom
-                                    left: !Config.options.bar.bottom ? parent.left : undefined
-                                    right: Config.options.bar.bottom ? parent.right : undefined
+                                    left: !barRoot.onRight ? parent.left : undefined
+                                    right: barRoot.onRight ? parent.right : undefined
                                 }
                                 implicitSize: Appearance.rounding.screenRounding
                                 color: showBarBackground ? Appearance.colors.colLayer0 : "transparent"
@@ -221,7 +229,7 @@ Scope {
                                 corner: RoundCorner.CornerEnum.BottomLeft
                                 states: State {
                                     name: "bottom"
-                                    when: Config.options.bar.bottom
+                                    when: barRoot.onRight
                                     PropertyChanges {
                                         bottomCorner.corner: RoundCorner.CornerEnum.BottomRight
                                     }
