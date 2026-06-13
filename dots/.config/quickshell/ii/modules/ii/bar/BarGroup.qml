@@ -23,7 +23,7 @@ Item {
     function _updateScenePos() {
         const p = background.mapToItem(null, 0, 0);
         _sceneX = p.x + Appearance.sizes.hyprlandGapsOut;
-        _sceneY = Config.options.bar.bottom
+        _sceneY = Config.barHorizontalBottom(root.QsWindow.window?.screen?.name)
             ? ((root.QsWindow.window?.screen?.height ?? 0) - (root.QsWindow.window?.height ?? 0) + p.y)
             : p.y;
     }

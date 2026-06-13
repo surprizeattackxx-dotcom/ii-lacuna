@@ -96,7 +96,7 @@ Item { // Bar content region
             screen: root.screen
             cornerRadius: barBackground.radius
             screenX: barBackground.x + Appearance.sizes.hyprlandGapsOut
-            screenY: Config.options.bar.bottom ? ((root.screen?.height ?? 0) - root.height + barBackground.y) : barBackground.y
+            screenY: Config.barHorizontalBottom(root.screen?.name) ? ((root.screen?.height ?? 0) - root.height + barBackground.y) : barBackground.y
             tint: Appearance.colors.colLayer0
         }
 

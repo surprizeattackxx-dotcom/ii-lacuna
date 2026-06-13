@@ -12,6 +12,7 @@ PopupWindow {
     id: root
     required property QsMenuHandle trayItemMenuHandle
     property string trayItemId: ""
+    property string barScreenName: ""
     property real popupBackgroundMargin: 0
 
     signal menuClosed
@@ -67,8 +68,8 @@ PopupWindow {
                 left: parent.left
                 right: parent.right
                 verticalCenter: Config.options.bar.vertical ? parent.verticalCenter : undefined
-                top: Config.options.bar.vertical ? undefined : Config.options.bar.bottom ? undefined : parent.top
-                bottom: Config.options.bar.vertical ? undefined : Config.options.bar.bottom ? parent.bottom : undefined
+                top: Config.options.bar.vertical ? undefined : Config.barHorizontalBottom(root.barScreenName) ? undefined : parent.top
+                bottom: Config.options.bar.vertical ? undefined : Config.barHorizontalBottom(root.barScreenName) ? parent.bottom : undefined
                 margins: root.padding
             }
 

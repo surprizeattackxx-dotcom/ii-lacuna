@@ -10,6 +10,7 @@ import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
 import qs.modules.common.functions
+import qs.modules.ii.bar
 
 Scope {
     id: bar
@@ -47,13 +48,7 @@ Scope {
                 }
                 visible: !monitorFullscreen
 
-                property bool onRight: {
-                    const name = barLoader.modelData?.name;
-                    const overrides = Config.options.bar.verticalSideOverrides;
-                    const match = overrides?.find(o => o.monitor === name);
-                    if (match) return match.side === "right";
-                    return Config.options.bar.bottom;
-                }
+                property bool onRight: Config.barVerticalRight(barLoader.modelData?.name)
 
                 Connections {
                     enabled: Config.options.bar.barBackgroundStyle === 2
@@ -284,4 +279,6 @@ Scope {
             GlobalStates.barOpen = false;
         }
     }
+
+    BarAppletsOverlay {}
 }

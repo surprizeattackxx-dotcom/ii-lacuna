@@ -13,6 +13,10 @@ MouseArea {
     id: root
     required property SystemTrayItem item
     property bool targetMenuOpen: false
+    readonly property string barScreenName: root.QsWindow.window?.screen?.name ?? ""
+    readonly property bool barOnFarSide: Config.options.bar.vertical
+        ? Config.barVerticalRight(root.barScreenName)
+        : Config.barHorizontalBottom(root.barScreenName)
 
     signal menuOpened(qsWindow: var)
     signal menuClosed()
@@ -49,6 +53,7 @@ MouseArea {
         sourceComponent: SysTrayMenu {
             Component.onCompleted: this.open();
             trayItemMenuHandle: root.item.menu
+            barScreenName: root.barScreenName
 
             anchor {
                 window: root.QsWindow.window
@@ -59,7 +64,7 @@ MouseArea {
 
                     if (Config.options.bar.vertical) {
                         return Qt.rect(
-                            Config.options.bar.bottom ? pos.x - gap : pos.x + gap,
+                            root.barOnFarSide ? pos.x - gap : pos.x + gap,
                             pos.y,
                             root.width,
                             root.height
@@ -67,7 +72,7 @@ MouseArea {
                     } else {
                         return Qt.rect(
                             pos.x,
-                            Config.options.bar.bottom ? pos.y - gap : pos.y + gap,
+                            root.barOnFarSide ? pos.y - gap : pos.y + gap,
                             root.width,
                             root.height
                         );
@@ -76,17 +81,17 @@ MouseArea {
 
                 edges: {
                     if (Config.options.bar.vertical) {
-                        return Config.options.bar.bottom ? (Edges.Left | Edges.Middle) : (Edges.Right | Edges.Middle);
+                        return root.barOnFarSide ? (Edges.Left | Edges.Middle) : (Edges.Right | Edges.Middle);
                     } else {
-                        return Config.options.bar.bottom ? (Edges.Top | Edges.Center) : (Edges.Bottom | Edges.Center);
+                        return root.barOnFarSide ? (Edges.Top | Edges.Center) : (Edges.Bottom | Edges.Center);
                     }
                 }
 
                 gravity: {
                     if (Config.options.bar.vertical) {
-                        return Config.options.bar.bottom ? Edges.Left : Edges.Right;
+                        return root.barOnFarSide ? Edges.Left : Edges.Right;
                     } else {
-                        return Config.options.bar.bottom ? Edges.Top : Edges.Bottom;
+                        return root.barOnFarSide ? Edges.Top : Edges.Bottom;
                     }
                 }
             }
@@ -125,7 +130,7 @@ MouseArea {
         id: tooltip
         extraVisibleCondition: root.containsMouse
         alternativeVisibleCondition: extraVisibleCondition
-        anchorEdges: (!Config.options.bar.bottom && !Config.options.bar.vertical) ? Edges.Bottom : Edges.Top
+        anchorEdges: (!root.barOnFarSide && !Config.options.bar.vertical) ? Edges.Bottom : Edges.Top
     }
 
 }

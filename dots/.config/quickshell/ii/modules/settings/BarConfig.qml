@@ -245,6 +245,46 @@ ContentPage {
             }
         }
 
+        ContentSubsection {
+            title: Translation.tr("Per-monitor side")
+            tooltip: Translation.tr("Override which side the horizontal bar sits on for each display. Only applies in horizontal mode.")
+            visible: !Config.options.bar.vertical
+
+            Repeater {
+                model: Quickshell.screens
+                delegate: RowLayout {
+                    required property var modelData
+                    Layout.fillWidth: true
+                    spacing: 8
+
+                    StyledText {
+                        Layout.fillWidth: true
+                        text: modelData.name
+                        color: Appearance.colors.colOnLayer1
+                    }
+
+                    ConfigSelectionArray {
+                        Layout.fillWidth: false
+                        currentValue: {
+                            const overrides = Config.options.bar.horizontalSideOverrides ?? [];
+                            const match = overrides.find(o => o.monitor === modelData.name);
+                            if (match) return match.side;
+                            return Config.options.bar.bottom ? "bottom" : "top";
+                        }
+                        onSelected: newValue => {
+                            const overrides = (Config.options.bar.horizontalSideOverrides ?? []).filter(o => o.monitor !== modelData.name);
+                            overrides.push({ monitor: modelData.name, side: newValue });
+                            Config.options.bar.horizontalSideOverrides = overrides;
+                        }
+                        options: [
+                            { displayName: Translation.tr("Top"), icon: "arrow_upward", value: "top" },
+                            { displayName: Translation.tr("Bottom"), icon: "arrow_downward", value: "bottom" }
+                        ]
+                    }
+                }
+            }
+        }
+
         ConfigRow {
             Layout.fillHeight: false
             ContentSubsection {

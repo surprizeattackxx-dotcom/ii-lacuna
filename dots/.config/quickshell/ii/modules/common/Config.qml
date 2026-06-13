@@ -14,6 +14,18 @@ Singleton {
     property int readWriteDelay: 75 // milliseconds
     property bool blockWrites: false
 
+    function barHorizontalBottom(screenName) {
+        const match = root.options.bar.horizontalSideOverrides?.find(o => o.monitor === screenName);
+        if (match) return match.side === "bottom";
+        return root.options.bar.bottom;
+    }
+
+    function barVerticalRight(screenName) {
+        const match = root.options.bar.verticalSideOverrides?.find(o => o.monitor === screenName);
+        if (match) return match.side === "right";
+        return root.options.bar.bottom;
+    }
+
     function setNestedValue(nestedKey, value) {
         let keys = nestedKey.split(".");
         let obj = root.options;
@@ -334,6 +346,7 @@ Singleton {
 
                 property bool bottom: false // Instead of top
                 property list<var> verticalSideOverrides: [] // Per-monitor vertical bar side, e.g. [{ monitor: "DP-1", side: "right" }]. Falls back to 'bottom' (false=left, true=right).
+                property list<var> horizontalSideOverrides: [] // Per-monitor horizontal bar side, e.g. [{ monitor: "DP-1", side: "bottom" }]. Falls back to 'bottom' (false=top, true=bottom).
                 property int cornerStyle: 1 // 0: Hug | 1: Float | 2: Plain rectangle
                 property bool floatStyleShadow: true // Show shadow behind bar when cornerStyle == 1 (Float)
                 property int barGroupStyle: 0 // 0: Pills | 1: Island (opaque) | 2: Transparent (or maybe line-separated in the future)
