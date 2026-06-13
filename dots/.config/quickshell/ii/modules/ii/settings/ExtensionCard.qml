@@ -185,6 +185,7 @@ Item {
 
                 RippleButton {
                     Layout.alignment: Qt.AlignRight
+                    enabled: Config.options.extensions.enable
                     implicitWidth: 80
                     implicitHeight: 28
                     padding: 0

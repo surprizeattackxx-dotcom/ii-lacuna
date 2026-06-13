@@ -4,6 +4,7 @@ pragma ComponentBehavior: Bound
 import QtQuick
 import Quickshell
 import Quickshell.Io
+import qs.modules.common
 
 Singleton {
     id: root
@@ -16,6 +17,7 @@ Singleton {
     property int auditDbVersion: 0
 
     function fetchAuditDatabase() {
+        if (!Config.options.extensions.enable) return
         auditFetchProc.exec(["curl", "-s", "--connect-timeout", "5",
             "https://raw.githubusercontent.com/vaguesyntax/vynx-extension-audit/refs/heads/main/extension-database.json"])
     }

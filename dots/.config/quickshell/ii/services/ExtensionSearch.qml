@@ -40,6 +40,7 @@ Singleton {
     // ── GitHub search ──
 
     function refreshAvailableExtensions() {
+        if (!Config.options.extensions.enable) return
         if (root.loading) return
         root.loading = true
         ExtensionManager.error = ""
@@ -92,6 +93,7 @@ Singleton {
     // ── ExtensionJson fetch ──
 
     function fetchExtensionJson(repoId) {
+        if (!Config.options.extensions.enable) return
         if (root.extensionJsonLoading) return
         root.extensionJsonLoading = true
         ExtensionManager.error = ""
@@ -152,6 +154,7 @@ Singleton {
     // ── ExtensionJson auto-fetch queue ──
 
     function startExtensionJsonFetchAll() {
+        if (!Config.options.extensions.enable) return
         let ids = []
         for (let i = 0; i < root.availableExtensions.length; i++) {
             if (!root.availableExtensions[i].hasExtensionJson) {

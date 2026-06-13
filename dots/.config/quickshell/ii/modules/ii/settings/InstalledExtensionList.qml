@@ -7,6 +7,7 @@ import "."
 
 ColumnLayout {
     id: root
+    visible: root.installedList.length > 0
 
     readonly property var installedList: {
         let list = []

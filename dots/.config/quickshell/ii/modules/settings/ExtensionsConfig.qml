@@ -40,6 +40,7 @@ ContentPage {
 
     Component.onCompleted: {
         if (!ExtensionManager.ready) return
+        if (!Config.options.extensions.enable) { page.filter(); return }
         if (ExtensionSearch.availableExtensions.length === 0) {
             ExtensionSearch.refreshAvailableExtensions()
         }
@@ -63,6 +64,7 @@ ContentPage {
     }
 
     function filter() {
+        if (!Config.options.extensions.enable) { page.filteredExtensions = []; return }
         let installed = ExtensionManager.installedExtensions
         let list = ExtensionSearch.availableExtensions
 
@@ -90,11 +92,19 @@ ContentPage {
     ContentSection {
         icon: "extension"
         title: Translation.tr("Extensions (beta)")
-        tooltip: Translation.tr("Extension system is still on beta, expect some bugs. PLEASE report any issues you encounter.")
 
         ButtonGroup {
+            enabled: Config.options.extensions.enable
             Layout.topMargin: 10
             Layout.fillWidth: true
+
+            GroupButtonWithIcon {
+                buttonIcon: "info"
+                baseHeight: 44
+                extraWidth: 26
+                onClicked: Qt.openUrlExternally("https://github.com/vaguesyntax/ii-vynx/blob/main/.github/EXTENSIONS.md")
+                StyledToolTip { text: Translation.tr("Developer documentation to develop extensions") }
+            }
 
             GroupButtonWithIcon {
                 buttonIcon: "link"
@@ -129,6 +139,7 @@ ContentPage {
 
         ButtonGroup {
             id: urlInputLayout
+            enabled: Config.options.extensions.enable
             clip: true
             Layout.fillWidth: true
             implicitHeight: page.showCustomUrlInput ? 44 : 0
@@ -152,6 +163,16 @@ ContentPage {
                 buttonIcon: "download"
                 onClicked: page.installFromUrl()
                 StyledToolTip { text: Translation.tr("Install a custom extension") }
+            }
+        }
+
+        NoticeBox {
+            Layout.fillWidth: true
+            text: Translation.tr("Extension system is in early beta stage. Please be cautious when installing extensions from untrusted sources and report any issues you encounter.")
+            ConfigSwitch {
+                checked: Config.options.extensions.enable
+                onClicked: Config.options.extensions.enable = !Config.options.extensions.enable
+                StyledToolTip { text: Translation.tr("Enable/Disable extensions") }
             }
         }
 
