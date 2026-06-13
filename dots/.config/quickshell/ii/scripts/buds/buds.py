@@ -2,6 +2,7 @@
 import json
 import os
 import socket
+import subprocess
 import sys
 import time
 
@@ -67,6 +68,14 @@ def parse_frames(buf):
     return frames
 
 
+def is_connected():
+    try:
+        out = subprocess.run(["bluetoothctl", "info", ADDR], capture_output=True, text=True, timeout=3).stdout
+        return "Connected: yes" in out
+    except Exception:
+        return False
+
+
 def open_channel(ch, timeout=2.0):
     s = socket.socket(socket.AF_BLUETOOTH, socket.SOCK_STREAM, socket.BTPROTO_RFCOMM)
     s.settimeout(timeout)
@@ -104,6 +113,8 @@ def detect_channel():
 
 
 def read_status(timeout=3.0):
+    if not is_connected():
+        return {"connected": False}
     s, ch, primer = detect_channel()
     buf = bytearray(primer)
     s.settimeout(1.2)
@@ -147,6 +158,8 @@ def read_status(timeout=3.0):
 
 
 def send(msg_id, payload=b""):
+    if not is_connected():
+        return
     s, ch, _ = detect_channel()
     s.send(build(msg_id, payload))
     time.sleep(0.2)
