@@ -588,6 +588,7 @@ Singleton {
                     property bool enable: true
                     property int lockTimeout: 1800 // seconds; 0 disables
                     property int dpmsTimeout: 2700 // seconds; 0 disables
+                    property bool respectMedia: true // Don't auto-lock or DPMS-off while a media player is actively playing
                 }
             }
 

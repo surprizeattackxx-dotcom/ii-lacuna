@@ -1,5 +1,6 @@
 pragma Singleton
 import qs
+import qs.services
 import qs.modules.common
 import QtQuick
 import Quickshell
@@ -39,9 +40,13 @@ Singleton {
         Persistent.states.idle.sessionId = root._sessionId
     }
 
+    // Don't auto-lock or blank the screen while something's actively playing
+    // (covers players that don't register a Wayland idle inhibitor themselves)
+    readonly property bool mediaInhibit: Config.options.lock.idle.respectMedia && MprisController.anyPlaying
+
     // Native idle handling (replaces hypridle, which crashes Hyprland here)
     IdleMonitor {
-        enabled: Config.options.lock.idle.enable && Config.options.lock.idle.lockTimeout > 0
+        enabled: Config.options.lock.idle.enable && Config.options.lock.idle.lockTimeout > 0 && !root.mediaInhibit
         respectInhibitors: true
         timeout: Config.options.lock.idle.lockTimeout
         onIsIdleChanged: {
@@ -55,7 +60,7 @@ Singleton {
     }
 
     IdleMonitor {
-        enabled: Config.options.lock.idle.enable && Config.options.lock.idle.dpmsTimeout > 0
+        enabled: Config.options.lock.idle.enable && Config.options.lock.idle.dpmsTimeout > 0 && !root.mediaInhibit
         respectInhibitors: true
         timeout: Config.options.lock.idle.dpmsTimeout
         onIsIdleChanged: Quickshell.execDetached(["hyprctl", "dispatch", "dpms", isIdle ? "off" : "on"])
