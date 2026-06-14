@@ -22,20 +22,21 @@ Singleton {
 	property MprisPlayer activePlayer: trackedPlayer ?? Mpris.players.values[0] ?? null;
 	signal trackChanged(reverse: bool);
 
-	property string priorityPlayer: Config.options.media.priorityPlayer;
+	property var priorityPlayers: (Config.options.media.priorityPlayer ?? "").split(",").map(s => s.trim()).filter(s => s.length > 0);
 
 	property bool __reverse: false;
 
 	property var activeTrack;
 
 	onAllPlayersChanged: {
-		const nextPlayer = allPlayers.find(player => player.desktopEntry === root.priorityPlayer);
-		if (nextPlayer) {
-			activePlayer = nextPlayer;
-			return;
-		} else {
-			activePlayer = players[0] ?? null;
+		for (const entry of root.priorityPlayers) {
+			const match = allPlayers.find(player => player.desktopEntry === entry);
+			if (match) {
+				activePlayer = match;
+				return;
+			}
 		}
+		activePlayer = players[0] ?? null;
 	}
 
 	property bool hasActivePlasmaIntegration: false
