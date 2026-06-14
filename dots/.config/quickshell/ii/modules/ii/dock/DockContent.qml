@@ -81,9 +81,8 @@ Item {
         return magnifyMaxShift * _erf((pos - magnifyCursor) / (magnifySigma * Math.SQRT2));
     }
 
-    readonly property var activePlayer: MprisController.activePlayer
-    readonly property string rawTitle: StringUtils.cleanMusicTitle(activePlayer?.trackTitle) || ""
-    readonly property bool hasRealData: activePlayer !== null && rawTitle !== ""
+    readonly property var mediaPlayers: MprisController.players.filter(p => (StringUtils.cleanMusicTitle(p?.trackTitle) || "") !== "")
+    readonly property bool hasRealData: mediaPlayers.length > 0
     property bool showMusicPlayer: hasRealData
 
     onHasRealDataChanged: {
@@ -554,8 +553,8 @@ Item {
             id: mediaWidgetWrapper
             Layout.alignment: Qt.AlignCenter
             readonly property bool showWidget: (Config.options?.dock?.enableMediaWidget ?? false) && root.showMusicPlayer
-            readonly property real innerW: mediaWidgetLoader.item?.implicitWidth ?? 0
-            readonly property real innerH: mediaWidgetLoader.item?.implicitHeight ?? 0
+            readonly property real innerW: mediaRow.implicitWidth
+            readonly property real innerH: mediaRow.implicitHeight
             Layout.preferredWidth: root.isVertical ? root.buttonSlotSize : (showWidget ? innerW : 0)
             Layout.preferredHeight: root.isVertical ? (showWidget ? innerH : 0) : root.buttonSlotSize
             opacity: showWidget ? 1.0 : 0.0
@@ -574,12 +573,21 @@ Item {
                 animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
             }
 
-            Loader {
-                id: mediaWidgetLoader
+            GridLayout {
+                id: mediaRow
                 anchors.centerIn: parent
-                active: mediaWidgetWrapper.visible
-                sourceComponent: DockMediaWidget {
-                    isVertical: root.isVertical
+                flow: root.isVertical ? GridLayout.TopToBottom : GridLayout.LeftToRight
+                rowSpacing: 0
+                columnSpacing: 0
+                Repeater {
+                    model: ScriptModel {
+                        values: mediaWidgetWrapper.visible ? root.mediaPlayers : []
+                    }
+                    delegate: DockMediaWidget {
+                        required property var modelData
+                        isVertical: root.isVertical
+                        player: modelData
+                    }
                 }
             }
         }

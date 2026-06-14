@@ -36,7 +36,8 @@ Item {
     implicitWidth: isVertical ? slotSize : fixedLength
     implicitHeight: isVertical ? buttonSize + dotMargin * 1.3 : slotSize
 
-    readonly property MprisPlayer currentPlayer: MprisController.activePlayer
+    property MprisPlayer player: MprisController.activePlayer
+    readonly property MprisPlayer currentPlayer: player
     readonly property bool isPlaying: currentPlayer?.isPlaying ?? false
 
     readonly property string finalTitle: StringUtils.cleanMusicTitle(currentPlayer?.trackTitle) || Translation.tr("Unknown Title")
