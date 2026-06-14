@@ -3,5 +3,6 @@
   "theme": {
     "mode": "matugen",
     "overrides": {}
-  }
+  },
+  "topbarTheme": "glass"
 }

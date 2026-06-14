@@ -263,6 +263,7 @@ Singleton {
                 Quickshell.execDetached(["bash", "-c",
                     'printf "%s\n" "$1" > /tmp/qs_island_notif', "ii_notif_bridge",
                     JSON.stringify({
+                        notifId: notification.id + root.idOffset,
                         appName: notification.appName || "System",
                         title: notification.summary || "",
                         body: notification.body || "",

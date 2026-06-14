@@ -23,6 +23,27 @@ DockButton {
     property int dotMargin: Math.round((Config.options?.dock.height ?? 60) * 0.2)
 
     readonly property bool isVertical: dockContent?.isVertical ?? false
+    readonly property string dockPos: dock.dockEffectivePosition
+
+    property real pressScale: 1.0
+    readonly property real magScale: {
+        const dc = dockContent
+        if (!dc || !dc.magnifyEnabled || !dc.magnifyActive || isDragging || dc.fileDragActive)
+            return 1.0
+        const host = dc.magnifyHost
+        if (!host) return 1.0
+        const c = mapToItem(host, width / 2, height / 2)
+        const mine = isVertical ? c.y : c.x
+        const d = mine - dc.magnifyCursor
+        const sigma = dc.magnifySigma
+        return 1.0 + (dc.magnifyMax - 1.0) * Math.exp(-(d * d) / (2 * sigma * sigma))
+    }
+
+    SequentialAnimation {
+        id: pressAnim
+        NumberAnimation { target: root; property: "pressScale"; to: 0.82; duration: 90; easing.type: Easing.OutCubic }
+        NumberAnimation { target: root; property: "pressScale"; to: 1.0; duration: 280; easing.type: Easing.OutBack }
+    }
 
     readonly property string fileName: {
         const parts = filePath.split("/").filter(s => s.length > 0)
@@ -196,6 +217,7 @@ DockButton {
                 return
             }
 
+            pressAnim.restart()
             Quickshell.execDetached({ command: ["xdg-open", root.filePath] })
         }
     }
@@ -228,6 +250,11 @@ DockButton {
             width: root.buttonSize
             height: root.buttonSize
             anchors.centerIn: parent
+
+            scale: root.magScale * root.pressScale
+            transformOrigin: root.isVertical
+                ? (root.dockPos === "left" ? Item.Left : Item.Right)
+                : (root.dockPos === "top" ? Item.Top : Item.Bottom)
 
             // Image thumbnail (shown for recognized image files)
             Image {

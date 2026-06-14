@@ -38,7 +38,7 @@ BaseBubble {
     Text {
         id: timeText
         anchors.centerIn: parent
-        text: island.timeStr
+        text: island.timeStr + " " + island.clockAmPm
         font.family: "JetBrains Mono"
         font.pixelSize: root.bubbleH * 0.38
         font.weight: Font.Bold

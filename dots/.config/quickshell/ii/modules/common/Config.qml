@@ -527,6 +527,9 @@ Singleton {
             property JsonObject dock: JsonObject {
                 property bool enable: false
                 property bool isolateMonitors: false
+                property bool sortByWorkspace: true
+                property bool hoverMagnify: true
+                property real hoverMagnifyScale: 1.3
                 property bool monochromeIcons: true
                 property bool dimInactiveIcons: false
                 property real height: 60

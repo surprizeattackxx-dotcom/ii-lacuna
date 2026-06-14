@@ -8,11 +8,22 @@ Row {
 
     ColumnLayout {
         spacing: -1; anchors.verticalCenter: parent.verticalCenter
-        Text {
-            text: island.timeStr
-            font.family: "JetBrains Mono"; font.pixelSize: island.s(15); font.weight: Font.Black
-            font.letterSpacing: -0.3
-            color: island.text
+        Row {
+            spacing: island.s(3)
+            Text {
+                text: island.timeStr
+                font.family: "JetBrains Mono"; font.pixelSize: island.s(15); font.weight: Font.Black
+                font.letterSpacing: -0.3
+                color: island.text
+                anchors.bottom: parent.bottom
+            }
+            Text {
+                text: island.clockAmPm
+                font.family: "JetBrains Mono"; font.pixelSize: island.s(9); font.weight: Font.Bold
+                color: island.subtext0
+                anchors.bottom: parent.bottom
+                anchors.bottomMargin: island.s(1)
+            }
         }
         Text { text: island.dateStr; font.family: "JetBrains Mono"; font.pixelSize: island.s(10); font.weight: Font.Medium; color: island.subtext0 }
     }

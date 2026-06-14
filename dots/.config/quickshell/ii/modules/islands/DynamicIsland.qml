@@ -6,6 +6,9 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 import Quickshell.Hyprland
+import qs.modules.common
+import qs.modules.common.widgets
+import qs.services
 import "."
 import "./pet"
 import "./pages"
@@ -365,6 +368,8 @@ PanelWindow {
     // Clock / Weather
     property string timeStr:     ""
     property string timeStrSec:  ""
+    property string clockAmPm:   ""
+    property int    clockHour24: 0
     property string dateStr:     ""
     property string weatherIcon:     ""
     property string weatherTemp:     "--°"
@@ -572,12 +577,39 @@ PanelWindow {
         let items = [];
         for (let i = 0; i < Math.min(notifHistory.count, 100); i++) {
             let it = notifHistory.get(i);
-            items.push({ appName: it.appName, title: it.title, body: it.body, icon: it.icon, timestamp: it.timestamp || 0 });
+            items.push({ notifId: it.notifId !== undefined ? it.notifId : -1, appName: it.appName, title: it.title, body: it.body, icon: it.icon, timestamp: it.timestamp || 0 });
         }
         Quickshell.execDetached(["bash", "-c",
             "mkdir -p ~/.cache/quickshell && printf '%s' \"$1\" > ~/.cache/quickshell/notifications.json",
             "qs_save", JSON.stringify(items)
         ]);
+    }
+
+    // Clearing on the island clears everywhere: the shared shell service plus
+    // every island instance (one per monitor). Each island keeps its own
+    // notifHistory model, so we broadcast via a clear-signal file that all
+    // instances watch (see notifClearWatcher) rather than clearing only ours.
+    function clearAllNotifications() {
+        Notifications.discardAllNotifications();
+        Notifications.clearHistory();
+        Quickshell.execDetached(["bash", "-c", "echo 1 > /tmp/qs_island_notif_clear"]);
+    }
+
+    // Dismiss a single notification everywhere: shell (active + history) and
+    // every island instance. Items carry the shell's notifId; when present we
+    // broadcast by id so all monitors drop the same one. Legacy items without
+    // an id (-1) can only be removed locally by index.
+    function removeNotification(index) {
+        let it = notifHistory.get(index);
+        let id = it ? it.notifId : -1;
+        if (id !== undefined && id >= 0) {
+            Notifications.discardNotification(id);
+            Notifications.removeFromHistory(id);
+            Quickshell.execDetached(["bash", "-c", "printf '%s' \"$1\" > /tmp/qs_island_notif_remove", "qs_rm", String(id)]);
+        } else {
+            notifHistory.remove(index);
+            saveNotifHistory();
+        }
     }
 
     // Deterministic accent color from app name
@@ -637,6 +669,12 @@ PanelWindow {
     Component { id: gamePageComp;         GamePage         { island: islandWindow } }
 
     function dismissNotif() {
+        _dismissNotifLocal();
+        // Close the toast on every island at once (manual dismiss only — the
+        // auto-hide timer is already synced across instances by ingestion).
+        Quickshell.execDetached(["bash", "-c", "echo 1 > /tmp/qs_island_notif_close"]);
+    }
+    function _dismissNotifLocal() {
         notifHideTimer.stop();
         notifActive = false;
         notifData   = null;
@@ -789,9 +827,14 @@ PanelWindow {
     Timer { interval: 1000; running: true; repeat: true; triggeredOnStart: true
         onTriggered: {
             let d = new Date();
-            islandWindow.timeStr    = Qt.formatDateTime(d, "hh:mm");
-            islandWindow.timeStrSec = Qt.formatDateTime(d, "hh:mm:ss");
-            islandWindow.dateStr    = Qt.formatDateTime(d, "ddd, MMM dd");
+            let h24 = d.getHours();
+            let h12 = h24 % 12; if (h12 === 0) h12 = 12;
+            let pad = n => (n < 10 ? "0" : "") + n;
+            islandWindow.timeStr     = pad(h12) + ":" + pad(d.getMinutes());
+            islandWindow.timeStrSec  = pad(h12) + ":" + pad(d.getMinutes()) + ":" + pad(d.getSeconds());
+            islandWindow.clockAmPm   = h24 < 12 ? "AM" : "PM";
+            islandWindow.clockHour24 = h24;
+            islandWindow.dateStr     = Qt.formatDateTime(d, "ddd, MMM dd");
         }
     }
 
@@ -835,7 +878,7 @@ PanelWindow {
                 const desc   = get(2); if (desc)   islandWindow.weatherDesc     = desc
                 const feels  = get(3); if (feels)  islandWindow.weatherFeels    = parseFloat(feels).toFixed(0) + "°"
                 const hum    = get(4); if (hum)    islandWindow.weatherHumidity = hum + "%"
-                const wind   = get(5); if (wind)   islandWindow.weatherWind     = wind + " km/h"
+                const wind   = get(5); if (wind)   islandWindow.weatherWind     = wind + " mph"
                 const hi     = get(6); if (hi)     islandWindow.weatherHi       = parseFloat(hi).toFixed(0) + "°"
                 const lo     = get(7); if (lo)     islandWindow.weatherLo       = parseFloat(lo).toFixed(0) + "°"
             }
@@ -1064,6 +1107,7 @@ PanelWindow {
                     if (Array.isArray(items)) {
                         for (let i = 0; i < Math.min(items.length, 100); i++) {
                             notifHistory.append({
+                                notifId:   items[i].notifId !== undefined ? items[i].notifId : -1,
                                 appName:   items[i].appName   || "System",
                                 title:     items[i].title     || "",
                                 body:      items[i].body      || "",
@@ -1228,11 +1272,7 @@ PanelWindow {
         visible: islandWindow.expanded
         z: 0
         onClicked: {
-            if (islandWindow.notifActive) {
-                notifHideTimer.stop();
-                islandWindow.notifActive = false;
-                islandWindow.notifData   = null;
-            }
+            if (islandWindow.notifActive) islandWindow.dismissNotif();
             islandWindow.expanded = false;
         }
     }
@@ -1283,49 +1323,55 @@ PanelWindow {
         opacity: islandWindow.launcherActive ? 0.0 : 1.0
         Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
 
-        Behavior on width  { NumberAnimation { duration: 540; easing.type: Easing.OutExpo } }
+        // iOS-style springy expand — gentle overshoot, well-damped so it
+        // settles without clipping content.
+        Behavior on width  { SpringAnimation { spring: 4.5; damping: 0.58; mass: 1.0; epsilon: 0.25 } }
         Behavior on height {
             SequentialAnimation {
                 // For notifications only: width expands first, height follows after
                 PauseAnimation { duration: islandWindow.notifActive && islandWindow.expanded ? 220 : 0 }
-                NumberAnimation { duration: 540; easing.type: Easing.OutExpo }
+                SpringAnimation { spring: 4.5; damping: 0.58; mass: 1.0; epsilon: 0.25 }
             }
         }
 
         scale: islandWindow.hovered && !islandWindow.expanded ? 1.025 : 1.0
         Behavior on scale { NumberAnimation { duration: 280; easing.type: Easing.OutExpo } }
 
-        // ── Drop shadow — gives floating feeling, stretches with volume drag ──
-        Rectangle {
+        // ── Drop shadow — shared pill/dock elevation recipe, still stretches
+        // with the volume drag so the deform reads on the shadow too. ──
+        StyledRectangularShadow {
             id: islandShadow
-            anchors.fill: parent
-            anchors.margins: -s(6)
-            anchors.topMargin: s(10)
-            radius: bg.radius + s(6)
-            Behavior on radius { NumberAnimation { duration: 540; easing.type: Easing.OutExpo } }
-            color: Qt.rgba(0, 0, 0, islandWindow.expanded ? 0.38 : 0.28)
-            Behavior on color { ColorAnimation { duration: 400 } }
+            target: bg
             z: -1
-
             transform: Scale {
                 xScale: islandWindow.expanded ? 1.0 : (1.0 + Math.abs(islandWindow.volStretch) * 0.26)
-                origin.x: islandWindow.volStretch >= 0 ? islandShadow.width * 0.08 : islandShadow.width * 0.92
-                origin.y: islandShadow.height * 0.5
+                origin.x: islandWindow.volStretch >= 0 ? bg.width * 0.08 : bg.width * 0.92
+                origin.y: bg.height * 0.5
             }
+        }
 
-            layer.enabled: true
-            layer.effect: MultiEffect {
-                blurEnabled: true
-                blur: 1.0
-                blurMax: 28
-            }
+        // ── Liquid-glass frost — blurred wallpaper slice under the pill,
+        // same treatment as the bar/dock pills (GlassPanel). Sits behind
+        // bg's translucent tint. Heavy blur tolerates small offset, so the
+        // approximate sceneX/Y from islandShape is fine during animation.
+        GlassPanel {
+            anchors.fill: parent
+            screen: islandWindow.screen
+            screenX: islandShape.x
+            screenY: islandShape.y
+            blurRadius: 48
+            tint: "transparent"
+            topLeftRadius: bg.radius
+            topRightRadius: bg.radius
+            bottomLeftRadius: bg.radius
+            bottomRightRadius: bg.radius
         }
 
         // ── Background pill ──────────────────────────────────
         Rectangle {
             id: bg
             anchors.fill: parent
-            radius: islandWindow.expanded ? s(26) : height / 2
+            radius: islandWindow.expanded ? s(34) : height / 2
             Behavior on radius { NumberAnimation { duration: 540; easing.type: Easing.OutExpo } }
             // Elastic volume-drag deform
             transform: Scale {
@@ -1336,10 +1382,13 @@ PanelWindow {
 
             color: {
                 if (islandWindow.glassTheme) {
-                    let g  = islandWindow.surface2;
-                    let ga = islandWindow.expanded ? 0.62
-                           : islandWindow.hovered  ? 0.50
-                           : 0.40;
+                    // Match the bar/dock pills exactly: matugen-derived
+                    // m3surfaceContainerLow tint (tracks dark/light) at the
+                    // pills' ~0.45 alpha, over the GlassPanel frost.
+                    let g  = Appearance.m3colors.m3surfaceContainerLow;
+                    let ga = islandWindow.expanded ? 0.45
+                           : islandWindow.hovered  ? 0.40
+                           : 0.45;
                     return Qt.rgba(g.r, g.g, g.b, ga);
                 }
                 // Light themes need lower alpha or the near-white base reads
@@ -1382,6 +1431,8 @@ PanelWindow {
                 if (islandWindow.isMediaActive)
                     return Qt.rgba(islandWindow.mauve.r, islandWindow.mauve.g, islandWindow.mauve.b,
                                    islandWindow.hovered || islandWindow.expanded ? 0.45 : 0.22);
+                if (islandWindow.glassTheme)
+                    return Appearance.colors.colLayer0Border;
                 return Qt.rgba(islandWindow.text.r, islandWindow.text.g, islandWindow.text.b,
                                islandWindow.hovered ? 0.15 : 0.06);
             }
@@ -1411,6 +1462,32 @@ PanelWindow {
                     GradientStop { position: 0.0; color: Qt.rgba(islandWindow.base.r, islandWindow.base.g, islandWindow.base.b, islandWindow.glassTheme ? 0.05 : 0.55) }
                     GradientStop { position: 1.0; color: Qt.rgba(islandWindow.base.r, islandWindow.base.g, islandWindow.base.b, islandWindow.glassTheme ? 0.12 : 0.85) }
                 }
+            }
+
+            // ── Liquid Glass specular sheen ──────────────────────
+            // Bright top-edge highlight fading out, plus a faint bottom
+            // light-catch — the signature "glass under light" look.
+            Rectangle {
+                anchors.fill: parent
+                radius: bg.radius
+                Behavior on radius { NumberAnimation { duration: 540; easing.type: Easing.OutExpo } }
+                opacity: islandWindow.glassTheme ? 1.0 : 0.85
+                gradient: Gradient {
+                    orientation: Gradient.Vertical
+                    GradientStop { position: 0.0;  color: Qt.rgba(1, 1, 1, islandWindow.glassTheme ? 0.20 : 0.16) }
+                    GradientStop { position: 0.16; color: Qt.rgba(1, 1, 1, islandWindow.glassTheme ? 0.08 : 0.05) }
+                    GradientStop { position: 0.45; color: Qt.rgba(1, 1, 1, 0.0) }
+                    GradientStop { position: 0.92; color: Qt.rgba(1, 1, 1, 0.0) }
+                    GradientStop { position: 1.0;  color: Qt.rgba(1, 1, 1, islandWindow.glassTheme ? 0.07 : 0.04) }
+                }
+            }
+
+            // Bright specular hairline tracing the very top edge.
+            Rectangle {
+                anchors { left: parent.left; right: parent.right; top: parent.top; leftMargin: bg.radius * 0.5; rightMargin: bg.radius * 0.5 }
+                height: Math.max(1, s(1))
+                radius: height / 2
+                color: Qt.rgba(1, 1, 1, islandWindow.glassTheme ? 0.32 : 0.22)
             }
 
         }
@@ -1946,6 +2023,7 @@ PanelWindow {
                     try {
                         let n = JSON.parse(data);
                         let item = {
+                            notifId:   n.notifId !== undefined ? n.notifId : -1,
                             appName:   n.appName || "System",
                             title:     n.title   || "",
                             body:      n.body    || "",
@@ -1980,6 +2058,64 @@ PanelWindow {
                 }
                 notifIpcWatcher.running = false;
                 notifIpcWatcher.running = true;
+            }
+        }
+    }
+
+    // Clear broadcast — clearAllNotifications() writes /tmp/qs_island_notif_clear;
+    // every island instance (all monitors) wipes its own local history here.
+    Process {
+        id: notifClearWatcher; running: true
+        command: ["bash", "-c",
+            "inotifywait -qq -e close_write,moved_to --include 'qs_island_notif_clear$' /tmp/ 2>/dev/null"
+        ]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                islandWindow.notifHistory.clear();
+                islandWindow.notifBadgeVisible = false;
+                islandWindow.saveNotifHistory();
+                notifClearWatcher.running = false;
+                notifClearWatcher.running = true;
+            }
+        }
+    }
+
+    // Close broadcast — dismissNotif() writes /tmp/qs_island_notif_close;
+    // every island hides its active notification toast at the same time.
+    Process {
+        id: notifCloseWatcher; running: true
+        command: ["bash", "-c",
+            "inotifywait -qq -e close_write,moved_to --include 'qs_island_notif_close$' /tmp/ 2>/dev/null"
+        ]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                if (islandWindow.notifActive) islandWindow._dismissNotifLocal();
+                notifCloseWatcher.running = false;
+                notifCloseWatcher.running = true;
+            }
+        }
+    }
+
+    // Remove broadcast — removeNotification() writes a notifId to
+    // /tmp/qs_island_notif_remove; every island drops the matching item.
+    Process {
+        id: notifRemoveWatcher; running: true
+        command: ["bash", "-c",
+            "inotifywait -qq -e close_write,moved_to --include 'qs_island_notif_remove$' /tmp/ 2>/dev/null; " +
+            "[ -f /tmp/qs_island_notif_remove ] && cat /tmp/qs_island_notif_remove"
+        ]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                let id = parseInt(this.text.trim());
+                if (!isNaN(id) && id >= 0) {
+                    for (let i = islandWindow.notifHistory.count - 1; i >= 0; i--) {
+                        if (islandWindow.notifHistory.get(i).notifId === id)
+                            islandWindow.notifHistory.remove(i);
+                    }
+                    islandWindow.saveNotifHistory();
+                }
+                notifRemoveWatcher.running = false;
+                notifRemoveWatcher.running = true;
             }
         }
     }

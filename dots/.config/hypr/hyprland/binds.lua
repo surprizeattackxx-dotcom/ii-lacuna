@@ -87,6 +87,7 @@ hl.bind("SUPER + mouse:273", hl.dsp.window.resize(), { mouse = true })
 
 -- ─── QuickShell Actions ────────────────────────
 hl.bind("SUPER + D", hl.dsp.exec_cmd("hamr toggle"))
+hl.bind("SUPER + U", hl.dsp.exec_cmd("claude-usage-float"))
 hl.bind("SUPER + V", hl.dsp.global("quickshell:overviewClipboardToggle"))
 hl.bind("SUPER + PERIOD", hl.dsp.global("quickshell:overviewEmojiToggle"))
 hl.bind("SUPER + A", hl.dsp.global("quickshell:sidebarLeftToggle"))

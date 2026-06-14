@@ -20,7 +20,7 @@ Item {
         anchors.fill: parent
         island: root.island
         desc: root.island.weatherDesc
-        timeStr: root.island.timeStr
+        hour24: root.island.clockHour24
     }
 
     Item {
@@ -63,16 +63,30 @@ Item {
                 FlipDigit { island: root.island; digit: root.m0; fontSize: island.s(72) }
                 FlipDigit { island: root.island; digit: root.m1; fontSize: island.s(72) }
 
-                // Tiny seconds badge — tabular for stability
-                Text {
-                    text: root.seconds
-                    font.family: Theme.fontMono
-                    font.pixelSize: island.s(13)
-                    font.weight: Font.Medium
-                    color: island.subtext0
+                // AM/PM over a tiny seconds badge — tabular for stability
+                ColumnLayout {
+                    spacing: island.s(1)
                     Layout.alignment: Qt.AlignBottom
                     Layout.bottomMargin: island.s(14)
                     Layout.leftMargin: island.s(6)
+
+                    Text {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: island.clockAmPm
+                        font.family: Theme.fontUI
+                        font.pixelSize: island.s(12)
+                        font.weight: Font.Bold
+                        font.letterSpacing: island.s(0.5)
+                        color: island.mauve
+                    }
+                    Text {
+                        Layout.alignment: Qt.AlignHCenter
+                        text: root.seconds
+                        font.family: Theme.fontMono
+                        font.pixelSize: island.s(13)
+                        font.weight: Font.Medium
+                        color: island.subtext0
+                    }
                 }
             }
 

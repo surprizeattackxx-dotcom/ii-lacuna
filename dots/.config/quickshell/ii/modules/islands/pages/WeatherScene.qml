@@ -10,10 +10,10 @@ Item {
     id: root
     property var island
     property string desc: ""
-    property string timeStr: "12:00"
+    property int hour24: 12
 
     readonly property bool reduceMotion: Theme.reduceMotion
-    readonly property int hour: parseInt((timeStr || "12").substring(0,2)) || 12
+    readonly property int hour: hour24
     readonly property bool isNight: hour < 6 || hour >= 20
 
     // Time-of-day phase. Drives sky tint independently of weather state so

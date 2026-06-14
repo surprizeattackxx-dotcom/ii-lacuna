@@ -106,7 +106,7 @@ Item {
                     }
                     MouseArea {
                         id: clearMouse; anchors.fill: parent; hoverEnabled: true
-                        onClicked: { island.notifHistory.clear(); island.saveNotifHistory() }
+                        onClicked: island.clearAllNotifications()
                     }
                 }
             }
@@ -322,7 +322,7 @@ Item {
                             }
                             MouseArea {
                                 id: dismissMouse; anchors.fill: parent; hoverEnabled: true
-                                onClicked: { island.notifHistory.remove(index); island.saveNotifHistory() }
+                                onClicked: island.removeNotification(index)
                             }
                         }
                     }

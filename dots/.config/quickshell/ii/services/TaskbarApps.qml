@@ -114,15 +114,12 @@ Singleton {
         for (const old of root._prevApps)
             if (old) old.destroy();
 
-        var map = new Map();
+        var pinnedMap = new Map();
+        var unpinnedMap = new Map();
 
         const pinnedApps = Config.options?.dock.pinnedApps ?? [];
         for (const appId of pinnedApps) {
             if (appId) pinnedMap.set(appId, { pinned: true, toplevels: [] })
-        }
-
-        if (pinnedApps.length > 0) {
-            map.set("SEPARATOR", { pinned: false, toplevels: [] });
         }
 
         const ignoredRegexStrings = Config.options?.dock.ignoredAppRegexes ?? [];
@@ -149,7 +146,13 @@ Singleton {
 
         var values = [];
 
-        for (const [key, value] of map) {
+        for (const [key, value] of pinnedMap) {
+            values.push(appEntryComp.createObject(root, { appId: key, toplevels: value.toplevels, pinned: value.pinned }));
+        }
+        if (unpinnedMap.size > 0) {
+            values.push(appEntryComp.createObject(root, { appId: "SEPARATOR", toplevels: [], pinned: false }));
+        }
+        for (const [key, value] of unpinnedMap) {
             values.push(appEntryComp.createObject(root, { appId: key, toplevels: value.toplevels, pinned: value.pinned }));
         }
 

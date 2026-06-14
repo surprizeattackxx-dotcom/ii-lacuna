@@ -1,0 +1,1 @@
+/home/donnie/Projects/ActivSpot/scripts/qs_manager.sh

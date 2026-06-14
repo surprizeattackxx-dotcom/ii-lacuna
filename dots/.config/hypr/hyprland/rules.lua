@@ -28,6 +28,8 @@ local floating_dialogs = {
   { class = "^(guifetch)$" },
   { class = "^(pavucontrol)$", size = "monitor_w*.45 monitor_h*.45" },
   { class = "^(org\\.pulseaudio\\.pavucontrol)$", size = "monitor_w*.45 monitor_h*.45" },
+  { class = "^(pavucontrol-qt)$", size = "monitor_w*.45 monitor_h*.45" },
+  { class = "^(org\\.kde\\.easyeffects)$", size = "monitor_w*.55 monitor_h*.65" },
   { class = "^(nm-connection-editor)$", size = "monitor_w*.45 monitor_h*.45" },
   { class = ".*plasmawindowed.*" },
   { class = "kcm_.*" },
@@ -51,6 +53,7 @@ hl.window_rule({ center = true, float = true, name = "float-theme-tools", match 
 hl.window_rule({ center = true, float = true, name = "float-qalculate", match = { class = "^(qalculate-gtk)$" } })
 hl.window_rule({ float = true, name = "float-mc", match = { class = "^(Minecraft.*|com\\.adamcake\\.Bolt|net\\.runelite\\.client\\.RuneLite)$" } })
 hl.window_rule({ center = true, float = true, no_blur = true, opacity = 1.0, size = { 680, 760 }, name = "float-kdeconnect", match = { class = "^(kde-connect-tui)$" } })
+hl.window_rule({ center = true, float = true, no_blur = true, opacity = 1.0, size = { 900, 620 }, name = "float-claude-usage", match = { class = "^(claude-usage-tui)$" } })
 hl.window_rule({ center = true, name = "default-float-center", match = { float = true } })
 
 -- ··· Picture-in-picture ···
