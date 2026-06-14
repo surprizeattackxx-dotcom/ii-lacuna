@@ -24,11 +24,30 @@ Singleton {
 
 	property var priorityPlayers: (Config.options.media.priorityPlayer ?? "").split(",").map(s => s.trim()).filter(s => s.length > 0);
 
+	// Manually-dismissed players (session only): dbusName -> true.
+	// quit() the player if it supports it (e.g. mpv), otherwise just hide its widget.
+	property var dismissedPlayers: ({});
+	function dismissPlayer(player) {
+		if (!player) return;
+		if (player.canQuit) { player.quit(); return; }
+		let d = root.dismissedPlayers;
+		d[player.dbusName] = true;
+		root.dismissedPlayers = d; // reassign to notify bindings
+	}
+	function isDismissed(player) {
+		return !!(player && root.dismissedPlayers[player.dbusName]);
+	}
+
 	property bool __reverse: false;
 
 	property var activeTrack;
 
 	onAllPlayersChanged: {
+		// drop dismissals whose bus is gone, so a re-opened session shows again
+		const names = allPlayers.map(p => p.dbusName);
+		let d = root.dismissedPlayers; let changed = false;
+		for (const k in d) if (!names.includes(k)) { delete d[k]; changed = true; }
+		if (changed) root.dismissedPlayers = d;
 		for (const entry of root.priorityPlayers) {
 			const match = allPlayers.find(player => player.desktopEntry === entry);
 			if (match) {

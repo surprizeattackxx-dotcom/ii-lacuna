@@ -44,17 +44,14 @@ Item {
     readonly property string finalArtist: currentPlayer?.trackArtist || Translation.tr("Unknown Artist")
     readonly property string finalArtUrl: currentPlayer?.trackArtUrl || ""
 
-    property bool mediaHovered: false
+    readonly property bool mediaHovered: mediaMouseArea.containsMouse || closeBtnArea.containsMouse
 
     MouseArea {
         id: mediaMouseArea
         anchors.fill: parent
         hoverEnabled: true
         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton | Qt.BackButton | Qt.ForwardButton
-        
-        onEntered: root.mediaHovered = true
-        onExited: root.mediaHovered = false
-        
+
         onClicked: (mouse) => {
             if (mouse.button === Qt.MiddleButton || mouse.button === Qt.LeftButton) {
                 root.currentPlayer?.togglePlaying();
@@ -180,11 +177,47 @@ Item {
         }
     }
 
+    // Hover ✕ to remove this player from the dock (quits it if it can, e.g. mpv;
+    // otherwise just hides the widget — useful for stale browser media sessions)
+    Rectangle {
+        id: closeBtn
+        z: 10
+        visible: opacity > 0
+        opacity: root.mediaHovered ? 1 : 0
+        width: Math.round(root.buttonSize * 0.34)
+        height: width
+        radius: Appearance.rounding.full
+        color: closeBtnArea.containsMouse ? Appearance.colors.colError : Appearance.colors.colSurfaceContainerHighest
+        anchors.top: parent.top
+        anchors.right: parent.right
+        anchors.topMargin: root.dotMargin * 0.4
+        anchors.rightMargin: root.dotMargin * 0.4
+
+        Behavior on opacity {
+            animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(closeBtn)
+        }
+
+        MaterialSymbol {
+            anchors.centerIn: parent
+            text: "close"
+            iconSize: parent.width * 0.7
+            color: closeBtnArea.containsMouse ? Appearance.colors.colOnError : Appearance.colors.colOnSurface
+        }
+
+        MouseArea {
+            id: closeBtnArea
+            anchors.fill: parent
+            hoverEnabled: true
+            cursorShape: Qt.PointingHandCursor
+            onClicked: MprisController.dismissPlayer(root.currentPlayer)
+        }
+    }
+
     DockTooltip {
         id: mediaTooltip
         parentItem: root
         text: root.finalTitle + " - " + root.finalArtist
-        showTooltip: root.mediaHovered
+        showTooltip: root.mediaHovered && !closeBtnArea.containsMouse
         tooltipOffset: -root.dotMargin * 0.5
     }
 }

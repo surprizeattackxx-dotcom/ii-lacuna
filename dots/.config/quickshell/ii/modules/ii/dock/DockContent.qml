@@ -81,7 +81,10 @@ Item {
         return magnifyMaxShift * _erf((pos - magnifyCursor) / (magnifySigma * Math.SQRT2));
     }
 
-    readonly property var mediaPlayers: MprisController.players.filter(p => (StringUtils.cleanMusicTitle(p?.trackTitle) || "") !== "")
+    readonly property var mediaPlayers: {
+        MprisController.dismissedPlayers; // dependency for reactivity
+        return MprisController.players.filter(p => (StringUtils.cleanMusicTitle(p?.trackTitle) || "") !== "" && !MprisController.isDismissed(p));
+    }
     readonly property bool hasRealData: mediaPlayers.length > 0
     property bool showMusicPlayer: hasRealData
 
