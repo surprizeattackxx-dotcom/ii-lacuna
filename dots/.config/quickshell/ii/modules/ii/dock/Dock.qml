@@ -24,8 +24,10 @@ Scope {
 
     function computeSizes(opts) {
         const gapsOut = opts.gapsOut
+        const headroom = opts.magnifyHeadroom ?? 0
+        const spread = opts.magnifySpread ?? 0
         const barConflicts = opts.barActive && (opts.isVertical !== opts.barIsVertical)
-        
+
         const barOffset = barConflicts ? (opts.isVertical ? opts.barThickness : 0) : 0
         const barOffsetH = barConflicts ? (!opts.isVertical ? opts.barThickness : 0) : 0
 
@@ -35,14 +37,26 @@ Scope {
         const contentW = opts.contentVisualWidth + opts.dockPadding * 2
         const contentH = opts.contentVisualHeight + opts.dockPadding * 2
 
+        // Headroom is added only to the dock's cross-axis (thickness), giving magnified
+        // icons transparent space to balloon into above the translucent bar — mac-style.
+        const crossW = contentW + gapsOut * 2 + (opts.isVertical ? headroom : 0)
+        const crossH = contentH + gapsOut * 2 + (opts.isVertical ? 0 : headroom)
+
+        // The ripple spread grows the bar along its length only.
+        const longW = opts.isVertical ? contentW : contentW + spread
+        const longH = opts.isVertical ? contentH + spread : contentH
+
         return {
             maxWidth: maxW,
             maxHeight: maxH,
-            dockWidth:     opts.isVertical ? contentW + gapsOut * 2 : Math.min(contentW + gapsOut * 2, maxW),
-            dockHeight:    opts.isVertical ? Math.min(contentH + gapsOut * 2, maxH) : contentH + gapsOut * 2,
-            dockThickness: opts.isVertical ? contentW + gapsOut * 2 : contentH + gapsOut * 2,
-            backgroundWidth:  Math.max(1, opts.isVertical ? contentW : Math.min(contentW, maxW - gapsOut * 2)),
-            backgroundHeight: Math.max(1, opts.isVertical ? Math.min(contentH, maxH - gapsOut * 2) : contentH)
+            dockWidth:     opts.isVertical ? crossW : Math.min(longW + gapsOut * 2, maxW),
+            dockHeight:    opts.isVertical ? Math.min(longH + gapsOut * 2, maxH) : crossH,
+            dockThickness: opts.isVertical ? crossW : crossH,
+            reservedThickness: opts.isVertical ? contentW + gapsOut * 2 : contentH + gapsOut * 2,
+            backgroundWidth:  Math.max(1, opts.isVertical ? contentW : Math.min(longW, maxW - gapsOut * 2)),
+            backgroundHeight: Math.max(1, opts.isVertical ? Math.min(longH, maxH - gapsOut * 2) : contentH),
+            contentWidth:  Math.max(1, opts.isVertical ? contentW : Math.min(contentW, maxW - gapsOut * 2)),
+            contentHeight: Math.max(1, opts.isVertical ? Math.min(contentH, maxH - gapsOut * 2) : contentH)
         }
     }
 
@@ -65,6 +79,14 @@ Scope {
 
             readonly property bool isVertical: dock.isVertical
             readonly property real dockThickness: isVertical ? dockRoot.sizing.dockWidth : dockRoot.sizing.dockHeight
+
+            readonly property real magnifyHeadroom: {
+                const magOn = Config.options?.dock.hoverMagnify ?? true
+                const mag = magOn ? (Config.options?.dock.hoverMagnifyScale ?? 1.3) : 1.0
+                const btn = Appearance.sizes.dockButtonSize
+                const dm = (Config.options?.dock.height ?? 60) * 0.2
+                return Math.max(0, Math.round((mag - 1) * btn - dm + 6))
+            }
             property bool reveal: dock.pinned || (Config.options?.dock.hoverToReveal && dockMouseArea.containsMouse) || (dockContent.requestDockShow) || (workspaceEmpty)
             property bool positionChanging: false
 
@@ -85,7 +107,9 @@ Scope {
                 availableH: availableH,
                 contentVisualWidth: dockContent.visualWidth,
                 contentVisualHeight: dockContent.visualHeight,
-                dockPadding: dockContent.dockPadding
+                dockPadding: dockContent.dockPadding,
+                magnifyHeadroom: magnifyHeadroom,
+                magnifySpread: dockContent.magnifySpread
             })
 
             implicitWidth: Math.max(1, dockRoot.sizing.dockWidth)
@@ -98,13 +122,16 @@ Scope {
                 right: dock.dockEffectivePosition !== "left"
             }
 
-            exclusiveZone: dock.pinned ? dockThickness : 0
+            exclusiveZone: dock.pinned ? dockRoot.sizing.reservedThickness : 0
             WlrLayershell.namespace: "quickshell:dock"
             WlrLayershell.layer: WlrLayer.Overlay
             color: "transparent"
 
+            // Mask the bar plus a thin inner-edge strip (the auto-reveal trigger), so the
+            // transparent balloon headroom above the bar stays click-through.
             mask: Region {
-                item: dockMouseArea
+                Region { item: dockVisualBackground }
+                Region { item: revealSensor }
             }
 
             Timer {
@@ -142,6 +169,18 @@ Scope {
                 width: dock.isVertical ? dockRoot.dockThickness : dockRoot.sizing.dockWidth
                 height: dock.isVertical ? dockRoot.sizing.dockHeight : dockRoot.dockThickness
 
+                Item {
+                    id: revealSensor
+                    readonly property string dp: dock.dockEffectivePosition
+                    readonly property real hr: Config.options?.dock.hoverRegionHeight ?? 2
+                    anchors.top: dp !== "top" ? parent.top : undefined
+                    anchors.bottom: dp !== "bottom" ? parent.bottom : undefined
+                    anchors.left: dp !== "left" ? parent.left : undefined
+                    anchors.right: dp !== "right" ? parent.right : undefined
+                    width: dock.isVertical ? hr : undefined
+                    height: dock.isVertical ? undefined : hr
+                }
+
                 state: dock.dockEffectivePosition
 
                 states: [
@@ -176,10 +215,24 @@ Scope {
 
                 Rectangle {
                     id: dockVisualBackground
-                    anchors.centerIn: parent
+
+                    readonly property string dpos: dock.dockEffectivePosition
+                    anchors.bottom: dpos === "bottom" ? parent.bottom : undefined
+                    anchors.top: dpos === "top" ? parent.top : undefined
+                    anchors.left: dpos === "left" ? parent.left : undefined
+                    anchors.right: dpos === "right" ? parent.right : undefined
+                    anchors.horizontalCenter: dock.isVertical ? undefined : parent.horizontalCenter
+                    anchors.verticalCenter: dock.isVertical ? parent.verticalCenter : undefined
+                    anchors.bottomMargin: dpos === "bottom" ? Appearance.sizes.hyprlandGapsOut : 0
+                    anchors.topMargin: dpos === "top" ? Appearance.sizes.hyprlandGapsOut : 0
+                    anchors.leftMargin: dpos === "left" ? Appearance.sizes.hyprlandGapsOut : 0
+                    anchors.rightMargin: dpos === "right" ? Appearance.sizes.hyprlandGapsOut : 0
 
                     width: dockRoot.sizing.backgroundWidth
                     height: dockRoot.sizing.backgroundHeight
+
+                    Behavior on width { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(dockVisualBackground) }
+                    Behavior on height { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(dockVisualBackground) }
 
                     color: "transparent"
                     border.width: 1
@@ -243,7 +296,12 @@ Scope {
 
                     DockContent {
                         id: dockContent
-                        anchors.fill: parent
+                        // Stay at resting size, centred in the bar. The bar grows around it
+                        // for the ripple; keeping this fixed means the magnify math never
+                        // sees a moving coordinate frame (no feedback, no drift).
+                        anchors.centerIn: parent
+                        width: dockRoot.sizing.contentWidth
+                        height: dockRoot.sizing.contentHeight
                         isPinned: dock.pinned
                         currentScreen: dockRoot.screen
                         onTogglePinRequested: {

@@ -17,7 +17,7 @@ StyledListView {
     orientation: root.isVertical ? ListView.Vertical : ListView.Horizontal
     spacing: 0
     interactive: false
-    clip: true
+    clip: false
     animateAppearance: false
     animateMovement: false
     popin: false

@@ -21,6 +21,30 @@ DockButton {
     property bool fileDropActive: false
     readonly property bool isDragging: dragActive || fileDropActive
 
+    property var dockContent: null
+    readonly property bool isVertical: dockContent?.isVertical ?? false
+    readonly property string dockPos: dock.dockEffectivePosition
+
+    // Same macOS ripple as the app icons so the ends grow/part with the bar.
+    readonly property real magScale: {
+        const dc = dockContent
+        if (!dc || !dc.magnifyEnabled || !dc.magnifyActive || dc.dragActive) return 1.0
+        const host = dc.magnifyHost
+        if (!host) return 1.0
+        const c = mapToItem(host, width / 2, height / 2)
+        const d = (isVertical ? c.y : c.x) - dc.magnifyCursor
+        const sigma = dc.magnifySigma
+        return 1.0 + (dc.magnifyMax - 1.0) * Math.exp(-(d * d) / (2 * sigma * sigma))
+    }
+    readonly property real magShift: {
+        const dc = dockContent
+        if (!dc || !dc.magnifyEnabled || !dc.magnifyActive || dc.dragActive) return 0
+        const host = dc.magnifyHost
+        if (!host) return 0
+        const c = mapToItem(host, width / 2, height / 2)
+        return dc.magnifySpreadAt(isVertical ? c.y : c.x)
+    }
+
     background.implicitWidth: 0
     background.implicitHeight: 0
 
@@ -28,6 +52,12 @@ DockButton {
         MaterialShapeWrappedMaterialSymbol {
             id: shapeSymbol
             anchors.centerIn: parent
+            anchors.horizontalCenterOffset: root.isVertical ? 0 : root.magShift
+            anchors.verticalCenterOffset: root.isVertical ? root.magShift : 0
+            scale: root.magScale
+            transformOrigin: root.isVertical
+                ? (root.dockPos === "left" ? Item.Left : Item.Right)
+                : (root.dockPos === "top" ? Item.Top : Item.Bottom)
 
             shape: root.isDragging ? root.activeShape : root.normalShape
 

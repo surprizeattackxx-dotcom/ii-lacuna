@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Widgets
 import Quickshell.Wayland
+import Quickshell.Hyprland
 import QtQuick.Controls
 import qs
 import qs.services
@@ -44,6 +45,41 @@ Item {
     property point hoveredButtonCenter: Qt.point(0, 0)
     property string externalDragIcon: ""
     property bool externalDragOver: false
+
+    readonly property bool magnifyEnabled: Config.options?.dock.hoverMagnify ?? true
+    readonly property real magnifyMax: Config.options?.dock.hoverMagnifyScale ?? 1.35
+    readonly property real magnifySigma: buttonSlotSize * 0.9
+    property Item magnifyHost: middleContent
+    property real magnifyCursor: -99999
+    property bool magnifyActive: false
+
+    // macOS ripple: icons part around the cursor and the bar widens to fit them.
+    // Computed in middleContent's resting frame so it never feeds back into magScale.
+    readonly property real magnifyMaxShift: (magnifyEnabled && magnifyMax > 1)
+        ? (magnifyMax - 1) * magnifySigma * Math.sqrt(Math.PI / 2) : 0
+    // Grow the bar by exactly what the parted content needs (icons + end buttons).
+    readonly property real magnifySpread: {
+        if (!magnifyActive || !magnifyHost) return 0
+        const a = mainLayout.mapToItem(magnifyHost, 0, 0)
+        const b = mainLayout.mapToItem(magnifyHost, mainLayout.width, mainLayout.height)
+        const lo = isVertical ? Math.min(a.y, b.y) : Math.min(a.x, b.x)
+        const hi = isVertical ? Math.max(a.y, b.y) : Math.max(a.x, b.x)
+        return Math.max(0, magnifySpreadAt(hi) - magnifySpreadAt(lo))
+    }
+
+    function _erf(x) {
+        const s = x < 0 ? -1 : 1;
+        x = Math.abs(x);
+        const t = 1 / (1 + 0.3275911 * x);
+        const y = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x);
+        return s * y;
+    }
+
+    function magnifySpreadAt(pos) {
+        if (!magnifyActive || magnifyCursor <= -9999)
+            return 0;
+        return magnifyMaxShift * _erf((pos - magnifyCursor) / (magnifySigma * Math.SQRT2));
+    }
 
     readonly property var activePlayer: MprisController.activePlayer
     readonly property string rawTitle: StringUtils.cleanMusicTitle(activePlayer?.trackTitle) || ""
@@ -129,6 +165,18 @@ Item {
                 });
         });
 
+        if (Config.options?.dock?.sortByWorkspace ?? true) {
+            const wsOf = entry => {
+                let min = Infinity;
+                for (const tl of entry.appData.toplevels) {
+                    const id = HyprlandData.clientForToplevel(tl)?.workspace?.id;
+                    if (typeof id === "number" && id < min) min = id;
+                }
+                return min;
+            };
+            running.sort((a, b) => wsOf(a) - wsOf(b));
+        }
+
         processedPinnedApps = pinned;
         processedRunningApps = running;
     }
@@ -169,6 +217,7 @@ Item {
         suppressAnimation = true;
         dragState = "idle";
         const appId = draggedAppId, intent = dragIntent, from = draggedIndex, to = dropTargetIndex;
+        const poofX = dragGhost.x + dragGhost.width / 2, poofY = dragGhost.y + dragGhost.height / 2;
         draggedAppId = "";
         draggedIndex = dropTargetIndex = -1;
         buttonHovered = false;
@@ -178,8 +227,10 @@ Item {
 
         if (intent === "pin" && !TaskbarApps.isPinned(appId))
             TaskbarApps.togglePin(appId);
-        else if (intent === "unpin" && TaskbarApps.isPinned(appId))
+        else if (intent === "unpin" && TaskbarApps.isPinned(appId)) {
             TaskbarApps.togglePin(appId);
+            poofEffect.burst(poofX, poofY);
+        }
         else if (intent === "reorder" && from !== to) {
             let pinned = Config.options.dock.pinnedApps.slice();
             let f = pinned.indexOf(appId);
@@ -217,11 +268,13 @@ Item {
         fileSuppressAnim = true;
         dragState = "idle";
         const intent = fileDragIntent, from = fileDraggedIndex, to = fileDropIndex;
+        const poofX = dragGhost.x + dragGhost.width / 2, poofY = dragGhost.y + dragGhost.height / 2;
         fileDraggedIndex = fileDropIndex = -1;
         buttonHovered = false;
 
         if (intent === "unpin") {
             TaskbarApps.removePinnedFile(processedFiles[from]?.path ?? "");
+            poofEffect.burst(poofX, poofY);
         } else if (intent === "reorder" && from !== to) {
             TaskbarApps.reorderPinnedFile(processedFiles[from]?.path, processedFiles[to]?.path);
             updateFileModel();
@@ -250,9 +303,54 @@ Item {
         return last.includes(".") ? "insert_drive_file" : "folder";
     }
 
+    property var attentionAppIds: []
+
+    function appIdForAddress(addr) {
+        const norm = a => (a ?? "").toString().replace(/^0x/i, "").toLowerCase();
+        const target = norm(addr);
+        if (!target) return "";
+        for (const app of (TaskbarApps.apps ?? [])) {
+            for (const tl of (app.toplevels ?? [])) {
+                if (norm(tl.HyprlandToplevel?.address) === target)
+                    return app.appId;
+            }
+        }
+        return "";
+    }
+
+    Connections {
+        target: Hyprland
+        function onRawEvent(event) {
+            if (event.name !== "urgent") return;
+            const appId = root.appIdForAddress(event.data);
+            if (!appId) return;
+            const activeAppId = root.appIdForAddress(ToplevelManager.activeToplevel?.HyprlandToplevel?.address);
+            if (appId === activeAppId) return;
+            if (!root.attentionAppIds.includes(appId))
+                root.attentionAppIds = [...root.attentionAppIds, appId];
+        }
+    }
+    Connections {
+        target: ToplevelManager
+        function onActiveToplevelChanged() {
+            const appId = root.appIdForAddress(ToplevelManager.activeToplevel?.HyprlandToplevel?.address);
+            if (appId && root.attentionAppIds.includes(appId))
+                root.attentionAppIds = root.attentionAppIds.filter(a => a !== appId);
+        }
+    }
+
     Connections {
         target: TaskbarApps
         function onAppsChanged() {
+            if (isAppDrag)
+                return;
+            updateModel();
+        }
+    }
+    Connections {
+        target: HyprlandData
+        enabled: Config.options?.dock?.sortByWorkspace ?? true
+        function onWindowListChanged() {
             if (isAppDrag)
                 return;
             updateModel();
@@ -298,6 +396,7 @@ Item {
             DockActionButton {
                 id: pinButton
                 anchors.centerIn: parent
+                dockContent: root
                 symbolName: "keep"
                 toggled: root.isPinned
                 onClicked: root.togglePinRequested()
@@ -319,7 +418,7 @@ Item {
             Layout.fillHeight: root.isVertical
             Layout.preferredWidth: Math.max(1, root.isVertical ? root.buttonSlotSize : middleContent.implicitWidth)
             Layout.preferredHeight: Math.max(1, root.isVertical ? middleContent.implicitHeight : root.buttonSlotSize)
-            clip: true
+            clip: interactive
             contentWidth: middleContent.width
             contentHeight: middleContent.height
             interactive: root.isVertical ? contentHeight > height : contentWidth > width
@@ -345,6 +444,16 @@ Item {
                 columns: root.isVertical ? 1 : -1
                 rowSpacing: 0
                 columnSpacing: 0
+
+                HoverHandler {
+                    id: stripHover
+                    enabled: root.magnifyEnabled && !root.dragActive
+                    onPointChanged: root.magnifyCursor = root.isVertical ? point.position.y : point.position.x
+                    onHoveredChanged: {
+                        root.magnifyActive = hovered
+                        if (!hovered) root.magnifyCursor = -99999
+                    }
+                }
 
                 DockListView {
                     id: pinnedListView
@@ -487,6 +596,7 @@ Item {
             DockActionButton {
                 id: unpinButton
                 anchors.centerIn: parent
+                dockContent: root
                 symbolName: "apps"
                 activeShape: MaterialShape.Shape.SoftBurst
                 onClicked: GlobalStates.overviewOpen = !GlobalStates.overviewOpen
@@ -523,6 +633,10 @@ Item {
         Drag.keys: root.isFileDrag ? ["dock-file-reorder"] : ["dock-reorder"]
         Drag.hotSpot.x: width / 2
         Drag.hotSpot.y: height / 2
+    }
+
+    DockPoof {
+        id: poofEffect
     }
 
     Loader {
