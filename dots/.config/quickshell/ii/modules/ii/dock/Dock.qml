@@ -87,7 +87,12 @@ Scope {
                 const dm = (Config.options?.dock.height ?? 60) * 0.2
                 return Math.max(0, Math.round((mag - 1) * btn - dm + 6))
             }
-            property bool reveal: dock.pinned || (Config.options?.dock.hoverToReveal && dockMouseArea.containsMouse) || (dockContent.requestDockShow) || (workspaceEmpty)
+            // Under a fullscreen window only hover (or an open menu/preview) reveals the
+            // dock — pinning and the empty-workspace auto-show are suppressed, so it gets
+            // out of the way like macOS does.
+            property bool reveal: monitorHasFullscreen
+                ? ((Config.options?.dock.hoverToReveal && dockMouseArea.containsMouse) || dockContent.requestDockShow)
+                : (dock.pinned || (Config.options?.dock.hoverToReveal && dockMouseArea.containsMouse) || (dockContent.requestDockShow) || (workspaceEmpty))
             property bool positionChanging: false
 
             readonly property bool workspaceEmpty: {
@@ -95,6 +100,13 @@ Scope {
                 const wsId = monitor?.activeWorkspace?.id ?? -1
                 if (wsId === -1) return true
                 return HyprlandData.hyprlandClientsForWorkspace(wsId).length === 0
+            }
+
+            readonly property bool monitorHasFullscreen: {
+                const monitor = HyprlandData.monitors.find(m => m.name === dockRoot.screen?.name)
+                const wsId = monitor?.activeWorkspace?.id ?? -1
+                if (wsId === -1) return false
+                return HyprlandData.workspaceById[wsId]?.hasfullscreen ?? false
             }
 
             readonly property var sizing: dock.computeSizes({
@@ -122,7 +134,7 @@ Scope {
                 right: dock.dockEffectivePosition !== "left"
             }
 
-            exclusiveZone: dock.pinned ? dockRoot.sizing.reservedThickness : 0
+            exclusiveZone: (dock.pinned && !monitorHasFullscreen) ? dockRoot.sizing.reservedThickness : 0
             WlrLayershell.namespace: "quickshell:dock"
             WlrLayershell.layer: WlrLayer.Overlay
             color: "transparent"
