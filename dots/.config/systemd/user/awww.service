@@ -1,0 +1,18 @@
+[Unit]
+Description=awww wallpaper daemon (per-monitor backgrounds)
+Documentation=https://github.com/LGFae/swww
+PartOf=graphical-session.target
+After=graphical-session.target
+# Start before the shell so the daemon is ready when switchwall.sh runs `awww img`
+Before=quickshell-ii.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/awww-daemon
+ExecStop=/usr/bin/awww kill
+Restart=always
+RestartSec=1
+Slice=session.slice
+
+[Install]
+WantedBy=graphical-session.target
