@@ -190,5 +190,5 @@ Toolbar {
         StyledToolTip {
             text: Translation.tr("Cancel wallpaper selection")
         }
-    }                        
+    }                 
 }

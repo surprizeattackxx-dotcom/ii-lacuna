@@ -24,8 +24,6 @@ Scope {
 
     function computeSizes(opts) {
         const gapsOut = opts.gapsOut
-        const headroom = opts.magnifyHeadroom ?? 0
-        const spread = opts.magnifySpread ?? 0
         const barConflicts = opts.barActive && (opts.isVertical !== opts.barIsVertical)
 
         const barOffset = barConflicts ? (opts.isVertical ? opts.barThickness : 0) : 0
@@ -34,29 +32,21 @@ Scope {
         const maxW = Math.max(1, opts.availableW - gapsOut * 2 - barOffsetH)
         const maxH = Math.max(1, opts.availableH - gapsOut * 2 - barOffset)
 
-        const contentW = opts.contentVisualWidth + opts.dockPadding * 2
-        const contentH = opts.contentVisualHeight + opts.dockPadding * 2
+        const unloadedW = maxW
+        const unloadedH = maxH
 
-        // Headroom is added only to the dock's cross-axis (thickness), giving magnified
-        // icons transparent space to balloon into above the translucent bar — mac-style.
-        const crossW = contentW + gapsOut * 2 + (opts.isVertical ? headroom : 0)
-        const crossH = contentH + gapsOut * 2 + (opts.isVertical ? 0 : headroom)
-
-        // The ripple spread grows the bar along its length only.
-        const longW = opts.isVertical ? contentW : contentW + spread
-        const longH = opts.isVertical ? contentH + spread : contentH
+        const contentW = opts.isLoaded ? opts.contentVisualWidth : (opts.isVertical ? 60 : unloadedW)
+        const contentH = opts.isLoaded ? opts.contentVisualHeight : (opts.isVertical ? unloadedH : 60)
+        const dockPadding = opts.isLoaded ? opts.dockPadding : 0
 
         return {
             maxWidth: maxW,
             maxHeight: maxH,
-            dockWidth:     opts.isVertical ? crossW : Math.min(longW + gapsOut * 2, maxW),
-            dockHeight:    opts.isVertical ? Math.min(longH + gapsOut * 2, maxH) : crossH,
-            dockThickness: opts.isVertical ? crossW : crossH,
-            reservedThickness: opts.isVertical ? contentW + gapsOut * 2 : contentH + gapsOut * 2,
-            backgroundWidth:  Math.max(1, opts.isVertical ? contentW : Math.min(longW, maxW - gapsOut * 2)),
-            backgroundHeight: Math.max(1, opts.isVertical ? Math.min(longH, maxH - gapsOut * 2) : contentH),
-            contentWidth:  Math.max(1, opts.isVertical ? contentW : Math.min(contentW, maxW - gapsOut * 2)),
-            contentHeight: Math.max(1, opts.isVertical ? Math.min(contentH, maxH - gapsOut * 2) : contentH)
+            dockWidth: opts.isVertical ? contentW + dockPadding * 2 + gapsOut * 2 : Math.min(contentW + dockPadding * 2 + gapsOut * 2, maxW),
+            dockHeight: opts.isVertical ? Math.min(contentH + dockPadding * 2 + gapsOut * 2, maxH) : contentH + dockPadding * 2 + gapsOut * 2,
+            dockThickness: opts.isVertical ? contentW + dockPadding * 2 + gapsOut * 2 : contentH + dockPadding * 2 + gapsOut * 2,
+            backgroundWidth:  Math.max(1, opts.isVertical ? contentW : Math.min(contentW, maxW - gapsOut * 2)),
+            backgroundHeight: Math.max(1, opts.isVertical ? Math.min(contentH, maxH - gapsOut * 2) : contentH)
         }
     }
 
@@ -67,33 +57,32 @@ Scope {
             id: dockRoot
             required property var modelData
             screen: modelData
-            
-            visible: !GlobalStates.screenLocked && !positionChanging 
+
+            visible: !GlobalStates.screenLocked && !positionChanging
             // using a flag for positionChanging is not really necessary, but it prevents some graphical issues caused by qml when the dock is moving
 
             readonly property real availableW: screen?.width ?? 1920
             readonly property real availableH: screen?.height ?? 1080
             readonly property bool barActive: GlobalStates.barOpen
             readonly property bool barIsVertical: Config.options?.bar?.vertical ?? false
-            readonly property real barThickness: barActive? (barIsVertical ? (Config.options?.bar?.sizes?.width ?? Appearance.sizes.verticalBarWidth) : (Config.options?.bar?.sizes?.height ?? Appearance.sizes.barHeight)) : 0
+            readonly property real barThickness: barActive ? (barIsVertical ? (Config.options?.bar?.sizes?.width ?? Appearance.sizes.verticalBarWidth) : (Config.options?.bar?.sizes?.height ?? Appearance.sizes.barHeight)) : 0
 
             readonly property bool isVertical: dock.isVertical
             readonly property real dockThickness: isVertical ? dockRoot.sizing.dockWidth : dockRoot.sizing.dockHeight
 
-            readonly property real magnifyHeadroom: {
-                const magOn = Config.options?.dock.hoverMagnify ?? true
-                const mag = magOn ? (Config.options?.dock.hoverMagnifyScale ?? 1.3) : 1.0
-                const btn = Appearance.sizes.dockButtonSize
-                const dm = (Config.options?.dock.height ?? 60) * 0.2
-                return Math.max(0, Math.round((mag - 1) * btn - dm + 6))
-            }
-            // Under a fullscreen window only hover (or an open menu/preview) reveals the
-            // dock — pinning and the empty-workspace auto-show are suppressed, so it gets
-            // out of the way like macOS does.
-            property bool reveal: monitorHasFullscreen
-                ? ((Config.options?.dock.hoverToReveal && dockMouseArea.containsMouse) || dockContent.requestDockShow)
-                : (dock.pinned || (Config.options?.dock.hoverToReveal && dockMouseArea.containsMouse) || (dockContent.requestDockShow) || (workspaceEmpty))
+            // reveal is set imperatively (not as a binding) to avoid a binding loop:
+            property bool reveal: false
             property bool positionChanging: false
+            readonly property bool readyToReveal: reveal && (dockLoader.item?.ready ?? false)
+
+            function updateReveal() {
+                var shouldReveal = dock.pinned
+                    || (dockMouseArea.containsMouse || graceTimer.running)
+                    || (dockLoader.item?.requestDockShow ?? false)
+                    || (Config.options?.dock?.revealOnEmptyWorkspace && workspaceEmpty)
+                if (reveal !== shouldReveal)
+                    reveal = shouldReveal
+            }
 
             readonly property bool workspaceEmpty: {
                 const monitor = HyprlandData.monitors.find(m => m.name === dockRoot.screen?.name)
@@ -102,26 +91,20 @@ Scope {
                 return HyprlandData.hyprlandClientsForWorkspace(wsId).length === 0
             }
 
-            readonly property bool monitorHasFullscreen: {
-                const monitor = HyprlandData.monitors.find(m => m.name === dockRoot.screen?.name)
-                const wsId = monitor?.activeWorkspace?.id ?? -1
-                if (wsId === -1) return false
-                return HyprlandData.workspaceById[wsId]?.hasfullscreen ?? false
-            }
+            onWorkspaceEmptyChanged: updateReveal()
 
             readonly property var sizing: dock.computeSizes({
                 gapsOut: Appearance.sizes.hyprlandGapsOut,
                 isVertical: dock.isVertical,
-                barActive: barActive,
-                barIsVertical: barIsVertical,
-                barThickness: barThickness,
-                availableW: availableW,
-                availableH: availableH,
-                contentVisualWidth: dockContent.visualWidth,
-                contentVisualHeight: dockContent.visualHeight,
-                dockPadding: dockContent.dockPadding,
-                magnifyHeadroom: magnifyHeadroom,
-                magnifySpread: dockContent.magnifySpread
+                barActive: dockRoot.barActive,
+                barIsVertical: dockRoot.barIsVertical,
+                barThickness: dockRoot.barThickness,
+                availableW: dockRoot.availableW,
+                availableH: dockRoot.availableH,
+                isLoaded: dockLoader.activeAsync,
+                contentVisualWidth: dockLoader.item?.contentVisualWidth ?? 0,
+                contentVisualHeight: dockLoader.item?.contentVisualHeight ?? 0,
+                dockPadding: dockLoader.item?.dockPadding ?? 0
             })
 
             implicitWidth: Math.max(1, dockRoot.sizing.dockWidth)
@@ -134,16 +117,41 @@ Scope {
                 right: dock.dockEffectivePosition !== "left"
             }
 
-            exclusiveZone: (dock.pinned && !monitorHasFullscreen) ? dockRoot.sizing.reservedThickness : 0
+            exclusiveZone: dock.pinned ? dockThickness : 0
             WlrLayershell.namespace: "quickshell:dock"
             WlrLayershell.layer: WlrLayer.Overlay
             color: "transparent"
 
-            // Mask the bar plus a thin inner-edge strip (the auto-reveal trigger), so the
-            // transparent balloon headroom above the bar stays click-through.
             mask: Region {
-                Region { item: dockVisualBackground }
-                Region { item: revealSensor }
+                item: dockMouseArea
+            }
+
+            Timer {
+                id: unloadTimer
+                interval: Appearance.animation.elementMoveFast.duration + 100
+            }
+
+            // Grace timer: keeps the dock revealed for 1 second after the initial
+            // hover trigger, giving the user time to reach the dock as it expands.
+            Timer {
+                id: graceTimer
+                interval: Appearance.animation.elementMoveFast.duration + 800
+                onRunningChanged: dockRoot.updateReveal()
+            }
+
+            onRevealChanged: {
+                if (!reveal) unloadTimer.restart()
+                else unloadTimer.stop()
+            }
+
+            // Watch dock.pinned changes to update reveal
+            Connections {
+                target: dock
+                function onPinnedChanged() { dockRoot.updateReveal() }
+                function onDockEffectivePositionChanged() {
+                    dockRoot.positionChanging = true
+                    positionChangeTimer.restart()
+                }
             }
 
             Timer {
@@ -152,21 +160,15 @@ Scope {
                 onTriggered: dockRoot.positionChanging = false
             }
 
-            Connections {
-                target: dock
-                function onDockEffectivePositionChanged() {
-                    dockRoot.positionChanging = true
-                    positionChangeTimer.restart()
-                }
-            }
-
             HyprlandFocusGrab {
                 id: dragFocusGrab
-                active: dockContent.dragState != "idle"
+                active: dockLoader.activeAsync && (dockLoader.item?.dragState ?? "idle") !== "idle"
                 windows: [dockRoot]
                 onCleared: {
-                    if (dockContent.isAppDrag) dockContent.endDrag()
-                    if (dockContent.isFileDrag) dockContent.endFileDrag()
+                    if (dockLoader.item && dockLoader.item.dragState !== "idle") {
+                        dockLoader.item.endDrag()
+                        dockLoader.item.endFileDrag()
+                    }
                 }
             }
 
@@ -174,23 +176,105 @@ Scope {
                 id: dockMouseArea
                 hoverEnabled: true
 
-                property real hiddenOffset: dockRoot.dockThickness - (Config.options?.dock.hoverRegionHeight ?? 10)
-                property real fullyHiddenOffset: dockRoot.dockThickness + 1
-                property real currentOffset: dockRoot.reveal ? 0 : (Config.options?.dock.hoverToReveal ? hiddenOffset : fullyHiddenOffset)
+                // When the mouse enters the hover strip and the dock is hidden,
+                // start the grace timer so the dock stays open for 1 second while
+                // it animates and the user moves the cursor onto it.
+                onContainsMouseChanged: {
+                    if (containsMouse && !dockRoot.reveal && !dock.pinned) {
+                        graceTimer.restart()
+                    }
+                    // Update reveal imperatively to avoid binding loop
+                    dockRoot.updateReveal()
+                }
+
+                property real hiddenOffset: dockRoot.dockThickness - (Config.options?.dock.hoverRegionHeight ?? 2)
+                property real currentOffset: dockRoot.readyToReveal ? 0 : hiddenOffset
 
                 width: dock.isVertical ? dockRoot.dockThickness : dockRoot.sizing.dockWidth
                 height: dock.isVertical ? dockRoot.sizing.dockHeight : dockRoot.dockThickness
 
                 Item {
-                    id: revealSensor
-                    readonly property string dp: dock.dockEffectivePosition
-                    readonly property real hr: Config.options?.dock.hoverRegionHeight ?? 2
-                    anchors.top: dp !== "top" ? parent.top : undefined
-                    anchors.bottom: dp !== "bottom" ? parent.bottom : undefined
-                    anchors.left: dp !== "left" ? parent.left : undefined
-                    anchors.right: dp !== "right" ? parent.right : undefined
-                    width: dock.isVertical ? hr : undefined
-                    height: dock.isVertical ? undefined : hr
+                    id: dockContentHost
+                    anchors.fill: parent
+
+                    LazyLoader {
+                        id: dockLoader
+                        loading: true
+                        active: dockRoot.reveal || unloadTimer.running
+
+                        Item {
+                            id: wrapper
+                            parent: dockContentHost
+                            anchors.fill: parent
+
+                            readonly property real contentVisualWidth: content.visualWidth
+                            readonly property real contentVisualHeight: content.visualHeight
+                            readonly property real dockPadding: content.dockPadding
+                            readonly property string dragState: content.dragState
+                            readonly property bool requestDockShow: content.requestDockShow
+                            readonly property bool ready: content.ready
+
+                            function endDrag() { content.endDrag() }
+                            function endFileDrag() { content.endFileDrag() }
+                            function mimeIconFromPath(p) { return content.mimeIconFromPath(p) }
+
+                            // When requestDockShow changes inside the loaded content, update reveal
+                            onRequestDockShowChanged: dockRoot.updateReveal()
+
+                            // Only show once DockContent itself is ready
+                            readonly property bool contentReady: content.ready && !dockRoot.positionChanging
+                            opacity: contentReady ? 1.0 : 0.0
+
+                            StyledRectangularShadow {
+                                target: visualBackground
+                            }
+
+                            Rectangle {
+                                id: visualBackground
+                                anchors.centerIn: parent
+                                width: dockRoot.sizing.backgroundWidth
+                                height: dockRoot.sizing.backgroundHeight
+                                color: Appearance.colors.colLayer0
+                                border.width: 1
+                                border.color: Appearance.colors.colLayer0Border
+                                radius: Appearance.rounding.large
+
+                                DropArea {
+                                    id: fileDropArea
+                                    anchors.fill: parent
+                                    keys: ["text/uri-list"]
+                                    enabled: content.dragActive === false
+
+                                    onEntered: (drag) => {
+                                        if (!drag.hasUrls) return
+                                        const url = drag.urls[0]?.toString() ?? ""
+                                        content.externalDragIcon = content.mimeIconFromPath(url)
+                                        content.externalDragOver = true
+                                    }
+                                    onExited: {
+                                        content.externalDragIcon = ""
+                                        content.externalDragOver = false
+                                    }
+                                    onDropped: (drop) => {
+                                        if (!drop.hasUrls) return
+                                        for (let i = 0; i < drop.urls.length; i++)
+                                            TaskbarApps.addPinnedFile(drop.urls[i])
+                                        drop.accept(Qt.CopyAction)
+                                        content.externalDragIcon = ""
+                                        content.externalDragOver = false
+                                    }
+                                }
+
+                                DockContent {
+                                    id: content
+                                    anchors.fill: parent
+                                    isPinned: dock.pinned
+                                    currentScreen: dockRoot.screen
+                                    onTogglePinRequested: dock.pinned = !dock.pinned
+                                }
+                            }
+                        }
+                    }
                 }
 
                 state: dock.dockEffectivePosition
@@ -222,105 +306,6 @@ Scope {
                 Behavior on anchors.bottomMargin { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(dockMouseArea) }
                 Behavior on anchors.leftMargin { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(dockMouseArea) }
                 Behavior on anchors.rightMargin { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(dockMouseArea) }
-
-                StyledRectangularShadow { target: dockVisualBackground }
-
-                Rectangle {
-                    id: dockVisualBackground
-
-                    readonly property string dpos: dock.dockEffectivePosition
-                    anchors.bottom: dpos === "bottom" ? parent.bottom : undefined
-                    anchors.top: dpos === "top" ? parent.top : undefined
-                    anchors.left: dpos === "left" ? parent.left : undefined
-                    anchors.right: dpos === "right" ? parent.right : undefined
-                    anchors.horizontalCenter: dock.isVertical ? undefined : parent.horizontalCenter
-                    anchors.verticalCenter: dock.isVertical ? parent.verticalCenter : undefined
-                    anchors.bottomMargin: dpos === "bottom" ? Appearance.sizes.hyprlandGapsOut : 0
-                    anchors.topMargin: dpos === "top" ? Appearance.sizes.hyprlandGapsOut : 0
-                    anchors.leftMargin: dpos === "left" ? Appearance.sizes.hyprlandGapsOut : 0
-                    anchors.rightMargin: dpos === "right" ? Appearance.sizes.hyprlandGapsOut : 0
-
-                    width: dockRoot.sizing.backgroundWidth
-                    height: dockRoot.sizing.backgroundHeight
-
-                    Behavior on width { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(dockVisualBackground) }
-                    Behavior on height { animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(dockVisualBackground) }
-
-                    color: "transparent"
-                    border.width: 1
-                    border.color: Appearance.colors.colLayer0Border
-                    radius: Appearance.rounding.large
-
-                    GlassPanel {
-                        anchors.fill: parent
-                        anchors.margins: 1
-                        cornerRadius: dockVisualBackground.radius - 1
-                        screen: dockVisualBackground.QsWindow.window?.screen
-                        screenX: ((dockVisualBackground.QsWindow.window?.screen?.width ?? 0) - width) / 2
-                        screenY: (dockVisualBackground.QsWindow.window?.screen?.height ?? 0) - height - Appearance.sizes.hyprlandGapsOut
-                        tint: Appearance.colors.colLayer0
-                    }
-
-                    DropArea {
-                        id: fileDropArea
-                        anchors.fill: parent
-                        keys: ["text/uri-list"]
-
-                        // We delay the re-enablement slightly after an internal drag ends
-                        // to prevent the "exited" event from firing for the internal drag.
-                        property bool blockDueToInternal: dockContent.dragActive
-                        onBlockDueToInternalChanged: {
-                            if (!blockDueToInternal) {
-                                reEnableTimer.restart()
-                            } else {
-                                enabled = false
-                            }
-                        }
-
-                        Timer {
-                            id: reEnableTimer
-                            interval: 50
-                            onTriggered: fileDropArea.enabled = true
-                        }
-
-                        onEntered: (drag) => {
-                            if (!drag.hasUrls) return
-                            //console.log("[Dock] External drag entered")
-                            const url = drag.urls[0]?.toString() ?? ""
-                            dockContent.externalDragIcon = dockContent.mimeIconFromPath(url)
-                            dockContent.externalDragOver = true
-                        }
-                        onExited: {
-                            //console.log("[Dock] External drag exited")
-                            dockContent.externalDragIcon = ""
-                            dockContent.externalDragOver = false
-                        }
-                        onDropped: (drop) => {
-                            if (!drop.hasUrls) return
-                            //console.log("[Dock] External drag dropped")
-                            for (let i = 0; i < drop.urls.length; i++)
-                                TaskbarApps.addPinnedFile(drop.urls[i])
-                            drop.accept(Qt.CopyAction)
-                            dockContent.externalDragIcon = ""
-                            dockContent.externalDragOver = false
-                        }
-                    }
-
-                    DockContent {
-                        id: dockContent
-                        // Stay at resting size, centred in the bar. The bar grows around it
-                        // for the ripple; keeping this fixed means the magnify math never
-                        // sees a moving coordinate frame (no feedback, no drift).
-                        anchors.centerIn: parent
-                        width: dockRoot.sizing.contentWidth
-                        height: dockRoot.sizing.contentHeight
-                        isPinned: dock.pinned
-                        currentScreen: dockRoot.screen
-                        onTogglePinRequested: {
-                            dock.pinned = !dock.pinned
-                        }
-                    }
-                }
             }
         }
     }

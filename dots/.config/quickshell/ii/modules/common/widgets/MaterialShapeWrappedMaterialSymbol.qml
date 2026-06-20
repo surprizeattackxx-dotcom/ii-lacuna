@@ -13,6 +13,8 @@ MaterialShape {
     property real padding: 6
     
 
+    property bool rotateIconWithShape: false
+
     color: Appearance.colors.colSecondaryContainer
     colSymbol: Appearance.colors.colOnSecondaryContainer
     shape: MaterialShape.Shape.Clover4Leaf
@@ -26,6 +28,8 @@ MaterialShape {
         id: symbol
         anchors.centerIn: parent
         color: root.colSymbol
-        rotation: 360 - root.rotation
+        width: root.iconSize
+        height: root.iconSize
+        rotation: !root.rotateIconWithShape ? 360 - root.rotation: root.rotation
     }
 }
