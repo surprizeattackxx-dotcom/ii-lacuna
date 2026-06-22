@@ -133,7 +133,7 @@ ForegroundPositive=#006a36
 ForegroundVisited=#9900cf
 
 [General]
-ColorScheme=MaterialYouLight
+ColorScheme=colloidLightGruvbox
 ColorSchemeHash=503e4979c3fa4539488f124709dcb90e14fd4dba
 LastUsedCustomAccentColor=184,117,220
 TerminalApplication=kitty -1

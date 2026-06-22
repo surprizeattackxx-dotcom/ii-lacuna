@@ -7,7 +7,7 @@ Wants=hamr-daemon.service
 
 [Service]
 Type=simple
-ExecStart=/usr/bin/hamr-gtk
+ExecStart=/home/donnie/.local/bin/hamr-gtk
 Restart=always
 RestartSec=3
 KillMode=process
