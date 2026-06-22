@@ -537,6 +537,7 @@ Singleton {
                 property bool pinnedOnStartup: false
                 property bool enablePreview: true
                 property bool revealOnEmptyWorkspace: true
+                property bool hideOnFullscreen: true
                 property bool enableMediaWidget: false
                 property string position: "bottom"
                 property list<string> pinnedApps: ["org.kde.dolphin", "kitty",]

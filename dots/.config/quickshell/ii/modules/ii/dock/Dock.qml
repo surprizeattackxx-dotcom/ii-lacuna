@@ -58,7 +58,7 @@ Scope {
             required property var modelData
             screen: modelData
 
-            visible: !GlobalStates.screenLocked && !positionChanging
+            visible: !GlobalStates.screenLocked && !positionChanging && !monitorFullscreen
             // using a flag for positionChanging is not really necessary, but it prevents some graphical issues caused by qml when the dock is moving
 
             readonly property real availableW: screen?.width ?? 1920
@@ -89,6 +89,15 @@ Scope {
                 const wsId = monitor?.activeWorkspace?.id ?? -1
                 if (wsId === -1) return true
                 return HyprlandData.hyprlandClientsForWorkspace(wsId).length === 0
+            }
+
+            // True when the active workspace on this monitor has a fullscreen window.
+            readonly property bool monitorFullscreen: {
+                if (!(Config.options?.dock?.hideOnFullscreen ?? true)) return false
+                const monitor = HyprlandData.monitors.find(m => m.name === dockRoot.screen?.name)
+                const wsId = monitor?.activeWorkspace?.id ?? -1
+                if (wsId === -1) return false
+                return HyprlandData.workspaceById[wsId]?.hasfullscreen ?? false
             }
 
             onWorkspaceEmptyChanged: updateReveal()
@@ -122,8 +131,10 @@ Scope {
             WlrLayershell.layer: WlrLayer.Overlay
             color: "transparent"
 
+            // Clear the input mask while fullscreen so the leftover hover strip
+            // doesn't linger / capture input as the dock hides.
             mask: Region {
-                item: dockMouseArea
+                item: dockRoot.monitorFullscreen ? null : dockMouseArea
             }
 
             Timer {
