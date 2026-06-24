@@ -17,7 +17,6 @@ RAW_JSON_PATH="/tmp/quickshell/ai/theme-raw.json"
 MODEL="${GEMINI_THEME_MODEL:-gemini-flash-lite-latest}"
 MONITOR_STATE_DIR="$STATE_DIR/user/generated/wallpaper/monitors"
 
-# Parse --monitor argument
 TARGET_MONITOR=""
 while [[ $# -gt 0 ]]; do
     case "$1" in
@@ -26,32 +25,23 @@ while [[ $# -gt 0 ]]; do
     esac
 done
 
-# Resolve the wallpaper path — prefers the specified monitor's wallpaper
 resolve_wallpaper_path() {
     local monitor="$1"
     local path=""
-
-    # 1. If a monitor is specified, check its state file first
     if [[ -n "$monitor" ]]; then
         local mon_state="$MONITOR_STATE_DIR/${monitor}.json"
         if [[ -f "$mon_state" ]]; then
             path="$(jq -r '.matugenPath // .thumbnailPath // .previewPath // .path // empty' "$mon_state" 2>/dev/null)"
         fi
     fi
-
-    # 2. Fall back to path.txt (Matugen's generic path)
     if [[ -z "$path" || "$path" == "null" ]]; then
         if [[ -f "$WALLPAPER_PATH_FILE" ]]; then
             path="$(<"$WALLPAPER_PATH_FILE")"
         fi
     fi
-
-    # 3. Config wallpaperPath
     if [[ -z "$path" || "$path" == "null" ]]; then
         path="$(jq -r '.background.wallpaperPath // empty' "$SHELL_CONFIG_FILE" 2>/dev/null)"
     fi
-
-    # 4. Any monitor state file as last resort
     if [[ -z "$path" || "$path" == "null" ]]; then
         if [[ -d "$MONITOR_STATE_DIR" ]]; then
             local state_file
@@ -61,7 +51,6 @@ resolve_wallpaper_path() {
             fi
         fi
     fi
-
     printf '%s\n' "$path"
 }
 
@@ -71,16 +60,14 @@ if [[ -z "$IMGPATH" || "$IMGPATH" == "null" ]]; then
     exit 1
 fi
 
-# Get API key
+mkdir -p "$(dirname "$RESIZED_IMG_PATH")"
+magick "$IMGPATH" -thumbnail 400x -quality 60 "$RESIZED_IMG_PATH"
+
 API_KEY=$(secret-tool lookup 'application' 'illogical-impulse' | jq -r '.apiKeys.gemini')
 if [[ -z "$API_KEY" || "$API_KEY" == "null" ]]; then
     echo "Error: Gemini API key not found." >&2
     exit 1
 fi
-
-# Resize image for speed
-mkdir -p "$(dirname "$RESIZED_IMG_PATH")"
-magick "$IMGPATH" -thumbnail 400x -quality 60 "$RESIZED_IMG_PATH"
 
 if [[ "$(base64 --version 2>&1)" = *"FreeBSD"* ]]; then
     B64FLAGS="--input"
@@ -89,7 +76,6 @@ else
 fi
 B64DATA="$(base64 "$B64FLAGS" "$RESIZED_IMG_PATH")"
 
-# Required Material 3 keys — Catppuccin aliases are derived locally afterwards
 M3_KEYS=(
     background surface surface_dim surface_bright
     surface_container_lowest surface_container_low surface_container surface_container_high surface_container_highest
@@ -108,8 +94,6 @@ M3_KEYS=(
     success on_success success_container on_success_container
 )
 
-# Analyze the wallpaper (reuses scheme_for_image.py) so Gemini knows whether
-# to go muted or punchy instead of guessing from a 400px thumbnail alone
 STATS_LINE=""
 if [[ -x "$VENV_PYTHON" && -f "$SCRIPT_DIR/scheme_for_image.py" ]]; then
     CF=$("$VENV_PYTHON" "$SCRIPT_DIR/scheme_for_image.py" "$RESIZED_IMG_PATH" --colorfulness 2>/dev/null)
@@ -130,7 +114,6 @@ if [[ -x "$VENV_PYTHON" && -f "$SCRIPT_DIR/scheme_for_image.py" ]]; then
     fi
 fi
 
-# Respect the configured color mode instead of hardcoding dark
 MODE_PREF=$(jq -r '.appearance.colorMode // "dark"' "$SHELL_CONFIG_FILE" 2>/dev/null)
 [[ "$MODE_PREF" == "light" ]] || MODE_PREF="dark"
 if [[ "$MODE_PREF" == "dark" ]]; then
@@ -178,7 +161,6 @@ payload=$(jq -n \
 mkdir -p "$(dirname "$COLORS_JSON")"
 export M3_KEYS_STR="${M3_KEYS[*]}"
 
-# Validate, contrast-fix, alias, and write colors.json; exits 1 on bad input
 validate_and_write() {
     python3 - "$RAW_JSON_PATH" "$COLORS_JSON" << 'PYEOF'
 import json, os, re, sys
@@ -234,7 +216,6 @@ for k in req:
         sys.exit(1)
     d[k] = v
 
-# Repair only clearly broken pairs (< 3.0); push them to a readable 4.5
 for k in req:
     if not k.startswith('on_'):
         continue
@@ -291,7 +272,6 @@ if [[ -z "$ok" ]]; then
     exit 1
 fi
 
-# Generate SCSS from colors.json (same camelCase conversion as apply_custom_theme.sh)
 python3 - "$COLORS_JSON" > "$SCSS_FILE" << 'PYEOF'
 import json, re, sys
 
@@ -306,10 +286,9 @@ for k, v in d.items():
         print(f"${snake_to_camel(k)}: {v};")
 PYEOF
 
-# Append terminal colors if scheme-base.json and venv exist
 PRIMARY=$(jq -r '.primary // "#ffffff"' "$COLORS_JSON")
 if jq -e '.term0' "$COLORS_JSON" > /dev/null 2>&1; then
-    : # already in SCSS
+    :
 elif [[ -f "$TERMSCHEME" && -x "$VENV_PYTHON" ]]; then
     "$VENV_PYTHON" "$SCRIPT_DIR/generate_colors_material.py" \
         --color "$PRIMARY" --mode "$MODE_PREF" \
@@ -317,17 +296,14 @@ elif [[ -f "$TERMSCHEME" && -x "$VENV_PYTHON" ]]; then
         | grep -E '^\$term[0-9]+:' >> "$SCSS_FILE"
 fi
 
-# Detect dark/light mode from background color lightness
 BG=$(jq -r '.background // "#1e1e2e"' "$COLORS_JSON")
 R=$(( 16#${BG:1:2} )); G=$(( 16#${BG:3:2} )); B=$(( 16#${BG:5:2} ))
 L=$(( (R + G + B) / 3 ))
 [[ $L -lt 128 ]] && MODE="dark" || MODE="light"
 
-# Sync colorMode in shell config
 jq --indent 4 --arg mode "$MODE" '.appearance.colorMode = $mode' "$SHELL_CONFIG_FILE" \
     > "$SHELL_CONFIG_FILE.tmp" && mv "$SHELL_CONFIG_FILE.tmp" "$SHELL_CONFIG_FILE"
 
-# Also write to per-monitor color caches so focus switching doesn't revert
 MONITOR_STATE_DIR="$STATE_DIR/user/generated/wallpaper/monitors"
 if [[ -d "$MONITOR_STATE_DIR" ]]; then
     for _moncolors in "$MONITOR_STATE_DIR"/*-colors.json; do
@@ -336,10 +312,8 @@ if [[ -d "$MONITOR_STATE_DIR" ]]; then
     done
 fi
 
-# Apply all colors: GTK4, Kitty, Rofi, Hyprland borders, terminal sequences
 bash "$SCRIPT_DIR/applycolor.sh"
 
-# GNOME color-scheme
 if [[ "$MODE" == "dark" ]]; then
     gsettings set org.gnome.desktop.interface color-scheme 'prefer-dark' 2>/dev/null
     gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3-dark' 2>/dev/null
@@ -348,7 +322,6 @@ else
     gsettings set org.gnome.desktop.interface gtk-theme 'adw-gtk3' 2>/dev/null
 fi
 
-# Theme Qt/KDE apps via MTYC's color scheme generator directly (no daemon)
 VENV_DIR="${ILLOGICAL_IMPULSE_VIRTUAL_ENV:-$HOME/.local/state/quickshell/.venv}"
 VENV_DIR="${VENV_DIR/#\~/$HOME}"
 if [[ -x "$VENV_DIR/bin/python3" ]]; then

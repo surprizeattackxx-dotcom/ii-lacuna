@@ -1,0 +1,11 @@
+[Unit]
+Description=Daily GitHub traffic snapshot
+
+[Timer]
+# every day around noon; catch up if the machine was off at the scheduled time
+OnCalendar=*-*-* 12:00:00
+Persistent=true
+RandomizedDelaySec=300
+
+[Install]
+WantedBy=timers.target

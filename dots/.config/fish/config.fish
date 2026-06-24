@@ -18,3 +18,5 @@ end
 set -gx PATH $PATH $HOME/.lmstudio/bin
 # End of LM Studio CLI section
 
+set -x XCURSOR_THEME oreo_red_cursors
+set -x XCURSOR_SIZE 24

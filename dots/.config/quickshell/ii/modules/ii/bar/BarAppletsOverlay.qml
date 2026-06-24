@@ -160,16 +160,11 @@ PanelWindow {
     function applyTheme(themeName) {
         console.log(`[BA DEBUG] applyTheme called with: ${themeName}`);
         if (themeName === "Matugen") {
-            // Pass the focused monitor so colors derive from ITS wallpaper, not the
-            // hardcoded PREFERRED_MATUGEN_MONITOR (DP-1) fallback in switchwall.sh.
-            const mon = Hyprland.focusedMonitor?.name ?? "";
-            themeApplyProc.command = ["bash", Directories.wallpaperSwitchScriptPath, "--noswitch", "--mode", "dark"]
-                .concat(mon.length > 0 ? ["--monitor", mon] : []);
+            // Always derive from DP-1's wallpaper regardless of which monitor is focused
+            themeApplyProc.command = ["bash", Directories.wallpaperSwitchScriptPath, "--noswitch", "--mode", "dark", "--monitor", "DP-1"];
         } else if (themeName === "Gemini") {
-            // Call Gemini AI to generate M3 colors from the focused monitor's wallpaper
-            const mon = Hyprland.focusedMonitor?.name ?? "";
-            themeApplyProc.command = ["bash", Directories.scriptPath + "/colors/gemini-generate-theme.sh"]
-                .concat(mon.length > 0 ? ["--monitor", mon] : []);
+            // Always derive from DP-1's wallpaper regardless of which monitor is focused
+            themeApplyProc.command = ["bash", Directories.scriptPath + "/colors/gemini-generate-theme.sh", "--monitor", "DP-1"];
         } else {
             const path = Directories.defaultThemes + "/" + themeName.toLowerCase() + ".json";
             themeApplyProc.command = ["bash", Directories.applyCustomThemeScriptPath, path, themeName];

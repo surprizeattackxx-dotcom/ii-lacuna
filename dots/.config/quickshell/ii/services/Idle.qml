@@ -44,9 +44,17 @@ Singleton {
     // (covers players that don't register a Wayland idle inhibitor themselves)
     readonly property bool mediaInhibit: Config.options.lock.idle.respectMedia && MprisController.anyPlaying
 
+    // Don't auto-lock or blank the screen while a window is fullscreen —
+    // covers fullscreen video (YouTube/Netflix/mpv) and games, which don't
+    // register a Wayland idle inhibitor or report MPRIS playback.
+    readonly property bool fullscreenInhibit: Config.options.lock.idle.respectFullscreen
+        && HyprlandData.windowList.some(w => w.fullscreen > 0)
+
+    readonly property bool activityInhibit: root.mediaInhibit || root.fullscreenInhibit
+
     // Native idle handling (replaces hypridle, which crashes Hyprland here)
     IdleMonitor {
-        enabled: Config.options.lock.idle.enable && Config.options.lock.idle.lockTimeout > 0 && !root.mediaInhibit
+        enabled: Config.options.lock.idle.enable && Config.options.lock.idle.lockTimeout > 0 && !root.activityInhibit
         respectInhibitors: true
         timeout: Config.options.lock.idle.lockTimeout
         onIsIdleChanged: {
@@ -60,7 +68,7 @@ Singleton {
     }
 
     IdleMonitor {
-        enabled: Config.options.lock.idle.enable && Config.options.lock.idle.dpmsTimeout > 0 && !root.mediaInhibit
+        enabled: Config.options.lock.idle.enable && Config.options.lock.idle.dpmsTimeout > 0 && !root.activityInhibit
         respectInhibitors: true
         timeout: Config.options.lock.idle.dpmsTimeout
         onIsIdleChanged: Quickshell.execDetached(["hyprctl", "dispatch", "dpms", isIdle ? "off" : "on"])

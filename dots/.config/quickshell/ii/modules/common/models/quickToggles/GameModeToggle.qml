@@ -13,35 +13,10 @@ QuickToggleModel {
     mainAction: () => {
         root.toggled = !root.toggled;
         if (root.toggled) {
-            HyprlandSettings.setKeys({
-                "animations:enabled": 0,
-                "decoration:shadow:enabled": 0,
-                "decoration:blur:enabled": 0,
-                "general:gaps_in": 0,
-                "general:gaps_out": 0,
-                "general:border_size": 1,
-                "decoration:rounding": 0,
-                "general:allow_tearing": 1
-            });
+            Quickshell.execDetached(["hyprctl", "eval", `hl.config({ animations = { enabled = false }, decoration = { shadow = { enabled = false }, blur = { enabled = false }, rounding = 0 }, general = { gaps_in = 0, gaps_out = 0, border_size = 1, allow_tearing = true } })`]);
         } else {
-            HyprlandSettings.resetKeys([
-                "animations:enabled",
-                "decoration:shadow:enabled",
-                "decoration:blur:enabled",
-                "general:gaps_in",
-                "general:gaps_out",
-                "general:border_size",
-                "decoration:rounding",
-                "general:allow_tearing",
-            ]);
+            Quickshell.execDetached(["hyprctl", "reload"])
         }
-        reloadTimer.restart();
-    }
-
-    Timer {
-        id: reloadTimer
-        interval: 100
-        onTriggered: Quickshell.execDetached(["hyprctl", "reload"])
     }
 
     HyprlandConfigOption {

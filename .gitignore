@@ -89,3 +89,4 @@ GEMINI.md
 /dots/.config/hypr/monitor-state.lua
 /dots/.config/hypr/hyprgamma.json
 AGENTS.md
+.git-rewrite/

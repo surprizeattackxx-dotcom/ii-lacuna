@@ -72,11 +72,10 @@ Singleton {
     }
 
     function openFallbackPicker(darkMode = root.preferredDarkMode) {
-        const focusedMonitor = Hyprland.focusedMonitor?.name ?? Hyprland.monitors?.at(0)?.name ?? ""
         applyProc.exec([
             Directories.wallpaperSwitchScriptPath,
             "--mode", (darkMode ? "dark" : "light"),
-            "--monitor", focusedMonitor
+            "--monitor", "DP-1"
         ])
     }
 

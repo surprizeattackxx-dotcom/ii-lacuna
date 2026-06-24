@@ -126,7 +126,20 @@ Scope {
                 right: dock.dockEffectivePosition !== "left"
             }
 
-            exclusiveZone: dock.pinned ? dockThickness : 0
+            readonly property real reservedThickness: dock.pinned ? dockThickness : 0
+            exclusiveZone: reservedThickness
+
+            // Publish the reserved strip so the vertical bar can extend back down
+            // over it and reach the screen edge while the dock is showing.
+            onReservedThicknessChanged: {
+                GlobalStates.dockReservedThickness = reservedThickness
+                GlobalStates.dockReserving = dock.pinned
+            }
+            Component.onCompleted: {
+                GlobalStates.dockReservedThickness = reservedThickness
+                GlobalStates.dockReserving = dock.pinned
+            }
+
             WlrLayershell.namespace: "quickshell:dock"
             WlrLayershell.layer: WlrLayer.Overlay
             color: "transparent"

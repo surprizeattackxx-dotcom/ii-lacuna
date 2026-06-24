@@ -1,0 +1,15 @@
+[Unit]
+Description=Conduit alert poller — desktop notifications for marked live/available items
+Documentation=https://github.com/surprizeattackxx-dotcom/conduit
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+WorkingDirectory=/home/donnie/Projects/conduit
+ExecStart=/usr/bin/node /home/donnie/Projects/conduit/daemon.js
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

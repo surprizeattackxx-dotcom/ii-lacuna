@@ -117,8 +117,8 @@ Singleton {
     Connections {
         target: Hyprland
         function onFocusedMonitorChanged() {
-            const mon = Hyprland.focusedMonitor?.name
-            if (!mon || mon === root.activeMonitor) return
+            const mon = "DP-1"
+            if (root.activeMonitor === mon) return
             root.activeMonitor = mon
             if (!Persistent.ready || GlobalStates.activeTheme !== "Matugen") return
             const src = Directories.generatedMaterialThemePath

@@ -103,6 +103,16 @@ Scope {
                     bottom: true
                 }
 
+                // The dock reserves a strip across the whole bottom edge, which
+                // squeezes this bar (anchored top+bottom) up by that amount. Pull
+                // the bottom back down over the reserved strip so the bar reaches
+                // the screen edge while the dock is showing. The dock pill is
+                // centered, so the bar never overlaps it.
+                margins.bottom: GlobalStates.dockReserving ? -GlobalStates.dockReservedThickness : 0
+                Behavior on margins.bottom {
+                    animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
+                }
+
                 // Include in focus grab
                 Component.onCompleted: {
                     GlobalFocusGrab.addPersistent(barRoot);

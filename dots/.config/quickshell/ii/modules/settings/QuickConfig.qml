@@ -382,7 +382,6 @@ ContentPage {
                                 ]
 
                                 delegate: ColorPreviewGrid {
-                                    columns: carouselWrapper.expanded ? 2 : 3
                                     customTheme: modelData.customTheme
                                     builtInTheme: modelData.builtInTheme
                                 }

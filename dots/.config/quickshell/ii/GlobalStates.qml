@@ -48,6 +48,11 @@ Singleton {
     property bool workspaceShowNumbers: true
     property bool isScrollingLayout: false
 
+    // Published by the dock so other edge panels (e.g. the vertical bar) can
+    // reclaim the bottom strip the dock reserves and still reach the screen edge.
+    property bool dockReserving: false
+    property real dockReservedThickness: 0
+
     property bool appLauncherOpen: false
     property bool gameLauncherOpen: false
     property bool calendarAppOpen: false

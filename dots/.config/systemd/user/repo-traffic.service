@@ -1,0 +1,7 @@
+[Unit]
+Description=Snapshot GitHub clone/view traffic for my repos
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/repo-traffic-snapshot.sh

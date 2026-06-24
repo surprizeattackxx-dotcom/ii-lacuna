@@ -1,0 +1,13 @@
+[Unit]
+Description=Respawn hyprlock if it dies while the session is locked
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.config/hypr/scripts/hyprlock-watchdog.sh
+Restart=always
+RestartSec=2
+
+[Install]
+WantedBy=graphical-session.target

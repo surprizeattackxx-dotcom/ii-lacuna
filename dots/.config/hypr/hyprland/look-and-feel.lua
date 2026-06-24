@@ -52,7 +52,7 @@ hl.config({
   -- ─── Dwindle Layout ──────────────────────────────
   dwindle = {
     preserve_split = false,
-    smart_resizing = true,
+    smart_resizing = false,
     smart_split = false
   },
   -- ─── General ─────────────────────────────────────
