@@ -64,10 +64,11 @@ StyledFlickable {
                 property bool selected: index >= root.selectionStart && index < root.selectionEnd
 
                 color: ColorUtils.transparentize(root.selectionColor, selected ? 0 : 1)
-                
+
                 MaterialShape {
                     id: materialShape
                     anchors.centerIn: parent
+                    // Each character gets a different M3 icon, cycling by position.
                     property list<var> charShapes: [
                         MaterialShape.Shape.Clover4Leaf,
                         MaterialShape.Shape.Arrow,
