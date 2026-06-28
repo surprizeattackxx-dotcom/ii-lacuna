@@ -26,6 +26,17 @@ Singleton {
     property bool _updateCheckRunning: false
     property bool watchFileChanges: true
 
+    // Multi-source plugin support
+    property var pluginSources: [] // [{ name: string, url: string, enabled: bool }]
+    property var availablePlugins: [] // [{ id, name, description, version, author, icon, source, repoUrl, htmlUrl }]
+    property var pluginErrors: ({}) // { pluginId: [{ error: string, entryPoint: string, timestamp: string }] }
+    property string defaultSourceName: "Noctalia Plugins"
+    property string defaultSourceUrl: "https://github.com/noctalia-dev/noctalia-plugins"
+
+    // Registry fetch tracking
+    property var _activeRegistryFetches: ({})
+    property bool _registryFetching: false
+
     Connections {
         target: Config.options.extensions
         function onEnableChanged() {
@@ -53,6 +64,10 @@ Singleton {
     signal extensionRemoved(string extId)
     signal extensionToggled(string extId)
     signal updateCheckDone(string extId, bool available, string error)
+    signal availablePluginsUpdated()
+    signal pluginSourceAdded(string name, string url)
+    signal pluginSourceRemoved(string url)
+    signal pluginSourceToggled(string url, bool enabled)
 
     Component.onCompleted: {
         if (!Config.options.extensions.enable) {
@@ -70,6 +85,7 @@ Singleton {
         extensionsAdapter.extensionConfigs = root.extensionConfigs
         extensionsAdapter.extensionWidgetConfigs = root.extensionWidgetConfigs
         extensionsAdapter.extensionOverlayConfigs = root.extensionOverlayConfigs
+        extensionsAdapter.pluginSources = root.pluginSources
         extensionsFileView.writeAdapter()
     }
 
@@ -138,23 +154,35 @@ Singleton {
         root.error = ""
 
         let dest = Directories.extensionsInstalledPath + "/" + extId
+        let tempDest = Directories.extensionsInstalledPath + "/" + extId + "-temp"
+        Quickshell.exec(["rm", "-rf", tempDest])
         installProc._pendingExtId = extId
         installProc._pendingDest = dest
+        installProc._pendingTempDest = tempDest
         installProc._pendingRepoUrl = repoUrl
         installProc._pendingBranch = defaultBranch || "main"
         installProc._pendingHtmlUrl = htmlUrl || ""
         installProc._pendingIsCustomUrl = !!isCustomUrl
-        installProc.exec(["git", "clone", "--depth", "1", repoUrl, dest])
+        installProc.exec(["sh", "-c", "GIT_ASKPASS=/bin/true git clone --depth 1 --branch '" + (defaultBranch || "main") + "' '" + repoUrl + "' '" + tempDest + "' < /dev/null"])
     }
 
-    function installLocalExtension(localPath) {
-        if (!Config.options.extensions.enable) { root.error = "Extensions are disabled"; return }
-        root.loading = true
-        root.error = ""
-        let resolvedPath = localPath.replace(/^~/, Directories.home).replace(/\/+$/, "")
-        localReader._pendingPath = resolvedPath
-        localReader.path = resolvedPath + "/extension.json"
-        localReader.reload()
+    function registerAllLocal(dirPath) {
+        let process = Qt.createQmlObject(`
+            import QtQuick
+            import Quickshell.Io
+            Process {
+                command: ["sh", "-c", "for d in ${dirPath}/*/; do if [ -f \\\"$d/extension.json\\\" ]; then echo \\\"$d\\\"; fi; done"]
+                stdout: StdioCollector {}
+            }
+        `, root, "FindLocals")
+        process.stdout.onStreamFinished.connect(function() {
+            let output = this.text || ""
+            let paths = output.trim().split('\n')
+            for (let i = 0; i < paths.length; i++) {
+                if (paths[i]) root.installLocalExtension(paths[i])
+            }
+        })
+        process.running = true
     }
 
     function reinstallLocalExtension(extId) {
@@ -529,25 +557,235 @@ Singleton {
         return result
     }
 
+    // ── Plugin Source Management ──
+
+    function addPluginSource(name, url) {
+        for (let i = 0; i < root.pluginSources.length; i++) {
+            if (root.pluginSources[i].url === url) {
+                console.warn("ExtensionManager: Source already exists:", url)
+                return false
+            }
+        }
+        let newSources = root.pluginSources.slice()
+        newSources.push({ name: name, url: url, enabled: true })
+        root.pluginSources = newSources
+        root.syncPluginsAdapter()
+        root.pluginSourceAdded(name, url)
+        return true
+    }
+
+    function removePluginSource(url) {
+        let newSources = []
+        for (let i = 0; i < root.pluginSources.length; i++) {
+            if (root.pluginSources[i].url !== url) {
+                newSources.push(root.pluginSources[i])
+            }
+        }
+        if (newSources.length === root.pluginSources.length) {
+            console.warn("ExtensionManager: Source not found:", url)
+            return false
+        }
+        root.pluginSources = newSources
+        root.syncPluginsAdapter()
+        root.pluginSourceRemoved(url)
+        return true
+    }
+
+    function setPluginSourceEnabled(url, enabled) {
+        let found = false
+        let newSources = root.pluginSources.slice()
+        for (let i = 0; i < newSources.length; i++) {
+            if (newSources[i].url === url) {
+                newSources[i] = { name: newSources[i].name, url: newSources[i].url, enabled: enabled }
+                found = true
+                break
+            }
+        }
+        if (!found) {
+            console.warn("ExtensionManager: Source not found:", url)
+            return false
+        }
+        root.pluginSources = newSources
+        root.syncPluginsAdapter()
+        root.pluginSourceToggled(url, enabled)
+        return true
+    }
+
+    function getEnabledPluginSources() {
+        let enabled = []
+        for (let i = 0; i < root.pluginSources.length; i++) {
+            if (root.pluginSources[i].enabled !== false) {
+                enabled.push(root.pluginSources[i])
+            }
+        }
+        return enabled
+    }
+
+    // ── Registry Discovery (Fetch available plugins from sources) ──
+
+    function fetchAvailablePlugins() {
+        if (!Config.options.extensions.enable) return
+        if (root._registryFetching) {
+            console.log("ExtensionManager: Registry fetch already in progress")
+            return
+        }
+
+        root._registryFetching = true
+        root.availablePlugins = []
+
+        let enabledSources = root.getEnabledPluginSources()
+        console.log("ExtensionManager: Fetching from", enabledSources.length, "sources")
+
+        for (let i = 0; i < enabledSources.length; i++) {
+            root._fetchSingleRegistry(enabledSources[i])
+        }
+
+        // If no sources, mark as done
+        if (enabledSources.length === 0) {
+            root._registryFetching = false
+            root.availablePluginsUpdated()
+        }
+    }
+
+    function _fetchSingleRegistry(source) {
+        let repoUrl = source.url
+        let tempDir = "/tmp/quickshell-registry-" + Date.now() + "-" + Math.random().toString(36).substr(2, 6)
+
+        let process = Qt.createQmlObject(`
+            import QtQuick
+            import Quickshell.Io
+            Process {
+                command: ["sh", "-c", "mkdir -p ${tempDir} && GIT_TERMINAL_PROMPT=0 git clone --filter=blob:none --sparse --depth=1 --quiet '${repoUrl}' '${tempDir}' 2>/dev/null && cd '${tempDir}' && git sparse-checkout set --no-cone /registry.json 2>/dev/null && cat '${tempDir}/registry.json' 2>/dev/null; rm -rf '${tempDir}'"]
+                stdout: StdioCollector {}
+            }
+        `, root, "FetchRegistry_" + source.name.replace(/[^a-zA-Z0-9]/g, "_"))
+
+        root._activeRegistryFetches[source.url] = process
+
+        process.stdout.onStreamFinished.connect(function() {
+            let response = process.stdout.text || ""
+            if (response.trim()) {
+                try {
+                    let registry = JSON.parse(response)
+                    if (registry && registry.plugins && Array.isArray(registry.plugins)) {
+                        for (let p = 0; p < registry.plugins.length; p++) {
+                            let plugin = registry.plugins[p]
+                            plugin.source = source
+                            plugin.sourceName = source.name
+                            plugin.downloaded = !!root.installedExtensions[plugin.id]
+                            plugin.enabled = root.installedExtensions?.[plugin.id]?.enabled ?? false
+                            root.availablePlugins.push(plugin)
+                        }
+                        console.log("ExtensionManager: Parsed", registry.plugins.length, "plugins from", source.name)
+                    }
+                } catch (e) {
+                    console.error("ExtensionManager: Failed to parse registry from", source.name, ":", e)
+                }
+            } else {
+                console.log("ExtensionManager: No registry.json found in", source.name)
+            }
+
+            delete root._activeRegistryFetches[source.url]
+            process.destroy()
+
+            // Check if all fetches complete
+            if (Object.keys(root._activeRegistryFetches).length === 0) {
+                root._registryFetching = false
+                root.availablePluginsUpdated()
+            }
+        })
+
+        process.exited.connect(function(exitCode) {
+            if (exitCode !== 0) {
+                console.warn("ExtensionManager: Failed to fetch registry from", source.name, "(exit:", exitCode, ")")
+                delete root._activeRegistryFetches[source.url]
+                process.destroy()
+                if (Object.keys(root._activeRegistryFetches).length === 0) {
+                    root._registryFetching = false
+                    root.availablePluginsUpdated()
+                }
+            }
+        })
+
+        process.running = true
+    }
+
+    // ── Plugin Error Tracking ──
+
+    function addPluginError(pluginId, entryPoint, error) {
+        let errors = Object.assign({}, root.pluginErrors)
+        if (!errors[pluginId]) errors[pluginId] = []
+        errors[pluginId].push({
+            error: error,
+            entryPoint: entryPoint,
+            timestamp: new Date().toISOString()
+        })
+        root.pluginErrors = errors
+    }
+
+    function clearPluginError(pluginId, entryPoint) {
+        if (!root.pluginErrors[pluginId]) return
+        let errors = Object.assign({}, root.pluginErrors)
+        if (entryPoint) {
+            errors[pluginId] = errors[pluginId].filter(e => e.entryPoint !== entryPoint)
+            if (errors[pluginId].length === 0) delete errors[pluginId]
+        } else {
+            delete errors[pluginId]
+        }
+        root.pluginErrors = errors
+    }
+
+    function clearAllPluginErrors() {
+        root.pluginErrors = {}
+    }
+
     // ── Processes ──
 
     Process {
-        id: installProc
+        id: moveProc
         property string _pendingExtId: ""
         property string _pendingDest: ""
+        property string _pendingTempDest: ""
         property string _pendingRepoUrl: ""
         property string _pendingBranch: "main"
         property string _pendingHtmlUrl: ""
         property bool _pendingIsCustomUrl: false
         onExited: (exitCode, _) => {
             if (exitCode === 0) {
-                installReader._pendingExtId = installProc._pendingExtId
-                installReader._pendingDest = installProc._pendingDest
-                installReader._pendingRepoUrl = installProc._pendingRepoUrl
-                installReader._pendingBranch = installProc._pendingBranch
-                installReader._pendingHtmlUrl = installProc._pendingHtmlUrl
-                installReader._pendingIsCustomUrl = installProc._pendingIsCustomUrl
-                installReader.path = installProc._pendingDest + "/extension.json"
+                installReader._pendingExtId = _pendingExtId
+                installReader._pendingDest = _pendingDest
+                installReader._pendingRepoUrl = _pendingRepoUrl
+                installReader._pendingBranch = _pendingBranch
+                installReader._pendingHtmlUrl = _pendingHtmlUrl
+                installReader._pendingIsCustomUrl = _pendingIsCustomUrl
+                installReader.path = _pendingDest + "/extension.json"
+                installReader.reload()
+            } else {
+                root.error = "Failed to move plugin subdirectory"
+                root.loading = false
+            }
+        }
+    }
+
+    Process {
+        id: installProc
+        property string _pendingExtId: ""
+        property string _pendingDest: ""
+        property string _pendingTempDest: ""
+        property string _pendingRepoUrl: ""
+        property string _pendingBranch: "main"
+        property string _pendingHtmlUrl: ""
+        property bool _pendingIsCustomUrl: false
+        onExited: (exitCode, _) => {
+            if (exitCode === 0) {
+                moveProc._pendingExtId = _pendingExtId
+                moveProc._pendingDest = _pendingDest
+                moveProc._pendingTempDest = _pendingTempDest
+                moveProc._pendingRepoUrl = _pendingRepoUrl
+                moveProc._pendingBranch = _pendingBranch
+                moveProc._pendingHtmlUrl = _pendingHtmlUrl
+                moveProc._pendingIsCustomUrl = _pendingIsCustomUrl
+                moveProc.exec(["sh", "-c", "mkdir -p '" + _pendingDest + "' && cp -r '" + _pendingTempDest + "/" + _pendingExtId + "/'. '" + _pendingDest + "/' && rm -rf '" + _pendingTempDest + "'"])
             } else {
                 root.error = "Git clone failed (exit " + exitCode + ")"
                 root.loading = false
@@ -615,9 +853,18 @@ Singleton {
             root.extensionWidgetConfigs = extensionsAdapter.extensionWidgetConfigs || {}
             root.extensionOverlayConfigs = extensionsAdapter.extensionOverlayConfigs || {}
             root.extensionConfigs = extensionsAdapter.extensionConfigs || {}
+            root.pluginSources = extensionsAdapter.pluginSources || []
             let cache = extensionsAdapter.searchCache
             ExtensionSearch.loadFromCache(cache)
             ExtensionAudit.fetchAuditDatabase()
+
+            // Ensure default source exists
+            if (root.pluginSources.length === 0) {
+                root.pluginSources = [
+                    { name: root.defaultSourceName, url: root.defaultSourceUrl, enabled: true }
+                ]
+                root.syncPluginsAdapter()
+            }
 
             if (!root.ready) {
                 root.ready = true
@@ -644,6 +891,7 @@ Singleton {
             property var extensionWidgetConfigs: ({})
             property var extensionOverlayConfigs: ({})
             property var extensionConfigs: ({})
+            property var pluginSources: []
         }
     }
 

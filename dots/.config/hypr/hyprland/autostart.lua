@@ -1,3 +1,6 @@
+-- Auto-start config
+-- if you dont use UWSM add your auto start programs here, otherwise use XDG autostart https://wiki.archlinux.org/title/XDG_Autostart
+
 -- Autostart
 
 hl.on("hyprland.start", function()
@@ -17,6 +20,9 @@ hl.on("hyprland.start", function()
   -- hl.exec_cmd("systemctl --user start quickshell-ii.service")
   hl.exec_cmd("~/.config/hypr/hyprland/scripts/start_geoclue_agent.sh")
   hl.exec_cmd("sleep 1 && ~/.config/waybar/scripts/wallpaper.sh --restore")
+  hl.exec_cmd("qs -c noctalia-shell")
+  hl.exec_cmd("xhost +SI:localuser:root")
+
 
   -- ─── Auth & Keyring ─────────────────────────────
   hl.exec_cmd("gnome-keyring-daemon --start --components=secrets")
@@ -27,8 +33,7 @@ hl.on("hyprland.start", function()
   hl.exec_cmd("easyeffects --hide-window --service-mode")
   -- Android notification ding on every notification
   hl.exec_cmd("~/.config/hypr/scripts/osrs-notify-sound.sh")
-  hl.exec_cmd("wl-paste --type text --watch bash -c 'cliphist store && qs -c $qsConfig ipc call cliphistService update'")
-  hl.exec_cmd("wl-paste --type image --watch bash -c 'cliphist store && qs -c $qsConfig ipc call cliphistService update'")
+  -- Clipboard watching is handled by Noctalia Shell's built-in clipboard service
 
   -- ─── Apps ───────────────────────────────────────
   hl.exec_cmd("sleep 1 && uwsm app -- thunderbird")

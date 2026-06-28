@@ -1,6 +1,3 @@
--- ─── Config ────────────────────────────────────
-hl.env("qsConfig", "ii")
-
 -- ─── Apps ──────────────────────────────────────
 terminal = "kitty"
 fileManager = "dolphin"
@@ -8,7 +5,7 @@ browser = "google-chrome-stable --remote-debugging-port=9222 --user-data-dir=/ho
 codeEditor = "kate"
 textEditor = "kate"
 volumeMixer = "pavucontrol-qt"
-settingsApp = "qs -p ~/.config/quickshell/ii/settings-launcher.qml"
+settingsApp = "qs -c noctalia-shell ipc call settings toggle"
 taskManager = "kitty -1 fish -c btop"
 
 workspaceGroupSize = 10

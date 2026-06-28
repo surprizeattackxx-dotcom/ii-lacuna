@@ -34,7 +34,7 @@ Item {
     }
     property string _stateText: ""
     FileView {
-        path: root.statePath
+        path: screen?.name ? root.statePath : ""
         watchChanges: true
         onFileChanged: reload()
         onLoaded: root._stateText = text() ?? ""

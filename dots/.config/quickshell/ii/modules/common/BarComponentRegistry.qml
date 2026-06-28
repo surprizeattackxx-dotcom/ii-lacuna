@@ -7,6 +7,7 @@ Singleton {
     id: root
 
     readonly property var builtinComponents: [
+        { id: "control_center", icon: "control_camera", title: "Control Center" },
         { id: "policies_panel_button", icon: "star", title: "Policies panel button" },
         { id: "active_window", icon: "label", title: "Active window" },
         { id: "music_player", icon: "music_note", title: "Music player" },
@@ -25,6 +26,18 @@ Singleton {
         { id: "system_updates", icon: "system_update_alt", title: "System Updates" },
         { id: "localsend", icon: "devices", title: "LocalSend" },
         { id: "network_speed", icon: "speed", title: "Network speed" },
+        { id: "volume", icon: "volume_up", title: "Volume" },
+        { id: "bluetooth", icon: "bluetooth", title: "Bluetooth" },
+        { id: "network", icon: "wifi", title: "Network" },
+        { id: "night_light", icon: "nightlight", title: "Night Light" },
+        { id: "brightness", icon: "brightness_high", title: "Brightness" },
+        { id: "dark_mode", icon: "contrast", title: "Dark Mode" },
+        { id: "microphone", icon: "mic", title: "Microphone" },
+        { id: "keyboard_layout", icon: "keyboard", title: "Keyboard Layout" },
+        { id: "power_profile", icon: "bolt", title: "Power Profile" },
+        { id: "settings", icon: "settings", title: "Settings" },
+        { id: "spacer", icon: "space_bar", title: "Spacer" },
+        { id: "audio_visualizer", icon: "graphic_eq", title: "Audio Visualizer" },
     ]
 
     property var extensionComponents: []

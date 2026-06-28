@@ -81,9 +81,9 @@ Scope {
                 property bool mustShow: hoverRegion.containsMouse || superShow
                 exclusionMode: ExclusionMode.Ignore
                 exclusiveZone: (Config?.options.bar.autoHide.enable && (!mustShow || !Config?.options.bar.autoHide.pushWindows)) ? 0 :
-                    Appearance.sizes.baseBarHeight + (Config.options.bar.cornerStyle === 1 ? Appearance.sizes.hyprlandGapsOut : 0)
+                    Appearance.sizes.baseBarHeight + (Config.options.bar.barType === "floating" ? Appearance.sizes.hyprlandGapsOut : 0)
                 WlrLayershell.namespace: "quickshell:bar"
-                implicitHeight: Appearance.sizes.barHeight + (Config.options.bar.cornerStyle === 0 ? Appearance.rounding.screenRounding : 0)
+                implicitHeight: Appearance.sizes.barHeight + (Config.options.bar.barType !== "floating" ? Appearance.rounding.screenRounding : 0)
                 // Full-strip mask so scrolling on empty bar space still hits the wheel handler
                 mask: Region { item: barContent }
                 color: "transparent"
@@ -189,7 +189,7 @@ Scope {
                             bottom: undefined
                         }
                         height: Appearance.rounding.screenRounding
-                        active: showBarBackground && Config.options.bar.cornerStyle === 0 // Hug
+                        active: showBarBackground && Config.options.bar.barType !== "floating"
 
                         states: State {
                             name: "bottom"

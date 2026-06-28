@@ -195,6 +195,7 @@ Singleton {
         property int unsharpenmore: Config.options.appearance.sharpMode ? 0 : 6
         property int verysmall: Config.options.appearance.sharpMode ? 0 : 10
         property int small: Config.options.appearance.sharpMode ? 0 : 14
+        property int medium: Config.options.appearance.sharpMode ? 0 : 17
         property int normal: Config.options.appearance.sharpMode ? 0 : 20
         property int large: Config.options.appearance.sharpMode ? 0 : 28
         property int verylarge: Config.options.appearance.sharpMode ? 0 : 36
@@ -362,8 +363,13 @@ Singleton {
     }
 
     sizes: QtObject {
-        property real baseBarHeight: Config.options.bar.sizes.height
-        property real barHeight: Config.options.bar.cornerStyle === 1 ? 
+        readonly property real densityMultiplier: Config.options.bar.density === "mini" ? 0.6
+            : Config.options.bar.density === "compact" ? 0.8
+            : Config.options.bar.density === "comfortable" ? 1.2
+            : Config.options.bar.density === "spacious" ? 1.5
+            : 1.0
+        property real baseBarHeight: Config.options.bar.sizes.height * root.sizes.densityMultiplier
+        property real barHeight: Config.options.bar.barType === "floating" ? 
             (baseBarHeight + root.sizes.hyprlandGapsOut * 2) : baseBarHeight
         property real barCenterSideModuleWidth: Config.options?.bar.verbose ? 360 : 140
         property real barCenterSideModuleWidthShortened: 280
@@ -383,8 +389,8 @@ Singleton {
         property real sidebarWidth: 460
         property real sidebarWidthExpanded: 570 
         property real sidebarWidthExtended: 750
-        property real baseVerticalBarWidth: Config.options.bar.sizes.width
-        property real verticalBarWidth: Config.options.bar.cornerStyle === 1 ? 
+        property real baseVerticalBarWidth: Config.options.bar.sizes.width * root.sizes.densityMultiplier
+        property real verticalBarWidth: Config.options.bar.barType === "floating" ? 
             (baseVerticalBarWidth + root.sizes.hyprlandGapsOut * 2) : baseVerticalBarWidth
         property real wallpaperSelectorWidth: 1200
         property real wallpaperSelectorHeight: 690

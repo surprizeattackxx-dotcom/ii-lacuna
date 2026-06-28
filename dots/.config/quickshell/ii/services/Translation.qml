@@ -52,7 +52,17 @@ Singleton {
         translationFileView.languageCode = root.languageCode;
         generatedTranslationFileView.languageCode = root.languageCode;
         translationFileView.reread();
-        generatedTranslationFileView.reread();
+        if (root.availableGeneratedLanguages.includes(root.languageCode)) {
+            generatedTranslationFileView.reread();
+        } else {
+            root.generatedTranslations = {};
+        }
+    }
+
+    onAvailableGeneratedLanguagesChanged: {
+        if (root.availableGeneratedLanguages.includes(root.languageCode)) {
+            generatedTranslationFileView.reread();
+        }
     }
 
     TranslationReader {

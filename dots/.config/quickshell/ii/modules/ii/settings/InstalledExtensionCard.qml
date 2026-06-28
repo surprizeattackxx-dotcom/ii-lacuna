@@ -17,6 +17,7 @@ Item {
     property bool updateAvailable: updateState.updateAvailable || false
     property bool expanded: false
     readonly property bool hasConfigSchema: ext.configSchema && Object.keys(ext.configSchema).length > 0
+    readonly property bool hasErrors: ExtensionManager.pluginErrors?.[ext.id]?.length > 0
     readonly property string _auditState: {
         ExtensionAudit.auditDbVersion
         if (!ExtensionAudit.auditDatabaseReady) return ""
@@ -105,6 +106,13 @@ Item {
                             icon: "folder"
                             tooltip: Translation.tr("Local path extension — files linked from your filesystem")
                             visible: ext.isLocal
+                        }
+                        ExtensionBadge {
+                            icon: "warning"
+                            bgColor: Appearance.colors.colErrorContainer
+                            fgColor: Appearance.colors.colError
+                            tooltip: Translation.tr("This extension has errors. Check the error details.")
+                            visible: root.hasErrors
                         }
                     }
 

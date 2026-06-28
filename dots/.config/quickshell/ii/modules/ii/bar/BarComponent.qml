@@ -9,6 +9,7 @@ import qs.modules.ii.bar.weather
 import qs.modules.ii.bar
 
 import qs.modules.ii.verticalBar as Vertical
+import qs.modules.ii.controlCenter
 
 Item {
     id: rootItem
@@ -63,6 +64,7 @@ Item {
     }
 
     property var compMap: ({ // [horizontal, vertical]
+        "control_center": [controlCenterToggle, controlCenterToggle],
         "workspaces": [workspaceComp,workspaceComp],
         "music_player": [musicPlayerComp, musicPlayerCompVert],
         "system_monitor": [systemMonitorComp, systemMonitorCompVert],
@@ -81,6 +83,18 @@ Item {
         "system_updates": [systemUpdatesComp, systemUpdatesComp],
         "localsend": [localsendComp, localsendCompVert],
         "network_speed": [networkSpeedComp, networkSpeedComp],
+        "volume": [volumeComp, volumeComp],
+        "bluetooth": [bluetoothComp, bluetoothComp],
+        "network": [networkComp, networkComp],
+        "night_light": [nightLightComp, nightLightComp],
+        "brightness": [brightnessComp, brightnessComp],
+        "dark_mode": [darkModeComp, darkModeComp],
+        "microphone": [microphoneComp, microphoneComp],
+        "keyboard_layout": [keyboardLayoutComp, keyboardLayoutComp],
+        "power_profile": [powerProfileComp, powerProfileComp],
+        "settings": [settingsComp, settingsComp],
+        "spacer": [spacerComp, spacerComp],
+        "audio_visualizer": [audioVisualizerComp, audioVisualizerComp],
     })
 
     property real startRadius: {
@@ -197,6 +211,8 @@ Item {
 
         Component { id: workspaceComp; Workspaces { vertical: rootItem.vertical } }
 
+        Component { id: controlCenterToggle; ControlCenterToggle {} }
+
         Component { id: policiesPanelButton; PoliciesPanelButton {} }
 
         Component { id: systemUpdatesComp; SystemUpdates {} }
@@ -208,4 +224,17 @@ Item {
         Component { id: localsendCompVert; Vertical.LocalSendWidget {} }
 
         Component { id: networkSpeedComp; NetworkSpeed { vertical: rootItem.vertical } }
+
+        Component { id: volumeComp; VolumeWidget { vertical: rootItem.vertical } }
+        Component { id: bluetoothComp; BluetoothWidget { vertical: rootItem.vertical } }
+        Component { id: networkComp; NetworkWidget { vertical: rootItem.vertical } }
+        Component { id: nightLightComp; NightLightWidget { vertical: rootItem.vertical } }
+        Component { id: brightnessComp; BrightnessWidget { vertical: rootItem.vertical } }
+        Component { id: darkModeComp; DarkModeWidget { vertical: rootItem.vertical } }
+        Component { id: microphoneComp; MicrophoneWidget { vertical: rootItem.vertical } }
+        Component { id: keyboardLayoutComp; KeyboardLayoutWidget { vertical: rootItem.vertical } }
+        Component { id: powerProfileComp; PowerProfileWidget { vertical: rootItem.vertical } }
+        Component { id: settingsComp; SettingsWidget { vertical: rootItem.vertical } }
+        Component { id: spacerComp; SpacerWidget { vertical: rootItem.vertical } }
+        Component { id: audioVisualizerComp; AudioVisualizerWidget { vertical: rootItem.vertical } }
 }

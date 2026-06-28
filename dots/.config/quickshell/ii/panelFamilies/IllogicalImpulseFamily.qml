@@ -1,6 +1,7 @@
 import QtQuick
 import Quickshell
 
+import qs.services
 import qs.modules.common
 import qs.modules.ii.background
 import qs.modules.ii.bar
@@ -28,50 +29,58 @@ import qs.modules.ii.wallpaperChanger
 import qs.modules.ii.wrappedFrame
 import qs.modules.ii.appLauncher
 import qs.modules.ii.gameLauncher
+import qs.modules.ii.controlCenter
 
-Scope {
-    property bool barExtraCondition: true
-    readonly property bool usingWrappedFrame: Config.options.appearance.fakeScreenRounding === 3
-    readonly property bool barBot: Config.options.bar.bottom
-    readonly property bool barVert: Config.options.bar.vertical
+Item {
+    // NoctaliaBridge must always be active
+    NoctaliaBridge {}
 
-    Component.onCompleted: Qt.callLater(() => updateBarExtraCondition())
-    onUsingWrappedFrameChanged: updateBarExtraCondition()
-    onBarBotChanged: updateBarExtraCondition()
-    onBarVertChanged: updateBarExtraCondition()
+    Scope {
+        id: rootScope
+        property bool barExtraCondition: true
+        readonly property bool usingWrappedFrame: Config.options.appearance.fakeScreenRounding === 3
+        readonly property bool barBot: Config.options.bar.bottom
+        readonly property bool barVert: Config.options.bar.vertical
 
-    function updateBarExtraCondition() {
-        if (!usingWrappedFrame) return
+        Component.onCompleted: Qt.callLater(() => updateBarExtraCondition())
+        onUsingWrappedFrameChanged: updateBarExtraCondition()
+        onBarBotChanged: updateBarExtraCondition()
+        onBarVertChanged: updateBarExtraCondition()
 
-        barExtraCondition = false
-        Qt.callLater(() => barExtraCondition = true)
+        function updateBarExtraCondition() {
+            if (!usingWrappedFrame) return
+
+            barExtraCondition = false
+            Qt.callLater(() => barExtraCondition = true)
+        }
+
+        PanelLoader { extraCondition: !Config.options.bar.vertical && rootScope.barExtraCondition; component: Bar {} }
+        PanelLoader { component: Background {} }
+        PanelLoader { component: WpeWidgetOverlay {} }
+        PanelLoader { component: Cheatsheet {} }
+        PanelLoader { extraCondition: Config.options.dock.enable; component: Dock {} }
+        PanelLoader { component: Lock {} }
+        PanelLoader { component: ControlCenterPanel {} }
+        PanelLoader { component: MediaControls {} }
+        PanelLoader { component: NotificationPopup {} }
+        PanelLoader { component: BluetoothPopup {} }
+        PanelLoader { component: OnScreenDisplay {} }
+        PanelLoader { component: OnScreenKeyboard {} }
+        PanelLoader { component: Overlay {} }
+        PanelLoader { component: Overview {} }
+        PanelLoader { component: Polkit {} }
+        PanelLoader { component: RegionSelector {} }
+        PanelLoader { component: ScreenCorners {} }
+        PanelLoader { component: ScreenTranslator {} }
+        PanelLoader { component: SessionScreen {} }
+        PanelLoader { component: SidebarPolicies {} }
+        PanelLoader { component: CalendarApp {} }
+        PanelLoader { component: SidebarDashboard {} }
+        PanelLoader { extraCondition: Config.options.bar.vertical && rootScope.barExtraCondition; component: VerticalBar {} }
+        PanelLoader { component: AppLauncher {} }
+        PanelLoader { component: GameLauncher {} }
+        PanelLoader { component: WallpaperSelector {} }
+        PanelLoader { component: WrappedFrame {} }
+        PanelLoader { component: WallpaperChanger {} }
     }
-
-    PanelLoader { extraCondition: !Config.options.bar.vertical && barExtraCondition; component: Bar {} }
-    PanelLoader { component: Background {} }
-    PanelLoader { component: WpeWidgetOverlay {} }
-    PanelLoader { component: Cheatsheet {} }
-    PanelLoader { extraCondition: Config.options.dock.enable; component: Dock {} }
-    PanelLoader { component: Lock {} }
-    PanelLoader { component: MediaControls {} }
-    PanelLoader { component: NotificationPopup {} }
-    PanelLoader { component: BluetoothPopup {} }
-    PanelLoader { component: OnScreenDisplay {} }
-    PanelLoader { component: OnScreenKeyboard {} }
-    PanelLoader { component: Overlay {} }
-    PanelLoader { component: Overview {} }
-    PanelLoader { component: Polkit {} }
-    PanelLoader { component: RegionSelector {} }
-    PanelLoader { component: ScreenCorners {} }
-    PanelLoader { component: ScreenTranslator {} }
-    PanelLoader { component: SessionScreen {} }
-    PanelLoader { component: SidebarPolicies {} }
-    PanelLoader { component: CalendarApp {} }
-    PanelLoader { component: SidebarDashboard {} }
-    PanelLoader { extraCondition: Config.options.bar.vertical && barExtraCondition; component: VerticalBar {} }
-    PanelLoader { component: AppLauncher {} }
-    PanelLoader { component: GameLauncher {} }
-    PanelLoader { component: WallpaperSelector {} }
-    PanelLoader { component: WrappedFrame {} }
-    PanelLoader { component: WallpaperChanger {} }
 }

@@ -31,7 +31,7 @@ Variants {
         required property var modelData
 
         // Hide when fullscreen
-        property list<HyprlandWorkspace> workspacesForMonitor: Hyprland.workspaces.values.filter(workspace => workspace.monitor && workspace.monitor.name == monitor.name)
+        property list<HyprlandWorkspace> workspacesForMonitor: Hyprland.workspaces.values.filter(workspace => workspace.monitor && workspace.monitor.name == (monitor?.name ?? ""))
         property var activeWorkspaceWithFullscreen: workspacesForMonitor.filter(workspace => ((workspace.toplevels.values.filter(window => window.wayland?.fullscreen)[0] != undefined) && workspace.active))[0]
         visible: GlobalStates.screenLocked || (!(activeWorkspaceWithFullscreen != undefined)) || !Config?.options.background.hideWhenFullscreen
 
@@ -191,12 +191,12 @@ Variants {
         // Falls back to global Config values when the file is missing or a widget has no entry.
         readonly property string widgetStatePath: {
             const stateDir = CF.FileUtils.trimFileProtocol(Directories.state).replace(/\/$/, "");
-            const p = `${stateDir}/user/generated/widgets/monitors/${bgRoot.monitor.name}.json`;
+            const p = `${stateDir}/user/generated/widgets/monitors/${bgRoot.monitor?.name ?? ""}.json`;
             return p;
         }
         FileView {
             id: widgetStateFile
-            path: bgRoot.widgetStatePath
+            path: bgRoot.monitor?.name ? bgRoot.widgetStatePath : ""
             blockLoading: true
             watchChanges: true
             onFileChanged: reload()
@@ -216,13 +216,13 @@ Variants {
         // Falls back to global Config wallpaperPath when file is missing.
         readonly property string wallpaperStatePath: {
             const stateDir = CF.FileUtils.trimFileProtocol(Directories.state).replace(/\/$/, "");
-            return `${stateDir}/user/generated/wallpaper/monitors/${bgRoot.monitor.name}.json`;
+            return `${stateDir}/user/generated/wallpaper/monitors/${bgRoot.monitor?.name ?? ""}.json`;
         }
         property int _stateFileVersion: 0
         property string _wallpaperStateText: ""
         FileView {
             id: wallpaperStateFile
-            path: bgRoot.wallpaperStatePath
+            path: bgRoot.monitor?.name ? bgRoot.wallpaperStatePath : ""
             blockLoading: true
             watchChanges: true
             onFileChanged: {

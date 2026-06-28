@@ -36,6 +36,7 @@ Singleton {
     property string interfaceConfigPath: FileUtils.trimFileProtocol(`${Directories.config}/quickshell/ii/modules/settings/InterfaceConfig.qml`)
     property string servicesConfigPath: FileUtils.trimFileProtocol(`${Directories.config}/quickshell/ii/modules/settings/ServicesConfig.qml`)
     property string advancedConfigPath: FileUtils.trimFileProtocol(`${Directories.config}/quickshell/ii/modules/settings/AdvancedConfig.qml`)
+    property string settingsPortalPath: FileUtils.trimFileProtocol(`${Directories.config}/quickshell/noctalia-shell/settings-portal.qml`)
 
     // Hyprland config path (runtime, not project dots/)
     readonly property string hyprConfig: FileUtils.trimFileProtocol(`${Directories.config}/hypr`)

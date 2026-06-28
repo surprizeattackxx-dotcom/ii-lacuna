@@ -4,33 +4,34 @@ import QtQuick.Layouts
 import qs.services
 import qs.modules.common
 import qs.modules.common.widgets
-import qs.modules.common.functions
+import qs.modules.common.functions as CF
 import qs.modules.ii.settings
+import QtQuick.Controls as QQC2
 
 ContentPage {
     id: page
-    readonly property int index: 8
+    readonly property int index: 6
     property bool register: parent.register ?? false
     forceWidth: true
 
-    property string searchText: ""
-    property var filteredExtensions: []
-    property bool showCustomUrlInput: false
+    property int activeTab: 0
+    readonly property var tabs: [
+        { id: "installed", label: Translation.tr("Installed"), icon: "download" },
+        { id: "available", label: Translation.tr("Available"), icon: "explore" },
+        { id: "sources", label: Translation.tr("Sources"), icon: "source" }
+    ]
 
     function installFromUrl() {
         let input = customUrlField.textFieldText.trim()
         if (!input) return
 
-        // Detect if input is a URL (http/https/git) or a local path
         if (input.match(/^(https?:\/\/|git@|git:\/\/)/)) {
-            // URL — install via git clone
             let url = input
             let parts = url.replace(/\.git$/, "").split("/")
             let repoName = parts[parts.length - 1]
             if (!repoName) return
             ExtensionManager.installExtension(url, repoName, "main", url, true)
         } else {
-            // Local path — register directly
             ExtensionManager.installLocalExtension(input)
         }
 
@@ -38,146 +39,140 @@ ContentPage {
         customUrlField.textFieldText = ""
     }
 
-    Component.onCompleted: {
-        if (!ExtensionManager.ready) return
-        if (!Config.options.extensions.enable) { page.filter(); return }
-        if (ExtensionSearch.availableExtensions.length === 0) {
-            ExtensionSearch.refreshAvailableExtensions()
-        }
-        ExtensionManager.checkAllUpdates()
-        page.filter()
-    }
-
-    Connections {
-        target: ExtensionManager
-        function onReadyChanged() { if (ExtensionManager.ready) page.filter() }
-        function onExtensionInstalled(extId) { page.filter() }
-        function onExtensionRemoved(extId) { page.filter() }
-        function onExtensionToggled(extId) { page.filter() }
-        function onUpdateCheckDone(extId, available, error) { page.filter() }
-    }
-
-    Connections {
-        target: ExtensionSearch
-        function onExtensionSearchDone() { page.filter() }
-        function onExtensionJsonReady(repoId) { page.filter() }
-    }
-
-    function filter() {
-        if (!Config.options.extensions.enable) { page.filteredExtensions = []; return }
-        let installed = ExtensionManager.installedExtensions
-        let list = ExtensionSearch.availableExtensions
-
-        // Exclude installed extensions
-        let installedIds = {}
-        for (let id in installed) {
-            installedIds[installed[id].name] = true
-            installedIds[installed[id].id] = true
-        }
-        list = list.filter(e => !installedIds[e.name])
-
-        // Filter by search text
-        if (page.searchText.trim()) {
-            let q = page.searchText.toLowerCase().trim()
-            list = list.filter(e =>
-                e.name.toLowerCase().includes(q) ||
-                e.fullName.toLowerCase().includes(q) ||
-                e.description.toLowerCase().includes(q) ||
-                e.displayName?.toLowerCase().includes(q)
-            )
-        }
-        page.filteredExtensions = list
-    }
+    property bool showCustomUrlInput: false
 
     ContentSection {
         icon: "extension"
-        title: Translation.tr("Extensions (beta)")
+        title: Translation.tr("Extensions")
 
-        ButtonGroup {
-            enabled: Config.options.extensions.enable
-            Layout.topMargin: 10
+        // Tab bar
+        Flow {
             Layout.fillWidth: true
+            Layout.topMargin: 8
+            spacing: 6
 
-            GroupButtonWithIcon {
-                buttonIcon: "info"
-                baseHeight: 44
-                extraWidth: 26
-                onClicked: Qt.openUrlExternally("https://github.com/vaguesyntax/ii-vynx/blob/main/.github/EXTENSIONS.md")
-                StyledToolTip { text: Translation.tr("Developer documentation to develop extensions") }
-            }
+            Repeater {
+                model: page.tabs
+                delegate: Rectangle {
+                    required property var modelData
+                    required property int index
+                    implicitHeight: 32
+                    implicitWidth: tabLabel.implicitWidth + 32
+                    radius: Appearance.rounding.full
+                    color: page.activeTab === index ? Appearance.colors.colPrimaryContainer : Appearance.colors.colLayer2
 
-            GroupButtonWithIcon {
-                buttonIcon: "link"
-                baseHeight: 44
-                extraWidth: 26
-                onClicked: page.showCustomUrlInput = !page.showCustomUrlInput
-                toggled: page.showCustomUrlInput
-                StyledToolTip { text: Translation.tr("Install from custom URL (for developers)") }
-            }
+                    RowLayout {
+                        anchors.centerIn: parent
+                        spacing: 4
 
-            GroupButtonWithTextField {
-                buttonIcon: "search"
-                buttonText: Translation.tr("Search extensions...")
-                Layout.fillWidth: true
-                
-                onTextChanged: text => {
-                    page.searchText = text
-                    Qt.callLater(() => page.filter())
+                        MaterialSymbol {
+                            text: modelData.icon
+                            iconSize: 16
+                            color: page.activeTab === index ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colSubtext
+                        }
+                        StyledText {
+                            id: tabLabel
+                            text: modelData.label
+                            font.pixelSize: Appearance.font.pixelSize.smaller
+                            color: page.activeTab === index ? Appearance.colors.colOnPrimaryContainer : Appearance.colors.colSubtext
+                        }
+                    }
+
+                    MouseArea {
+                        anchors.fill: parent
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: page.activeTab = index
+                    }
                 }
             }
 
-            GroupButtonWithIcon {
-                Layout.fillWidth: true
-                baseHeight: 44
-                extraWidth: 26
-                buttonIcon: ExtensionManager.loading ? "hourglass_bottom" : "refresh"
-                toggled: ExtensionManager.loading
-                onClicked: ExtensionSearch.refreshAvailableExtensions()
-                StyledToolTip { text: Translation.tr("Refresh extension list") }
+            Item { Layout.fillWidth: true }
+
+            // Custom URL install button
+            RippleButton {
+                implicitHeight: 32
+                padding: 12
+                buttonRadius: Appearance.rounding.full
+                colBackground: "transparent"
+                colBackgroundHover: Appearance.colors.colLayer2
+                contentItem: RowLayout {
+                    spacing: 4
+                    MaterialSymbol {
+                        text: "link"
+                        iconSize: 16
+                        color: Appearance.colors.colSubtext
+                    }
+                    StyledText {
+                        text: Translation.tr("Install from URL")
+                        font.pixelSize: Appearance.font.pixelSize.smaller
+                        color: Appearance.colors.colSubtext
+                    }
+                }
+                onClicked: page.showCustomUrlInput = !page.showCustomUrlInput
             }
         }
 
-        ButtonGroup {
-            id: urlInputLayout
-            enabled: Config.options.extensions.enable
-            clip: true
+        // Custom URL input
+        Rectangle {
             Layout.fillWidth: true
-            implicitHeight: page.showCustomUrlInput ? 44 : 0
-            Behavior on implicitHeight { 
-                animation: Appearance.animation.elementMoveFast.numberAnimation.createObject(this)
-            }
+            visible: page.showCustomUrlInput
+            implicitHeight: 44
+            radius: Appearance.rounding.small
+            color: Appearance.colors.colLayer2
 
-            GroupButtonWithTextField {
-                id: customUrlField
-                buttonIcon: "add"
-                buttonText: Translation.tr("GitHub URL or local path")
-                Layout.fillWidth: true
-                
-                onAccepted: page.installFromUrl()
-            }
+            RowLayout {
+                anchors.fill: parent
+                anchors.margins: 4
+                spacing: 4
 
-            GroupButtonWithIcon {
-                Layout.fillWidth: true
-                baseHeight: 44
-                extraWidth: 26
-                buttonIcon: "download"
-                onClicked: page.installFromUrl()
-                StyledToolTip { text: Translation.tr("Install a custom extension") }
+                Rectangle {
+                    Layout.fillWidth: true
+                    implicitHeight: 36
+                    radius: Appearance.rounding.small
+                    color: Appearance.colors.colLayer3
+
+                    QQC2.TextField {
+                        id: customUrlField
+                        anchors { fill: parent; leftMargin: 10; rightMargin: 10 }
+                        verticalAlignment: TextInput.AlignVCenter
+                        font.pixelSize: Appearance.font.pixelSize.small
+                        color: Appearance.colors.colOnLayer0
+                        placeholderText: Translation.tr("GitHub URL or local path")
+                        background: null
+                        onAccepted: page.installFromUrl()
+                    }
+                }
+
+                RippleButton {
+                    implicitHeight: 36
+                    implicitWidth: 36
+                    buttonRadius: Appearance.rounding.full
+                    colBackground: Appearance.colors.colPrimaryContainer
+                    colBackgroundHover: Appearance.colors.colPrimaryContainerHover
+                    contentItem: MaterialSymbol {
+                        anchors.centerIn: parent
+                        text: "download"
+                        iconSize: 20
+                        color: Appearance.colors.colOnPrimaryContainer
+                    }
+                    onClicked: page.installFromUrl()
+                }
             }
         }
 
+        // Global enable/disable toggle
         NoticeBox {
             Layout.fillWidth: true
-            text: Translation.tr("Extension system is in early beta stage. Please be cautious when installing extensions from untrusted sources and report any issues you encounter.")
+            text: Translation.tr("Extension system is in early beta stage. Please be cautious when installing extensions from untrusted sources.")
             ConfigSwitch {
                 checked: Config.options.extensions.enable
                 onClicked: Config.options.extensions.enable = !Config.options.extensions.enable
-                StyledToolTip { text: Translation.tr("Enable/Disable extensions") }
+                StyledToolTip { text: Translation.tr("Enable/Disable extensions globally") }
             }
         }
 
+        // Error message
         StyledText {
-            Layout.alignment: Qt.AlignHCenter
             Layout.fillWidth: true
             visible: ExtensionManager.error.length > 0
             text: ExtensionManager.error
@@ -185,22 +180,16 @@ ContentPage {
             wrapMode: Text.Wrap
         }
 
-        InstalledExtensionList {}
-
-        StyledText {
+        // Tab content
+        StackLayout {
             Layout.fillWidth: true
-            Layout.topMargin: 20
-            visible: page.filteredExtensions.length > 0
-            text: Translation.tr("Browse Extensions")
-            font.pixelSize: Appearance.font.pixelSize.normal
-            font.weight: Font.Medium
-            color: Appearance.colors.colOnLayer0
-        }
+            currentIndex: page.activeTab
 
-        ExtensionList {
-            model: page.filteredExtensions
-            searchText: page.searchText
-            loading: ExtensionManager.loading
+            PluginInstalledTab {}
+
+            PluginAvailableTab {}
+
+            PluginSourcesTab {}
         }
     }
 }

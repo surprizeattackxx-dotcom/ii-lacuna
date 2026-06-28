@@ -6,6 +6,7 @@ ActiveWindow 1.0 ActiveWindow.qml
 Bar 1.0 Bar.qml
 BarComponent 1.0 BarComponent.qml
 BarContent 1.0 BarContent.qml
+BarFrame 1.0 BarFrame.qml
 BarGroup 1.0 BarGroup.qml
 BatteryIndicator 1.0 BatteryIndicator.qml
 BatteryPopup 1.0 BatteryPopup.qml
@@ -52,5 +53,18 @@ ClockWidgetPopupCompact 1.0 ClockWidgetPopupCompact.qml
 MediaPopup 1.0 MediaPopup.qml
 WallpaperPicker 1.0 WallpaperPicker.qml
 MusicPopup 1.0 music/MusicPopup.qml
+ControlCenterToggle 1.0 ControlCenterToggle.qml
 MonitorPopup 1.0 monitors/MonitorPopup.qml
 MonitorSettingsTab 1.0 MonitorSettingsTab.qml
+VolumeWidget 1.0 VolumeWidget.qml
+BluetoothWidget 1.0 BluetoothWidget.qml
+NetworkWidget 1.0 NetworkWidget.qml
+NightLightWidget 1.0 NightLightWidget.qml
+BrightnessWidget 1.0 BrightnessWidget.qml
+DarkModeWidget 1.0 DarkModeWidget.qml
+MicrophoneWidget 1.0 MicrophoneWidget.qml
+KeyboardLayoutWidget 1.0 KeyboardLayoutWidget.qml
+PowerProfileWidget 1.0 PowerProfileWidget.qml
+SettingsWidget 1.0 SettingsWidget.qml
+SpacerWidget 1.0 SpacerWidget.qml
+AudioVisualizerWidget 1.0 AudioVisualizerWidget.qml

@@ -56,6 +56,7 @@ Singleton {
     property bool appLauncherOpen: false
     property bool gameLauncherOpen: false
     property bool calendarAppOpen: false
+    property bool controlCenterOpen: false
     property bool dashboardPanelOpen: false // formerly sidebarRightOpen
     property bool policiesPanelOpen: false  // formerly sidebarLeftOpen
 
@@ -164,6 +165,19 @@ Singleton {
         function transition(): void {
             GlobalStates.wallpaperTransitioning = true
             wallpaperTransitionTimer.restart()
+        }
+    }
+
+    IpcHandler {
+        target: "controlCenter"
+        function toggle(): void {
+            GlobalStates.controlCenterOpen = !GlobalStates.controlCenterOpen
+        }
+        function open(): void {
+            GlobalStates.controlCenterOpen = true
+        }
+        function close(): void {
+            GlobalStates.controlCenterOpen = false
         }
     }
 

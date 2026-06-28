@@ -2,18 +2,18 @@
 -- Persists colors across reloads to match the live hyprctl state. Border *visibility*
 -- is controlled separately (disableHyprlandBorders), so this only sets colors.
 hl.config({
-    ['general.col.active_border']        = { colors = {'0xff6C7778', '0xff121C1D'}, angle = 45 },
-    ['general.col.inactive_border']      = '0xffDFE3E3',
-    ['decoration.shadow.color']          = '0x886C7778',
+    ['general.col.active_border']        = { colors = {'0xffBEC9C9', '0xff121C1D'}, angle = 45 },
+    ['general.col.inactive_border']      = '0xff434848',
+    ['decoration.shadow.color']          = '0x88BEC9C9',
     ['decoration.shadow.color_inactive'] = '0x44000000',
-    ['group.col.border_active']          = '0xff6C7778',
-    ['group.col.border_inactive']        = '0xffDFE3E3',
-    ['group.col.border_locked_active']   = '0xff6C7778',
-    ['group.col.border_locked_inactive'] = '0xffDFE3E3',
-    ['misc.background_color']            = '0xffFBF9F8',
+    ['group.col.border_active']          = '0xffBEC9C9',
+    ['group.col.border_inactive']        = '0xff434848',
+    ['group.col.border_locked_active']   = '0xffBEC9C9',
+    ['group.col.border_locked_inactive'] = '0xff434848',
+    ['misc.background_color']            = '0xff131313',
 })
 
 hl.window_rule({
     match        = { pin = 1 },
-    border_color = '0xAA6C7778 0x776C7778',
+    border_color = '0xAABEC9C9 0x77BEC9C9',
 })

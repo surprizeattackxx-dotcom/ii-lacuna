@@ -103,17 +103,17 @@ Singleton {
         // Trigger logic here if needed
     }
 
-    Connections {
-        target: Config.options
-        function onWallpaperPathChanged() { root.iconThemeRevision++ }
-        function onColorModeChanged() { root.iconThemeRevision++ }
-    }
+    Connections { target: Config.options?.background ?? null; function onWallpaperPathChanged() { root.iconThemeRevision++ } }
+    Connections { target: Config.options?.appearance ?? null; function onColorModeChanged() { root.iconThemeRevision++ } }
 
     property list<var> _prevApps: []
-    property list<var> apps: {
-        for (const old of root._prevApps)
+    onAppsChanged: {
+        for (const old of _prevApps) {
             if (old) old.destroy();
-
+        }
+        _prevApps = apps;
+    }
+    property list<var> apps: {
         var pinnedMap = new Map();
         var unpinnedMap = new Map();
 
@@ -156,7 +156,6 @@ Singleton {
             values.push(appEntryComp.createObject(root, { appId: key, toplevels: value.toplevels, pinned: value.pinned }));
         }
 
-        root._prevApps = values;
         return values;
     }
 

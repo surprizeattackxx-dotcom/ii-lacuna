@@ -1,0 +1,11 @@
+module qs.modules.ii.controlCenter
+CCBox 1.0 CCBox.qml
+CCGauge 1.0 CCGauge.qml
+ControlCenterPanel 1.0 ControlCenterPanel.qml
+ProfileCard 1.0 ProfileCard.qml
+ShortcutsCard 1.0 ShortcutsCard.qml
+AudioCard 1.0 AudioCard.qml
+BrightnessCard 1.0 BrightnessCard.qml
+WeatherCard 1.0 WeatherCard.qml
+MediaCard 1.0 MediaCard.qml
+SystemMonitorCard 1.0 SystemMonitorCard.qml

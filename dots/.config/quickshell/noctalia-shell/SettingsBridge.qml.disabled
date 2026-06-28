@@ -1,0 +1,332 @@
+import QtQuick
+import QtCore
+import Quickshell
+import Quickshell.Io
+import qs.Commons
+
+Item {
+  id: root
+
+  property string homeDir: StandardPaths.standardLocations(StandardPaths.HomeLocation)[0].replace("file://", "")
+  property string iiConfigPath: homeDir + "/.config/illogical-impulse/config.json"
+
+  FileView {
+    id: iiConfigView
+    path: root.iiConfigPath
+    watchChanges: false
+    blockWrites: false
+
+    JsonAdapter {
+      id: iiCfg
+      property JsonObject appearance: JsonObject {
+        property string colorMode: "dark"
+        property JsonObject palette: JsonObject {
+          property string type: "auto"
+          property string theme: ""
+        }
+        property JsonObject wallpaperTheming: JsonObject {
+          property bool enableAppsAndShell: true
+          property bool enableQtApps: true
+          property bool enableTerminal: true
+        }
+      }
+      property JsonObject background: JsonObject {
+        property bool enable: true
+        property string monitorForColors: "auto"
+      }
+      property JsonObject bar: JsonObject {
+        property bool vertical: false
+        property string barType: "floating"
+        property string density: "default"
+        property bool showOutline: false
+        property bool showCapsule: true
+        property real capsuleOpacity: 1.0
+        property string capsuleColorKey: "none"
+        property int widgetSpacing: 6
+        property int contentPadding: 2
+        property real fontScale: 1.0
+        property real backgroundOpacity: 0.93
+        property bool useSeparateOpacity: false
+        property int marginHorizontal: 4
+        property int marginVertical: 4
+        property int frameThickness: 8
+        property int frameRadius: 12
+        property bool outerCorners: true
+        property JsonObject weather: JsonObject {
+          property string city: ""
+          property bool useUSCS: false
+        }
+      }
+      property JsonObject dock: JsonObject {
+        property bool enable: false
+        property string position: "bottom"
+      }
+      property JsonObject lock: JsonObject {
+        property JsonObject idle: JsonObject {
+          property bool enable: true
+          property int screenOffTimeout: 600
+          property int lockTimeout: 1800
+          property int suspendTimeout: 1800
+          property int fadeDuration: 5
+        }
+      }
+      property JsonObject notifications: JsonObject {
+        property int timeout: 7000
+      }
+      property JsonObject osd: JsonObject {
+        property int timeout: 2500
+      }
+      property JsonObject light: JsonObject {
+        property JsonObject night: JsonObject {
+          property bool automatic: true
+          property int colorTemperature: 5000
+        }
+      }
+      property JsonObject time: JsonObject {
+        property int firstDayOfWeek: 0
+      }
+      property JsonObject calendar: JsonObject {
+        property string locale: "en-GB"
+      }
+    }
+  }
+
+  Timer {
+    id: writeTimer
+    interval: 100
+    onTriggered: {
+      iiConfigView.writeAdapter();
+    }
+  }
+
+  function writeToII(key, value) {
+    const parts = key.split(".");
+    let obj = iiCfg;
+    for (let i = 0; i < parts.length - 1; i++) {
+      obj = obj[parts[i]];
+      if (obj === undefined) return;
+    }
+    const lastKey = parts[parts.length - 1];
+    if (obj[lastKey] !== value) {
+      obj[lastKey] = value;
+      writeTimer.restart();
+    }
+  }
+
+  // ---- Color schemes ----
+  property string noctGenMethod: Settings.data?.colorSchemes?.generationMethod ?? ""
+  onNoctGenMethodChanged: {
+    if (!noctGenMethod) return;
+    if (noctGenMethod === "content")
+      writeToII("appearance.palette.type", "scheme-content");
+    else
+      writeToII("appearance.palette.type", "scheme");
+  }
+
+  property string noctPredefScheme: Settings.data?.colorSchemes?.predefinedScheme ?? ""
+  onNoctPredefSchemeChanged: {
+    if (!noctPredefScheme) return;
+    writeToII("appearance.palette.theme", noctPredefScheme);
+  }
+
+  property bool noctUseWallpaperColors: Settings.data?.colorSchemes?.useWallpaperColors ?? false
+  onNoctUseWallpaperColorsChanged: {
+    writeToII("appearance.wallpaperTheming.enableAppsAndShell", noctUseWallpaperColors);
+    writeToII("appearance.wallpaperTheming.enableQtApps", noctUseWallpaperColors);
+    writeToII("appearance.wallpaperTheming.enableTerminal", noctUseWallpaperColors);
+  }
+
+  property string noctMonitorForColors: Settings.data?.colorSchemes?.monitorForColors ?? ""
+  onNoctMonitorForColorsChanged: {
+    if (noctMonitorForColors)
+      writeToII("background.monitorForColors", noctMonitorForColors);
+  }
+
+  property string noctColorMode: Settings.data?.colorSchemes?.preferredColorScheme ?? ""
+  onNoctColorModeChanged: {
+    if (noctColorMode)
+      writeToII("appearance.colorMode", noctColorMode === "dark" ? "dark" : "light");
+  }
+
+  // ---- Night light ----
+  property bool noctNightLight: Settings.data?.nightLight?.enabled ?? false
+  onNoctNightLightChanged: {
+    writeToII("light.night.automatic", noctNightLight);
+  }
+
+  property int noctNightTemp: Settings.data?.nightLight?.nightTemp ?? 5000
+  onNoctNightTempChanged: {
+    writeToII("light.night.colorTemperature", noctNightTemp);
+  }
+
+  // ---- OSD ----
+  property int noctOsdTimeout: Settings.data?.osd?.osdTimeout ?? 2500
+  onNoctOsdTimeoutChanged: {
+    if (noctOsdTimeout > 0) writeToII("osd.timeout", noctOsdTimeout);
+  }
+
+  // ---- Dock ----
+  property bool noctDockEnabled: Settings.data?.dock?.enabled ?? false
+  onNoctDockEnabledChanged: {
+    writeToII("dock.enable", noctDockEnabled);
+  }
+
+  property string noctDockPos: Settings.data?.dock?.position ?? "bottom"
+  onNoctDockPosChanged: {
+    writeToII("dock.position", noctDockPos);
+  }
+
+  // ---- Idle / lock ----
+  property bool noctIdleEnabled: Settings.data?.idle?.enabled ?? true
+  onNoctIdleEnabledChanged: {
+    writeToII("lock.idle.enable", noctIdleEnabled);
+  }
+
+  property int noctLockTimeout: Settings.data?.idle?.lockTimeout ?? 1800
+  onNoctLockTimeoutChanged: {
+    if (noctLockTimeout > 0) writeToII("lock.idle.lockTimeout", noctLockTimeout);
+  }
+
+  property int noctScreenOffTimeout: Settings.data?.idle?.screenOffTimeout ?? 600
+  onNoctScreenOffTimeoutChanged: {
+    if (noctScreenOffTimeout > 0) writeToII("lock.idle.screenOffTimeout", noctScreenOffTimeout);
+  }
+
+  property int noctSuspendTimeout: Settings.data?.idle?.suspendTimeout ?? 1800
+  onNoctSuspendTimeoutChanged: {
+    if (noctSuspendTimeout > 0) writeToII("lock.idle.suspendTimeout", noctSuspendTimeout);
+  }
+
+  property int noctFadeDuration: Settings.data?.idle?.fadeDuration ?? 5
+  onNoctFadeDurationChanged: {
+    if (noctFadeDuration > 0) writeToII("lock.idle.fadeDuration", noctFadeDuration);
+  }
+
+  property int noctDimmerOpacity: Settings.data?.general?.dimmerOpacity ?? 50
+  onNoctDimmerOpacityChanged: {
+    writeToII("lock.dimmerOpacity", noctDimmerOpacity);
+  }
+
+  // ---- Notifications ----
+  property int noctNotifTimeout: Settings.data?.notifications?.timeout ?? 7000
+  onNoctNotifTimeoutChanged: {
+    if (noctNotifTimeout > 0) writeToII("notifications.timeout", noctNotifTimeout);
+  }
+
+  // ---- Weather / location ----
+  property string noctLocation: Settings.data?.location?.name ?? ""
+  onNoctLocationChanged: {
+    iiCfg.bar.weather.city = noctLocation;
+    if (noctLocation && noctUseFahrenheit !== undefined)
+      writeTimer.restart();
+    else
+      writeToII("bar.weather.city", noctLocation);
+  }
+
+  property bool noctUseFahrenheit: Settings.data?.location?.useFahrenheit ?? false
+  onNoctUseFahrenheitChanged: {
+    writeToII("bar.weather.useUSCS", noctUseFahrenheit);
+  }
+
+  // ---- Calendar ----
+  property int noctFirstDay: Settings.data?.calendar?.firstDayOfWeek ?? 0
+  onNoctFirstDayChanged: {
+    writeToII("time.firstDayOfWeek", noctFirstDay);
+  }
+
+  // ---- Bar ----
+  property bool noctBarVertical: Settings.data?.bar?.vertical ?? false
+  onNoctBarVerticalChanged: {
+    writeToII("bar.vertical", noctBarVertical);
+  }
+
+  property string noctBarType: Settings.data?.bar?.barType ?? "floating"
+  onNoctBarTypeChanged: {
+    if (noctBarType) writeToII("bar.barType", noctBarType);
+  }
+
+  property string noctBarDensity: Settings.data?.bar?.density ?? "default"
+  onNoctBarDensityChanged: {
+    if (noctBarDensity) writeToII("bar.density", noctBarDensity);
+  }
+
+  property bool noctBarShowOutline: Settings.data?.bar?.showOutline ?? false
+  onNoctBarShowOutlineChanged: {
+    writeToII("bar.showOutline", noctBarShowOutline);
+  }
+
+  property bool noctBarShowCapsule: Settings.data?.bar?.showCapsule ?? true
+  onNoctBarShowCapsuleChanged: {
+    writeToII("bar.showCapsule", noctBarShowCapsule);
+  }
+
+  property real noctBarCapsuleOpacity: Settings.data?.bar?.capsuleOpacity ?? 1.0
+  onNoctBarCapsuleOpacityChanged: {
+    writeToII("bar.capsuleOpacity", noctBarCapsuleOpacity);
+  }
+
+  property string noctBarCapsuleColorKey: Settings.data?.bar?.capsuleColorKey ?? "none"
+  onNoctBarCapsuleColorKeyChanged: {
+    if (noctBarCapsuleColorKey) writeToII("bar.capsuleColorKey", noctBarCapsuleColorKey);
+  }
+
+  property int noctBarWidgetSpacing: Settings.data?.bar?.widgetSpacing ?? 6
+  onNoctBarWidgetSpacingChanged: {
+    writeToII("bar.widgetSpacing", noctBarWidgetSpacing);
+  }
+
+  property int noctBarContentPadding: Settings.data?.bar?.contentPadding ?? 2
+  onNoctBarContentPaddingChanged: {
+    writeToII("bar.contentPadding", noctBarContentPadding);
+  }
+
+  property real noctBarFontScale: Settings.data?.bar?.fontScale ?? 1.0
+  onNoctBarFontScaleChanged: {
+    writeToII("bar.fontScale", noctBarFontScale);
+  }
+
+  property real noctBarBgOpacity: Settings.data?.bar?.backgroundOpacity ?? 0.93
+  onNoctBarBgOpacityChanged: {
+    writeToII("bar.backgroundOpacity", noctBarBgOpacity);
+  }
+
+  property bool noctBarSeparateOpacity: Settings.data?.bar?.useSeparateOpacity ?? false
+  onNoctBarSeparateOpacityChanged: {
+    writeToII("bar.useSeparateOpacity", noctBarSeparateOpacity);
+  }
+
+  property int noctBarMarginH: Settings.data?.bar?.marginHorizontal ?? 4
+  onNoctBarMarginHChanged: {
+    writeToII("bar.marginHorizontal", noctBarMarginH);
+  }
+
+  property int noctBarMarginV: Settings.data?.bar?.marginVertical ?? 4
+  onNoctBarMarginVChanged: {
+    writeToII("bar.marginVertical", noctBarMarginV);
+  }
+
+  property int noctBarFrameThickness: Settings.data?.bar?.frameThickness ?? 8
+  onNoctBarFrameThicknessChanged: {
+    writeToII("bar.frameThickness", noctBarFrameThickness);
+  }
+
+  property int noctBarFrameRadius: Settings.data?.bar?.frameRadius ?? 12
+  onNoctBarFrameRadiusChanged: {
+    writeToII("bar.frameRadius", noctBarFrameRadius);
+  }
+
+  property bool noctBarOuterCorners: Settings.data?.bar?.outerCorners ?? true
+  onNoctBarOuterCornersChanged: {
+    writeToII("bar.outerCorners", noctBarOuterCorners);
+  }
+
+  // ---- Wallpaper ----
+  property bool noctWallpaperEnabled: Settings.data?.wallpaper?.enabled ?? false
+  onNoctWallpaperEnabledChanged: {
+    writeToII("background.enable", noctWallpaperEnabled);
+  }
+
+  Component.onCompleted: {
+    iiConfigView.reload();
+  }
+}

@@ -70,43 +70,20 @@ Item { // Bar content region
         rightList = model.slice(idx + 1)
     }
 
-    // Background shadow
-    Loader {
-        active: root.showBarBackground && Config.options.bar.cornerStyle === 1 && Config.options.bar.floatStyleShadow
-        anchors.fill: barBackground
-        sourceComponent: StyledRectangularShadow {
-            anchors.fill: undefined // The loader's anchors act on this, and this should not have any anchor
-            target: barBackground
-        }
-    }
-    // Background
-    Rectangle {
-        id: barBackground
-        z: -10 // making sure its behind everything
+    // Background using Noctalia wrapped frame
+    BarFrame {
+        id: barFrame
+        z: -10
         anchors {
             fill: parent
-            margins: Config.options.bar.cornerStyle === 1 ? (Appearance.sizes.hyprlandGapsOut) : 0 // idk why but +1 is needed
+            topMargin: Config.options.bar.barType === "floating" ? (Appearance.sizes.hyprlandGapsOut + Config.options.bar.marginVertical) : Config.options.bar.marginVertical
+            bottomMargin: Config.options.bar.barType === "floating" ? (Appearance.sizes.hyprlandGapsOut + Config.options.bar.marginVertical) : Config.options.bar.marginVertical
+            leftMargin: Config.options.bar.barType === "floating" ? (Appearance.sizes.hyprlandGapsOut + Config.options.bar.marginHorizontal) : Config.options.bar.marginHorizontal
+            rightMargin: Config.options.bar.barType === "floating" ? (Appearance.sizes.hyprlandGapsOut + Config.options.bar.marginHorizontal) : Config.options.bar.marginHorizontal
         }
-        color: "transparent"
-        radius: Config.options.bar.cornerStyle === 1 ? Appearance.rounding.windowRounding : 0
-
-        GlassPanel {
-            anchors.fill: parent
-            visible: root.showBarBackground
-            screen: root.screen
-            cornerRadius: barBackground.radius
-            screenX: barBackground.x + Appearance.sizes.hyprlandGapsOut
-            screenY: Config.barHorizontalBottom(root.screen?.name) ? ((root.screen?.height ?? 0) - root.height + barBackground.y) : barBackground.y
-            tint: Appearance.colors.colLayer0
-        }
-
-        Rectangle { // specular rim above the glass
-            anchors.fill: parent
-            radius: barBackground.radius
-            color: "transparent"
-            border.width: Config.options.bar.cornerStyle === 1 ? 1 : 0
-            border.color: root.showBarBackground ? Appearance.colors.colLayer0Border : "transparent"
-        }
+        screen: root.screen
+        tint: Appearance.colors.colLayer0
+        visible: root.showBarBackground
     }
 
     MouseArea { // Right-click to open Bar Applets overlay
@@ -185,7 +162,7 @@ Item { // Bar content region
             bottom: parent.bottom
             left: leftStopper.right
         }
-        spacing: 4
+        spacing: Config.options.bar.widgetSpacing
 
         Repeater {
             id: leftRepeater
@@ -201,14 +178,15 @@ Item { // Bar content region
         id: middleSection
         anchors.horizontalCenter: parent.horizontalCenter
         height: parent.height
-        width: centerCenter.width + (middleLeftRepeater.count > 0 ? 4 : 0) + (middleRightRepeater.count > 0 ? 4 : 0)
+        width: centerCenter.width + (middleLeftRepeater.count > 0 ? Config.options.bar.widgetSpacing : 0) + (middleRightRepeater.count > 0 ? Config.options.bar.widgetSpacing : 0)
         onXChanged: root.sectionGeometryChanged()
         onWidthChanged: root.sectionGeometryChanged()
 
         RowLayout {
             anchors.right: centerCenter.left
-            anchors.rightMargin: 4
+            anchors.rightMargin: Config.options.bar.widgetSpacing
             height: parent.height
+            spacing: Config.options.bar.widgetSpacing
             Repeater {
                 id: middleLeftRepeater
                 model: root.leftList
@@ -227,6 +205,7 @@ Item { // Bar content region
                 bottom: parent.bottom
                 horizontalCenter: parent.horizontalCenter
             }
+            spacing: Config.options.bar.widgetSpacing
             Repeater {
                 model: root.centerList
                 delegate: BarComponent {
@@ -242,8 +221,9 @@ Item { // Bar content region
                 top: parent.top
                 bottom: parent.bottom
                 left: centerCenter.right
-                leftMargin: 4
+                leftMargin: Config.options.bar.widgetSpacing
             }
+            spacing: Config.options.bar.widgetSpacing
             Repeater {
                 id: middleRightRepeater
                 model: root.rightList
@@ -273,7 +253,7 @@ Item { // Bar content region
             right: rightStopper.left
             rightMargin: Math.ceil(Appearance.rounding.screenRounding / 2)
         }
-        spacing: 4
+        spacing: Config.options.bar.widgetSpacing
 
         Repeater {
             id: rightRepeater

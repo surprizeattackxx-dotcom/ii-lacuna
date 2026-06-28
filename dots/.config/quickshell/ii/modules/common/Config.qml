@@ -61,6 +61,7 @@ Singleton {
         interval: root.readWriteDelay
         repeat: false
         onTriggered: {
+            console.log("Config: fileReloadTimer triggered, calling configFileView.reload()");
             configFileView.reload();
         }
     }
@@ -79,8 +80,14 @@ Singleton {
         path: root.filePath
         watchChanges: true
         blockWrites: root.blockWrites
-        onFileChanged: fileReloadTimer.restart()
-        onAdapterUpdated: fileWriteTimer.restart()
+        onFileChanged: {
+            console.log("Config file changed, reloading...");
+            fileReloadTimer.restart();
+        }
+        onAdapterUpdated: {
+            console.log("Config adapter updated, saving...");
+            fileWriteTimer.restart();
+        }
         onLoaded: root.ready = true
         onLoadFailed: error => {
             if (error == FileViewError.FileNotFound) {
@@ -354,6 +361,23 @@ Singleton {
                 property int barBackgroundStyle: 1 // 0: Transparent | 1: Visible | 2: Adaptive
                 property bool verbose: true
                 property bool vertical: false
+                // Noctalia wrapped frame styling (synced from Settings.data.bar.*)
+                property string barType: "floating" // simple, floating, framed
+                property string density: "default" // mini, compact, default, comfortable, spacious
+                property bool showOutline: false
+                property bool showCapsule: true
+                property real capsuleOpacity: 1.0
+                property string capsuleColorKey: "none"
+                property int widgetSpacing: 6
+                property int contentPadding: 2
+                property real fontScale: 1.0
+                property real backgroundOpacity: 0.93
+                property bool useSeparateOpacity: false
+                property int marginHorizontal: 4
+                property int marginVertical: 4
+                property int frameThickness: 8
+                property int frameRadius: 12
+                property bool outerCorners: true
 
                 property JsonObject mediaPlayer: JsonObject {
                     property bool useFixedSize: false
@@ -457,10 +481,28 @@ Singleton {
                             id: "weather"
                         },
                         {
+                            id: "volume"
+                        },
+                        {
+                            id: "network"
+                        },
+                        {
+                            id: "bluetooth"
+                        },
+                        {
+                            id: "night_light"
+                        },
+                        {
+                            id: "brightness"
+                        },
+                        {
                             id: "clock"
                         },
                         {
                             id: "system_tray"
+                        },
+                        {
+                            id: "control_center"
                         },
                         {
                             id: "dashboard_panel_button"
@@ -603,9 +645,11 @@ Singleton {
                 property bool materialShapeChars: true
                 property JsonObject idle: JsonObject {
                     property bool enable: true
-                    property int lockTimeout: 1800 // seconds; 0 disables
-                    property int dpmsTimeout: 2700 // seconds; 0 disables
-                    property bool respectMedia: true // Don't auto-lock or DPMS-off while a media player is actively playing
+                    property int screenOffTimeout: 600  // seconds; 0 disables
+                    property int lockTimeout: 1800      // seconds; 0 disables
+                    property int suspendTimeout: 1800   // seconds; 0 disables
+                    property int fadeDuration: 5        // grace period before action fires
+                    property bool respectMedia: true    // Don't auto-lock or DPMS-off while a media player is actively playing
                     property bool respectFullscreen: true // Don't auto-lock or DPMS-off while a window is fullscreen (covers fullscreen video & games)
                 }
             }

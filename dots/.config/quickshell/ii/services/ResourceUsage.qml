@@ -41,6 +41,7 @@ Singleton {
     // CPU package temperature from x86_pkg_temp (more accurate than acpitz/zone0)
     property real cpuTemp: 0
     readonly property string cpuTempString: cpuTemp > 0 ? cpuTemp.toFixed(1) + " °C" : "—"
+    property string cpuTempPath: "/sys/class/thermal/thermal_zone0/temp"
 
     readonly property int historyLength: Config?.options.resources.historyLength ?? 60
     property list<real> cpuUsageHistory: []
@@ -138,7 +139,7 @@ Singleton {
 
 	FileView { id: fileMeminfo; path: "/proc/meminfo" }
     FileView { id: fileStat; path: "/proc/stat" }
-    FileView { id: fileCpuTemp; path: "/sys/class/thermal/thermal_zone4/temp" }
+    FileView { id: fileCpuTemp; path: root.cpuTempPath }
     FileView { id: fileDiskstats; path: "/proc/diskstats" }
 
     Process {
@@ -153,6 +154,20 @@ Singleton {
             id: outputCollector
             onStreamFinished: {
                 root.maxAvailableCpuString = (parseFloat(outputCollector.text) / 1000).toFixed(0) + " GHz"
+            }
+        }
+    }
+
+    Process {
+        id: findCpuTempPathProc
+        command: ["bash", "-c", "for f in /sys/class/thermal/thermal_zone*/type; do if grep -q 'x86_pkg_temp' \"$f\"; then echo \"${f%type}temp\"; exit; fi; done; echo '/sys/class/thermal/thermal_zone0/temp'"]
+        running: true
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const trimmed = text.trim()
+                if (trimmed) {
+                    root.cpuTempPath = trimmed
+                }
             }
         }
     }

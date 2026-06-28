@@ -174,7 +174,7 @@ Singleton {
     // --- khal (secondary/local source) ---
     Process {
         id: khalCheckProcess
-        command: ["khal", "list", "today"]
+        command: ["which", "khal"]
         running: true
         onExited: (exitCode) => {
           root.khalAvailable = (exitCode === 0);

@@ -20,3 +20,12 @@ set -gx PATH $PATH $HOME/.lmstudio/bin
 
 set -x XCURSOR_THEME oreo_red_cursors
 set -x XCURSOR_SIZE 24
+
+
+# Added by Antigravity CLI installer
+set -gx PATH "/home/donnie/.local/bin" $PATH
+
+# Added by LM Studio CLI (lms)
+set -gx PATH $PATH /home/donnie/.lmstudio/bin
+# End of LM Studio CLI section
+
