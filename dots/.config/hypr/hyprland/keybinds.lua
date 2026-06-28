@@ -111,7 +111,7 @@ hl.bind("CTRL + ALT + DELETE", hl.dsp.exec_cmd("qs -c noctalia-shell ipc call se
 hl.bind("SUPER + TAB", hl.plugin.hymission.toggle)
 hl.bind("SUPER + Z", hl.dsp.exec_cmd("pypr zoom"))
 hl.bind("SUPER + H", hl.dsp.exec_cmd("$HOME/hypr-gamma/gui/build/hyprgamma-gui"))
-hl.bind("SUPER + SHIFT + S", hl.dsp.exec_cmd("qs -c noctalia-shell ipc call plugin:screen-toolkit toggle"))
+hl.bind("SUPER + SHIFT + S", hl.dsp.exec_cmd("grim -g \"$(slurp -d)\" - | wl-copy && notify-send -a Screenshot \"Region copied\" -i image-x-generic"))
 hl.bind("SUPER + SHIFT + A", hl.dsp.exec_cmd("qs -c noctalia-shell ipc call plugin:screen-toolkit lens"))
 hl.bind("SUPER + SHIFT + X", hl.dsp.exec_cmd("qs -c noctalia-shell ipc call plugin:screen-toolkit ocr"))
 hl.bind("SUPER + SHIFT + I", hl.dsp.global("quickshell:aiSidebarToggle"))

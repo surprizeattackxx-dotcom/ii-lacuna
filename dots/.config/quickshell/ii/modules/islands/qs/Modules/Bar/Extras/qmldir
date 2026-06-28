@@ -1,2 +1,0 @@
-module qs.Modules.Bar.Extras
-singleton Settings 1.0 Settings.qml
