@@ -18,9 +18,9 @@ hl.bind("SUPER + ALT + SPACE", hl.dsp.exec_cmd("python3 ~/.config/hypr/scripts/d
 hl.bind("SUPER + S", hl.dsp.exec_cmd("~/.config/hypr/scripts/toggle_suspend_games.sh"))
 hl.bind("SUPER + SEMICOLON", hl.dsp.layout("splitratio -0.1"))
 hl.bind("SUPER + APOSTROPHE", hl.dsp.layout("splitratio +0.1"))
-hl.bind("CTRL + SUPER + T", hl.dsp.global("quickshell:wallpaperSelectorToggle"),
+hl.bind("CTRL + SUPER + T", hl.dsp.exec_cmd("qs -c noctalia-shell ipc call wallpaper toggle"),
         { description = "Shell: Toggle wallpaper selector" })
-hl.bind("CTRL + SUPER + ALT + T", hl.dsp.global("quickshell:wallpaperSelectorRandom"),
+hl.bind("CTRL + SUPER + ALT + T", hl.dsp.exec_cmd("qs -c noctalia-shell ipc call wallpaper random"),
         { description = "Shell: Select random wallpaper" })
 
 -- ─── Cursor Zoom ───────────────────────────────
@@ -88,26 +88,26 @@ hl.bind("SUPER + mouse:273", hl.dsp.window.resize(), { mouse = true })
 -- ─── QuickShell Actions ────────────────────────
 hl.bind("SUPER + D", hl.dsp.exec_cmd("hamr toggle"))
 hl.bind("SUPER + U", hl.dsp.exec_cmd("claude-usage-float"))
-hl.bind("SUPER + V", hl.dsp.global("quickshell:overviewClipboardToggle"))
-hl.bind("SUPER + PERIOD", hl.dsp.global("quickshell:overviewEmojiToggle"))
-hl.bind("SUPER + A", hl.dsp.global("quickshell:sidebarLeftToggle"))
-hl.bind("SUPER + N", hl.dsp.global("quickshell:sidebarRightToggle"))
+hl.bind("SUPER + V", hl.dsp.exec_cmd("qs -c noctalia-shell ipc call plugin:clipper toggle"))
+hl.bind("SUPER + PERIOD", hl.dsp.exec_cmd("qs -c noctalia-shell ipc call launcher emoji"))
+hl.bind("SUPER + A", hl.dsp.exec_cmd("qs -c noctalia-shell ipc call controlCenter toggle"))
+hl.bind("SUPER + N", hl.dsp.exec_cmd("qs -c noctalia-shell ipc call notifications toggleHistory"))
 hl.bind("SUPER + SLASH", hl.dsp.global("quickshell:cheatsheetToggle"))
-hl.bind("SUPER + ALT + V", hl.dsp.global("quickshell:calendarAppToggle"))
-hl.bind("SUPER + K", hl.dsp.global("quickshell:oskToggle"))
-hl.bind("SUPER + M", hl.dsp.global("quickshell:mediaControlsToggle"))
-hl.bind("SUPER + G", hl.dsp.global("quickshell:overlayToggle"))
-hl.bind("SUPER + J", hl.dsp.global("quickshell:barToggle"))
+hl.bind("SUPER + ALT + V", hl.dsp.exec_cmd("qs -c noctalia-shell ipc call calendar toggle"))
+-- SUPER + K (on-screen keyboard): no noctalia equivalent
+hl.bind("SUPER + M", hl.dsp.exec_cmd("qs -c noctalia-shell ipc call media toggle"))
+hl.bind("SUPER + G", hl.dsp.exec_cmd("qs -c noctalia-shell ipc call systemMonitor toggle"))
+hl.bind("SUPER + J", hl.dsp.exec_cmd("qs -c noctalia-shell ipc call bar toggle"))
 hl.bind("SUPER + W", hl.dsp.exec_cmd("qs -c noctalia-shell ipc call wallpaper toggle"),
         { description = "Shell: Toggle wallpaper selector" })
 hl.bind("SUPER + O", hl.dsp.global("quickshell:gameLauncherToggle"))
-hl.bind("SUPER + SPACE", hl.dsp.global("quickshell:appLauncherToggle"))
-hl.bind("SUPER + X", hl.dsp.global("quickshell:animations"))
+hl.bind("SUPER + SPACE", hl.dsp.exec_cmd("qs -c noctalia-shell ipc call launcher toggle"))
+-- SUPER + X (animations toggle): no noctalia equivalent
 hl.bind("SUPER + I", hl.dsp.exec_cmd(settingsApp))
-hl.bind("SUPER + L", hl.dsp.global("quickshell:lock"))
+hl.bind("SUPER + L", hl.dsp.exec_cmd("qs -c noctalia-shell ipc call lockScreen lock"))
 
 -- ─── System Actions ────────────────────────────
-hl.bind("CTRL + ALT + DELETE", hl.dsp.global("quickshell:sessionToggle"))
+hl.bind("CTRL + ALT + DELETE", hl.dsp.exec_cmd("qs -c noctalia-shell ipc call sessionMenu toggle"))
 hl.bind("SUPER + TAB", hl.plugin.hymission.toggle)
 hl.bind("SUPER + Z", hl.dsp.exec_cmd("pypr zoom"))
 hl.bind("SUPER + H", hl.dsp.exec_cmd("$HOME/hypr-gamma/gui/build/hyprgamma-gui"))
@@ -115,7 +115,7 @@ hl.bind("SUPER + SHIFT + S", hl.dsp.global("quickshell:regionScreenshot"))
 hl.bind("SUPER + SHIFT + A", hl.dsp.global("quickshell:regionSearch"))
 hl.bind("SUPER + SHIFT + X", hl.dsp.global("quickshell:regionOcr"))
 hl.bind("SUPER + SHIFT + I", hl.dsp.global("quickshell:aiSidebarToggle"))
-hl.bind("SUPER + SHIFT + T", hl.dsp.global("quickshell:screenTranslate"))
+-- SUPER + SHIFT + T (screen translate): no noctalia equivalent
 hl.bind("SUPER + SHIFT + C", hl.dsp.exec_cmd("hyprpicker -a"))
 hl.bind("SUPER + SHIFT + R", hl.dsp.global("quickshell:regionRecord"))
 hl.bind("CTRL + SUPER + V", hl.dsp.exec_cmd(volumeMixer))
