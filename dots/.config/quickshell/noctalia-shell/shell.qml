@@ -30,7 +30,6 @@ import qs.Modules.Panels.Settings
 import qs.Modules.Panels.AiChat
 import qs.Modules.GameLauncher
 import qs.Modules.Cheatsheet
-import qs.Modules.RegionSelector
 import qs.Modules.Toast
 import qs.Services.Control
 import qs.Services.Hardware
@@ -140,8 +139,7 @@ ShellRoot {
       ToastOverlay {}
       OSD {}
 
-      // Native region selector overlay host (ii port)
-      RegionSelectorHost {}
+      // (region selector retired — using the screen-toolkit plugin instead)
 
       // Force-load the AI controller singleton (registers IPC "ai" + shortcut)
       Item { Component.onCompleted: { void AiChatController; } }
