@@ -145,8 +145,8 @@ ShellRoot {
       // Force-load the AI controller singleton (registers IPC "ai" + shortcut)
       Item { Component.onCompleted: { void AiChatController; } }
 
-      // Game launcher host (ii port)
-      GameLauncherHost {}
+      // Force-load the game launcher controller (registers IPC + shortcut)
+      Item { Component.onCompleted: { void GameLauncherController; } }
 
       // Launcher overlay window (for overlay layer mode)
       Loader {

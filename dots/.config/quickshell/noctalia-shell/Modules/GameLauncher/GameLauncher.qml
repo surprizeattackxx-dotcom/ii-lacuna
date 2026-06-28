@@ -4,21 +4,17 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
 import Quickshell
-import Quickshell.Wayland
 import qs.Commons
+import qs.Modules.MainScreen
 import qs.Services.System
 import qs.Widgets
 
-// Fullscreen game launcher overlay (ported from illogical-impulse).
-PanelWindow {
+// Bar-attached game launcher panel (ported from illogical-impulse).
+SmartPanel {
     id: root
-    color: "transparent"
-    WlrLayershell.namespace: "noctalia:gameLauncher"
-    WlrLayershell.layer: WlrLayer.Overlay
-    WlrLayershell.keyboardFocus: WlrKeyboardFocus.Exclusive
-    anchors { top: true; bottom: true; left: true; right: true }
 
-    signal requestClose()
+    preferredWidth: Math.round(1100 * Style.uiScaleRatio)
+    preferredHeight: Math.round(740 * Style.uiScaleRatio)
 
     readonly property var platforms: ["steam", "heroic", "native", "appimage", "rom"]
     property int tabIndex: 0   // 0 = all, 1..5 = platform
@@ -29,12 +25,7 @@ PanelWindow {
     property var filteredGames: []
     property var selectedGame: null
 
-    // Debounce search so we rebuild once after typing pauses, not per keystroke.
-    Timer {
-        id: searchDebounce
-        interval: 220
-        onTriggered: root.searchQuery = root.pendingSearch
-    }
+    Timer { id: searchDebounce; interval: 220; onTriggered: root.searchQuery = root.pendingSearch }
 
     function fmtPlaytime(min) { return min >= 60 ? (Math.round(min / 60) + "h") : (min + "m"); }
     function fmtSize(b) {
@@ -44,12 +35,11 @@ PanelWindow {
     }
     function fmtDate(ts) {
         if (!ts) return "Never";
-        const d = new Date(ts * 1000);
-        return d.toLocaleDateString(Qt.locale(), Locale.ShortFormat);
+        return new Date(ts * 1000).toLocaleDateString(Qt.locale(), Locale.ShortFormat);
     }
 
-    // Coalesce rebuild requests — the scan appends 480 games one-by-one, each
-    // firing onCountChanged; without this that's 480 full grid rebuilds = freeze.
+    // Coalesce rebuild requests — the scan appends games one-by-one (480+ count
+    // changes); without this that's hundreds of full grid rebuilds = freeze.
     Timer { id: rebuildTimer; interval: 60; onTriggered: root.rebuild() }
     function rebuildLater() { rebuildTimer.restart(); }
 
@@ -63,7 +53,6 @@ PanelWindow {
             arr.push(g);
         }
         arr.sort((a, b) => {
-            // installed games first, then favorites, then the chosen sort
             if (!!a.installed !== !!b.installed) return a.installed ? -1 : 1;
             const fa = Games.isFavorite(a.appId), fb = Games.isFavorite(b.appId);
             if (fa !== fb) return fa ? -1 : 1;
@@ -79,25 +68,14 @@ PanelWindow {
     onTabIndexChanged: rebuildLater()
     onSortModeChanged: rebuildLater()
     onSearchQueryChanged: rebuildLater()
-    Component.onCompleted: { if (!Games.available && !Games.scanning) Games.scan(); rebuildLater(); }
+    onIsPanelOpenChanged: { if (isPanelOpen) { if (!Games.available && !Games.scanning) Games.scan(); rebuildLater(); } }
+    Component.onCompleted: rebuildLater()
 
-    // dim background
-    Rectangle {
+    panelContent: Item {
+        id: pc
         anchors.fill: parent
-        color: Qt.rgba(0, 0, 0, 0.55)
-        focus: true
-        Keys.onPressed: (e) => { if (e.key === Qt.Key_Escape) { if (root.selectedGame) root.selectedGame = null; else root.requestClose(); } }
-        MouseArea { anchors.fill: parent; onClicked: root.requestClose() }
-    }
-
-    // main panel
-    NBox {
-        anchors.fill: parent
-        anchors.margins: Math.round(Math.min(parent.width, parent.height) * 0.04)
-        color: Color.mSurface
-        forceOpaque: true
-        radius: Style.radiusL
-        MouseArea { anchors.fill: parent } // swallow clicks (don't close)
+        readonly property real contentPreferredWidth: Math.round(1100 * Style.uiScaleRatio)
+        readonly property real contentPreferredHeight: Math.round(740 * Style.uiScaleRatio)
 
         ColumnLayout {
             anchors.fill: parent
@@ -125,7 +103,7 @@ PanelWindow {
                     onClicked: root.sortMode = (root.sortMode + 1) % 3
                 }
                 NIconButton { icon: "refresh-cw"; tooltipText: "Rescan"; enabled: !Games.scanning; onClicked: Games.scan() }
-                NIconButton { icon: "x"; tooltipText: "Close"; onClicked: root.requestClose() }
+                NIconButton { icon: "x"; tooltipText: "Close"; onClicked: root.close() }
             }
 
             // ─── Platform tabs ───
@@ -166,7 +144,6 @@ PanelWindow {
                     Layout.fillWidth: true
                     Layout.fillHeight: true
 
-                    // games grid (non-ROM tabs)
                     NScrollView {
                         anchors.fill: parent
                         visible: !root.romsActive
@@ -198,7 +175,6 @@ PanelWindow {
                         }
                     }
 
-                    // ROM browser (ROMs tab)
                     Loader {
                         anchors.fill: parent
                         active: root.romsActive

@@ -12,6 +12,7 @@ import qs.Modules.Bar
 import qs.Modules.Bar.Extras
 import qs.Modules.Panels.Audio
 import qs.Modules.Panels.AiChat
+import qs.Modules.GameLauncher
 import qs.Modules.Panels.Battery
 import qs.Modules.Panels.Bluetooth
 import qs.Modules.Panels.Brightness
@@ -308,6 +309,12 @@ PanelWindow {
     AiChatPanel {
       id: aiChatPanel
       objectName: "aiChatPanel-" + (root.screen?.name || "unknown")
+      screen: root.screen
+    }
+
+    GameLauncher {
+      id: gameLauncherPanel
+      objectName: "gameLauncherPanel-" + (root.screen?.name || "unknown")
       screen: root.screen
     }
 

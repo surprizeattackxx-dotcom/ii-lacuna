@@ -13,6 +13,7 @@ Singleton {
   // Widget registry object mapping widget names to components
   property var widgets: ({
                            "AiChat": aiChatComponent,
+                           "GameLauncher": gameLauncherComponent,
                            "ActiveWindow": activeWindowComponent,
                            "AudioVisualizer": audioVisualizerComponent,
                            "Battery": batteryComponent,
@@ -123,6 +124,9 @@ Singleton {
                                   },
                                   "AiChat": {
                                     "icon": "sparkles"
+                                  },
+                                  "GameLauncher": {
+                                    "icon": "gamepad-2"
                                   },
                                   "ControlCenter": {
                                     "useDistroLogo": false,
@@ -392,6 +396,9 @@ Singleton {
   }
   property Component aiChatComponent: Component {
     AiChat {}
+  }
+  property Component gameLauncherComponent: Component {
+    GameLauncher {}
   }
   property Component spacerComponent: Component {
     Spacer {}
