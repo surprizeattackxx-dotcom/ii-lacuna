@@ -29,6 +29,7 @@ import qs.Modules.Panels.Launcher
 import qs.Modules.Panels.Settings
 import qs.Modules.Panels.AiChat
 import qs.Modules.GameLauncher
+import qs.Modules.Cheatsheet
 import qs.Modules.RegionSelector
 import qs.Modules.Toast
 import qs.Services.Control
@@ -147,6 +148,9 @@ ShellRoot {
 
       // Force-load the game launcher controller (registers IPC + shortcut)
       Item { Component.onCompleted: { void GameLauncherController; } }
+
+      // Force-load the cheatsheet controller (registers IPC + shortcut)
+      Item { Component.onCompleted: { void CheatsheetController; } }
 
       // Launcher overlay window (for overlay layer mode)
       Loader {

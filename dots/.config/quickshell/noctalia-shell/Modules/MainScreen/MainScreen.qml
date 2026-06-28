@@ -13,6 +13,7 @@ import qs.Modules.Bar.Extras
 import qs.Modules.Panels.Audio
 import qs.Modules.Panels.AiChat
 import qs.Modules.GameLauncher
+import qs.Modules.Cheatsheet
 import qs.Modules.Panels.Battery
 import qs.Modules.Panels.Bluetooth
 import qs.Modules.Panels.Brightness
@@ -315,6 +316,12 @@ PanelWindow {
     GameLauncher {
       id: gameLauncherPanel
       objectName: "gameLauncherPanel-" + (root.screen?.name || "unknown")
+      screen: root.screen
+    }
+
+    Cheatsheet {
+      id: cheatsheetPanel
+      objectName: "cheatsheetPanel-" + (root.screen?.name || "unknown")
       screen: root.screen
     }
 

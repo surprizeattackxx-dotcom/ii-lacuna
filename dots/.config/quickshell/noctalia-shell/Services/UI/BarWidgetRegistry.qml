@@ -14,6 +14,7 @@ Singleton {
   property var widgets: ({
                            "AiChat": aiChatComponent,
                            "GameLauncher": gameLauncherComponent,
+                           "Cheatsheet": cheatsheetComponent,
                            "ActiveWindow": activeWindowComponent,
                            "AudioVisualizer": audioVisualizerComponent,
                            "Battery": batteryComponent,
@@ -127,6 +128,9 @@ Singleton {
                                   },
                                   "GameLauncher": {
                                     "icon": "gamepad-2"
+                                  },
+                                  "Cheatsheet": {
+                                    "icon": "keyboard"
                                   },
                                   "ControlCenter": {
                                     "useDistroLogo": false,
@@ -399,6 +403,9 @@ Singleton {
   }
   property Component gameLauncherComponent: Component {
     GameLauncher {}
+  }
+  property Component cheatsheetComponent: Component {
+    Cheatsheet {}
   }
   property Component spacerComponent: Component {
     Spacer {}
