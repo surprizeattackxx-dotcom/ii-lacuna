@@ -721,6 +721,7 @@
     "visualizer-types": {
       "linear": "Linear",
       "mirrored": "Mirrored",
+      "segmented": "Segmented",
       "wave": "Wave"
     },
     "visualizer-visibility": {

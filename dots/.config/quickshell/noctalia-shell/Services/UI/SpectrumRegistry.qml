@@ -31,6 +31,10 @@ Singleton {
     {
       "key": "wave",
       "source": "NWaveSpectrum.qml"
+    },
+    {
+      "key": "segmented",
+      "source": "NSegmentedSpectrum.qml"
     }
   ]
 
