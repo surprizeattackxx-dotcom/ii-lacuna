@@ -488,6 +488,7 @@
     "spectrumFrameRate": 30,
     "visualizerType": "linear",
     "spectrumMirrored": true,
+    "spectrumPeaks": true,
     "mprisBlacklist": [],
     "preferredPlayer": "",
     "volumeFeedback": false,

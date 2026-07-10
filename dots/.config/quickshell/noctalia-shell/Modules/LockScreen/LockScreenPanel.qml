@@ -261,46 +261,16 @@ Item {
           clip: true
           visible: MediaService.currentPlayer && MediaService.canPlay
 
-          Loader {
+          NSpectrum {
             anchors.fill: parent
             anchors.margins: 4
-            active: Settings.data.audio.visualizerType === "linear"
             z: 0
-            sourceComponent: NLinearSpectrum {
-              anchors.fill: parent
-              values: SpectrumService.values
-              fillColor: Color.mPrimary
-              opacity: 0.4
-              mirrored: Settings.data.audio.spectrumMirrored
-            }
-          }
+            opacity: 0.4
 
-          Loader {
-            anchors.fill: parent
-            anchors.margins: 4
-            active: Settings.data.audio.visualizerType === "mirrored"
-            z: 0
-            sourceComponent: NMirroredSpectrum {
-              anchors.fill: parent
-              values: SpectrumService.values
-              fillColor: Color.mPrimary
-              opacity: 0.4
-              mirrored: Settings.data.audio.spectrumMirrored
-            }
-          }
-
-          Loader {
-            anchors.fill: parent
-            anchors.margins: 4
-            active: Settings.data.audio.visualizerType === "wave"
-            z: 0
-            sourceComponent: NWaveSpectrum {
-              anchors.fill: parent
-              values: SpectrumService.values
-              fillColor: Color.mPrimary
-              opacity: 0.4
-              mirrored: Settings.data.audio.spectrumMirrored
-            }
+            type: Settings.data.audio.visualizerType
+            values: SpectrumService.values
+            fillColor: Color.mPrimary
+            mirrored: Settings.data.audio.spectrumMirrored
           }
 
           RowLayout {

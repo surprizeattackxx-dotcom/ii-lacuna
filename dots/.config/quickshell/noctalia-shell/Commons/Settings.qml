@@ -207,6 +207,7 @@ Singleton {
       property list<string> monitors: [] // holds bar visibility per monitor
       property string density: "default" // "compact", "default", "comfortable"
       property bool showOutline: false
+      property bool segmentedIslands: false // draw each section as its own rounded pill
       property bool showCapsule: true
       property real capsuleOpacity: 1.0
       property string capsuleColorKey: "none"
@@ -718,6 +719,7 @@ Singleton {
       property int spectrumFrameRate: 30
       property string visualizerType: "linear"
       property bool spectrumMirrored: true
+      property bool spectrumPeaks: true
       property list<string> mprisBlacklist: []
       property string preferredPlayer: ""
       property bool volumeFeedback: false

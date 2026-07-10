@@ -43,7 +43,7 @@ Item {
 
   readonly property color fillColor: Color.resolveColorKey(colorName)
 
-  readonly property bool shouldShow: (currentVisualizerType !== "" && currentVisualizerType !== "none") && (!hideWhenIdle || MediaService.isPlaying)
+  readonly property bool shouldShow: SpectrumRegistry.isEnabled(currentVisualizerType) && (!hideWhenIdle || MediaService.isPlaying)
 
   // Register/unregister with SpectrumService based on visibility (use screenName — screen can be null after DPMS/output changes)
   readonly property string spectrumComponentId: "bar:audiovisualizer:" + screenName + ":" + root.section + ":" + root.sectionWidgetIndex
@@ -99,26 +99,20 @@ Item {
     border.width: Style.capsuleBorderWidth
 
     // When visualizer type or playback changes, shouldShow updates automatically
-    // The Loader dynamically loads the appropriate visualizer based on settings
-    Loader {
+    // NSpectrum resolves the implementation for currentVisualizerType via SpectrumRegistry
+    NSpectrum {
       id: visualizerLoader
       anchors.fill: parent
       anchors.margins: Style.marginS
-      active: shouldShow
-      asynchronous: true
+      active: root.shouldShow
 
-      sourceComponent: {
-        switch (currentVisualizerType) {
-        case "linear":
-          return linearComponent;
-        case "mirrored":
-          return mirroredComponent;
-        case "wave":
-          return waveComponent;
-        default:
-          return null;
-        }
-      }
+      type: root.currentVisualizerType
+      values: SpectrumService.values
+      fillColor: root.fillColor
+      showMinimumSignal: true
+      vertical: root.isVerticalBar
+      barPosition: root.barPosition
+      mirrored: Settings.data.audio.spectrumMirrored
     }
   }
 
@@ -145,10 +139,7 @@ Item {
                    }
 
                    if (action === "cycle-visualizer") {
-                     const types = ["linear", "mirrored", "wave"];
-                     const currentIndex = types.indexOf(currentVisualizerType);
-                     const nextIndex = (currentIndex + 1) % types.length;
-                     Settings.data.audio.visualizerType = types[nextIndex];
+                     Settings.data.audio.visualizerType = SpectrumRegistry.next(currentVisualizerType);
                    } else if (action === "widget-settings" && screen) {
                      BarService.openWidgetSettings(screen, section, sectionWidgetIndex, widgetId, widgetSettings);
                    }
@@ -169,48 +160,8 @@ Item {
                      PanelService.showContextMenu(contextMenu, root, screen);
                    }
                  } else {
-                   const types = ["linear", "mirrored", "wave"];
-                   const currentIndex = types.indexOf(currentVisualizerType);
-                   const nextIndex = (currentIndex + 1) % types.length;
-                   Settings.data.audio.visualizerType = types[nextIndex];
+                   Settings.data.audio.visualizerType = SpectrumRegistry.next(currentVisualizerType);
                  }
                }
-  }
-
-  Component {
-    id: linearComponent
-    NLinearSpectrum {
-      anchors.fill: parent
-      values: SpectrumService.values
-      fillColor: root.fillColor
-      showMinimumSignal: true
-      vertical: root.isVerticalBar
-      barPosition: root.barPosition
-      mirrored: Settings.data.audio.spectrumMirrored
-    }
-  }
-
-  Component {
-    id: mirroredComponent
-    NMirroredSpectrum {
-      anchors.fill: parent
-      values: SpectrumService.values
-      fillColor: root.fillColor
-      showMinimumSignal: true
-      vertical: root.isVerticalBar
-      mirrored: Settings.data.audio.spectrumMirrored
-    }
-  }
-
-  Component {
-    id: waveComponent
-    NWaveSpectrum {
-      anchors.fill: parent
-      values: SpectrumService.values
-      fillColor: root.fillColor
-      showMinimumSignal: true
-      vertical: root.isVerticalBar
-      mirrored: Settings.data.audio.spectrumMirrored
-    }
   }
 }

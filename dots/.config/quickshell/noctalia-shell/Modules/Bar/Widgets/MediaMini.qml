@@ -75,7 +75,7 @@ Item {
 
   // SpectrumService registration for visualizer
   readonly property string spectrumComponentId: "bar:mediamini:" + root.screen?.name + ":" + root.section + ":" + root.sectionWidgetIndex
-  readonly property bool needsSpectrum: root.showVisualizer && root.visualizerType !== "" && root.visualizerType !== "none" && !root.isHidden
+  readonly property bool needsSpectrum: root.showVisualizer && SpectrumRegistry.isEnabled(root.visualizerType) && !root.isHidden
 
   Layout.preferredHeight: isVertical ? -1 : Style.getBarHeightForScreen(screenName)
   Layout.preferredWidth: isVertical ? Style.getBarHeightForScreen(screenName) : -1
@@ -267,17 +267,7 @@ Item {
         height: Style.toOdd(parent.height)
         active: showVisualizer
         z: 0
-        sourceComponent: {
-          if (!showVisualizer)
-            return null;
-          if (visualizerType === "linear")
-            return linearSpectrum;
-          if (visualizerType === "mirrored")
-            return mirroredSpectrum;
-          if (visualizerType === "wave")
-            return waveSpectrum;
-          return null;
-        }
+        sourceComponent: (showVisualizer && SpectrumRegistry.isEnabled(visualizerType)) ? spectrumComponent : null
       }
 
       // Horizontal layout
@@ -423,39 +413,18 @@ Item {
   }
 
   // Components
+  // "linear" keeps its short fixed-height strip; the others fill the capsule.
   Component {
-    id: linearSpectrum
-    NLinearSpectrum {
+    id: spectrumComponent
+    NSpectrum {
       width: parent.width - Style.marginS
-      height: 20
+      height: root.visualizerType === "linear" ? 20 : parent.height - Style.marginS
+      opacity: 0.4
+
+      type: root.visualizerType
       values: SpectrumService.values
       fillColor: Color.mPrimary
-      opacity: 0.4
       barPosition: root.barPosition
-      mirrored: Settings.data.audio.spectrumMirrored
-    }
-  }
-
-  Component {
-    id: mirroredSpectrum
-    NMirroredSpectrum {
-      width: parent.width - Style.marginS
-      height: parent.height - Style.marginS
-      values: SpectrumService.values
-      fillColor: Color.mPrimary
-      opacity: 0.4
-      mirrored: Settings.data.audio.spectrumMirrored
-    }
-  }
-
-  Component {
-    id: waveSpectrum
-    NWaveSpectrum {
-      width: parent.width - Style.marginS
-      height: parent.height - Style.marginS
-      values: SpectrumService.values
-      fillColor: Color.mPrimary
-      opacity: 0.4
       mirrored: Settings.data.audio.spectrumMirrored
     }
   }

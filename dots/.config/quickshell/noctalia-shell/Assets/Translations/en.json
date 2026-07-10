@@ -812,6 +812,8 @@
       "panel-applications-empty": "No applications are currently playing audio",
       "spectrum-mirrored-description": "Mirror the spectrum so low frequencies are in the center. When off, low frequencies are on the left and high on the right.",
       "spectrum-mirrored-label": "Mirror spectrum",
+      "spectrum-peaks-description": "Show a cap above each bar that holds the recent maximum, then falls back down.",
+      "spectrum-peaks-label": "Peak hold",
       "title": "Audio",
       "visualizer-type-description": "Choose a visualization type for media playback.",
       "visualizer-type-label": "Visualization type",

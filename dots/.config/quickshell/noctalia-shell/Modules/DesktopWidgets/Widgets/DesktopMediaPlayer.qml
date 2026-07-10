@@ -64,17 +64,11 @@ DraggableDesktopWidget {
   height: implicitHeight
 
   // Visualizer visibility mode
-  readonly property bool shouldShowVisualizer: {
-    if (!root.showVisualizer)
-      return false;
-    if (root.visualizerType === "" || root.visualizerType === "none")
-      return false;
-    return true;
-  }
+  readonly property bool shouldShowVisualizer: root.showVisualizer && SpectrumRegistry.isEnabled(root.visualizerType)
 
   // Visualizer overlay (visibility controlled by visualizerVisibility setting)
   // Completely disabled during scaling to avoid expensive canvas redraws
-  Loader {
+  NSpectrum {
     anchors.fill: parent
     anchors.leftMargin: Math.round(Style.marginXS * widgetScale)
     anchors.rightMargin: Math.round(Style.marginXS * widgetScale)
@@ -83,6 +77,13 @@ DraggableDesktopWidget {
     z: 0
     clip: true
     active: needsSpectrum
+    opacity: 0.5
+
+    type: root.visualizerType
+    values: SpectrumService.values
+    fillColor: Color.mPrimary
+    mirrored: Settings.data.audio.spectrumMirrored
+
     layer.enabled: true
     layer.smooth: true
     layer.effect: MultiEffect {
@@ -97,51 +98,6 @@ DraggableDesktopWidget {
       }
     }
 
-    sourceComponent: {
-      switch (root.visualizerType) {
-      case "linear":
-        return linearComponent;
-      case "mirrored":
-        return mirroredComponent;
-      case "wave":
-        return waveComponent;
-      default:
-        return null;
-      }
-    }
-
-    Component {
-      id: linearComponent
-      NLinearSpectrum {
-        anchors.fill: parent
-        values: SpectrumService.values
-        fillColor: Color.mPrimary
-        opacity: 0.5
-        mirrored: Settings.data.audio.spectrumMirrored
-      }
-    }
-
-    Component {
-      id: mirroredComponent
-      NMirroredSpectrum {
-        anchors.fill: parent
-        values: SpectrumService.values
-        fillColor: Color.mPrimary
-        opacity: 0.5
-        mirrored: Settings.data.audio.spectrumMirrored
-      }
-    }
-
-    Component {
-      id: waveComponent
-      NWaveSpectrum {
-        anchors.fill: parent
-        values: SpectrumService.values
-        fillColor: Color.mPrimary
-        opacity: 0.5
-        mirrored: Settings.data.audio.spectrumMirrored
-      }
-    }
   }
 
   // Drop shadow for text and controls readability over visualizer

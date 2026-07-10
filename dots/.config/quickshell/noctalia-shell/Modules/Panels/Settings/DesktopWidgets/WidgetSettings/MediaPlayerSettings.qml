@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import qs.Commons
+import qs.Services.UI
 import qs.Widgets
 
 ColumnLayout {
@@ -98,20 +99,7 @@ ColumnLayout {
     label: I18n.tr("panels.audio.visualizer-type-label")
     description: I18n.tr("panels.desktop-widgets.media-player-visualizer-type-description")
     enabled: valueShowVisualizer
-    model: [
-      {
-        "key": "linear",
-        "name": I18n.tr("options.visualizer-types.linear")
-      },
-      {
-        "key": "mirrored",
-        "name": I18n.tr("options.visualizer-types.mirrored")
-      },
-      {
-        "key": "wave",
-        "name": I18n.tr("options.visualizer-types.wave")
-      }
-    ]
+    model: SpectrumRegistry.comboModel(false)
     currentKey: valueVisualizerType
     onSelected: key => {
                   valueVisualizerType = key;

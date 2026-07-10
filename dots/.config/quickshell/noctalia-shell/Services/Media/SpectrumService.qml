@@ -42,6 +42,76 @@ Singleton {
   property var values: []
   property bool isIdle: true
 
+  // Per-band peak-hold: each peak jumps to a new maximum instantly, sits there for
+  // peakHoldSeconds, then falls under constant acceleration (gravity), which reads
+  // far better than a linear fall. Computed once here so every visualizer shares it.
+  property var peaks: []
+
+  readonly property real peakHoldSeconds: 0.4
+  readonly property real peakGravity: 1.6 // amplitude units per second squared
+
+  // Internal, mutated in place; `peaks` gets a fresh copy so bindings re-evaluate.
+  property var _peakValues: []
+  property var _peakHold: []
+  property var _peakVelocity: []
+
+  function _resetPeaks(n) {
+    root._peakValues = new Array(n).fill(0);
+    root._peakHold = new Array(n).fill(0);
+    root._peakVelocity = new Array(n).fill(0);
+  }
+
+  function _updatePeaks(dt) {
+    const v = root.values;
+    const n = (v && v.length !== undefined) ? v.length : 0;
+    if (n === 0) {
+      if (root.peaks.length !== 0) {
+        root.peaks = [];
+      }
+      return;
+    }
+
+    if (root._peakValues.length !== n) {
+      root._resetPeaks(n);
+    }
+
+    var p = root._peakValues;
+    var hold = root._peakHold;
+    var vel = root._peakVelocity;
+
+    for (var i = 0; i < n; i++) {
+      const amp = v[i] || 0;
+      if (amp >= p[i]) {
+        // New peak: snap up, restart the hold, cancel any fall.
+        p[i] = amp;
+        hold[i] = root.peakHoldSeconds;
+        vel[i] = 0;
+      } else if (hold[i] > 0) {
+        hold[i] -= dt;
+      } else {
+        vel[i] += root.peakGravity * dt;
+        p[i] = Math.max(amp, p[i] - vel[i] * dt);
+      }
+    }
+
+    root.peaks = p.slice();
+  }
+
+  Timer {
+    // Decay must advance on wall time, not on audio frames, or the caps freeze
+    // in place whenever PipeWire stops emitting during silence.
+    interval: Math.max(1, Math.round(1000 / Settings.data.audio.spectrumFrameRate))
+    running: root._shouldRun && Settings.data.audio.spectrumPeaks
+    repeat: true
+    onTriggered: root._updatePeaks(interval / 1000)
+  }
+
+  onValuesChanged: {
+    if (!Settings.data.audio.spectrumPeaks && root.peaks.length !== 0) {
+      root.peaks = [];
+    }
+  }
+
   PwAudioSpectrum {
     id: spectrum
     node: Pipewire.defaultAudioSink

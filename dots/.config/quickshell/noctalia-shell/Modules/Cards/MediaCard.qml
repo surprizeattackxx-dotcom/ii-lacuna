@@ -16,7 +16,7 @@ NBox {
   readonly property bool hasActivePlayer: MediaService.currentPlayer && MediaService.canPlay
 
   // SpectrumService registration for visualizer
-  readonly property bool needsSpectrum: Settings.data.audio.visualizerType !== "" && Settings.data.audio.visualizerType !== "none"
+  readonly property bool needsSpectrum: SpectrumRegistry.isEnabled(Settings.data.audio.visualizerType)
 
   onNeedsSpectrumChanged: {
     if (root.needsSpectrum) {
@@ -136,55 +136,14 @@ NBox {
     }
 
     // Background visualizer on top of the artwork
-    Loader {
+    NSpectrum {
       anchors.fill: parent
-      active: Settings.data.audio.visualizerType !== "" && Settings.data.audio.visualizerType !== "none"
+      opacity: 0.8
 
-      sourceComponent: {
-        switch (Settings.data.audio.visualizerType) {
-        case "linear":
-          return linearComponent;
-        case "mirrored":
-          return mirroredComponent;
-        case "wave":
-          return waveComponent;
-        default:
-          return null;
-        }
-      }
-
-      Component {
-        id: linearComponent
-        NLinearSpectrum {
-          anchors.fill: parent
-          values: SpectrumService.values
-          fillColor: Color.mPrimary
-          opacity: 0.8
-          mirrored: Settings.data.audio.spectrumMirrored
-        }
-      }
-
-      Component {
-        id: mirroredComponent
-        NMirroredSpectrum {
-          anchors.fill: parent
-          values: SpectrumService.values
-          fillColor: Color.mPrimary
-          opacity: 0.8
-          mirrored: Settings.data.audio.spectrumMirrored
-        }
-      }
-
-      Component {
-        id: waveComponent
-        NWaveSpectrum {
-          anchors.fill: parent
-          values: SpectrumService.values
-          fillColor: Color.mPrimary
-          opacity: 0.8
-          mirrored: Settings.data.audio.spectrumMirrored
-        }
-      }
+      type: Settings.data.audio.visualizerType
+      values: SpectrumService.values
+      fillColor: Color.mPrimary
+      mirrored: Settings.data.audio.spectrumMirrored
     }
   }
 

@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import qs.Commons
+import qs.Services.UI
 import qs.Widgets
 
 ColumnLayout {
@@ -122,20 +123,7 @@ ColumnLayout {
     visible: valueShowVisualizer
     label: I18n.tr("bar.media-mini.visualizer-type-label")
     description: I18n.tr("bar.media-mini.visualizer-type-description")
-    model: [
-      {
-        "key": "linear",
-        "name": I18n.tr("options.visualizer-types.linear")
-      },
-      {
-        "key": "mirrored",
-        "name": I18n.tr("options.visualizer-types.mirrored")
-      },
-      {
-        "key": "wave",
-        "name": I18n.tr("options.visualizer-types.wave")
-      }
-    ]
+    model: SpectrumRegistry.comboModel(false)
     currentKey: valueVisualizerType
     onSelected: key => {
                   valueVisualizerType = key;

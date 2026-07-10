@@ -23,7 +23,7 @@ DraggableDesktopWidget {
 
   readonly property color fillColor: Color.resolveColorKey(colorName)
 
-  readonly property bool shouldShow: visualizerType !== "" && visualizerType !== "none" && (!hideWhenIdle || MediaService.isPlaying)
+  readonly property bool shouldShow: SpectrumRegistry.isEnabled(visualizerType) && (!hideWhenIdle || MediaService.isPlaying)
   readonly property bool isHidden: !shouldShow
   readonly property bool shouldRegisterSpectrum: shouldShow
 
@@ -62,54 +62,13 @@ DraggableDesktopWidget {
     radius: root.roundedCorners ? Math.min(Math.round(Style.radiusL * root.widgetScale), Style.radiusL, width / 2, height / 2) : 0
     clip: true
 
-    Loader {
+    NSpectrum {
       id: visualizerLoader
       anchors.fill: parent
       anchors.margins: root.showBackground ? Math.round(Style.marginXS * root.widgetScale) : 0
       active: root.shouldShow
-      asynchronous: true
 
-      sourceComponent: {
-        switch (root.visualizerType) {
-        case "linear":
-          return linearComponent;
-        case "mirrored":
-          return mirroredComponent;
-        case "wave":
-          return waveComponent;
-        default:
-          return null;
-        }
-      }
-    }
-  }
-
-  Component {
-    id: linearComponent
-    NLinearSpectrum {
-      anchors.fill: parent
-      values: SpectrumService.values
-      fillColor: root.fillColor
-      showMinimumSignal: true
-      mirrored: Settings.data.audio.spectrumMirrored
-    }
-  }
-
-  Component {
-    id: mirroredComponent
-    NMirroredSpectrum {
-      anchors.fill: parent
-      values: SpectrumService.values
-      fillColor: root.fillColor
-      showMinimumSignal: true
-      mirrored: Settings.data.audio.spectrumMirrored
-    }
-  }
-
-  Component {
-    id: waveComponent
-    NWaveSpectrum {
-      anchors.fill: parent
+      type: root.visualizerType
       values: SpectrumService.values
       fillColor: root.fillColor
       showMinimumSignal: true

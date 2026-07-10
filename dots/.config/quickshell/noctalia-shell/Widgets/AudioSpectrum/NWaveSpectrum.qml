@@ -11,6 +11,12 @@ Item {
   property bool vertical: false
   property bool mirrored: true
 
+  // Part of the shared spectrum contract; unused here since the curve is drawn in a shader.
+  // Peak caps would need a second data channel in wave_spectrum.frag.
+  property string barPosition: "top"
+  property var peaks: []
+  property bool showPeaks: false
+
   // Minimum signal properties
   property bool showMinimumSignal: false
   property real minimumSignalValue: 0.01 // Default to 1% of height

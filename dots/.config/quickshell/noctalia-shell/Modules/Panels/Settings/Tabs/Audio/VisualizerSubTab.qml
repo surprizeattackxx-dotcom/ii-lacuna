@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import qs.Commons
+import qs.Services.UI
 import qs.Widgets
 
 ColumnLayout {
@@ -12,24 +13,7 @@ ColumnLayout {
   NComboBox {
     label: I18n.tr("panels.audio.visualizer-type-label")
     description: I18n.tr("panels.audio.visualizer-type-description")
-    model: [
-      {
-        "key": "none",
-        "name": I18n.tr("common.none")
-      },
-      {
-        "key": "linear",
-        "name": I18n.tr("options.visualizer-types.linear")
-      },
-      {
-        "key": "mirrored",
-        "name": I18n.tr("options.visualizer-types.mirrored")
-      },
-      {
-        "key": "wave",
-        "name": I18n.tr("options.visualizer-types.wave")
-      }
-    ]
+    model: SpectrumRegistry.comboModel(true)
     currentKey: Settings.data.audio.visualizerType
     defaultValue: Settings.getDefaultValue("audio.visualizerType")
     onSelected: key => Settings.data.audio.visualizerType = key
@@ -41,6 +25,14 @@ ColumnLayout {
     checked: Settings.data.audio.spectrumMirrored
     defaultValue: Settings.getDefaultValue("audio.spectrumMirrored")
     onToggled: Settings.data.audio.spectrumMirrored = checked
+  }
+
+  NToggle {
+    label: I18n.tr("panels.audio.spectrum-peaks-label")
+    description: I18n.tr("panels.audio.spectrum-peaks-description")
+    checked: Settings.data.audio.spectrumPeaks
+    defaultValue: Settings.getDefaultValue("audio.spectrumPeaks")
+    onToggled: Settings.data.audio.spectrumPeaks = checked
   }
 
   NComboBox {
