@@ -673,6 +673,31 @@ Item {
       // Calculate margin to center widgets horizontally within the bar height
       readonly property real horizontalBarMargin: Math.round((root.barHeight - root.capsuleHeight) / 2)
 
+      // ─── Segmented islands: a rounded pill behind each non-empty section ───
+      readonly property real islandPad: Math.min(Math.round(root.capsuleHeight * 0.30), horizontalBarMargin)
+      component SectionIsland: Rectangle {
+        z: -1
+        radius: height / 2
+        color: Qt.rgba(Color.mSurface.r, Color.mSurface.g, Color.mSurface.b, Settings.data.bar.capsuleOpacity)
+        border.width: Settings.data.bar.showOutline ? 1 : 0
+        border.color: Color.mOutline
+      }
+      SectionIsland {
+        anchors.fill: leftSection
+        anchors.margins: -islandPad
+        visible: Settings.data.bar.segmentedIslands && root.leftWidgetsModel.count > 0
+      }
+      SectionIsland {
+        anchors.fill: centerSection
+        anchors.margins: -islandPad
+        visible: Settings.data.bar.segmentedIslands && root.centerWidgetsModel.count > 0
+      }
+      SectionIsland {
+        anchors.fill: rightSection
+        anchors.margins: -islandPad
+        visible: Settings.data.bar.segmentedIslands && root.rightWidgetsModel.count > 0
+      }
+
       // Left Section
       RowLayout {
         id: leftSection

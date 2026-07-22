@@ -58,7 +58,7 @@ Item {
           bar: root.bar
           shapeContainer: unifiedBackgroundsShape
           windowRoot: root.windowRoot
-          backgroundColor: panelBackgroundColor
+          backgroundColor: Settings.data.bar.segmentedIslands ? Qt.rgba(0, 0, 0, 0) : panelBackgroundColor
         }
 
         /**
@@ -168,7 +168,7 @@ Item {
             bar: root.bar
             shapeContainer: barBackgroundShape
             windowRoot: root.windowRoot
-            backgroundColor: panelBackgroundColor
+            backgroundColor: Settings.data.bar.segmentedIslands ? Qt.rgba(0, 0, 0, 0) : panelBackgroundColor
           }
         }
 
