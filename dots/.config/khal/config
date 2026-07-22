@@ -1,7 +1,7 @@
 [calendars]
 
 [[google]]
-path = ~/.local/share/vdirsyncer/google_calendar/
+path = ~/.local/share/vdirsyncer/google_calendar/*
 type = discover
 color = light blue
 

@@ -3,6 +3,10 @@ MenuBar=Disabled
 [DetailsMode]
 PreviewSize=32
 
+[ExtractDialog]
+3 screens: Window-Maximized=true
+DirHistory[$e]=$HOME/Projects/,$HOME/Documents/
+
 [General]
 BrowseThroughArchives=true
 GlobalViewProps=false

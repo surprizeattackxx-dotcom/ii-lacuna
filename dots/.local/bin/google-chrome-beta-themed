@@ -1,5 +1,4 @@
 #!/usr/bin/env bash
 exec /usr/bin/google-chrome-beta \
     --remote-debugging-port=9222 \
-    --load-extension="$HOME/.local/share/ii-lacuna-chrome-theme" \
     "$@"

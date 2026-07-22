@@ -4,6 +4,7 @@ import subprocess, json, time, os, signal, sys, socket as sock
 PIDFILE_DIR = "/tmp/hypr-dvd"
 SPEED = 8
 TICK = 1 / 60
+CHECK_EVERY = 15  # ticks between "is the window still floating?" polls
 
 
 def _socket_path():
@@ -31,6 +32,20 @@ def get_client(addr):
     return next((c for c in clients if c["address"] == addr), None)
 
 
+def pid_alive(pid):
+    # pid <= 1 must never reach os.kill: 0 signals our whole process group and
+    # -1 signals every process we own.
+    if pid <= 1:
+        return False
+    try:
+        os.kill(pid, 0)
+    except (ProcessLookupError, ValueError):
+        return False
+    except PermissionError:
+        return True
+    return True
+
+
 def get_monitor(name):
     monitors = json.loads(run(["hyprctl", "monitors", "-j"]).stdout)
     return next((m for m in monitors if m["name"] == name), monitors[0])
@@ -54,17 +69,23 @@ def main():
     os.makedirs(PIDFILE_DIR, exist_ok=True)
 
     if os.path.exists(pidfile):
-        with open(pidfile) as f:
-            pid = int(f.read().strip())
         try:
-            os.kill(pid, signal.SIGTERM)
-        except ProcessLookupError:
-            pass
+            with open(pidfile) as f:
+                pid = int(f.read().strip())
+        except (ValueError, OSError):
+            pid = -1
         try:
             os.remove(pidfile)
         except FileNotFoundError:
             pass
-        return
+        # A live bouncer means this press is the "off" half of the toggle.
+        # A stale pidfile must not swallow the press; fall through and start.
+        if pid_alive(pid):
+            try:
+                os.kill(pid, signal.SIGTERM)
+            except ProcessLookupError:
+                pass
+            return
 
     with open(pidfile, "w") as f:
         f.write(str(os.getpid()))
@@ -106,6 +127,7 @@ def main():
     max_x = mx + mw - w
     max_y = my + mh - h
 
+    tick = 0
     try:
         while True:
             x += dx
@@ -127,6 +149,12 @@ def main():
 
             move_window(addr, x, y)
             time.sleep(TICK)
+
+            tick += 1
+            if tick % CHECK_EVERY == 0:
+                client = get_client(addr)
+                if not client or not client.get("floating"):
+                    break
     finally:
         cleanup()
 
