@@ -80,17 +80,26 @@ RowLayout {
     }
 
     Rectangle {
-      implicitWidth: Math.round(root.baseSize * 0.4) * 2
-      implicitHeight: Math.round(root.baseSize * 0.4) * 2
+      // M3 switches grow the thumb on the ON state (~0.75 of track height) vs. a smaller OFF
+      // dot (~0.5) - this was previously a fixed size in both states, sliding but never resizing.
+      implicitWidth: (root.checked ? Math.round(root.baseSize * 0.4) : Math.round(root.baseSize * 0.25)) * 2
+      implicitHeight: implicitWidth
       radius: Math.min(Style.iRadiusL, height / 2)
       color: root.checked ? Color.mOnPrimary : Color.mPrimary
-      border.color: root.checked ? Color.mSurface : Color.mSurface
+      border.color: Color.mSurface
       border.width: Style.borderM
       anchors.verticalCenter: parent.verticalCenter
       anchors.verticalCenterOffset: 0
       x: root.checked ? switcher.width - width - 3 : 3
 
       Behavior on x {
+        NumberAnimation {
+          duration: Style.animationFast
+          easing.type: Easing.OutCubic
+        }
+      }
+
+      Behavior on implicitWidth {
         NumberAnimation {
           duration: Style.animationFast
           easing.type: Easing.OutCubic
