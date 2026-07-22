@@ -3,21 +3,21 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Io
-import Quickshell.Hyprland
 
-// Parses the Hyprland Lua keybinds file into categorized keybindings for the
-// cheatsheet (ported from illogical-impulse). The config is Lua (hl.bind), so
-// hyprctl binds shows opaque __lua dispatchers — we parse the .lua file instead.
+// Loads categorized keybindings for the cheatsheet from the JSON that the
+// Hyprland config itself dumps on every (re)load (config/cheatsheet.lua wraps
+// hl.bind and records each real, variable-resolved bind at registration
+// time). Replaces the old parse_binds_lua.py regex parser, which pointed at a
+// pre-migration path and couldn't resolve Lua variables anyway.
 Singleton {
     id: root
 
     property var keybinds: []         // flat: [{key_combo, category, description}]
     property var categories: []       // [{name, binds: [...]}]
 
-    readonly property string scriptPath: Quickshell.shellPath("Scripts/hyprland/parse_binds_lua.py")
-    readonly property string bindsPath: Quickshell.env("HOME") + "/.config/hypr/hyprland/keybinds.lua"
+    readonly property string jsonPath: Quickshell.env("HOME") + "/.local/state/quickshell/hypr-binds.json"
 
-    function reload() { parseProc.running = true }
+    function reload() { bindsFile.reload() }
 
     // Collapse runs of binds that share a modifier prefix + description and
     // differ only by a trailing digit (e.g. SUPER+1..0 "Focus workspace") into
@@ -65,25 +65,17 @@ Singleton {
         root.categories = order.map(c => ({ name: c, binds: root._compact(map[c]) }));
     }
 
-    Process {
-        id: parseProc
-        command: ["python3", root.scriptPath, root.bindsPath]
-        stdout: StdioCollector {
-            id: out
-            onStreamFinished: {
-                try { root.keybinds = JSON.parse(out.text); } catch (e) { root.keybinds = []; }
-                root._regroup();
-            }
+    // The config rewrites the JSON on every Hyprland reload; watchChanges
+    // picks that up, so no configreloaded event plumbing is needed.
+    FileView {
+        id: bindsFile
+        path: root.jsonPath
+        printErrors: false
+        watchChanges: true
+        onFileChanged: reload()
+        onLoaded: {
+            try { root.keybinds = JSON.parse(text()); } catch (e) { root.keybinds = []; }
+            root._regroup();
         }
     }
-
-    // Re-parse when Hyprland reloads its config.
-    Connections {
-        target: Hyprland
-        function onRawEvent(event) {
-            if (event && event.name === "configreloaded") root.reload();
-        }
-    }
-
-    Component.onCompleted: reload()
 }
