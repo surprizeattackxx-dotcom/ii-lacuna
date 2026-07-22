@@ -146,9 +146,17 @@ hl.bind("SUPER + L", hl.dsp.exec_cmd("qs -c noctalia-shell ipc call lockScreen l
 
 -- ─── System Actions ────────────────────────────
 hl.bind("CTRL + ALT + DELETE", hl.dsp.exec_cmd("qs -c noctalia-shell ipc call sessionMenu toggle"))
-hl.bind("SUPER + TAB", hl.plugin.hymission.toggle)
+-- nil-guard per the wiki plugin FAQ: hymission isn't loaded in
+-- --verify-config runs (was killing the rest of this file there) and may
+-- race hyprpm on a cold start
+if hl.plugin.hymission then
+    hl.bind("SUPER + TAB", hl.plugin.hymission.toggle)
+end
 hl.bind("SUPER + Z", hl.dsp.exec_cmd("pypr zoom"))
-hl.bind("SUPER + H", hl.dsp.exec_cmd("$HOME/hypr-gamma/gui/build/hyprgamma-gui"))
+hl.bind("SUPER + H", hl.dsp.exec_cmd("$HOME/Projects/hypr-gamma/gui/build/hyprgamma-gui")) -- repo moved to ~/Projects 2026-07-20
+hl.bind("SUPER + SHIFT + G", function()
+    if __handlers and __handlers.toggle_gaming then __handlers.toggle_gaming() end
+end, { description = "Toggle game mode (animations off/on)" })
 hl.bind("SUPER + SHIFT + S", hl.dsp.exec_cmd("grim -g \"$(slurp -d)\" - | wl-copy && notify-send -a Screenshot \"Region copied\" -i image-x-generic"))
 hl.bind("SUPER + SHIFT + A", hl.dsp.exec_cmd("qs -c noctalia-shell ipc call plugin:screen-toolkit lens"))
 hl.bind("SUPER + SHIFT + X", hl.dsp.exec_cmd("qs -c noctalia-shell ipc call plugin:screen-toolkit ocr"))
