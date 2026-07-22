@@ -24,6 +24,7 @@ Text {
   font.family: root.family
   font.weight: Style.fontWeightMedium
   font.pointSize: Math.max(1, root.pointSize * fontScale)
+  font.letterSpacing: Style.typeTracking(root.pointSize) * fontScale
   font.features: root.features
   color: Color.mOnSurface
   elide: Text.ElideRight

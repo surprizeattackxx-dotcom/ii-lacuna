@@ -22,6 +22,9 @@ PopupWindow {
   property int animationDuration: Style.animationFast
   property real animationScale: 0.85
 
+  // M3 elevation Level 1: room reserved around the visible card for the shadow to bleed into
+  readonly property int shadowPadding: Style.shadowBlurMax + Style.marginXS
+
   // Font scale calculation matching NText behavior
   readonly property real gridFontScale: {
     const baseScale = (tooltipText.family === Settings.data.ui.fontDefault ? Settings.data.ui.fontDefaultScale : Settings.data.ui.fontFixedScale);
@@ -258,10 +261,10 @@ PopupWindow {
     }
 
     const extraPad = isGridMode ? gridPaddingVertical : 0;
-    const tipWidth = Math.ceil(Math.min(contentWidth + ((padding + extraPad) * 2), maxWidth));
+    const tipWidth = Math.ceil(Math.min(contentWidth + ((padding + extraPad) * 2), maxWidth)) + root.shadowPadding * 2;
     root.implicitWidth = tipWidth;
 
-    const tipHeight = Math.ceil(contentHeight + ((padding + extraPad) * 2));
+    const tipHeight = Math.ceil(contentHeight + ((padding + extraPad) * 2)) + root.shadowPadding * 2;
     root.implicitHeight = tipHeight;
 
     // Get target's global position and convert to screen-relative
@@ -500,10 +503,10 @@ PopupWindow {
     }
 
     const extraPad = isGridMode ? gridPaddingVertical : 0;
-    const tipWidth = Math.ceil(Math.min(contentWidth + ((padding + extraPad) * 2), maxWidth));
+    const tipWidth = Math.ceil(Math.min(contentWidth + ((padding + extraPad) * 2), maxWidth)) + root.shadowPadding * 2;
     root.implicitWidth = tipWidth;
 
-    const tipHeight = Math.ceil(contentHeight + ((padding + extraPad) * 2));
+    const tipHeight = Math.ceil(contentHeight + ((padding + extraPad) * 2)) + root.shadowPadding * 2;
     root.implicitHeight = tipHeight;
 
     // Reposition based on current direction (screen-relative)
@@ -633,6 +636,7 @@ PopupWindow {
   Item {
     id: tooltipContainer
     anchors.fill: parent
+    anchors.margins: root.shadowPadding
 
     // Animation properties
     opacity: 1.0
@@ -640,9 +644,10 @@ PopupWindow {
     transformOrigin: Item.Center
 
     Rectangle {
+      id: tooltipBg
       anchors.fill: parent
       anchors.margins: border.width
-      color: Color.mSurface
+      color: Color.elevatedSurface(Color.mSurface, Style.elevation1TintOpacity)
       border.color: Color.mOutline
       border.width: Style.borderS
       radius: Math.min(Style.radiusS, Math.min(width, height) / 3)
@@ -688,6 +693,14 @@ PopupWindow {
           }
         }
       }
+    }
+
+    // M3 elevation Level 1
+    NDropShadow {
+      anchors.fill: tooltipBg
+      source: tooltipBg
+      shadowOpacity: Style.elevation1ShadowOpacity
+      shadowBlur: Style.elevation1ShadowBlur
     }
   }
 

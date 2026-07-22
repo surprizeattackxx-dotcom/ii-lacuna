@@ -32,7 +32,7 @@ Rectangle {
   topRightRadius: isLast ? Style.iRadiusM : Style.iRadiusXXXS
   bottomRightRadius: isLast ? Style.iRadiusM : Style.iRadiusXXXS
 
-  color: root.isHovered ? Color.mHover : (root.checked ? Color.mPrimary : Color.smartAlpha(Color.mSurface))
+  color: root.checked ? Color.mPrimary : Color.smartAlpha(Color.mSurface)
   border.color: root.checked ? Color.mPrimary : Color.mOutline
   border.width: Style.borderS
 
@@ -42,6 +42,32 @@ Rectangle {
       duration: Style.animationFast
       easing.type: Easing.OutCubic
     }
+  }
+
+  // M3 state layer: translucent tint of mHover over the resting background
+  Rectangle {
+    anchors.fill: parent
+    topLeftRadius: parent.topLeftRadius
+    bottomLeftRadius: parent.bottomLeftRadius
+    topRightRadius: parent.topRightRadius
+    bottomRightRadius: parent.bottomRightRadius
+    color: Qt.alpha(Color.mHover, root.isHovered ? Style.stateLayerHover : 0)
+
+    Behavior on color {
+      enabled: !Color.isTransitioning
+      ColorAnimation {
+        duration: Style.animationFast
+        easing.type: Easing.BezierSpline
+        easing.bezierCurve: Style.easingStandard
+      }
+    }
+  }
+
+  // M3 ripple
+  NRipple {
+    id: ripple
+    anchors.fill: parent
+    rippleColor: Color.mHover
   }
 
   // Content
@@ -56,7 +82,7 @@ Rectangle {
       Layout.alignment: Qt.AlignVCenter
       icon: root.icon
       pointSize: root.pointSize * 1.2
-      color: root.isHovered ? Color.mOnHover : (root.checked ? Color.mOnPrimary : Color.mOnSurface)
+      color: root.checked ? Color.mOnPrimary : Color.mOnSurface
 
       Behavior on color {
         enabled: !Color.isTransitioning
@@ -74,7 +100,7 @@ Rectangle {
       text: root.text
       pointSize: root.pointSize
       font.weight: Style.fontWeightSemiBold
-      color: root.isHovered ? Color.mOnHover : (root.checked ? Color.mOnPrimary : Color.mOnSurface)
+      color: root.checked ? Color.mOnPrimary : Color.mOnSurface
       horizontalAlignment: Text.AlignHCenter
       verticalAlignment: Text.AlignVCenter
 
@@ -116,6 +142,9 @@ Rectangle {
         TooltipService.hide();
       }
     }
+    onPressed: mouse => {
+                 ripple.trigger(mouse.x, mouse.y);
+               }
     onClicked: {
       root.clicked();
       // Update parent NTabBar's currentIndex

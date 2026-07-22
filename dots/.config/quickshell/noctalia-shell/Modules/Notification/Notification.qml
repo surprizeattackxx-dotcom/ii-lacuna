@@ -551,7 +551,7 @@ Variants {
                 radius: Style.radiusL
                 border.color: Qt.alpha(Color.mOutline, Color.adaptiveOpacity(Settings.data.notifications.backgroundOpacity) || 1.0)
                 border.width: Style.borderS
-                color: Qt.alpha(Color.mSurface, Color.adaptiveOpacity(Settings.data.notifications.backgroundOpacity) || 1.0)
+                color: Qt.alpha(Color.elevatedSurface(Color.mSurface, Style.elevation3TintOpacity), Color.adaptiveOpacity(Settings.data.notifications.backgroundOpacity) || 1.0)
 
                 // Progress bar
                 Rectangle {
@@ -594,10 +594,13 @@ Variants {
                 }
               }
 
+              // M3 elevation Level 3: floats above the panel layer
               NDropShadow {
                 anchors.fill: cardBackground
                 source: cardBackground
                 autoPaddingEnabled: true
+                shadowOpacity: Style.elevation3ShadowOpacity
+                shadowBlur: Style.elevation3ShadowBlur
               }
 
               // Content

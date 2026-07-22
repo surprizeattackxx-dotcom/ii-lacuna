@@ -32,8 +32,11 @@ PopupWindow {
 
   signal triggered(string action, var item)
 
-  implicitWidth: calculatedWidth
-  implicitHeight: Math.min(600, flickable.contentHeight + Style.margin2S)
+  // M3 elevation Level 1: room reserved around the visible menu for the shadow to bleed into
+  readonly property int shadowPadding: Style.shadowBlurMax + Style.marginXS
+
+  implicitWidth: calculatedWidth + shadowPadding * 2
+  implicitHeight: Math.min(600, flickable.contentHeight + Style.margin2S) + shadowPadding * 2
   visible: false
   color: "transparent"
 
@@ -201,6 +204,7 @@ PopupWindow {
 
   Item {
     anchors.fill: parent
+    anchors.margins: root.shadowPadding
     focus: true
     Keys.onEscapePressed: root.close()
   }
@@ -208,7 +212,8 @@ PopupWindow {
   Rectangle {
     id: menuBackground
     anchors.fill: parent
-    color: Color.mSurface
+    anchors.margins: root.shadowPadding
+    color: Color.elevatedSurface(Color.mSurface, Style.elevation1TintOpacity)
     border.color: Color.mOutline
     border.width: Style.borderS
     radius: Style.radiusM
@@ -222,10 +227,18 @@ PopupWindow {
     }
   }
 
+  // M3 elevation Level 1
+  NDropShadow {
+    anchors.fill: menuBackground
+    source: menuBackground
+    shadowOpacity: root.visible ? Style.elevation1ShadowOpacity : 0
+    shadowBlur: Style.elevation1ShadowBlur
+  }
+
   Flickable {
     id: flickable
     anchors.fill: parent
-    anchors.margins: Style.marginS
+    anchors.margins: Style.marginS + root.shadowPadding
     contentHeight: columnLayout.implicitHeight
     interactive: true
     opacity: root.visible ? 1.0 : 0.0

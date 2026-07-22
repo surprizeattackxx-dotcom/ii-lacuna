@@ -8,6 +8,7 @@ RadioButton {
 
   property real pointSize: Style.fontSizeM
 
+  hoverEnabled: true
   implicitWidth: outerCircle.implicitWidth + Style.marginS + contentItem.implicitWidth
 
   indicator: Rectangle {
@@ -20,6 +21,21 @@ RadioButton {
     border.color: root.checked ? Color.mPrimary : Color.mOnSurface
     border.width: Style.borderM
     anchors.verticalCenter: parent.verticalCenter
+
+    // M3 state layer: translucent tint over the whole indicator on hover
+    Rectangle {
+      anchors.fill: parent
+      radius: parent.radius
+      color: Qt.alpha(root.checked ? Color.mPrimary : Color.mOnSurface, root.enabled && root.hovered ? Style.stateLayerHover : 0)
+
+      Behavior on color {
+        ColorAnimation {
+          duration: Style.animationFast
+          easing.type: Easing.BezierSpline
+          easing.bezierCurve: Style.easingStandard
+        }
+      }
+    }
 
     Rectangle {
       anchors.fill: parent

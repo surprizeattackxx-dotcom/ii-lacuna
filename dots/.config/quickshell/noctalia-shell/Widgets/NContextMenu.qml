@@ -61,11 +61,31 @@ Popup {
   width: 180
   padding: Style.marginS
 
-  background: Rectangle {
-    color: Color.mSurfaceVariant
-    border.color: Color.mOutline
-    border.width: Style.borderS
-    radius: Style.iRadiusM
+  // M3 elevation Level 1: negative insets give the background room to render a shadow
+  // outside the popup's logical content box, without affecting positioning math elsewhere.
+  readonly property int shadowPadding: Style.shadowBlurMax + Style.marginXS
+  topInset: -shadowPadding
+  bottomInset: -shadowPadding
+  leftInset: -shadowPadding
+  rightInset: -shadowPadding
+
+  background: Item {
+    Rectangle {
+      id: menuBg
+      anchors.fill: parent
+      anchors.margins: root.shadowPadding
+      color: Color.elevatedSurface(Color.mSurfaceVariant, Style.elevation1TintOpacity)
+      border.color: Color.mOutline
+      border.width: Style.borderS
+      radius: Style.iRadiusM
+    }
+
+    NDropShadow {
+      anchors.fill: menuBg
+      source: menuBg
+      shadowOpacity: Style.elevation1ShadowOpacity
+      shadowBlur: Style.elevation1ShadowBlur
+    }
   }
 
   contentItem: NListView {

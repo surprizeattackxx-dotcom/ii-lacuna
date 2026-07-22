@@ -23,6 +23,18 @@ Singleton {
   readonly property int fontWeightSemiBold: 600
   readonly property int fontWeightBold: 700
 
+  // M3 type scale: letter-spacing tapers from most tracking at small sizes
+  // (legibility, matching M3's Label scale) down to ~0 by title/headline-scale
+  // sizes (~24px+ in this shell's ramp) - the one type-scale dimension this
+  // shell had none of. Continuous function, not a per-tier lookup, so any
+  // custom/computed pointSize still gets a sensible value.
+  function typeTracking(pointSize) {
+    const minSize = fontSizeXXS, maxSize = fontSizeXXXL;
+    const minTracking = 0.4, maxTracking = 0;
+    const t = Math.max(0, Math.min(1, (pointSize - minSize) / (maxSize - minSize)));
+    return minTracking + (maxTracking - minTracking) * t;
+  }
+
   // Container Radii: major layout sections (sidebars, cards, content panels)
   readonly property int radiusXXXS: Math.round(3 * Settings.data.general.radiusRatio)
   readonly property int radiusXXS: Math.round(4 * Settings.data.general.radiusRatio)
@@ -72,15 +84,39 @@ Singleton {
   readonly property real opacityAlmost: 0.95
   readonly property real opacityFull: 1.0
 
+  // M3 state layers: translucent tint of a widget's own content color, laid over its resting color
+  readonly property real stateLayerHover: 0.08
+  readonly property real stateLayerPress: 0.12
+
+  // M3 motion: real published easing curves, in QML BezierSpline format (each 3-point group is
+  // [control1, control2, endpoint]; the animation implicitly starts at (0,0)).
+  // easingStandard is a single cubic-bezier(0.2, 0, 0, 1) segment - M3's workhorse curve for
+  // anything that isn't a large spatial transition.
+  readonly property var easingStandard: [0.2, 0, 0, 1, 1, 1]
+  // easingEmphasized is the real multi-segment M3 Emphasized path (a single cubic-bezier can't
+  // express its overshoot-and-settle character). Was already correctly ported into SmartPanel.qml
+  // and settings-portal.qml as inline duplicates; this is the single shared copy both now use.
+  readonly property var easingEmphasized: [0.05, 0, 0.133, 0.06, 0.166, 0.4, 0.208, 0.82, 0.25, 1, 1, 1]
+
   readonly property real effectivePanelOpacity: PowerProfileService.noctaliaPerformanceMode ? 1.0 : Color.adaptiveOpacity(Settings.data.ui.panelBackgroundOpacity)
   readonly property real effectiveBarOpacity: PowerProfileService.noctaliaPerformanceMode ? 1.0 : Settings.data.bar.backgroundOpacity
 
-  // Shadows
+  // Shadows (this is the "Level 2" tier: bar + all SmartPanel panels, unified single-pass shadow)
   readonly property real shadowOpacity: 0.85
   readonly property real shadowBlur: 1.0
   readonly property int shadowBlurMax: 22
   readonly property real shadowHorizontalOffset: Settings.data.general.shadowOffsetX
   readonly property real shadowVerticalOffset: Settings.data.general.shadowOffsetY
+
+  // M3 elevation Level 1: tooltips, context menus — small surfaces just off the base plane
+  readonly property real elevation1ShadowOpacity: 0.5
+  readonly property real elevation1ShadowBlur: 0.6
+  readonly property real elevation1TintOpacity: 0.05
+
+  // M3 elevation Level 3: toasts, notifications, OSD, media cards — float above the panel layer
+  readonly property real elevation3ShadowOpacity: 0.95
+  readonly property real elevation3ShadowBlur: 1.3
+  readonly property real elevation3TintOpacity: 0.11
 
   // Animation duration (ms)
   readonly property int animationFaster: (Settings.data.general.animationDisabled || PowerProfileService.noctaliaPerformanceMode) ? 0 : Math.round(75 / Settings.data.general.animationSpeed)

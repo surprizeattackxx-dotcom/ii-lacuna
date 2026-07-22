@@ -58,7 +58,7 @@ FloatingWindow {
     NumberAnimation {
       duration: 300
       easing.type: Easing.BezierSpline
-      easing.bezierCurve: [0.05, 0, 0.133, 0.06, 0.166, 0.4, 0.208, 0.82, 0.25, 1, 1, 1]
+      easing.bezierCurve: Style.easingEmphasized
     }
   }
 

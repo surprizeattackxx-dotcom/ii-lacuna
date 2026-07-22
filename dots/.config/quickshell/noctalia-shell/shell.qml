@@ -270,4 +270,5 @@ ShellRoot {
 
     setupPanel.open();
   }
+  // plugin-reload-kick
 }

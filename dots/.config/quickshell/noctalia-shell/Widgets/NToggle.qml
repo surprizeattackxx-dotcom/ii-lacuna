@@ -64,6 +64,21 @@ RowLayout {
       }
     }
 
+    // M3 state layer: translucent tint over the track on hover
+    Rectangle {
+      anchors.fill: parent
+      radius: parent.radius
+      color: Qt.alpha(root.checked ? Color.mOnPrimary : Color.mOnSurface, root.enabled && root.hovering ? Style.stateLayerHover : 0)
+
+      Behavior on color {
+        ColorAnimation {
+          duration: Style.animationFast
+          easing.type: Easing.BezierSpline
+          easing.bezierCurve: Style.easingStandard
+        }
+      }
+    }
+
     Rectangle {
       implicitWidth: Math.round(root.baseSize * 0.4) * 2
       implicitHeight: Math.round(root.baseSize * 0.4) * 2

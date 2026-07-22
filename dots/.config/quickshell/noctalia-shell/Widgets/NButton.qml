@@ -35,9 +35,6 @@ Item {
     if (!root.enabled) {
       return Color.mOnSurfaceVariant;
     }
-    if (root.hovered) {
-      return root.textHoverColor;
-    }
     if (root.outlined) {
       return root.backgroundColor;
     }
@@ -62,8 +59,6 @@ Item {
     color: {
       if (!root.enabled)
         return root.outlined ? "transparent" : Qt.lighter(Color.mSurfaceVariant, 1.2);
-      if (root.hovered)
-        return root.hoverColor;
       return root.outlined ? "transparent" : root.backgroundColor;
     }
 
@@ -71,8 +66,6 @@ Item {
     border.color: {
       if (!root.enabled)
         return Color.mOutline;
-      if (root.hovered)
-        return root.hoverColor;
       return root.outlined ? root.backgroundColor : "transparent";
     }
 
@@ -90,6 +83,29 @@ Item {
         duration: Style.animationFast
         easing.type: Easing.OutCubic
       }
+    }
+
+    // M3 state layer: translucent tint of hoverColor over the resting background
+    Rectangle {
+      anchors.fill: parent
+      radius: parent.radius
+      color: Qt.alpha(root.hoverColor, root.enabled && root.hovered ? Style.stateLayerHover : 0)
+
+      Behavior on color {
+        enabled: !Color.isTransitioning
+        ColorAnimation {
+          duration: Style.animationFast
+          easing.type: Easing.BezierSpline
+          easing.bezierCurve: Style.easingStandard
+        }
+      }
+    }
+
+    // M3 ripple
+    NRipple {
+      id: ripple
+      anchors.fill: parent
+      rippleColor: root.hoverColor
     }
 
     // Content
@@ -161,6 +177,7 @@ Item {
         }
       }
       onPressed: mouse => {
+                   ripple.trigger(mouse.x, mouse.y);
                    if (root.tooltipText && (!Array.isArray(root.tooltipText) || root.tooltipText.length > 0)) {
                      TooltipService.hide();
                    }

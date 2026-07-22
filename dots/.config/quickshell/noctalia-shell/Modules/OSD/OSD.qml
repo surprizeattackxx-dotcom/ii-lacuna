@@ -575,7 +575,7 @@ Variants {
           anchors.fill: parent
           anchors.margins: Style.marginM * 1.5
           radius: Style.radiusL
-          color: Qt.alpha(Color.mSurface, Color.adaptiveOpacity(Settings.data.osd.backgroundOpacity) || 1.0)
+          color: Qt.alpha(Color.elevatedSurface(Color.mSurface, Style.elevation3TintOpacity), Color.adaptiveOpacity(Settings.data.osd.backgroundOpacity) || 1.0)
           border.color: Qt.alpha(Color.mOutline, Color.adaptiveOpacity(Settings.data.osd.backgroundOpacity) || 1.0)
           border.width: {
             const bw = Math.max(2, Style.borderM);
@@ -583,10 +583,13 @@ Variants {
           }
         }
 
+        // M3 elevation Level 3: floats above the panel layer
         NDropShadow {
           anchors.fill: background
           source: background
           autoPaddingEnabled: true
+          shadowOpacity: Style.elevation3ShadowOpacity
+          shadowBlur: Style.elevation3ShadowBlur
         }
 
         Loader {

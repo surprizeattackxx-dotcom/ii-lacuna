@@ -46,18 +46,9 @@ Rectangle {
 
   // Appearance
   opacity: enabled ? 1.0 : 0.6
-  color: {
-    if (root.enabled && root.hovering || pressed) {
-      return colorBgHover;
-    }
-
-    if (hot) {
-      return colorBgHot;
-    }
-    return colorBg;
-  }
+  color: hot ? colorBgHot : colorBg
   radius: Math.min(Style.iRadiusL, width / 2)
-  border.color: root.enabled && root.hovering ? colorBorderHover : colorBorder
+  border.color: colorBorder
   border.width: Style.borderS
 
   Behavior on color {
@@ -68,20 +59,35 @@ Rectangle {
     }
   }
 
+  // M3 state layer: translucent tint of colorBgHover over the resting background, heavier while pressed
+  Rectangle {
+    anchors.fill: parent
+    radius: parent.radius
+    color: Qt.alpha(root.colorBgHover, !root.enabled ? 0 : (root.pressed ? Style.stateLayerPress : (root.hovering ? Style.stateLayerHover : 0)))
+
+    Behavior on color {
+      enabled: !Color.isTransitioning
+      ColorAnimation {
+        duration: Style.animationFast
+        easing.type: Easing.BezierSpline
+        easing.bezierCurve: Style.easingStandard
+      }
+    }
+  }
+
+  // M3 ripple
+  NRipple {
+    id: ripple
+    anchors.fill: parent
+    rippleColor: root.colorBgHover
+  }
+
   // Icon
   NIcon {
     icon: root.icon
     pointSize: Math.max(1, Math.round(root.width * 0.48))
     applyUiScale: root.applyUiScale
-    color: {
-      if (root.enabled && root.hovering || pressed) {
-        return colorFgHover;
-      }
-      if (hot) {
-        return colorFgHot;
-      }
-      return colorFg;
-    }
+    color: hot ? colorFgHot : colorFg
     // Center horizontally
     x: (root.width - width) / 2
     // Center vertically accounting for font metrics
@@ -123,6 +129,7 @@ Rectangle {
     onPressed: function (mouse) {
       if (root.enabled) {
         root.pressed = true;
+        ripple.trigger(mouse.x, mouse.y);
       }
       if (tooltipText && (!Array.isArray(tooltipText) || tooltipText.length > 0)) {
         TooltipService.hide();

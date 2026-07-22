@@ -1,7 +1,7 @@
 -- material-you.lua — MD3 Material You official easing curves
 
 -- MD3 official easing curves
-hl.curve("emphasized",      { type = "bezier", points = { { 0.2, 0.0 }, { 0.0, 1.0 } } })   -- MD3 Emphasized
+hl.curve("emphasized",      { type = "bezier", points = { { 0.05, 0.7 }, { 0.1, 1.0 } } })  -- MD3 Emphasized (approximated via Emphasized-Decelerate; a single cubic segment can't express the true multi-part path)
 hl.curve("emphasizedDecel", { type = "bezier", points = { { 0.05, 0.7 }, { 0.1, 1.0 } } })  -- MD3 Emphasized-Decelerate
 hl.curve("emphasizedAccel", { type = "bezier", points = { { 0.3, 0.0 }, { 0.8, 0.15 } } })  -- MD3 Emphasized-Accelerate
 hl.curve("standard",        { type = "bezier", points = { { 0.2, 0.0 }, { 0.0, 1.0 } } })   -- MD3 Standard

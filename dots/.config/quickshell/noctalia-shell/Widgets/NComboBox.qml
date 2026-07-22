@@ -272,7 +272,15 @@ RowLayout {
           width: listView.availableWidth
           height: delegateText.implicitHeight + Style.margin2S
           radius: Style.iRadiusS
-          color: isHighlighted ? Color.mHover : "transparent"
+          // M3 state layer: translucent tint instead of a flat highlight fill
+          color: Qt.alpha(Color.mHover, isHighlighted ? Style.stateLayerHover : 0)
+
+          // M3 ripple
+          NRipple {
+            id: ripple
+            anchors.fill: parent
+            rippleColor: Color.mHover
+          }
 
           NText {
             id: delegateText
@@ -282,7 +290,7 @@ RowLayout {
             verticalAlignment: Text.AlignVCenter
             elide: Text.ElideRight
             pointSize: Style.fontSizeM
-            color: delegateRect.isHighlighted ? Color.mOnHover : Color.mOnSurface
+            color: Color.mOnSurface
             text: {
               var item = root.getItem(delegateRect.index);
               return item && item.name ? item.name : "";
@@ -297,6 +305,9 @@ RowLayout {
                 listView.currentIndex = delegateRect.index;
               }
             }
+            onPressed: mouse => {
+                         ripple.trigger(mouse.x, mouse.y);
+                       }
             onClicked: {
               var item = root.getItem(delegateRect.index);
               if (item && item.key !== undefined) {

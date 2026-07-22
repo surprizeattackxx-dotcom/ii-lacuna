@@ -368,6 +368,12 @@ Singleton {
     return Qt.alpha(baseColor, resultAlpha);
   }
 
+  // M3 elevation surface tint: washes a bit of primary color into a surface as it "lifts"
+  // off the base plane, since shadows alone barely read in dark theme.
+  function elevatedSurface(baseColor, tintOpacity) {
+    return Qt.tint(baseColor, Qt.alpha(root.mPrimary, tintOpacity));
+  }
+
   readonly property var colorKeyModel: [
     {
       "key": "none",

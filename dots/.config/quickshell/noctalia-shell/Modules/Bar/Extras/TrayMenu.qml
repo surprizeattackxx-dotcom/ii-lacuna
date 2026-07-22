@@ -59,6 +59,7 @@ PopupWindow {
 
   visible: false
   color: "transparent"
+
   anchor.item: anchorItem
   anchor.rect.x: {
     if (anchorItem && screen) {

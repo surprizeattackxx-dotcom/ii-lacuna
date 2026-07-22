@@ -850,7 +850,7 @@ Item {
       // Track whether dimensions have been initialized (to prevent initial changes from animating)
       property bool dimensionsInitialized: false
 
-      property var bezierCurve: [0.05, 0, 0.133, 0.06, 0.166, 0.4, 0.208, 0.82, 0.25, 1, 1, 1]
+      property var bezierCurve: Style.easingEmphasized
 
       // Determine which edges the panel is closest to for animation direction
       // Use target position (not animated position) to avoid binding loops

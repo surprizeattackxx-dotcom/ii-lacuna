@@ -54,9 +54,9 @@ Item {
     height: root.buttonSize
     anchors.centerIn: parent
 
-    color: root.enabled && root.hovering ? colorBgHover : colorBg
+    color: colorBg
     radius: Math.min((customRadius >= 0 ? customRadius : Style.iRadiusL), width / 2)
-    border.color: root.enabled && root.hovering ? colorBorderHover : colorBorder
+    border.color: colorBorder
     border.width: Style.borderS
 
     Behavior on color {
@@ -67,11 +67,34 @@ Item {
       }
     }
 
+    // M3 state layer: translucent tint of colorBgHover over the resting background
+    Rectangle {
+      anchors.fill: parent
+      radius: parent.radius
+      color: Qt.alpha(root.colorBgHover, root.enabled && root.hovering ? Style.stateLayerHover : 0)
+
+      Behavior on color {
+        enabled: !Color.isTransitioning
+        ColorAnimation {
+          duration: Style.animationFast
+          easing.type: Easing.BezierSpline
+          easing.bezierCurve: Style.easingStandard
+        }
+      }
+    }
+
+    // M3 ripple
+    NRipple {
+      id: ripple
+      anchors.fill: parent
+      rippleColor: root.colorBgHover
+    }
+
     NIcon {
       icon: root.icon
       pointSize: Style.toOdd(visualButton.width * 0.48)
       applyUiScale: root.applyUiScale
-      color: root.enabled && root.hovering ? colorFgHover : colorFg
+      color: colorFg
       // Pixel-perfect centering
       x: Style.pixelAlignCenter(visualButton.width, width)
       y: Style.pixelAlignCenter(visualButton.height, contentHeight)
@@ -108,6 +131,9 @@ Item {
       }
       root.exited();
     }
+    onPressed: mouse => {
+                 ripple.trigger(mouse.x - visualButton.x, mouse.y - visualButton.y);
+               }
     onClicked: mouse => {
                  if (tooltipText && (!Array.isArray(tooltipText) || tooltipText.length > 0)) {
                    TooltipService.hide(root);

@@ -60,6 +60,21 @@ RowLayout {
       }
     }
 
+    // M3 state layer: translucent tint over the box on hover
+    Rectangle {
+      anchors.fill: parent
+      radius: parent.radius
+      color: Qt.alpha(root.checked ? root.activeOnColor : Color.mOnSurface, root.enabled && root.hovering ? Style.stateLayerHover : 0)
+
+      Behavior on color {
+        ColorAnimation {
+          duration: Style.animationFast
+          easing.type: Easing.BezierSpline
+          easing.bezierCurve: Style.easingStandard
+        }
+      }
+    }
+
     NIcon {
       visible: root.checked
       x: Style.pixelAlignCenter(parent.width, width)
