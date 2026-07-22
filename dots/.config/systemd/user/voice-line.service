@@ -1,0 +1,13 @@
+[Unit]
+Description=voice-line (Right Alt push-to-talk to Claude Code)
+After=graphical-session.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/Projects/voice-line
+ExecStart=%h/Projects/voice-line/run-voice-line.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=graphical-session.target

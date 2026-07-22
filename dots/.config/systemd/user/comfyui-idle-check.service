@@ -1,0 +1,6 @@
+[Unit]
+Description=Stop ComfyUI if it's been idle for 10 minutes
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/comfyui-idle-check.sh

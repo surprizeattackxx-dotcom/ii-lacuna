@@ -1,0 +1,16 @@
+[Unit]
+Description=wayvnc - VNC server for real output %i (LAN desktop mirror)
+Documentation=man:wayvnc(1)
+PartOf=graphical-session.target
+After=graphical-session.target
+ConditionEnvironment=WAYLAND_DISPLAY
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/wayvnc-desktop %i
+Restart=on-failure
+RestartSec=2
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=graphical-session.target

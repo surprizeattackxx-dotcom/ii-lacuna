@@ -1,0 +1,26 @@
+[Unit]
+Description=Weston RDP server (headless remote desktop)
+Documentation=man:weston-rdp(7) man:weston.ini(5)
+
+[Service]
+Type=exec
+# Bind to loopback ONLY. Weston's RDP backend performs NO authentication --
+# TLS encrypts the wire but anyone who can reach this port gets a desktop
+# running as this user. Reach it via `ssh -L 3389:localhost:3389 <host>`.
+ExecStart=/usr/bin/weston \
+    --backend=rdp \
+    --config=%h/.config/weston-rdp/weston.ini \
+    --socket=weston-rdp \
+    --address=127.0.0.1 \
+    --port=3389
+
+# Don't let the outer Hyprland session's display vars leak in and confuse
+# weston's XWayland child.
+UnsetEnvironment=DISPLAY WAYLAND_DISPLAY
+
+Restart=on-failure
+RestartSec=2
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=default.target

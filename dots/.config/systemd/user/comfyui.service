@@ -1,0 +1,16 @@
+[Unit]
+Description=ComfyUI (backend, fronted by proxy-to-comfyui.socket on :8188)
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/Projects/ComfyUI
+ExecStart=%h/Projects/ComfyUI/.venv/bin/python main.py --port 8189 --lowvram
+# Hold the start job open until ComfyUI actually serves, so the proxy
+# (ordered After= this unit) never forwards into a dead port.
+ExecStartPost=/bin/sh -c 'until curl -sf -o /dev/null --max-time 2 http://127.0.0.1:8189/system_stats; do sleep 0.3; done'
+Restart=on-failure
+RestartSec=5
+
+# No [Install] section: started on demand by proxy-to-comfyui.service,
+# never at boot.

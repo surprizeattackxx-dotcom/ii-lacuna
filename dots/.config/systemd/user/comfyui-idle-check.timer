@@ -1,0 +1,9 @@
+[Unit]
+Description=Periodically check whether ComfyUI is idle and stop it
+
+[Timer]
+OnUnitActiveSec=5min
+OnBootSec=5min
+
+[Install]
+WantedBy=timers.target

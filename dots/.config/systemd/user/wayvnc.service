@@ -1,0 +1,19 @@
+[Unit]
+Description=wayvnc - VNC server for a headless Hyprland output (OSRS on phone)
+Documentation=man:wayvnc(1)
+PartOf=graphical-session.target
+After=graphical-session.target
+ConditionEnvironment=WAYLAND_DISPLAY
+
+[Service]
+Type=simple
+# Creates/configures the HEADLESS output, then execs wayvnc onto it.
+# Credentials + TLS live in ~/.config/wayvnc/config (mode 0600).
+ExecStart=%h/.local/bin/wayvnc-osrs
+ExecStopPost=%h/.local/bin/wayvnc-osrs-down
+Restart=on-failure
+RestartSec=2
+NoNewPrivileges=yes
+
+[Install]
+WantedBy=graphical-session.target

@@ -1,0 +1,13 @@
+[Unit]
+Description=Watch quickshell-noctalia.service's journal for real errors and notify
+After=quickshell-noctalia.service
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/home/donnie/.local/bin/quickshell-error-watch.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

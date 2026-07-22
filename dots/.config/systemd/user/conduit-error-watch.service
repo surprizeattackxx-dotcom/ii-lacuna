@@ -1,0 +1,12 @@
+[Unit]
+Description=Watch Conduit's errors.log for dead sources and notify
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/home/donnie/.local/bin/conduit-error-watch.sh
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

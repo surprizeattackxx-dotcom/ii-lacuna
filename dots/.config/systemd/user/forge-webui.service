@@ -1,0 +1,14 @@
+[Unit]
+Description=Stable Diffusion WebUI Forge
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/Projects/stable-diffusion-webui-forge
+Environment=PYTHONPATH=%h/Projects/forge-env-py311/lib/python3.11/site-packages
+ExecStart=%h/Projects/forge-env-py311/bin/python launch.py --listen --enable-insecure-extension-access --ui-debug-mode
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target

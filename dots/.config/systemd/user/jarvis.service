@@ -1,0 +1,15 @@
+[Unit]
+Description=Jarvis (local AI assistant daemon)
+After=graphical-session.target
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+WorkingDirectory=%h/Projects/Jarvis
+ExecStart=%h/Projects/Jarvis/.venv/bin/python -m jarvis.main
+Restart=always
+RestartSec=2
+Slice=session.slice
+
+[Install]
+WantedBy=graphical-session.target
