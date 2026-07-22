@@ -20,7 +20,10 @@ Item {
   property real iconSize: Style.fontSizeL
   property bool outlined: false
   property int horizontalAlignment: Qt.AlignHCenter
-  property real buttonRadius: Style.iRadiusS
+  // M3 filled/outlined buttons are a true stadium/pill shape by default — matches the same
+  // Math.min(cap, dimension/2) idiom NToggle/NIconButton/NRadioButton already use, so this was
+  // the one interactive widget still using a fixed rounded-rect instead.
+  property real buttonRadius: Math.min(Style.iRadiusL, bg.height / 2)
 
   // Signals
   signal clicked

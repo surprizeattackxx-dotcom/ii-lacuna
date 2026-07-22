@@ -23,7 +23,8 @@ Item {
   // Reference to MainScreen (for panel access)
   required property var windowRoot
 
-  readonly property color panelBackgroundColor: Color.mSurface
+  // M3 elevation Level 2: bar + panels get the same tonal surface tint tooltips/toasts already had.
+  readonly property color panelBackgroundColor: Color.elevatedSurface(Color.mSurface, Style.elevation2TintOpacity)
 
   anchors.fill: parent
 

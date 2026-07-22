@@ -23,7 +23,8 @@ Item {
   property real preferredHeight: 900
   property real preferredWidthRatio
   property real preferredHeightRatio
-  property color panelBackgroundColor: Color.mSurface
+  // M3 elevation Level 2: same tonal surface tint the bar (AllBackgrounds.qml) now gets.
+  property color panelBackgroundColor: Color.elevatedSurface(Color.mSurface, Style.elevation2TintOpacity)
   property color panelBorderColor: Color.mOutline
   property var buttonItem: null
   property bool forceAttachToBar: false

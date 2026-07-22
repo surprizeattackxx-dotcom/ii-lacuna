@@ -86,7 +86,9 @@ Singleton {
 
   // M3 state layers: translucent tint of a widget's own content color, laid over its resting color
   readonly property real stateLayerHover: 0.08
+  readonly property real stateLayerFocus: 0.10
   readonly property real stateLayerPress: 0.12
+  readonly property real stateLayerDragged: 0.16
 
   // M3 motion: real published easing curves, in QML BezierSpline format (each 3-point group is
   // [control1, control2, endpoint]; the animation implicitly starts at (0,0)).
@@ -101,22 +103,35 @@ Singleton {
   readonly property real effectivePanelOpacity: PowerProfileService.noctaliaPerformanceMode ? 1.0 : Color.adaptiveOpacity(Settings.data.ui.panelBackgroundOpacity)
   readonly property real effectiveBarOpacity: PowerProfileService.noctaliaPerformanceMode ? 1.0 : Settings.data.bar.backgroundOpacity
 
-  // Shadows (this is the "Level 2" tier: bar + all SmartPanel panels, unified single-pass shadow)
+  // M3 elevation scale, levels 0-5. Tint opacities are the real published M3 surface-tint
+  // percentages (primary color blended into the surface via Color.elevatedSurface()); shadow
+  // opacity/blur are this shell's own tuning, not spec values (M3 doesn't publish those as numbers).
+  // Level 0: resting surfaces with no separation (base background layer, list rows).
+  readonly property real elevation0TintOpacity: 0.0
+
+  // Level 1: tooltips, context menus — small surfaces just off the base plane.
+  readonly property real elevation1ShadowOpacity: 0.5
+  readonly property real elevation1ShadowBlur: 0.6
+  readonly property real elevation1TintOpacity: 0.05
+
+  // Level 2: bar + all SmartPanel panels, unified single-pass shadow. The shell's main visible
+  // surfaces — this is the tier that was missing its tonal tint entirely until 2026-07-22.
   readonly property real shadowOpacity: 0.85
   readonly property real shadowBlur: 1.0
   readonly property int shadowBlurMax: 22
   readonly property real shadowHorizontalOffset: Settings.data.general.shadowOffsetX
   readonly property real shadowVerticalOffset: Settings.data.general.shadowOffsetY
+  readonly property real elevation2TintOpacity: 0.08
 
-  // M3 elevation Level 1: tooltips, context menus — small surfaces just off the base plane
-  readonly property real elevation1ShadowOpacity: 0.5
-  readonly property real elevation1ShadowBlur: 0.6
-  readonly property real elevation1TintOpacity: 0.05
-
-  // M3 elevation Level 3: toasts, notifications, OSD, media cards — float above the panel layer
+  // Level 3: toasts, notifications, OSD, media cards — float above the panel layer.
   readonly property real elevation3ShadowOpacity: 0.95
   readonly property real elevation3ShadowBlur: 1.3
   readonly property real elevation3TintOpacity: 0.11
+
+  // Level 4/5: reserved for modal/dialog-class surfaces above everything else. Nothing in this
+  // shell renders at these tiers yet (no true modal dialogs) — defined now for a complete scale.
+  readonly property real elevation4TintOpacity: 0.12
+  readonly property real elevation5TintOpacity: 0.14
 
   // Animation duration (ms)
   readonly property int animationFaster: (Settings.data.general.animationDisabled || PowerProfileService.noctaliaPerformanceMode) ? 0 : Math.round(75 / Settings.data.general.animationSpeed)
