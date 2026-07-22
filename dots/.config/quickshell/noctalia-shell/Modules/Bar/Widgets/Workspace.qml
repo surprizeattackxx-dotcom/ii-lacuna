@@ -4,6 +4,7 @@ import QtQuick.Effects
 import QtQuick.Layouts
 import QtQuick.Window
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Widgets
 import qs.Commons
@@ -274,6 +275,33 @@ Item {
     Settings.data.dock.pinnedApps = pinnedApps;
   }
 
+  // Hyprland-only: resolves the capturable Wayland toplevel handle for the
+  // active window on a given workspace, for the live hover preview. Returns
+  // null on any other compositor or if nothing's found.
+  function findActiveToplevelForWorkspace(wsId) {
+    if (!CompositorService.isHyprland)
+      return null;
+    if (!Hyprland.toplevels || !Hyprland.toplevels.values)
+      return null;
+
+    var candidates = [];
+    var list = Hyprland.toplevels.values;
+    for (var i = 0; i < list.length; i++) {
+      var tl = list[i];
+      if (tl && tl.workspace && tl.workspace.id === wsId) {
+        candidates.push(tl);
+      }
+    }
+    if (candidates.length === 0)
+      return null;
+
+    for (var j = 0; j < candidates.length; j++) {
+      if (candidates[j].activated)
+        return candidates[j].wayland;
+    }
+    return candidates[0].wayland;
+  }
+
   // Deferred via Qt.callLater to avoid synchronous ListModel mutations during
   // signal cascades. Qt.callLater deduplicates by function identity, so rapid
   // calls from multiple signal handlers coalesce into a single refresh.
@@ -442,6 +470,10 @@ Item {
       property: "masterProgress"
       value: 0.0
     }
+  }
+
+  WorkspaceLivePreview {
+    id: livePreview
   }
 
   NPopupContextMenu {
@@ -720,6 +752,14 @@ Item {
 
       HoverHandler {
         id: groupHoverHandler
+        onHoveredChanged: {
+          if (hovered) {
+            const tl = root.findActiveToplevelForWorkspace(groupedContainer.workspaceModel.id);
+            livePreview.show(groupedContainer, tl);
+          } else {
+            livePreview.hide();
+          }
+        }
       }
 
       width: Style.toOdd((hasWindows ? groupedIconsFlow.implicitWidth : root.iconSize) + (root.isVertical ? (root.baseItemSize - root.iconSize + Style.marginXS) : Style.marginXL))
