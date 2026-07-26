@@ -1,6 +1,8 @@
 import QtQuick
 import QtQuick.Shapes
+import Quickshell
 import qs.Commons
+import qs.Services.Power
 
 // Angular cut-corner glass panel with a glowing border.
 // NDropShadow is a sibling in this same Widgets/ directory, so no import is
@@ -62,6 +64,36 @@ Item {
       PathLine {
         x: 0
         y: 0
+      }
+    }
+  }
+
+  Loader {
+    id: scanlineLoader
+    anchors.fill: parent
+    active: !PowerProfileService.noctaliaPerformanceMode
+
+    sourceComponent: Item {
+      anchors.fill: parent
+      property real shaderTime: 0
+      NumberAnimation on shaderTime {
+        loops: Animation.Infinite
+        from: 0
+        to: 1
+        duration: 4000
+      }
+
+      ShaderEffect {
+        anchors.fill: parent
+        blending: true
+        property var source: ShaderEffectSource {
+          sourceItem: panelShape
+          hideSource: false
+        }
+        property real time: parent.shaderTime
+        property color glowColor: root.glowColor
+
+        fragmentShader: Qt.resolvedUrl(Quickshell.shellDir + "/Shaders/qsb/holoScanline.frag.qsb")
       }
     }
   }
