@@ -19,7 +19,8 @@ Item {
   property bool showBorder: true
 
   function pulse() {
-    // Hooked up by shader tasks later; no-op until then.
+    if (flickerLoader.item)
+      flickerLoader.item.pulse();
   }
 
   NDropShadow {
@@ -94,6 +95,51 @@ Item {
         property color glowColor: root.glowColor
 
         fragmentShader: Qt.resolvedUrl(Quickshell.shellDir + "/Shaders/qsb/holoScanline.frag.qsb")
+      }
+    }
+  }
+
+  Loader {
+    id: flickerLoader
+    anchors.fill: parent
+    active: !PowerProfileService.noctaliaPerformanceMode
+
+    sourceComponent: Item {
+      id: flickerRoot
+      anchors.fill: parent
+      property real intensity: 0
+
+      function pulse() {
+        flickerAnim.restart();
+      }
+
+      SequentialAnimation {
+        id: flickerAnim
+        NumberAnimation {
+          target: flickerRoot
+          property: "intensity"
+          to: 1.0
+          duration: 60
+        }
+        NumberAnimation {
+          target: flickerRoot
+          property: "intensity"
+          to: 0.0
+          duration: 220
+        }
+      }
+
+      ShaderEffect {
+        anchors.fill: parent
+        blending: true
+        property var source: ShaderEffectSource {
+          sourceItem: panelShape
+          hideSource: false
+        }
+        property real intensity: flickerRoot.intensity
+        property color glowColor: root.glowColor
+
+        fragmentShader: Qt.resolvedUrl(Quickshell.shellDir + "/Shaders/qsb/holoFlicker.frag.qsb")
       }
     }
   }

@@ -701,6 +701,15 @@ Item {
         visible: Settings.data.bar.segmentedIslands && root.rightWidgetsModel.count > 0
       }
 
+      Connections {
+        target: CompositorService
+        function onWorkspaceChanged() {
+          leftIsland.pulse();
+          centerIsland.pulse();
+          rightIsland.pulse();
+        }
+      }
+
       // Left Section
       RowLayout {
         id: leftSection
