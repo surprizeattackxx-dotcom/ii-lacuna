@@ -675,24 +675,27 @@ Item {
 
       // ─── Segmented islands: a rounded pill behind each non-empty section ───
       readonly property real islandPad: Math.min(Math.round(root.capsuleHeight * 0.30), horizontalBarMargin)
-      component SectionIsland: Rectangle {
+      component SectionIsland: NHoloPanel {
         z: -1
-        radius: height / 2
-        color: Qt.rgba(Color.mSurface.r, Color.mSurface.g, Color.mSurface.b, Settings.data.bar.capsuleOpacity)
-        border.width: Settings.data.bar.showOutline ? 1 : 0
-        border.color: Color.mOutline
+        fillColor: Color.mSurface
+        fillOpacity: Settings.data.bar.capsuleOpacity
+        glowColor: Color.mOutline
+        showBorder: Settings.data.bar.showOutline
       }
       SectionIsland {
+        id: leftIsland
         anchors.fill: leftSection
         anchors.margins: -islandPad
         visible: Settings.data.bar.segmentedIslands && root.leftWidgetsModel.count > 0
       }
       SectionIsland {
+        id: centerIsland
         anchors.fill: centerSection
         anchors.margins: -islandPad
         visible: Settings.data.bar.segmentedIslands && root.centerWidgetsModel.count > 0
       }
       SectionIsland {
+        id: rightIsland
         anchors.fill: rightSection
         anchors.margins: -islandPad
         visible: Settings.data.bar.segmentedIslands && root.rightWidgetsModel.count > 0
