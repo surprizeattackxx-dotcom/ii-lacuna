@@ -110,7 +110,8 @@ Item {
       property real intensity: 0
 
       function pulse() {
-        flickerAnim.restart();
+        if (!flickerAnim.running)
+          flickerAnim.restart();
       }
 
       SequentialAnimation {
