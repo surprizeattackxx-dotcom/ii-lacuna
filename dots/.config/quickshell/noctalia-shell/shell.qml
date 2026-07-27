@@ -24,6 +24,7 @@ import qs.Modules.LockScreen
 import qs.Modules.MainScreen
 import qs.Modules.Notification
 import qs.Modules.OSD
+import qs.Modules.Particles
 
 import qs.Modules.Panels.Launcher
 import qs.Modules.Panels.Settings
@@ -160,6 +161,7 @@ ShellRoot {
 
       LockScreen {}
       FadeOverlay {}
+      ParticlesOverlay {}
 
       // Settings window mode (single window across all monitors)
       SettingsPanelWindow {}
