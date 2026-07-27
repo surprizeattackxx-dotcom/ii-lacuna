@@ -14,6 +14,12 @@ Variants {
     required property ShellScreen modelData
     screen: modelData
 
+    // Only mapped while a burst is active/recently active (ParticlesService
+    // debounces this over a rolling 5s window). The delegate itself stays
+    // always-instantiated so registration with ParticlesService never races
+    // the first post-idle keystroke — see design spec Architecture §2.
+    visible: ParticlesService.anyActive
+
     color: "transparent"
 
     WlrLayershell.layer: WlrLayer.Overlay

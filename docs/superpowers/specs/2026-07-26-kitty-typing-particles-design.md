@@ -32,7 +32,9 @@ New file in `dots/.config/kitty/`, loaded via `watcher particles_watcher.py` in 
   - anything else (bigger jumps, line wraps, unrelated redraws, scrollback, tab-completion inserting multiple characters at once) → no event. This is a deliberate side effect, not just a limitation: it means pastes and completions don't spam a burst per inserted character, only genuine one-key-at-a-time typing does.
 - **On focus lost / window close**: cancels that window's timer via `remove_timer`.
 
-Emits one line per detected event over a persistent Unix socket connection to the renderer (below), held open for the life of the kitty process: `row,col,cols,lines,kind\n` — grid-relative, not pixels (pixel resolution happens on the Quickshell side, see below). `cols`/`lines` are `window.screen.columns`/`window.screen.lines`, included so the renderer can derive per-cell pixel size. If the socket write ever fails (renderer not running), the event is dropped silently — this must never be able to slow down or block actual typing, and the polling timer itself must never block kitty's main loop (each tick's parse/diff work is a handful of string operations on an already-small screen buffer, well under a millisecond).
+Pixel resolution happens entirely on the kitty side, using `window.geometry` — a `WindowGeometry` NamedTuple (`left, top, right, bottom, xnum, ynum`) that kitty maintains live per-pane and that is already pane-relative and margin-corrected (it excludes `window_margin_width`/padding, and is scoped to the individual pane, not the whole OS window — both matter once a window has splits, e.g. this repo's own `ctrl+f` → `launch --location=hsplit` binding). Per-cell pixel size is `cell_w = (geo.right - geo.left) / geo.xnum`, `cell_h = (geo.bottom - geo.top) / geo.ynum`; the target point is `geo.left + (col + 0.5) * cell_w`, `geo.top + (row + 0.5) * cell_h` — a pane-relative pixel offset, not a grid cell.
+
+Emits one line per detected event over a persistent Unix socket connection to the renderer (below), held open for the life of the kitty process: `px,py,kind\n` — a pane-relative pixel offset (floats) plus the event kind; Quickshell only has to add the Hyprland window's own screen-space origin to get an absolute pixel. If the socket write ever fails (renderer not running), the event is dropped silently — this must never be able to slow down or block actual typing, and the polling timer itself must never block kitty's main loop (each tick's parse/diff work is a handful of string operations on an already-small screen buffer, well under a millisecond, and the whole tick body is wrapped in a broad exception guard so a bug in the diff/geometry logic degrades to "no burst this tick" rather than repeating an unhandled exception every ~20ms for the life of the focused window).
 
 ### 2. Quickshell renderer — `Modules/Particles/`
 
@@ -40,9 +42,11 @@ New module in noctalia-shell. Follows the existing per-monitor overlay pattern a
 
 Listens on `$XDG_RUNTIME_DIR/particles.sock` using `Quickshell.Io`'s `SocketServer`/`Socket` types (`SocketServer { path; handler: Component { Socket { parser: SplitParser { splitMarker: "\n"; onRead: (line) => {...} } } } }` — confirmed against the installed Quickshell's `quickshell-io.qmltypes`). This is a new pattern for the codebase — the shell's existing IPC (`IpcHandler` + `qs ipc call`, used by AiChat/Cheatsheet/GameLauncher/CustomButtonIPCService) is request/response RPC meant for occasional toggle-style commands, and forks a new `qs` client process per call. Fine for "open the AI chat panel," too much overhead for a raw per-keystroke stream during fast typing — so this module opens a dedicated long-lived socket instead. An `IpcHandler { target: "particles" }` is still added alongside it for `enable`/`disable`/`reload`, consistent with how every other module exposes manual control.
 
-Each received `row,col,cols,lines,kind` line is turned into an absolute screen pixel here, not on the kitty side — Quickshell already has native Hyprland integration (`Quickshell.Hyprland`'s `HyprlandIpc.activeToplevel`) that this codebase can query directly for the focused window's live pixel geometry (`lastIpcObject.at` / `.size`, the same fields `hyprctl clients -j` reports). Since a burst can only ever originate from whichever kitty window currently has keyboard focus, `activeToplevel` at the moment the event arrives is always the right window — no PID or address matching needed. Per-cell pixel size is derived as `size.width / cols` and `size.height / lines`; the target point is `at + (col + 0.5) * cellWidth, at + (row + 0.5) * cellHeight`. This is an approximation (kitty's internal padding isn't subtracted), acceptable for a cosmetic burst that just needs to land on roughly the right glyph, not pixel-perfect.
+Each received `px,py,kind` line already carries a pane-relative pixel offset (computed kitty-side via `window.geometry`, see Architecture §1) — Quickshell's only remaining job is to add the focused window's screen-space origin. It uses its native Hyprland integration (`Quickshell.Hyprland`'s `HyprlandIpc.activeToplevel`) to query the focused window's live position (`lastIpcObject.at`, the same field `hyprctl clients -j` reports). Since a burst can only ever originate from whichever kitty window currently has keyboard focus, `activeToplevel` at the moment the event arrives is always the right window — no PID or address matching needed. The absolute pixel is simply `at[0] + px, at[1] + py`. Because the pixel math (per-pane geometry, margin subtraction) all happens on the kitty side against kitty's own authoritative per-pane `window.geometry`, this is correct — not an approximation — for split panes and margins alike, unlike an earlier revision of this design that divided the whole OS window's Hyprland-reported size by the pane's grid dimensions (wrong whenever a window has more than one pane, and never subtracted `window_margin_width`).
 
-Each screen's surface holds its own particle pool — plain QML objects with position, velocity, life, and opacity — driven by the same frame-loop mechanism the holo-shell shaders use (whatever `HoloPanel`'s scanline/flicker driver turns out to be day-of-build; not introducing a second animation system). A `char` event spawns 6-10 particles bursting outward at random angles/speeds from the target point, colored from `Color.mPrimary`/`Color.mSecondary`, shrinking and fading over roughly 300-500ms with no gravity — explode-and-fade. A `backspace` event spawns the same burst with a visually distinct treatment (color lean and/or fewer/smaller particles, tuned at build time). A surface only draws bursts whose coordinates land inside its own screen geometry, so multi-monitor setups route correctly. When no particles are alive on a given screen, that screen's frame loop stops entirely — zero cost at rest, matching the idle-sweep pattern elsewhere in the reskin.
+Each screen's surface holds its own particle pool — plain QML objects with position, velocity, life, and opacity — driven by the same frame-loop mechanism the holo-shell shaders use (whatever `HoloPanel`'s scanline/flicker driver turns out to be day-of-build; not introducing a second animation system). A `char` event spawns 6-10 particles bursting outward at random angles/speeds from the target point, colored from `Color.mPrimary`/`Color.mSecondary`, shrinking and fading over roughly 300-500ms with no gravity — explode-and-fade. A `backspace` event spawns the same burst with a visually distinct treatment (color lean and/or fewer/smaller particles, tuned at build time). A surface only draws bursts whose coordinates land inside its own screen geometry, so multi-monitor setups route correctly. When no particles are alive on a given screen, that screen's frame loop stops entirely.
+
+**Accepted deviation — overlay surface lifetime vs. "zero cost at rest."** Each screen's `PanelWindow` delegate is always-instantiated (not gated by a `Loader`), because it's also the object `ParticlesService` registers for burst routing (`containsPoint`/`spawnBurst`/`screenX`/`screenY`); unmounting it via `Loader { active: ... }` would leave nothing registered to route the very first post-idle keystroke's burst to, since `ParticlesService.handleLine` looks up the registered overlay synchronously and a `Loader` remounting a `PanelWindow` doesn't happen within that same call — that would silently drop the first burst after every idle period. Instead, only the delegate's `visible` property is gated, bound to `ParticlesService.anyActive` — a flag set synchronously and unconditionally at the top of `handleLine` (so it's already true by the time that same event is routed) and reset via a 5s debounce `Timer` restarted on every event, so a burst of typing keeps the surface visible continuously instead of flickering per keystroke. This is safe rather than merely cosmetic: verified against Quickshell's own source (`src/window/proxywindow.cpp`, `src/wayland/wlr_layershell/wlr_layershell.cpp`), `WlrLayershell::deleteOnInvisible()` unconditionally returns `true`, so `PanelWindow.visible = false` on a layer-shell surface doesn't just hide it — `ProxyWindowBase::setVisibleDirect` actually destroys the backing `QQuickWindow`/wl_surface (`deleteWindow()`) and fully recreates it (`createWindow()`) on the next `visible = true`, re-parenting the same persistent content item. So at rest (no recent bursts on a screen) that screen's overlay has no backing Wayland surface at all — genuinely zero compositor cost, not just an idle frame loop — while the lightweight QML delegate object (routing functions/properties only, no window) stays alive the whole time.
 
 ## Data Flow
 
@@ -50,22 +54,27 @@ Each screen's surface holds its own particle pool — plain QML objects with pos
 Kitty window gains focus
   → on_focus_change fires → particles_watcher.py starts a ~50Hz add_timer for this window
 
-Each timer tick:
+Each timer tick (wrapped in a broad try/except so a bug here degrades to a dropped tick, never a crashed/spammed timer):
   → window.as_text(add_cursor=True) → plain grid text + trailing cursor escape
   → parse row,col from "\x1b[row;colH"; diff grid text against last tick
       → cursor moved right one cell + new glyph at old position → kind=char
       → cursor moved left one cell + glyph removed → kind=backspace
       → anything else → no event
-  → on event: write "row,col,cols,lines,kind\n" to the open socket connection
+  → on event: read window.geometry (pane-relative, margin-corrected px bounds + grid dims)
+      → cell_w = (geo.right-geo.left)/geo.xnum, cell_h = (geo.bottom-geo.top)/geo.ynum
+      → px = geo.left + (col+0.5)*cell_w, py = geo.top + (row+0.5)*cell_h
+  → write "px,py,kind\n" to the open socket connection
 
 Quickshell particles module (per-screen SocketServer)
-  → receives line, parses row,col,cols,lines,kind
-  → reads HyprlandIpc.activeToplevel.lastIpcObject for live at/size
-  → derives absolute pixel: at + (col+0.5)*(size.width/cols), at + (row+0.5)*(size.height/lines)
+  → receives line, parses px,py,kind
+  → sets ParticlesService.anyActive = true synchronously, restarts its 5s debounce Timer
+  → reads HyprlandIpc.activeToplevel.lastIpcObject for live "at" (window's screen-space origin)
+  → derives absolute pixel: at[0] + px, at[1] + py
   → finds the screen whose geometry contains that pixel
-  → that screen's surface spawns 6-10 particles there, scheme-colored
+  → that screen's surface (already visible — anyActive flip above happened before this lookup) spawns 6-10 particles there, scheme-colored
   → frame loop (if not already running) starts, animates burst outward + fade
-  → last particle dies → frame loop stops → back to zero cost
+  → last particle dies → frame loop stops
+  → 5s after the last event on any screen → anyActive resets false → each screen's PanelWindow.visible goes false → backing wl_surface is destroyed (see Architecture §2's accepted-deviation note) → back to zero cost
 
 Kitty window loses focus / closes:
   → on_focus_change / on_close fires → particles_watcher.py cancels that window's timer via remove_timer
@@ -99,10 +108,10 @@ No unit-test story here — this is a live visual/input feature. Validation is m
 
 | File | Change |
 |------|--------|
-| `dots/.config/kitty/particles_watcher.py` | New — kitty watcher, hooks `on_focus_change`/`on_close`, polls via `add_timer` + `window.as_text(add_cursor=True)`, streams grid-relative events to socket |
+| `dots/.config/kitty/particles_watcher.py` | New — kitty watcher, hooks `on_focus_change`/`on_close`, polls via `add_timer` + `window.as_text(add_cursor=True)`, resolves pane-relative pixel offsets via `window.geometry` and streams `px,py,kind` events to socket |
 | `dots/.config/kitty/kitty.conf` | Modified — add `watcher particles_watcher.py` |
-| `Modules/Particles/ParticlesOverlay.qml` | New — per-screen layer-shell surface, particle pool, frame loop |
-| `Modules/Particles/ParticlesService.qml` (or similar) | New — `SocketServer` on `$XDG_RUNTIME_DIR/particles.sock`, parses events, routes to correct screen; also hosts the `IpcHandler { target: "particles" }` |
+| `Modules/Particles/ParticlesOverlay.qml` | New — per-screen layer-shell surface (always-instantiated, `visible` gated on `ParticlesService.anyActive`), particle pool, frame loop |
+| `Services/Particles/ParticlesService.qml` | New — `SocketServer` on `$XDG_RUNTIME_DIR/particles.sock`, parses `px,py,kind` events, adds the Hyprland window origin, routes to correct screen, drives the debounced `anyActive` visibility flag; also hosts the `IpcHandler { target: "particles" }`; force-loaded from `shell.qml` so its socket server's lifecycle doesn't depend on `ParticlesOverlay` referencing it first |
 | Shell module registration (wherever other top-level modules like `Dock`/`Background` are loaded) | Modified — load the new Particles module |
 
 ## Deferred (explicitly out of scope for this pass)

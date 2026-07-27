@@ -38,6 +38,7 @@ import qs.Services.Keyboard
 import qs.Services.Location
 import qs.Services.Networking
 import qs.Services.Noctalia
+import qs.Services.Particles
 import qs.Services.Power
 import qs.Services.System
 import qs.Services.Theming
@@ -150,6 +151,10 @@ ShellRoot {
 
       // Force-load the cheatsheet controller (registers IPC + shortcut)
       Item { Component.onCompleted: { void CheatsheetController; } }
+
+      // Force-load the particles service singleton (socket server lifecycle
+      // shouldn't depend on ParticlesOverlay happening to reference it first)
+      Item { Component.onCompleted: { void ParticlesService; } }
 
       // Launcher overlay window (for overlay layer mode)
       Loader {

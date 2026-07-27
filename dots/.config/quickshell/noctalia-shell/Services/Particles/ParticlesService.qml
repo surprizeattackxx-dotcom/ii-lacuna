@@ -9,6 +9,7 @@ Singleton {
   id: root
 
   property var overlays: ({})
+  property bool anyActive: false
 
   function registerOverlay(screenName, overlay) {
     overlays[screenName] = overlay;
@@ -18,27 +19,35 @@ Singleton {
     delete overlays[screenName];
   }
 
+  // Debounced "any particle burst active recently" flag. Set synchronously
+  // and unconditionally at the top of handleLine (before routing) so it's
+  // true in time for the very same event that triggers it — see
+  // ParticlesOverlay.qml, whose PanelWindow.visible is bound to this.
+  Timer {
+    id: activeResetTimer
+    interval: 5000
+    onTriggered: root.anyActive = false
+  }
+
   function handleLine(line) {
+    root.anyActive = true;
+    activeResetTimer.restart();
+
     const parts = line.split(",");
-    if (parts.length !== 5) return;
-    const row = parseInt(parts[0], 10);
-    const col = parseInt(parts[1], 10);
-    const cols = parseInt(parts[2], 10);
-    const lines = parseInt(parts[3], 10);
-    const kind = parts[4];
-    if (!Number.isFinite(row) || !Number.isFinite(col) || !Number.isFinite(cols) || !Number.isFinite(lines)) return;
-    if (cols <= 0 || lines <= 0) return;
+    if (parts.length !== 3) return;
+    const px0 = parseFloat(parts[0]);
+    const py0 = parseFloat(parts[1]);
+    const kind = parts[2];
+    if (!Number.isFinite(px0) || !Number.isFinite(py0)) return;
     if (kind !== "char" && kind !== "backspace") return;
 
     const toplevel = Hyprland.activeToplevel;
     if (!toplevel || !toplevel.lastIpcObject) return;
     const info = toplevel.lastIpcObject;
-    if (!info.at || !info.size) return;
+    if (!info.at) return;
 
-    const cellWidth = info.size[0] / cols;
-    const cellHeight = info.size[1] / lines;
-    const px = info.at[0] + (col + 0.5) * cellWidth;
-    const py = info.at[1] + (row + 0.5) * cellHeight;
+    const px = info.at[0] + px0;
+    const py = info.at[1] + py0;
 
     for (const screenName in overlays) {
       const overlay = overlays[screenName];

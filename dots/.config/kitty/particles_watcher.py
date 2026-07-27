@@ -36,13 +36,13 @@ def _get_socket() -> "socket.socket | None":
     return _sock
 
 
-def _send(row: int, col: int, cols: int, lines: int, kind: str) -> None:
+def _send(px: float, py: float, kind: str) -> None:
     global _sock
     sock = _get_socket()
     if sock is None:
         return
     try:
-        sock.sendall(f"{row},{col},{cols},{lines},{kind}\n".encode())
+        sock.sendall(f"{px},{py},{kind}\n".encode())
     except OSError:
         _sock = None
 
@@ -51,15 +51,23 @@ def _make_poller(window):
     state = {"snapshot": None}
 
     def _poll(timer_id):
-        text = window.as_text(add_cursor=True)
-        snap = parse_snapshot(text)
-        if snap is None:
+        try:
+            text = window.as_text(add_cursor=True)
+            snap = parse_snapshot(text)
+            if snap is None:
+                return
+            event = detect_event(state["snapshot"], snap)
+            state["snapshot"] = snap
+            if event is not None:
+                row, col, kind = event
+                geo = window.geometry
+                cell_w = (geo.right - geo.left) / geo.xnum
+                cell_h = (geo.bottom - geo.top) / geo.ynum
+                px = geo.left + (col + 0.5) * cell_w
+                py = geo.top + (row + 0.5) * cell_h
+                _send(px, py, kind)
+        except Exception:
             return
-        event = detect_event(state["snapshot"], snap)
-        state["snapshot"] = snap
-        if event is not None:
-            row, col, kind = event
-            _send(row, col, window.screen.columns, window.screen.lines, kind)
 
     return _poll
 
