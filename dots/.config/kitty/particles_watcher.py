@@ -1,0 +1,82 @@
+"""Kitty watcher — streams a particle-burst event to the Quickshell renderer
+for each detected single-character-typed or backspace event, while a kitty
+window is focused. See docs/superpowers/specs/2026-07-26-kitty-typing-particles-design.md.
+
+Registered via `watcher particles_watcher.py` in kitty.conf. Kitty loads this
+file with runpy and looks up on_focus_change/on_close by name — see
+kitty/launch.py:load_watch_modules in the kitty source for the loading contract.
+"""
+import os
+import socket
+import sys
+
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from particles_detect import detect_event, parse_snapshot  # noqa: E402
+
+from kitty.fast_data_types import add_timer, remove_timer  # type: ignore  # noqa: E402
+
+POLL_INTERVAL = 0.02  # seconds, ~50Hz
+SOCKET_PATH = os.path.join(os.environ.get("XDG_RUNTIME_DIR", "/tmp"), "particles.sock")
+
+_timers: dict[int, int] = {}  # window.id -> timer_id
+_sock: "socket.socket | None" = None
+
+
+def _get_socket() -> "socket.socket | None":
+    global _sock
+    if _sock is not None:
+        return _sock
+    try:
+        s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+        s.connect(SOCKET_PATH)
+        s.setblocking(False)
+        _sock = s
+    except OSError:
+        _sock = None
+    return _sock
+
+
+def _send(row: int, col: int, cols: int, lines: int, kind: str) -> None:
+    global _sock
+    sock = _get_socket()
+    if sock is None:
+        return
+    try:
+        sock.sendall(f"{row},{col},{cols},{lines},{kind}\n".encode())
+    except OSError:
+        _sock = None
+
+
+def _make_poller(window):
+    state = {"snapshot": None}
+
+    def _poll(timer_id):
+        text = window.as_text(add_cursor=True)
+        snap = parse_snapshot(text)
+        if snap is None:
+            return
+        event = detect_event(state["snapshot"], snap)
+        state["snapshot"] = snap
+        if event is not None:
+            row, col, kind = event
+            _send(row, col, window.screen.columns, window.screen.lines, kind)
+
+    return _poll
+
+
+def on_focus_change(boss, window, data):
+    if data.get("focused"):
+        if window.id in _timers:
+            return
+        timer_id = add_timer(_make_poller(window), POLL_INTERVAL, True)
+        _timers[window.id] = timer_id
+    else:
+        timer_id = _timers.pop(window.id, None)
+        if timer_id is not None:
+            remove_timer(timer_id)
+
+
+def on_close(boss, window, data):
+    timer_id = _timers.pop(window.id, None)
+    if timer_id is not None:
+        remove_timer(timer_id)
