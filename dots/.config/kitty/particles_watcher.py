@@ -53,7 +53,7 @@ def _make_poller(window):
     def _poll(timer_id):
         try:
             text = window.as_text(add_cursor=True)
-            snap = parse_snapshot(text)
+            snap = parse_snapshot(text, window.screen.columns)
             if snap is None:
                 return
             event = detect_event(state["snapshot"], snap)

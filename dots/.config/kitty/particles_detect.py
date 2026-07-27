@@ -15,9 +15,10 @@ class Snapshot(NamedTuple):
     row: int
     col: int
     lines: list[str]
+    cols: int  # total screen width; needed to tell a same-line wrap from a real new line
 
 
-def parse_snapshot(as_text_output: str) -> Optional[Snapshot]:
+def parse_snapshot(as_text_output: str, cols: int) -> Optional[Snapshot]:
     """Parse the string returned by kitty's window.as_text(add_cursor=True)."""
     match = _CURSOR_RE.search(as_text_output)
     if match is None:
@@ -29,7 +30,7 @@ def parse_snapshot(as_text_output: str) -> Optional[Snapshot]:
     if intro != -1:
         plain = plain[:intro]
     lines = plain.rstrip("\n").split("\n")
-    return Snapshot(row=row, col=col, lines=lines)
+    return Snapshot(row=row, col=col, lines=lines, cols=cols)
 
 
 def char_at(lines: list[str], row: int, col: int) -> str:
@@ -43,18 +44,34 @@ def char_at(lines: list[str], row: int, col: int) -> str:
 
 def detect_event(prev: Optional[Snapshot], curr: Snapshot) -> Optional[tuple[int, int, str]]:
     """Returns (row, col, kind) where kind is 'char' or 'backspace', or None."""
-    if prev is None or curr.row != prev.row:
+    if prev is None:
         return None
-    if curr.col == prev.col + 1:
+
+    if curr.row == prev.row:
+        if curr.col == prev.col + 1:
+            old_char = char_at(prev.lines, prev.row, prev.col)
+            new_char = char_at(curr.lines, curr.row, prev.col)
+            if new_char != " " and new_char != old_char:
+                return (prev.row, prev.col, "char")
+            return None
+        if curr.col == prev.col - 1:
+            old_char = char_at(prev.lines, prev.row, curr.col)
+            new_char = char_at(curr.lines, curr.row, curr.col)
+            if old_char != " " and new_char == " ":
+                return (curr.row, curr.col, "backspace")
+            return None
+        return None
+
+    # Typing past the terminal's width wraps to the next row without a real
+    # newline (no Enter pressed) — same logical line, just visually
+    # continuing. Detected the same way as a normal char-typed step, just
+    # across the wrap boundary: the new glyph lands at the cell the cursor
+    # just left (prev.row, prev.col), which was the last column.
+    if curr.row == prev.row + 1 and curr.col == 0 and prev.col == prev.cols - 1:
         old_char = char_at(prev.lines, prev.row, prev.col)
-        new_char = char_at(curr.lines, curr.row, prev.col)
+        new_char = char_at(curr.lines, prev.row, prev.col)
         if new_char != " " and new_char != old_char:
             return (prev.row, prev.col, "char")
         return None
-    if curr.col == prev.col - 1:
-        old_char = char_at(prev.lines, prev.row, curr.col)
-        new_char = char_at(curr.lines, curr.row, curr.col)
-        if old_char != " " and new_char == " ":
-            return (curr.row, curr.col, "backspace")
-        return None
+
     return None
