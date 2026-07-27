@@ -3,7 +3,7 @@ for each detected single-character-typed or backspace event, while a kitty
 window is focused. See docs/superpowers/specs/2026-07-26-kitty-typing-particles-design.md.
 
 Registered via `watcher particles_watcher.py` in kitty.conf. Kitty loads this
-file with runpy and looks up on_focus_change/on_close by name — see
+file with runpy and looks up on_focus_change/on_resize/on_close by name — see
 kitty/launch.py:load_watch_modules in the kitty source for the loading contract.
 """
 import os
@@ -72,16 +72,32 @@ def _make_poller(window):
     return _poll
 
 
+def _ensure_timer(window) -> None:
+    if window.id in _timers:
+        return
+    timer_id = add_timer(_make_poller(window), POLL_INTERVAL, True)
+    _timers[window.id] = timer_id
+
+
 def on_focus_change(boss, window, data):
     if data.get("focused"):
-        if window.id in _timers:
-            return
-        timer_id = add_timer(_make_poller(window), POLL_INTERVAL, True)
-        _timers[window.id] = timer_id
+        _ensure_timer(window)
     else:
         timer_id = _timers.pop(window.id, None)
         if timer_id is not None:
             remove_timer(timer_id)
+
+
+def on_resize(boss, window, data):
+    # Kitty's own on_focus_change hook only fires when its internal focus
+    # flag actually flips (kitty/window.py:focus_changed), which depends on
+    # an explicit OS/compositor "keyboard entered this window" event timing
+    # out cleanly. A just-created window doesn't always get that first
+    # transition reported before you start typing. on_resize is a reliable
+    # fallback: every new window forces one resize/layout pass on creation
+    # (kitty/window.py sets needs_layout = True in __init__), so this always
+    # fires at least once regardless of the focus-event race above.
+    _ensure_timer(window)
 
 
 def on_close(boss, window, data):
