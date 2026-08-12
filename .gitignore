@@ -90,3 +90,6 @@ GEMINI.md
 /dots/.config/hypr/hyprgamma.json
 AGENTS.md
 .git-rewrite/
+
+# autopush suspend marker (see ~/.local/bin/ii-lacuna-autopush.sh)
+/.autopush-pause
