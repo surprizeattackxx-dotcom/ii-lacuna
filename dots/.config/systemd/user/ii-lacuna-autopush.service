@@ -1,0 +1,14 @@
+[Unit]
+Description=Auto commit+push ii-lacuna dots/ on change
+# Wait for network so the initial catch-up push can reach GitHub.
+After=default.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/ii-lacuna-autopush.sh
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target
