@@ -3,7 +3,7 @@
 # remaining fields (bitdepth, cm, sdr*) intact. Called by BarAppletsOverlay.
 
 export OUTPUT="$1" MODE="$2" POSITION="$3" SCALE="$4"
-FILE="$HOME/.config/hypr/monitors.lua"
+FILE="$HOME/.config/hypr/config/monitors.lua"
 
 perl -0777 -i -pe '
   my ($o, $m, $p, $s) = @ENV{qw(OUTPUT MODE POSITION SCALE)};

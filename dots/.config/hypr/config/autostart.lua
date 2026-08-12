@@ -17,10 +17,8 @@ hl.exec_cmd("sleep 3 && ~/.config/hypr/scripts/restore-workspaces.sh")
 -- them here too raced the tray host and left Bitwarden with no tray icon.
 hl.exec_cmd("pypr")
 hl.exec_cmd("google-chrome-beta-themed")
--- quickshell (ii) replaced by waybar to reclaim ~30% idle GPU on triple-4K.
--- To revert: re-enable the service and remove the waybar line below.
--- hl.exec_cmd("systemctl --user start quickshell-ii.service")
-hl.exec_cmd("sleep 1 && ~/.config/waybar/scripts/wallpaper.sh --restore")
+-- The shell is noctalia v5 (native), managed by systemd (`noctalia.service`).
+-- Legacy quickshell-ii / waybar launch lines removed 2026-07-31.
 hl.exec_cmd("xhost +SI:localuser:root")
 
 
@@ -38,7 +36,7 @@ hl.exec_cmd("~/.config/hypr/scripts/osrs-notify-sound.sh")
 -- ─── Apps ───────────────────────────────────────
 hl.exec_cmd("sleep 1 && uwsm app -- thunderbird")
 hl.exec_cmd("sleep 2 && uwsm app -- discord")
-hl.exec_cmd("sleep 4 && uwsm app -- steam -cef-force-gpu")
+hl.exec_cmd("sleep 4 && uwsm app -- steam -cef-force-gpu -tenfoot")
 hl.exec_cmd("uwsm app -- openrgb --start-minimized --profile 'Default'")
 hl.exec_cmd("sleep 2 && uwsm app -- galaxybudsclient")
 

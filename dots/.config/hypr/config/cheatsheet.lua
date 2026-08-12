@@ -52,7 +52,7 @@ end
 
 local function pretty_cmd(cmd)
   cmd = cmd:gsub("^uwsm app %-%- ", "")
-  local ipc = cmd:match("^qs %-c noctalia%-shell ipc call (.+)$")
+  local ipc = cmd:match("^qs %-c noctalia%-shell ipc call (.+)$") or cmd:match("^noctalia msg (.+)$")
   if ipc then return "Shell: " .. ipc end
   return cmd
 end

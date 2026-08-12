@@ -7,13 +7,10 @@ hl.workspace_rule({ gaps_in = 0, gaps_out = 0, workspace = "f[1]" })
 
 -- ─── Monitor → Workspace Binding ───────────────
 -- Each monitor owns a block of 10 workspaces; the first in each block is default.
-local monitor_blocks = {
-    { monitor = "DP-2", first = 1 },
-    { monitor = "DP-1", first = 11 },
-    { monitor = "HDMI-A-1", first = 21 },
-}
-for _, b in ipairs(monitor_blocks) do
+-- MONITOR_BLOCKS lives in config/variables.lua (loads first) so these rules and
+-- the bare F-key workspace binds share one table and can't drift apart.
+for _, b in ipairs(MONITOR_BLOCKS) do
     for ws = b.first, b.first + 9 do
-        hl.workspace_rule({ monitor = b.monitor, workspace = ws, default = ws == b.first })
-        end
-        end
+        hl.workspace_rule({ monitor = b.monitor, workspace = ws, default = ws == b.first, persistent = true })
+    end
+end

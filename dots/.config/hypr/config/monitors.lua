@@ -30,7 +30,7 @@ hl.monitor({
     mode = "3840x2160@60",
     position = "3840x0",
     scale = 1,
-    bitdepth = 10,
+    bitdepth = 12,
     cm = "auto",
     sdrbrightness = 1.00,
     sdrsaturation = 0.99,
