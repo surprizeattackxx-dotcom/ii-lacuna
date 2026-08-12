@@ -1,8 +1,5 @@
 -- Window rules wiki https://wiki.hypr.land/Configuring/Basics/Window-Rules/
 
--- Generic floating position
-hl.window_rule({ match = { float = true }, center = true })
-
 -- Picture-in-Picture
 hl.window_rule({
     match             = { title = "^([Pp]icture[-\\s]?[Ii]n[-\\s]?[Pp]icture)(.*)$" },
@@ -16,8 +13,14 @@ hl.window_rule({
 local gamingApps = "^(steam_app.*|gamescope)$"
 local gamingWorkspace = "name:gaming"
 
-hl.window_rule({ match = { content = "game" }, workspace = gamingWorkspace })
-hl.window_rule({ match = { class = gamingApps }, workspace = gamingWorkspace })
+-- RS3 (steam_app_1343400) is deliberately EXEMPT from both gaming-workspace
+-- rules — as of 2026-08-12 it gets RuneLite's treatment instead and is pinned
+-- to workspace 1 alongside it (see ws_assignments near the bottom). It matches
+-- BOTH of these (class ^steam_app AND content=game), so each rule excludes it
+-- on a different field: this one by class, the next by its main window's
+-- initial_title. Patterns live in config/variables.lua.
+hl.window_rule({ match = { content = "game", class = "negative:" .. RS3_CLASS_PATTERN }, workspace = gamingWorkspace })
+hl.window_rule({ match = { class = gamingApps, initial_title = "negative:" .. RS3_MAIN_TITLE_PATTERN }, workspace = gamingWorkspace })
 hl.window_rule({ match = { class = "^(steam)$", title = "^(Friends List)$" }, float = true })
 hl.window_rule({
     match = {
@@ -25,19 +28,26 @@ hl.window_rule({
         title = "^(Launching\\.{3})$"
     },
     float     = true,
-    center    = true,
+    center    = false,
     workspace = gamingWorkspace,
 })
+-- RS3 excluded from the fullscreen block (2026-08-12) — it floats at 62%x70%
+-- placed at the cursor via config/handlers.lua, same as RuneLite.
 hl.window_rule({
     match = {
         class         = gamingApps,
         title         = "^(.+)$",
-        initial_title = "negative:^(.*\\\\home\\\\.*)$",
+        initial_title = "negative:^(.*\\\\home\\\\.*|RuneScape)$",
     },
     size             = { "monitor_w", "monitor_h" },
     fullscreen_state = 2,
     content          = "game",
 })
+-- ...but it still needs the content tag the block above would have set: the
+-- F-key gate (fkey_gate_match), gaming-mode animations-off (handlers.lua), and
+-- RS3's own confine-pointer exemption at the bottom of this file all key off
+-- content = "game". Tagging it here keeps all three working while it's windowed.
+hl.window_rule({ match = { class = RS3_CLASS_PATTERN }, content = "game" })
 hl.window_rule({
     match = {
         class         = "^(steam_app.*)$",
@@ -50,7 +60,7 @@ hl.window_rule({
 })
 
 -- Apps
-hl.window_rule({ match = { class = "^(.*\\.exe)$", float = true }, monitor = PRIMARY_MONITOR, center = true, fullscreen_state = 0 })
+hl.window_rule({ match = { class = "^(.*\\.exe)$", float = true }, monitor = PRIMARY_MONITOR, fullscreen_state = 0 })
 hl.window_rule({ match = { class = "^(vesktop|discord)$" }, monitor = PRIMARY_MONITOR })
 hl.window_rule({ match = { class = "^(.*[Cc]alculator.*)$" }, float = true, size = { "max(monitor_w, monitor_h)*0.17", "min(monitor_w, monitor_h)*0.43" } })
 hl.window_rule({ match = { class = "^(org\\.kde\\.keditfiletype)$" }, float = true })
@@ -83,11 +93,13 @@ local terminals = "^(kitty|ghostty|[Kk]onsole|Alacritty|gnome-terminal|xfce[0-9]
 hl.window_rule({ match = { class = "^(firefox|zen)$" }, opacity = "1.0 override" })
 hl.window_rule({ match = { class = terminals }, opacity = "1.0 override" }) -- Override opacity in favor of terminal settings for opacity. If your terminal doesn't support transparency, you can remove this rule.
 hl.window_rule({ match = { class = "^(mpv|org.kde.haruna|.*plex.*|org\\.kde\\.gwenview|.*vlc.*)$" }, opacity = "1.0 override" })
+hl.window_rule({ match = { class = GAME_CLIENT_CLASS_PATTERN }, opacity = "1.0 override" })
+hl.window_rule({ match = { class = "^(google-chrome)$" }, opacity = "1.0 override" })
 
 -- Float Utility Windows
 local floatApps = {
     { class = "^(kvantummanager|qt[56]ct|nwg-look)$" },
-    { class = "^(org.pulseaudio.pavucontrol|blueman-manager|nm-applet|nm-connection-editor)$" },
+    { class = "^(org.pulseaudio.pavucontrol|blueman-manager|nm-applet|nm-connection-editor|pavucontrol-qt)$" },
     { title = "^(Winetricks.*|Protontricks.*)$" },
 }
 for _, m in ipairs(floatApps) do hl.window_rule({ match = m, float = true }) end
@@ -125,6 +137,17 @@ hl.window_rule({
     no_focus = true,
 })
 
+hl.layer_rule({
+  name = "noctalia",
+  match = {
+    namespace = "^noctalia-(bar-.+|notification|dock|panel|attached-panel|osd|window-switcher)$",
+  },
+  no_anim = true,
+  ignore_alpha = 0.5,
+  blur = true,
+  blur_popups = true,
+})
+
 -- ============================================================
 --  Migrated custom rules (from old hyprland/windowrules.lua)
 --  suppress-maximize-events and fix-xwayland-drags are omitted here —
@@ -133,38 +156,12 @@ hl.window_rule({
 
 -- ··· Floating dialogs ···
 local floating_dialogs = {
-    { title = "^(Open File)(.*)$" },
-    { title = "^(Select a File)(.*)$" },
-    { title = "^(Choose wallpaper)(.*)$", size = "monitor_w*.60 monitor_h*.65" },
-    { title = "^(Open Folder)(.*)$" },
-    { title = "^(Save As)(.*)$" },
-    { title = "^(Library)(.*)$" },
-    { title = "^(File Upload)(.*)$" },
-    { title = "^(.*)(wants to save)$" },
-    { title = "^(.*)(wants to open)$" },
-    { title = ".*Welcome" },
-    { title = "^(ii-lacuna Settings)$" },
-    { title = ".*Shell conflicts.*" },
-    { class = "^(blueberry\\.py)$" },
-    { class = "^(guifetch)$" },
-    { class = "^(pavucontrol)$", size = "monitor_w*.45 monitor_h*.45" },
     { class = "^(org\\.pulseaudio\\.pavucontrol)$", size = "monitor_w*.45 monitor_h*.45" },
-    { class = "^(pavucontrol-qt)$", size = "monitor_w*.45 monitor_h*.45" },
     { class = "^(org\\.kde\\.easyeffects)$", size = "monitor_w*.55 monitor_h*.65" },
     { class = "^(nm-connection-editor)$", size = "monitor_w*.45 monitor_h*.45" },
-    { class = ".*plasmawindowed.*" },
-    { class = "kcm_.*" },
     { class = ".*bluedevilwizard" },
-    { class = "org.freedesktop.impl.portal.desktop.kde", size = "monitor_w*.60 monitor_h*.65" },
-    { class = "^(Zotero)$", size = "monitor_w*.45 monitor_h*.45" },
+    { class = "org.freedesktop.impl.portal.desktop.kde", size = "monitor_w*.60 monitor_h*.65" }
 }
-for _, r in ipairs(floating_dialogs) do
-    local rule = { float = true, center = true, match = {}, name = "float-" .. (r.class or r.title) }
-    if r.class then rule.match.class = r.class end
-    if r.title then rule.match.title = r.title end
-    if r.size then rule.size = r.size end
-    hl.window_rule(rule)
-end
 
 -- ··· Centered floating apps ···
 hl.window_rule({ center = true, float = true, no_blur = true, name = "float-utils",
@@ -172,13 +169,21 @@ hl.window_rule({ center = true, float = true, no_blur = true, name = "float-util
 hl.window_rule({ center = true, float = true, name = "float-media", match = { class = "^(mpv|imv|vlc|org\\.fooyin\\.fooyin)$" } })
 hl.window_rule({ center = true, float = true, name = "float-theme-tools", match = { class = "^(nwg-look|qt5ct|qt6ct|kvantummanager)$" } })
 hl.window_rule({ center = true, float = true, name = "float-qalculate", match = { class = "^(qalculate-gtk)$" } })
--- RuneLite deliberately excluded: it restores its own saved clientBounds, which
--- land in the empty top-left quadrant of the monitor layout (no output covers
--- x 0..3840, y 0..2160). Floating means Hyprland honours that, so it maps
--- invisible. Tiled, the layout owns its position.
+-- RuneLite deliberately excluded from static float rules: it restores its own
+-- saved clientBounds, which land in the empty top-left quadrant of the
+-- monitor layout (no output covers x 0..3840, y 0..2160) — a plain `float =
+-- true` here would just map it invisible. RESOLVED 2026-07-22: config/
+-- handlers.lua now floats + places the RuneLite main window itself (cursor-
+-- centered, clamped on-screen) via the window.open event, not a static rule —
+-- see [[Hyprland Lua Config]] in the vault.
+-- RS3 rides the same handler as of 2026-08-12 (Donnie: same rules as RuneLite).
+-- It has no off-screen-restore problem of its own — it maps correctly at its
+-- monitor origin — so for RS3 the handler is purely the windowed 62%x70%
+-- cursor placement, not a rescue.
 hl.window_rule({ float = true, name = "float-mc", match = { class = "^(Minecraft.*|bolt-launcher|com\\.adamcake\\.Bolt)$" } })
-hl.window_rule({ float = true, center = true, name = "float-jagex-launcher", match = { class = "(?i)^(.*jagexlauncher.*)$" } })
-hl.window_rule({ float = true, center = true, name = "float-jagex-launcher-title", match = { title = "^(Jagex Launcher)(.*)$" } })
+hl.window_rule({ float = true, name = "float-jagex-launcher", match = { class = "(?i)^(.*jagexlauncher.*)$" } })
+hl.window_rule({ float = true, name = "float-jagex-launcher-title", match = { title = "^(Jagex Launcher)(.*)$" } })
+hl.window_rule({ float = true, name = "float-runelite-launcher", match = { class = "^(net-runelite-launcher-Launcher)$" } })
 
 -- ··· Picture-in-picture (custom position; runs after the stock PiP rule so it wins) ···
 hl.window_rule({ float = true, pin = true, name = "discord-pip", match = { title = "Picture in picture" } })
@@ -199,9 +204,18 @@ for _, r in ipairs(tearing) do
 end
 
 -- ··· Confine pointer ···
+-- RuneScape (Steam, steam_app_1343400) is deliberately EXEMPT — it's a
+-- point-and-click MMO, and since 2026-08-12 it runs as a 62%x70% floating
+-- window (RuneLite parity) rather than fullscreen, so a locked cursor would
+-- also trap the pointer inside that window. It matched both of the first two
+-- rules (class ^steam_app AND content=game, confirmed live via hyprctl), so
+-- each rule excludes it on a different field: rule 1 skips anything already
+-- tagged as game content, rule 2 skips this one app by class. Every other game
+-- still gets confined by one rule or the other. Drop the negative: on rule 2
+-- to re-lock it.
 local confine = {
-    { match = { class = "^steam_app" }, name = "confine-steam" },
-    { match = { content = "game" }, name = "confine-game" },
+    { match = { class = "^steam_app", content = "negative:game" }, name = "confine-steam" },
+    { match = { content = "game", class = "negative:^steam_app_1343400$" }, name = "confine-game" },
     { match = { title = ".*minecraft.*" }, name = "confine-mc" },
 }
 for _, r in ipairs(confine) do
@@ -210,7 +224,7 @@ end
 
 -- ··· Workspace assignments ···
 local ws_assignments = {
-    { match = { class = "^(net-runelite-client-RuneLite)$" }, workspace = "1 silent",  name = "ws-runelite" },
+    { match = { class = GAME_CLIENT_CLASS_PATTERN }, workspace = "1 silent",  name = "ws-game-clients" },
     { match = { title = "^(facebook)$" },                     workspace = "11 silent", name = "ws-facebook" },
     { match = { class = "^(discord)$" },                      workspace = "11 silent", name = "ws-discord" },
     { match = { class = "^(org\\.mozilla\\.Thunderbird)$" },  workspace = "5 silent",  name = "ws-thunderbird" },
@@ -225,7 +239,7 @@ end
 
 -- ··· Steam (client window placement; stock rules above handle steam_app games) ···
 hl.window_rule({ float = true, name = "steam-negative-float", match = { class = "^steam$", title = "negative:^Steam$" } })
-hl.window_rule({ float = false, workspace = "2 silent", name = "ws-steam", match = { class = "^(steam)$", title = "^(Steam)$" } })
+hl.window_rule({ float = false, workspace = "2", name = "ws-steam", match = { class = "^(steam)$", title = "^(Steam)$" } })
 
 -- ··· App-specific tweaks ···
 hl.window_rule({ float = true, no_initial_focus = true, move = "999999 999999", name = "plasma-changeicons", match = { class = "^(plasma-changeicons)$" } })
@@ -239,98 +253,58 @@ hl.window_rule({ no_initial_focus = true, name = "jetbrains-fix", match = { clas
 -- ------------------------------------------------------------
 --  LAYER RULES  (stock config/windowrules.lua had none)
 --
---  2026-07-15: attempted a rewrite of this whole block against the real
---  noctalia-* namespace scheme (the quickshell:* patterns below are dead -
---  none of them match anything live). The rewrite caused two confirmed live
---  regressions (a red-banding/blur artifact on the bar+notifications, then
---  missing bar widgets after the blur rules were pulled) and was fully
---  reverted back to this exact original content rather than keep
---  iterating blind. See Noctalia Plugin Gotchas for what was tried and
---  why it's parked, not retried, until it can be tested more carefully.
+--  2026-07-15: a rewrite of this whole block against the noctalia-* scheme
+--  caused two confirmed regressions (red-banding/blur artifact on the bar+
+--  notifications, then missing bar widgets) and was fully reverted. See
+--  Noctalia Plugin Gotchas.
+--  2026-07-31: the dead quickshell:* relic rules (xray, ignore-alpha,
+--  animation, and override blocks below) were removed — they match no live
+--  namespace in the v5 shell (verified via hyprctl layers). Live rules are
+--  the global xray=true, the noctalia main rule, and the noctalia_blur list.
 -- ------------------------------------------------------------
 
 -- ··· Global ···
 hl.layer_rule({ xray = true, match = { namespace = ".*" } })
--- xray blur samples the background *level*, but the visible wallpaper is
--- quickshell's Background on the bottom level — glass needs real sampling
-hl.layer_rule({ xray = false, match = { namespace = "quickshell:.*" } })
 
 -- 2026-07-15: tried noctalia-bar-content blur + lower/separate bar opacity to
 -- get a glassy framed-bar look. Blur itself worked with no artifacts, but it
 -- exposed a real seam where the bar rectangle and frame border meet (they
 -- blur genuinely different content at that corner) - tried fixing the color
--- mismatch via xray, made it worse, reverted. Whole thing parked - see
--- Noctalia Plugin Gotchas for what was tried and the corner-geometry idea
--- for next time (square off the bar's corners so they sit flush against the
--- frame with no gap for a seam to show in, instead of chasing a color match).
+-- mismatch via xray, made it worse, reverted. That seam only applies to a bar
+-- WITH a visible border/frame; the live bar has border_width 0, so no seam.
+-- RETRIED 2026-07-31: blur rules for the live noctalia namespaces went in
+-- above (additive, not a rewrite). Second pass (iOS Liquid Glass): bar was
+-- a floating pill (margin_ends 100, radii 19, background_opacity 0.8, luminous
+-- border "#FFFFFF40" @ 1px); dock floated (margin_edge 14, radius 28, opacity
+-- 0.65); blur size 11 / passes 5 + noise 0.05 + vibrancy 0.25 in decorations.lua.
+-- 2026-07-31 (later): bar re-attached full-width — margin_edge 0, margin_ends 0,
+-- radius_top_* 0 (square top corners), bottom corners 19, border+opacity kept.
+-- Extended 2026-07-31: "noctalia-notification.*" joined the blur list; toast
+-- background_opacity 0.85 in config.toml. Lock screen is NOT compositor-blurred
+-- (Hyprland doesn't blur behind ext-session-lock) - its frost is noctalia-side
+-- (blur_intensity 0.7 + login box opacity 0.6 in settings.toml).
+-- Extended 2026-07-31: "noctalia-desktop-widget-.*" joined the blur list;
+-- weather/media_player/sysmon desktop cards placed top-left of DP-1 in
+-- config.toml (background_opacity 0.7, radius 24, color "surface").
+-- Verified: no regressions (bar/dock/wallpaper layers all present).
 
--- ··· Blur ··· (old quickshell:* table, dead - see note above)
-local layer_blur = {
-    "gtk-layer-shell", "launcher", "notifications",
-    "session[0-9]*", "bar[0-9]*", "barcorner.*", "dock[0-9]*",
-    "indicator.*", "overview[0-9]*", "cheatsheet[0-9]*",
-    "sideright[0-9]*", "sideleft[0-9]*", "osk[0-9]*",
-    "quickshell:.*", "quickshell:session",
+-- ··· Blur ··· (live noctalia v5 namespaces, verified 2026-07-31 via hyprctl layers;
+-- the old quickshell:* table below matched nothing)
+local noctalia_blur = {
+    "noctalia-bar.*",
+    "noctalia-dock",
+    "noctalia-panel",
+    "noctalia-attached-panel",
+    "noctalia-notification.*",
+    "noctalia-desktop-widget-.*",
+    "noctalia-osd",
 }
-for _, ns in ipairs(layer_blur) do
+for _, ns in ipairs(noctalia_blur) do
     hl.layer_rule({ blur = true, match = { namespace = ns } })
 end
-hl.layer_rule({ blur = false, match = { namespace = "quickshell:appLauncher" } })
 
--- ··· Ignore alpha ···
-local layer_ignore_alpha = {
-    { ns = "launcher", a = 0.5 },
-    { ns = "notifications", a = 0.69 },
-    { ns = "bar[0-9]*", a = 0.6 },
-    { ns = "barcorner.*", a = 0.6 },
-    { ns = "dock[0-9]*", a = 0.6 },
-    { ns = "indicator.*", a = 0.6 },
-    { ns = "overview[0-9]*", a = 0.6 },
-    { ns = "cheatsheet[0-9]*", a = 0.6 },
-    { ns = "sideright[0-9]*", a = 0.6 },
-    { ns = "sideleft[0-9]*", a = 0.6 },
-    { ns = "osk[0-9]*", a = 0.6 },
-    { ns = "quickshell:.*", a = 0.1 },
-}
-for _, r in ipairs(layer_ignore_alpha) do
-    hl.layer_rule({ ignore_alpha = r.a, match = { namespace = r.ns } })
-end
-
--- ··· No animation ···
-local layer_no_anim = {
-    "walker", "selection", "overview", "anyrun", "indicator.*",
-    "osk", "hyprpicker", "noanim", "gtk4-layer-shell",
-    "quickshell:actionCenter", "quickshell:lockWindowPusher",
-    "quickshell:overlay", "quickshell:overview", "quickshell:polkit",
-    "quickshell:regionSelector", "quickshell:screenshot", "quickshell:session",
-    "quickshell:wNotificationCenter", "quickshell:wOnScreenDisplay",
-    "quickshell:wStartMenu", "quickshell:wTaskView",
-}
-for _, ns in ipairs(layer_no_anim) do
-    hl.layer_rule({ no_anim = true, match = { namespace = ns } })
-end
-
--- ··· Animations ···
-local layer_anim = {
-    { ns = "quickshell:bar", anim = "slide" },
-    { ns = "quickshell:cheatsheet", anim = "slide bottom" },
-    { ns = "quickshell:dock", anim = "slide" },
-    { ns = "quickshell:screenCorners", anim = "popin 120%" },
-    { ns = "quickshell:notificationPopup", anim = "fade" },
-    { ns = "quickshell:reloadPopup", anim = "slide" },
-    { ns = "quickshell:sidebarRight", anim = "slide right" },
-    { ns = "quickshell:sidebarLeft", anim = "slide left" },
-    { ns = "quickshell:verticalBar", anim = "slide" },
-    { ns = "quickshell:wallpaperSelector", anim = "slide top" },
-}
-for _, r in ipairs(layer_anim) do
-    hl.layer_rule({ animation = r.anim, match = { namespace = r.ns } })
-end
-
--- ··· QuickShell overrides ···
-hl.layer_rule({ ignore_alpha = 1, match = { namespace = "quickshell:overlay" } })
-hl.layer_rule({ ignore_alpha = 1, xray = false, match = { namespace = "quickshell:popup" } })
-hl.layer_rule({ ignore_alpha = 1, match = { namespace = "quickshell:mediaControls" } })
-hl.layer_rule({ ignore_alpha = 0, match = { namespace = "quickshell:wTaskView" } })
-hl.layer_rule({ order = -1, match = { namespace = "quickshell:osk" } })
-hl.layer_rule({ animation = "slide bottom", blur = true, ignore_alpha = 0.6, match = { namespace = "quickshell:wallpaperChanger" } })
+-- ··· QuickShell overrides (removed 2026-07-31 — all dead in v5) ···
+-- ··· Ignore alpha (removed 2026-08-01 — same deal, bare/numbered namespaces
+-- like bar[0-9]*, sideright[0-9]*, cheatsheet[0-9]* matched nothing; verified
+-- against live `hyprctl layers` and the noctalia v5 source, which only ever
+-- emits noctalia-* prefixed namespaces) ···

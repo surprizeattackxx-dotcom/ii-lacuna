@@ -81,37 +81,44 @@ else
   table.insert(__handlers.subs, hl.on("hyprland.start", start_sweep))
 end
 
--- ══ RuneLite main-window placement ══════════════════════════════════════
+-- ══ Game client main-window placement ═══════════════════════════════════
 -- Float the MAIN client at the cursor, clamped on-screen with real math.
--- Main window only: initial_title is exactly "RuneLite" before the login
--- name is appended; popups/panels share the WM_CLASS but not that title
--- (this is what all four 2026-07-15 rule-based attempts couldn't express —
--- see the vault's Hyprland Lua Config note).
+-- Main window only: initial_title is exactly "RuneLite" / "RuneScape" before
+-- anything else is appended; popups/panels share the WM_CLASS but not that
+-- title (this is what all four 2026-07-15 rule-based attempts couldn't
+-- express — see the vault's Hyprland Lua Config note).
+-- GAME_CLIENT_MAIN_TITLE (class → expected main-window title) is defined in
+-- config/variables.lua, which loads before both this file and windowrules.lua,
+-- so the workspace pin and this handler share one source of truth instead of
+-- drifting. RS3 joined RuneLite here on 2026-08-12.
+
+function __handlers.place_game_client(w)
+  pcall(function()
+    local main_title = GAME_CLIENT_MAIN_TITLE[w.class]
+    if not (main_title and w.initial_title == main_title) then
+      return
+    end
+    local m = w.monitor
+    if not m then return end
+    local W, H = math.floor(m.width * 0.62), math.floor(m.height * 0.70)
+    hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address }))
+    if not w.floating then
+      hl.dispatch(hl.dsp.window.float({ action = "on" }))
+    end
+    hl.dispatch(hl.dsp.window.resize({ exact = true, x = W, y = H }))
+    local c = hl.get_cursor_pos() or { x = m.x + m.width / 2, y = m.y + m.height / 2 }
+    local PAD = 20
+    local x = math.max(m.x + PAD, math.min(c.x - W / 2, m.x + m.width - W - PAD))
+    local y = math.max(m.y + PAD, math.min(c.y - 60, m.y + m.height - H - PAD))
+    hl.dispatch(hl.dsp.window.move({ exact = true, x = math.floor(x), y = math.floor(y) }))
+  end)
+end
 
 table.insert(__handlers.subs, hl.on("window.open", function(w)
-  hl.timer(function()
-    pcall(function()
-      -- match inside the timer, not at event time: title props may not be
-      -- committed yet in the window.open instant (map-time race, hit live
-      -- 2026-07-22 — the at-event check silently never matched)
-      if not (w.class == "net-runelite-client-RuneLite" and w.initial_title == "RuneLite") then
-        return
-      end
-      local m = w.monitor
-      if not m then return end
-      local W, H = math.floor(m.width * 0.62), math.floor(m.height * 0.70)
-      hl.dispatch(hl.dsp.focus({ window = "address:" .. w.address }))
-      if not w.floating then
-        hl.dispatch(hl.dsp.window.float({ action = "on" }))
-      end
-      hl.dispatch(hl.dsp.window.resize({ exact = true, x = W, y = H }))
-      local c = hl.get_cursor_pos() or { x = m.x + m.width / 2, y = m.y + m.height / 2 }
-      local PAD = 20
-      local x = math.max(m.x + PAD, math.min(c.x - W / 2, m.x + m.width - W - PAD))
-      local y = math.max(m.y + PAD, math.min(c.y - 60, m.y + m.height - H - PAD))
-      hl.dispatch(hl.dsp.window.move({ exact = true, x = math.floor(x), y = math.floor(y) }))
-    end)
-  end, { timeout = 400, type = "oneshot" })
+  -- match inside the timer, not at event time: title props may not be
+  -- committed yet in the window.open instant (map-time race, hit live
+  -- 2026-07-22 — the at-event check silently never matched)
+  hl.timer(function() __handlers.place_game_client(w) end, { timeout = 400, type = "oneshot" })
 end))
 
 -- ══ Gaming mode ═════════════════════════════════════════════════════════
@@ -178,6 +185,40 @@ table.insert(__handlers.subs, hl.on("window.destroy", maybe_game_off))
 if __gaming_manual or game_count() > 0 then
   __handlers.gaming = true
   hl.config({ animations = { enabled = false } })
+end
+
+-- ══ F-key workspace gate ════════════════════════════════════════════════
+-- Bare F1-F10 (binds.lua) are a global grab — the focused app never sees the
+-- key — so apps that need their own F-keys get the binds switched off while
+-- they hold focus. Which apps: fkey_gate_match() in config/variables.lua.
+-- Deliberately idempotent: every call re-derives from the CURRENT active
+-- window and sets ALL handles, rather than toggling state on each event.
+-- Measured live 2026-08-05 (hyprctl repl): window.active fires TWICE per
+-- focus change, and focus can land on no window at all. Re-deriving makes
+-- both of those harmless instead of a permanent desync.
+
+function __handlers.refresh_fkey_gate()
+    pcall(function()
+        local binds = (__fkeys or {}).binds
+        if not binds or #binds == 0 then return end
+        local gated = __fkeys_manual_off or fkey_gate_match(hl.get_active_window())
+        for _, kb in ipairs(binds) do
+            pcall(function() kb:set_enabled(not gated) end)
+        end
+        __handlers.fkeys_gated = gated
+    end)
+end
+
+for _, ev in ipairs({ "window.active", "workspace.active", "window.close", "window.destroy" }) do
+    local sub = hl.on(ev, function() __handlers.refresh_fkey_gate() end)
+    if sub then table.insert(__handlers.subs, sub) end
+end
+
+-- Apply current state at load; same live-session guard as the sweep timer.
+if #hl.get_monitors() > 0 then
+    __handlers.refresh_fkey_gate()
+else
+    table.insert(__handlers.subs, hl.on("hyprland.start", __handlers.refresh_fkey_gate))
 end
 
 -- ══ Cheatsheet dump ═════════════════════════════════════════════════════
