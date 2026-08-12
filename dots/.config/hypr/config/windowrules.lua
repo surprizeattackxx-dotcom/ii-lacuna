@@ -204,18 +204,21 @@ for _, r in ipairs(tearing) do
 end
 
 -- ··· Confine pointer ···
--- RuneScape (Steam, steam_app_1343400) is deliberately EXEMPT — it's a
--- point-and-click MMO, and since 2026-08-12 it runs as a 62%x70% floating
--- window (RuneLite parity) rather than fullscreen, so a locked cursor would
--- also trap the pointer inside that window. It matched both of the first two
--- rules (class ^steam_app AND content=game, confirmed live via hyprctl), so
--- each rule excludes it on a different field: rule 1 skips anything already
--- tagged as game content, rule 2 skips this one app by class. Every other game
--- still gets confined by one rule or the other. Drop the negative: on rule 2
--- to re-lock it.
+-- RuneScape is deliberately EXEMPT, BOTH launchers — it's a point-and-click
+-- MMO, and since 2026-08-12 it runs as a 62%x70% floating window (RuneLite
+-- parity) rather than fullscreen, so a locked cursor would also trap the
+-- pointer inside that window. Rule 2 now excludes RS3_CLASS_PATTERN rather
+-- than the Steam class alone: adding Bolt's client (class "RuneScape") to
+-- RS3_CLASSES gives it content = "game", which would otherwise have made this
+-- rule newly confine it. Steam RS3 matched both of the first two rules (class
+-- ^steam_app AND content=game, confirmed live via hyprctl), so each excludes
+-- it on a different field: rule 1 skips anything already tagged as game
+-- content, rule 2 skips RS3 by class. Bolt's client only ever matches rule 2,
+-- since its class isn't a steam_app. Every other game still gets confined by
+-- one rule or the other. Drop the negative: on rule 2 to re-lock RS3.
 local confine = {
     { match = { class = "^steam_app", content = "negative:game" }, name = "confine-steam" },
-    { match = { content = "game", class = "negative:^steam_app_1343400$" }, name = "confine-game" },
+    { match = { content = "game", class = "negative:" .. RS3_CLASS_PATTERN }, name = "confine-game" },
     { match = { title = ".*minecraft.*" }, name = "confine-mc" },
 }
 for _, r in ipairs(confine) do
