@@ -5,7 +5,7 @@
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 OVERLAY="${1:-$HOME/.cache/noctalia/HVE/overlay.conf}"
 COLORS="$HOME/.config/hypr/noctalia/noctalia-colors.conf"
-OUT="$HOME/.config/hypr/hyprland/hve.lua"
+OUT="$HOME/.config/hypr/hve.lua"
 
 LUA="$(python3 "$HERE/hve2lua.py" "$OVERLAY" "$COLORS")"
 
