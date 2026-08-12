@@ -1,0 +1,9 @@
+[Unit]
+Description=Enable Do Not Disturb at 11pm
+
+[Timer]
+OnCalendar=*-*-* 23:00:00
+Persistent=false
+
+[Install]
+WantedBy=timers.target

@@ -1,0 +1,6 @@
+[Unit]
+Description=Disable Do Not Disturb
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/noctalia msg notification-dnd-set off

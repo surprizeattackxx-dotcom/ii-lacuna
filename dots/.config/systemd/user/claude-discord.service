@@ -1,0 +1,18 @@
+[Unit]
+Description=Claude Code - Discord Channel
+After=network-online.target
+Wants=network-online.target
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+WorkingDirectory=%h
+Environment="PATH=%h/.local/bin:%h/.npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/sbin:/bin"
+ExecStart=/usr/bin/script -qec "claude --channels plugin:discord@claude-plugins-official --dangerously-skip-permissions" /dev/null
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=default.target

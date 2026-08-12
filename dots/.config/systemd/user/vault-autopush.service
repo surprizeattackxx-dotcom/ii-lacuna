@@ -1,0 +1,14 @@
+[Unit]
+Description=Auto commit+push ~/vault (Obsidian) on change
+# Wait for network so the initial catch-up push can reach GitHub.
+After=default.target network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/vault-autopush.sh
+Restart=on-failure
+RestartSec=10
+
+[Install]
+WantedBy=default.target

@@ -1,0 +1,17 @@
+[Unit]
+# Background: the VERBOSE libbolt-plugin.so installed at /usr/lib/libbolt-plugin.so logs
+# every hooked GL call per frame into /tmp/bolt_verbose.log. It filled the 32G tmpfs and
+# ENOSPC'd the whole machine twice on 2026-08-11. See the vault note "Bolt RS3 Client".
+# This is a stopgap; the real fix is restoring libbolt-plugin.so.bak (needs root).
+Description=Truncate Bolt's runaway verbose GL log so it cannot fill /tmp
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/home/donnie/.local/bin/bolt-log-guard.sh
+Restart=always
+RestartSec=10
+Nice=10
+
+[Install]
+WantedBy=default.target
