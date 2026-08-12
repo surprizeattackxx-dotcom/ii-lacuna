@@ -26,8 +26,15 @@ RUNELITE_CLASSES = {
     ["net-runelite-client-RuneLite"] = true,
     ["net-runelite-launcher-Launcher"] = true,
 }
+-- Two RS3 launchers, two different WM_CLASSes for the same game (both verified
+-- live via `hyprctl clients -j`, 2026-08-12): Steam stamps steam_app_1343400,
+-- while Bolt's rs2client comes through XWayland as a plain "RuneScape". Both
+-- carry initial_title "RuneScape". Only the Steam one matches the generic
+-- gamingApps rules in windowrules.lua, so only it needs the carve-outs there —
+-- but both need the confine-pointer exemption, since that keys off content.
 RS3_CLASSES = {
     ["steam_app_1343400"] = true,
+    ["RuneScape"] = true,
 }
 
 -- Every class that gets the game-client treatment, mapped to the exact
