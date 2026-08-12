@@ -6,6 +6,16 @@ PartOf=graphical-session.target
 [Service]
 Type=simple
 WorkingDirectory=%h/Projects/Jarvis
+# claude/opencode CLIs live in user-local dirs that systemd's own default PATH
+# doesn't include (confirmed via /proc/<pid>/environ - none of these were
+# present) - without this, ClaudeProvider/OpenCodeProvider's subprocess calls
+# fail with "No such file or directory", breaking the mcp-cloud/chat-cloud
+# tiers entirely. Prepended, real system PATH kept as the fallback.
+Environment=PATH=%h/.local/bin:%h/.opencode/bin:%h/.npm-global/bin:/usr/local/sbin:/usr/local/bin:/usr/bin:/opt/android-sdk/tools:/opt/android-sdk/tools/bin:%h/.local/share/flatpak/exports/bin:/var/lib/flatpak/exports/bin:/usr/lib/jvm/default/bin:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/core_perl
+# Optional (the "-" prefix means don't fail startup if it doesn't exist yet):
+# GEMINI_API_KEY, same secrets-file-outside-git pattern already used for
+# mcp_servers.json's home-assistant token. See ~/.config/jarvis/secrets.env.
+EnvironmentFile=-%h/.config/jarvis/secrets.env
 ExecStart=%h/Projects/Jarvis/.venv/bin/python -m jarvis.main
 Restart=always
 RestartSec=2
