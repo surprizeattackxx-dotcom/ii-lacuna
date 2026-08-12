@@ -1,0 +1,17 @@
+[Unit]
+Description=Noctalia (native v5 shell)
+Documentation=https://docs.noctalia.dev
+PartOf=graphical-session.target
+After=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/noctalia
+Restart=always
+RestartSec=1
+KillMode=mixed
+TimeoutStopSec=2s
+Slice=session.slice
+
+[Install]
+WantedBy=graphical-session.target
