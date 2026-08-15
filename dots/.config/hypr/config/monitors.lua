@@ -4,7 +4,7 @@
 hl.monitor({
     output = "DP-2",
     mode = "2560x1440@60",
-    position = "6000x2160",
+    position = "5800x2000",
     scale = 1,
     bitdepth = 12,
     cm = "auto",
@@ -16,7 +16,7 @@ hl.monitor({
 hl.monitor({
     output = "DP-1",
     mode = "2560x1440@60",
-    position = "2900x2100",
+    position = "2900x2160",
     scale = 1,
     bitdepth = 12,
     cm = "auto",
