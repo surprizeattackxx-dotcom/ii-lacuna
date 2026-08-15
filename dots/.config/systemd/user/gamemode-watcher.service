@@ -1,0 +1,17 @@
+[Unit]
+Description=Register game windows with Feral gamemoded
+Documentation=https://github.com/FeralInteractive/gamemode
+After=graphical-session.target gamemoded.service
+PartOf=graphical-session.target
+
+[Service]
+Type=simple
+ExecStart=%h/.local/bin/gamemode-watcher.py
+Restart=on-failure
+RestartSec=5
+# Talks to hyprctl and busctl only; no reason to reach further.
+PrivateTmp=true
+NoNewPrivileges=true
+
+[Install]
+WantedBy=graphical-session.target
