@@ -235,11 +235,17 @@ def scan_existing():
     for c in hypr_clients():
         if is_game(c):
             register(str(c.get("address", "")).removeprefix("0x"), c)
+    # A marker surviving from a previous run (crash, kill -9, reboot into a
+    # non-cleaned runtime dir) would pin Jarvis to CPU forever with no game
+    # running. Startup is the one place we know the truth, so reconcile it.
+    if not registered:
+        set_gpu_marker(False)
 
 
 def cleanup(signum=None, frame=None):
     for addr in list(registered):
         unregister(addr)
+    set_gpu_marker(False)
     log("exiting")
     sys.exit(0)
 
