@@ -281,9 +281,11 @@ def main():
                             unregister(payload.strip())
         except (ConnectionError, FileNotFoundError, OSError) as e:
             # Hyprland restarted or the socket went away. Drop every
-            # registration so a dead pid can't hold gamemode on forever.
+            # registration so a dead pid can't hold gamemode on forever - and
+            # the GPU marker with them, for exactly the same reason.
             for addr in list(registered):
                 registered.pop(addr, None)
+            set_gpu_marker(False)
             log(f"event socket lost ({e}); retrying in {backoff}s")
             time.sleep(backoff)
             backoff = min(backoff * 2, 30)
