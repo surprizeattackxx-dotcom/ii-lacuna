@@ -23,6 +23,16 @@ own WM_CLASS instead of steam_app_*).
 
 Safe to run alongside the `gamemoderun %command%` launch options: gamemoded
 refcounts its clients, and a duplicate registration is logged and ignored here.
+
+It also hands the GPU back before a game starts. Ollama is no longer pinned to
+CPU, and offloading a 30B MoE to the 4070 is worth 2.2x throughput at lower power
+(Local Inference Benchmarks, Result 8) - but it parks ~10.8 GB in 12 GB of VRAM,
+which is the whole card. Ollama sizes its offload to *free* VRAM at load time, so
+"game first, then inference" already degrades gracefully on its own. The case that
+does not self-solve is the reverse: a model already resident when a game launches.
+That is exactly the moment this watcher fires, so RELEASE_GPU_ON_GAME below unloads
+any GPU-resident model when a game window opens. Models still on CPU are left alone
+- evicting those would slow Jarvis down for no gain.
 """
 
 import json
@@ -33,6 +43,8 @@ import socket
 import subprocess
 import sys
 import time
+import urllib.error
+import urllib.request
 
 # Classes that should count as games but don't get contentType=game from the
 # window rules. Add regexes here as they come up.
