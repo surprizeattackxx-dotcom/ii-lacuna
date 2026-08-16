@@ -171,6 +171,23 @@ def release_gpu():
             log(f"could not release {name}: {e}")
 
 
+def set_gpu_marker(on):
+    """Publish/clear 'a game holds the GPU'. Never raises."""
+    if not RELEASE_GPU_ON_GAME:
+        return
+    try:
+        if on:
+            if not os.path.exists(GPU_MARKER):
+                with open(GPU_MARKER, "w") as f:
+                    f.write(f"{len(registered)} game window(s) registered\n")
+                log(f"GPU reserved for games ({GPU_MARKER})")
+        elif os.path.exists(GPU_MARKER):
+            os.unlink(GPU_MARKER)
+            log("GPU released back to Ollama - no games registered")
+    except OSError as e:
+        log(f"could not update {GPU_MARKER}: {e}")
+
+
 def register(addr, client):
     pid = client.get("pid")
     if not pid or pid <= 0 or addr in registered:
@@ -181,6 +198,9 @@ def register(addr, client):
     if dbus_call("RegisterGameByPID", pid):
         registered[addr] = pid
         log(f"registered pid {pid} ({client.get('class')!r}) - gamemode requested")
+    # Marker goes up even if gamemoded rejected the registration: the game is
+    # real and wants the card regardless of whether the governor switched.
+    set_gpu_marker(True)
 
 
 def unregister(addr):
@@ -189,6 +209,8 @@ def unregister(addr):
         return
     if dbus_call("UnregisterGameByPID", pid):
         log(f"unregistered pid {pid} - gamemode released")
+    if not registered:
+        set_gpu_marker(False)
 
 
 def handle_open(addr):
