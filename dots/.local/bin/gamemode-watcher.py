@@ -58,6 +58,17 @@ RELEASE_GPU_ON_GAME = True
 OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434")
 OLLAMA_TIMEOUT = 3  # seconds; must stay short - this runs on the game-launch path
 
+# Evicting on game-open only covers "model loaded, then game starts". The reverse
+# - asking Jarvis something while a game is already running - is NOT self-solving:
+# Ollama sizes its offload to *free* VRAM, and free VRAM mid-game is still
+# gigabytes, so it will happily take them (measured 2026-08-16: 4.2 GiB lifted out
+# from under a live RS3 session). So while any game is registered we publish this
+# marker, and Jarvis's OllamaProvider reads it and requests num_gpu=0. Presence of
+# the file is the whole protocol - contents are informational only.
+GPU_MARKER = os.path.join(
+    os.environ.get("XDG_RUNTIME_DIR") or "/tmp", "gpu-reserved-for-game"
+)
+
 DBUS_DEST = "com.feralinteractive.GameMode"
 DBUS_PATH = "/com/feralinteractive/GameMode"
 DBUS_IFACE = "com.feralinteractive.GameMode"
