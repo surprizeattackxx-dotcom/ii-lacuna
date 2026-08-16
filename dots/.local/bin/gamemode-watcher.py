@@ -52,6 +52,12 @@ EXTRA_CLASS_PATTERNS = [
     # r"^some_native_game$",
 ]
 
+# Hand the GPU back to games: unload any GPU-resident Ollama model when a game
+# window opens. Set False to disable without removing the code.
+RELEASE_GPU_ON_GAME = True
+OLLAMA_HOST = os.environ.get("OLLAMA_HOST", "http://127.0.0.1:11434")
+OLLAMA_TIMEOUT = 3  # seconds; must stay short - this runs on the game-launch path
+
 DBUS_DEST = "com.feralinteractive.GameMode"
 DBUS_PATH = "/com/feralinteractive/GameMode"
 DBUS_IFACE = "com.feralinteractive.GameMode"
