@@ -123,10 +123,50 @@ def dbus_call(method, pid):
     return True
 
 
+def _ollama(path, payload=None):
+    """One Ollama HTTP call. Raises on any failure; callers must catch."""
+    data = json.dumps(payload).encode() if payload is not None else None
+    req = urllib.request.Request(
+        f"{OLLAMA_HOST}{path}", data=data,
+        headers={"Content-Type": "application/json"},
+    )
+    with urllib.request.urlopen(req, timeout=OLLAMA_TIMEOUT) as r:
+        return json.loads(r.read().decode() or "{}")
+
+
+def release_gpu():
+    """Unload GPU-resident Ollama models so a launching game gets the VRAM.
+
+    Deliberately best-effort and silent-on-absent: if Ollama isn't running this
+    is a no-op, and nothing here may ever prevent a game from registering with
+    gamemoded. Models sitting entirely on CPU (size_vram == 0) are left alone.
+    """
+    if not RELEASE_GPU_ON_GAME:
+        return
+    try:
+        loaded = _ollama("/api/ps").get("models", [])
+    except (urllib.error.URLError, OSError, json.JSONDecodeError, ValueError):
+        return  # ollama not running / not installed - nothing to release
+
+    for m in loaded:
+        name = m.get("name") or m.get("model")
+        vram = m.get("size_vram") or 0
+        if not name or vram <= 0:
+            continue  # CPU-resident, not our problem
+        try:
+            _ollama("/api/generate", {"model": name, "keep_alive": 0})
+            log(f"released {name} ({vram / 2**30:.1f} GiB VRAM) - GPU handed to the game")
+        except (urllib.error.URLError, OSError, json.JSONDecodeError, ValueError) as e:
+            log(f"could not release {name}: {e}")
+
+
 def register(addr, client):
     pid = client.get("pid")
     if not pid or pid <= 0 or addr in registered:
         return
+    # Free the card first, and independently of gamemoded being up - the game
+    # needs the VRAM whether or not the governor switch succeeds.
+    release_gpu()
     if dbus_call("RegisterGameByPID", pid):
         registered[addr] = pid
         log(f"registered pid {pid} ({client.get('class')!r}) - gamemode requested")
