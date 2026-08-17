@@ -52,7 +52,6 @@ PARTYDECK_CLASSES = {
     ["gamescope"] = true,
     ["gamescope-kbm"] = true,
 }
-PARTYDECK_CLASS_PATTERN = class_pattern(PARTYDECK_CLASSES)
 
 -- Every class that gets the game-client treatment, mapped to the exact
 -- initial_title its MAIN window carries. Popups/panels share the WM_CLASS but
