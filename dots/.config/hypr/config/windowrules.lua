@@ -10,7 +10,7 @@ hl.window_rule({
 })
 
 -- Gaming
-local gamingApps = "^(steam_app.*|gamescope)$"
+local gamingApps = "^(steam_app.*)$"
 local gamingWorkspace = "name:gaming"
 
 -- RS3 (steam_app_1343400) is deliberately EXEMPT from both gaming-workspace
@@ -19,7 +19,13 @@ local gamingWorkspace = "name:gaming"
 -- BOTH of these (class ^steam_app AND content=game), so each rule excludes it
 -- on a different field: this one by class, the next by its main window's
 -- initial_title. Patterns live in config/variables.lua.
-hl.window_rule({ match = { content = "game", class = "negative:" .. RS3_CLASS_PATTERN }, workspace = gamingWorkspace })
+-- PartyDeck's gamescope classes joined the exemption 2026-08-16 (see the
+-- PartyDeck section below): rule 1's exclusion widened from RS3 alone to
+-- NOT_GAMING_WORKSPACE_CLASS_PATTERN (RS3 + PartyDeck merged in
+-- variables.lua); rule 2 already excludes it by class since gamingApps no
+-- longer matches "gamescope" at all (was "^(steam_app.*|gamescope)$", now
+-- just steam_app — PartyDeck gets its own rules instead, right below).
+hl.window_rule({ match = { content = "game", class = "negative:" .. NOT_GAMING_WORKSPACE_CLASS_PATTERN }, workspace = gamingWorkspace })
 hl.window_rule({ match = { class = gamingApps, initial_title = "negative:" .. RS3_MAIN_TITLE_PATTERN }, workspace = gamingWorkspace })
 hl.window_rule({ match = { class = "^(steam)$", title = "^(Friends List)$" }, float = true })
 hl.window_rule({
