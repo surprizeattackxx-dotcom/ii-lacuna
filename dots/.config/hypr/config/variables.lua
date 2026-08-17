@@ -37,6 +37,23 @@ RS3_CLASSES = {
     ["RuneScape"] = true,
 }
 
+-- PartyDeck (the Hyprland fork at ~/Projects/partydeck) wraps every instance
+-- in gamescope, which reports class "gamescope" (or "gamescope-kbm" once the
+-- mouse/keyboard build lands). It needs the OPPOSITE of the generic Steam
+-- treatment: no forced fullscreen, no gaming-workspace shove — PartyDeck's own
+-- Rust-side splitscreen daemon (src/hyprland.rs) floats, resizes and positions
+-- each instance into its own tile itself, live, the same way it dispatches
+-- window.float/resize/move for RS3's placement above. Verified live
+-- 2026-08-16 (hyprctl eval) that the fullscreen_state=2 rule fights any
+-- resize/move dispatch aimed at a window still under it — same reason RS3 is
+-- carved out. Only class this box will ever hand gamescope-class windows to,
+-- since nothing else here launches raw gamescope.
+PARTYDECK_CLASSES = {
+    ["gamescope"] = true,
+    ["gamescope-kbm"] = true,
+}
+PARTYDECK_CLASS_PATTERN = class_pattern(PARTYDECK_CLASSES)
+
 -- Every class that gets the game-client treatment, mapped to the exact
 -- initial_title its MAIN window carries. Popups/panels share the WM_CLASS but
 -- not that title — that's how handlers.lua places only the real client.
