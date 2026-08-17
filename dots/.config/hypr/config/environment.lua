@@ -15,7 +15,7 @@ hl.env("XDG_SESSION_TYPE", "wayland")
 hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto")
 hl.env("QT_QPA_PLATFORMTHEME", "kde")
 hl.env("XDG_MENU_PREFIX", "plasma-")
-hl.env("XDG_DATA_DIRS", "$HOME/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share:/usr/share")
+hl.env("XDG_DATA_DIRS", os.getenv("HOME") .. "/.local/share/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share:/usr/share")
 
 -- ─── Tools & Editors ──────────────────────────
 hl.env("TERMINAL", "kitty -1")
