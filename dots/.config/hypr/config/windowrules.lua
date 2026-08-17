@@ -65,6 +65,27 @@ hl.window_rule({
     fullscreen_state = 0,
 })
 
+-- ··· PartyDeck (splitscreen) ···
+-- gamescope/gamescope-kbm need to float with no forced fullscreen — the
+-- Rust-side daemon in ~/Projects/partydeck (src/hyprland.rs) positions each
+-- instance into its own tile with live window.resize/move dispatch while a
+-- session is running, the same mechanism the RS3/RuneLite placement handler
+-- above uses. A window still under fullscreen_state=2 fights that dispatch
+-- (verified live 2026-08-16 via hyprctl eval — resize/move silently no-op'd
+-- until this exemption existed), which is why PartyDeck needs its own rule
+-- block instead of just excluding it from the generic one above.
+-- content=game keeps the F-key gate (fkey_gate_match), gamemode-watcher's
+-- content_type=="game" registration, and the confine-pointer rule below all
+-- working, exactly as the comment on the RS3 tag rule above explains.
+hl.window_rule({
+    match            = { class = PARTYDECK_CLASS_PATTERN },
+    float            = true,
+    fullscreen       = false,
+    fullscreen_state = 0,
+    no_border        = true,
+    content          = "game",
+})
+
 -- Apps
 hl.window_rule({ match = { class = "^(.*\\.exe)$", float = true }, monitor = PRIMARY_MONITOR, fullscreen_state = 0 })
 hl.window_rule({ match = { class = "^(vesktop|discord)$" }, monitor = PRIMARY_MONITOR })
