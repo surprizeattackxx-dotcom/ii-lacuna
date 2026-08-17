@@ -81,6 +81,16 @@ GAME_CLIENT_CLASS_PATTERN = class_pattern(GAME_CLIENT_CLASSES)
 -- gaming rules (fullscreen + gaming workspace) that RuneLite never matched.
 RS3_CLASS_PATTERN = class_pattern(RS3_CLASSES)
 RS3_MAIN_TITLE_PATTERN = "^(RuneScape)$"
+PARTYDECK_CLASS_PATTERN = class_pattern(PARTYDECK_CLASSES)
+-- Everything currently exempt from the generic Steam gaming-workspace rule
+-- (windowrules.lua rule keyed on content=game): RS3 (own windowed placement)
+-- plus PartyDeck's gamescope classes (own tiling). One merged table so a
+-- future third exemption is one addition here, not a second regex to keep in
+-- sync by hand.
+local NOT_GAMING_WS_CLASSES = {}
+for c in pairs(RS3_CLASSES) do NOT_GAMING_WS_CLASSES[c] = true end
+for c in pairs(PARTYDECK_CLASSES) do NOT_GAMING_WS_CLASSES[c] = true end
+NOT_GAMING_WORKSPACE_CLASS_PATTERN = class_pattern(NOT_GAMING_WS_CLASSES)
 
 -- ─── Monitor → workspace blocks ────────────────
 -- Each monitor owns a block of 10 workspaces; the first in each block is its
