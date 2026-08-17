@@ -82,7 +82,7 @@ hl.window_rule({
     float            = true,
     fullscreen       = false,
     fullscreen_state = 0,
-    no_border        = true,
+    border_size      = 0,
     content          = "game",
 })
 
