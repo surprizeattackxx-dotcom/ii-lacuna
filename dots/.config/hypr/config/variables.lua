@@ -1,7 +1,7 @@
 -- ─── Apps ──────────────────────────────────────
 terminal = "kitty"
 fileManager = "dolphin"
-browser = "google-chrome-stable"
+browser = "firefox"
 codeEditor = "micro"
 volumeMixer = "pavucontrol-qt"
 settingsApp = "noctalia msg settings-toggle"
