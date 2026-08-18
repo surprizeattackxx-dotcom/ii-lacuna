@@ -7,13 +7,15 @@
 # real interactive Desktop chat tabs by the --disallowedTools AskUserQuestion
 # flag Desktop passes them; a normal run finishes in well under a minute,
 # so anything still alive past MAX_AGE_MIN is a leaked one, not a live task.
-set -euo pipefail
+set -uo pipefail
 
 MAX_AGE_MIN=15
 MAX_AGE_SEC=$((MAX_AGE_MIN * 60))
 
-ps -eo pid,etimes,args | grep -- '--disallowedTools AskUserQuestion' | grep -v grep | while read -r pid etimes _; do
+while read -r pid etimes; do
     if [ "$etimes" -gt "$MAX_AGE_SEC" ]; then
         kill "$pid" 2>/dev/null && logger -t claude-scheduled-reaper "killed leaked scheduled-task process $pid (age ${etimes}s)"
     fi
-done
+done < <(pgrep -af -- '--disallowedTools AskUserQuestion' | awk '{print $1}' | xargs -r -I{} ps -o pid=,etimes= -p {} 2>/dev/null)
+
+exit 0
