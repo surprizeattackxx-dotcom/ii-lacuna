@@ -1,0 +1,6 @@
+[Unit]
+Description=Reap leaked Claude Desktop scheduled-task processes
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/claude-scheduled-reaper.sh
