@@ -1,0 +1,9 @@
+[Unit]
+Description=Periodically reap leaked Claude Desktop scheduled-task processes
+
+[Timer]
+OnUnitActiveSec=15min
+OnBootSec=15min
+
+[Install]
+WantedBy=timers.target
