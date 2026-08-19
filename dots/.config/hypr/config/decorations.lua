@@ -52,7 +52,6 @@ hl.config({
             render_power = 3,
             color = "rgba(00f0ff33)",
             offset = "0 4",
-            blur = true,
         },
     },
 })
