@@ -1,7 +1,7 @@
--- Cachy colors
+-- Cyberpunk Neon palette
 
-CACHYLGREEN = "rgba(82dcccff)"
-CACHYDGREEN = "rgba(007d6fff)"
-CACHYLBLUE  = "rgba(01ccffff)"
-CACHYDBLUE  = "rgba(111826ff)"
-CACHYGRAY   = "rgba(798bb2ff)"
+CACHYLGREEN = "rgba(00f0ffff)"
+CACHYDGREEN = "rgba(0080a0ff)"
+CACHYLBLUE  = "rgba(b967ffff)"
+CACHYDBLUE  = "rgba(12121eff)"
+CACHYGRAY   = "rgba(1a1a2eff)"
