@@ -44,8 +44,9 @@ Singleton {
                            "Volume": volumeComponent,
                            "VPN": vpnComponent,
                            "WallpaperSelector": wallpaperSelectorComponent,
-                           "Workspace": workspaceComponent
-                         })
+                            "Workspace": workspaceComponent,
+                            "HyprlandDashboard": hyprlandDashboardComponent
+                          })
 
   property var widgetSettingsMap: ({
                                      "ActiveWindow": "WidgetSettings/ActiveWindowSettings.qml",
