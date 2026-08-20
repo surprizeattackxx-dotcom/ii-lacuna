@@ -422,6 +422,12 @@ PanelWindow {
       screen: root.screen
     }
 
+    HyprlandDashboardPanel {
+      id: hyprlandDashboardPanel
+      objectName: "hyprlandDashboardPanel-" + (root.screen?.name || "unknown")
+      screen: root.screen
+    }
+
     StaticDockPanel {
       id: staticDockPanel
       objectName: "staticDockPanel-" + (root.screen?.name || "unknown")
