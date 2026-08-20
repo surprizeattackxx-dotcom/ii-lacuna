@@ -44,9 +44,8 @@ Singleton {
                            "Volume": volumeComponent,
                            "VPN": vpnComponent,
                            "WallpaperSelector": wallpaperSelectorComponent,
-                            "Workspace": workspaceComponent,
-                            "HyprlandDashboard": hyprlandDashboardComponent
-                          })
+                           "Workspace": workspaceComponent
+                         })
 
   property var widgetSettingsMap: ({
                                      "ActiveWindow": "WidgetSettings/ActiveWindowSettings.qml",
@@ -323,11 +322,6 @@ Singleton {
                                     "showBadge": true,
                                     "pillSize": 0.6,
                                     "fontWeight": "bold"
-                                  },
-                                  "HyprlandDashboard": {
-                                    "icon": "terminal",
-                                    "enableColorization": false,
-                                    "colorizeSystemIcon": "none"
                                   },
                                   "Volume": {
                                     "displayMode": "onhover",
