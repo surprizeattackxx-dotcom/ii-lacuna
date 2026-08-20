@@ -437,6 +437,9 @@ Singleton {
   property Component workspaceComponent: Component {
     Workspace {}
   }
+  property Component hyprlandDashboardComponent: Component {
+    HyprlandDashboard {}
+  }
   property Component taskbarComponent: Component {
     Taskbar {}
   }
