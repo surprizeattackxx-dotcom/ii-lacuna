@@ -30,6 +30,7 @@ import qs.Modules.Panels.SessionMenu
 import qs.Modules.Panels.Settings
 import qs.Modules.Panels.SetupWizard
 import qs.Modules.Panels.SystemStats
+import qs.Modules.Panels.HyprlandDashboard
 import qs.Modules.Panels.Tray
 import qs.Modules.Panels.Wallpaper
 import qs.Services.Compositor
