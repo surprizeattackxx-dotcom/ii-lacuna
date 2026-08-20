@@ -324,6 +324,11 @@ Singleton {
                                     "pillSize": 0.6,
                                     "fontWeight": "bold"
                                   },
+                                  "HyprlandDashboard": {
+                                    "icon": "terminal",
+                                    "enableColorization": false,
+                                    "colorizeSystemIcon": "none"
+                                  },
                                   "Volume": {
                                     "displayMode": "onhover",
                                     "middleClickCommand": "pwvucontrol || pavucontrol",
