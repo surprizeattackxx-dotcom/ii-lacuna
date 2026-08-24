@@ -23,13 +23,18 @@ hl.env("EDITOR", "kate")
 
 -- ─── Graphics & Display ───────────────────────
 hl.env("QT_AUTO_SCREEN_SCALE_FACTOR", "1")
-hl.env("AQ_DRM_DEVICES", "/dev/dri/by-path/pci-0000:00:02.0-card:/dev/dri/by-path/pci-0000:01:00.0-card")
+-- Intel iGPU (card2) primary — carries the displays; RTX 4070 (card1) secondary.
+-- AQ_DRM_DEVICES splits on ':' so by-path names (which contain colons) shred the list — cardN only.
+-- If cardN numbering ever shifts, Hyprland aborts with "Found no gpus": recheck `readlink /dev/dri/by-path/*`
+hl.env("AQ_DRM_DEVICES", "/dev/dri/card2:/dev/dri/card1")
 hl.env("XDG_CURRENT_DESKTOP", "Hyprland")
 hl.env("XDG_SESSION_DESKTOP", "Hyprland")
-hl.env("GBM_BACKEND", "nvidia-drm")
-hl.env("__GLX_VENDOR_LIBRARY_NAME", "nvidia")
-hl.env("LIBVA_DRIVER_NAME", "nvidia")
-hl.env("NVD_BACKEND", "direct")
+-- nvidia globals retired 2026-08-24: with the iGPU carrying the desktop they forced every app
+-- onto the nvidia stack (broken GLX/GBM/vaapi on intel). Per-app 4070 use: prime-run <cmd>.
+--hl.env("GBM_BACKEND", "nvidia-drm")
+--hl.env("__GLX_VENDOR_LIBRARY_NAME", "nvidia")
+--hl.env("LIBVA_DRIVER_NAME", "nvidia")
+--hl.env("NVD_BACKEND", "direct")
 hl.env("GSK_RENDERER","opengl")
 
 -- ─── Theme & Icons ─────────────────────────────
