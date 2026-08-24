@@ -3,8 +3,8 @@
 
 hl.monitor({
     output = "DP-5",
-    mode = "3840x2160@60",
-    position = "7100x2160",
+    mode = "2560x1440@59.95",
+    position = "7000x2160",
     scale = 1,
     transform = 0,
     bitdepth = 12,
@@ -16,8 +16,8 @@ hl.monitor({
 
 hl.monitor({
     output = "DP-4",
-    mode = "3840x2160@60",
-    position = "3260x2160",
+    mode = "2560x1440@60",
+    position = "4440x2160",
     scale = 1,
     transform = 0,
     bitdepth = 12,
