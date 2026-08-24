@@ -23,7 +23,7 @@ hl.env("EDITOR", "kate")
 
 -- ─── Graphics & Display ───────────────────────
 hl.env("QT_AUTO_SCREEN_SCALE_FACTOR", "1")
-hl.env("AQ_DRM_DEVICES", "/dev/dri/card1")
+hl.env("AQ_DRM_DEVICES", "/dev/dri/card1:card0")
 hl.env("XDG_CURRENT_DESKTOP", "Hyprland")
 hl.env("XDG_SESSION_DESKTOP", "Hyprland")
 hl.env("GBM_BACKEND", "nvidia-drm")
