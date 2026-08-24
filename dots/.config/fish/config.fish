@@ -1,5 +1,5 @@
 if status is-interactive
-    fastfetch --config ~/Projects/ii-lacuna/dots/.config/quickshell/noctalia-shell/Assets/Services/fastfetch/system-info.jsonc --logo-type file-raw --logo (pokemon-colorscripts -r --no-title | psub)
+    fastfetch --config ~/Projects/ii-lacuna/dots/.config/fastfetch/system-info.jsonc --logo-type file-raw --logo (pokemon-colorscripts -r --no-title | psub)
 end
 
 # opencode
