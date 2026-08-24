@@ -73,7 +73,11 @@ commit_push() {
     fi
 
     git add -A -- dots
-    git commit -q -m "auto(dots): $(date '+%Y-%m-%d %H:%M:%S')" >/dev/null 2>&1
+    # Stamp the WATCHER as the author, not whoever happens to own the repo default.
+    # Deliberate commits (a tool or Donnie running git by hand) keep the repo default
+    # and can override per-commit with -c, so real attribution still works for those.
+    git -c user.name="ii-lacuna Autopush" -c user.email="autopush@vault.local" \
+        commit -q -m "auto(dots): $(date '+%Y-%m-%d %H:%M:%S')" >/dev/null 2>&1
   fi
 
   # Push if ahead of origin (also covers commits made while offline, and the
