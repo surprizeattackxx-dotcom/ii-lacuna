@@ -23,7 +23,10 @@ hl.env("EDITOR", "kate")
 
 -- ─── Graphics & Display ───────────────────────
 hl.env("QT_AUTO_SCREEN_SCALE_FACTOR", "1")
-hl.env("AQ_DRM_DEVICES", "/dev/dri/card0:/dev/dri/card1")
+-- Pinned by PCI bus path (stable across reboots) instead of /dev/dri/cardN
+-- (card numbers are assigned by driver probe order and can swap on reboot).
+-- iGPU (00:02.0) listed first as primary/display; Nvidia (01:00.0) second for rendering.
+hl.env("AQ_DRM_DEVICES", "/dev/dri/by-path/pci-0000:00:02.0-card:/dev/dri/by-path/pci-0000:01:00.0-card")
 hl.env("XDG_CURRENT_DESKTOP", "Hyprland")
 hl.env("XDG_SESSION_DESKTOP", "Hyprland")
 hl.env("GBM_BACKEND", "nvidia-drm")
