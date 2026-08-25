@@ -23,13 +23,15 @@ hl.env("EDITOR", "kate")
 
 -- ─── Graphics & Display ───────────────────────
 hl.env("QT_AUTO_SCREEN_SCALE_FACTOR", "1")
--- Both GPUs listed so any boot numbering resolves: FIRST entry is the render GPU, and cardN
--- order reshuffles between boots (three different orders on 2026-08-24 alone). On intel-first
--- boots the desktop renders on the iGPU and mirrors to the 4070's outputs — works, slightly
--- slower, until a nvidia-first boot. Pin it permanently with:
---   sudo bash ~/win11-vm-setup/02-gpu-stable-symlinks.sh   (then use /dev/dri/gpu-nvidia here)
--- NEVER use /dev/dri/by-path names: AQ_DRM_DEVICES splits on ':' and by-path contains colons.
-hl.env("AQ_DRM_DEVICES", "/dev/dri/card0:/dev/dri/card1")
+-- Pinned to stable udev symlinks, not cardN — cardN order reshuffled 3 different ways on
+-- 2026-08-24 alone, and whichever GPU lands first here becomes the render GPU (an intel-first
+-- boot was silently rendering the whole desktop on the iGPU and mirroring to the 4070's
+-- monitor outputs — that's what was capping RS3 at 30fps 2026-08-24 21:xx, not a vsync bug).
+-- REQUIRES `sudo bash ~/win11-vm-setup/02-gpu-stable-symlinks.sh` to have been run first —
+-- it creates these two symlinks via a udev rule. If it hasn't run yet, Hyprland will fail to
+-- start with "Found no gpus to use". Run it, THEN log out/in (or reboot) for this to take effect.
+-- NEVER use /dev/dri/by-path names here: AQ_DRM_DEVICES splits on ':' and by-path contains colons.
+hl.env("AQ_DRM_DEVICES", "/dev/dri/gpu-nvidia:/dev/dri/gpu-intel")
 hl.env("XDG_CURRENT_DESKTOP", "Hyprland")
 hl.env("XDG_SESSION_DESKTOP", "Hyprland")
 hl.env("GBM_BACKEND", "nvidia-drm")
