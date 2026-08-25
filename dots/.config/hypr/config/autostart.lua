@@ -16,11 +16,11 @@ hl.exec_cmd("sleep 3 && ~/.config/hypr/scripts/restore-workspaces.sh")
 -- (/etc/xdg/autostart/*.desktop) because uwsm manages the session. Launching
 -- them here too raced the tray host and left Bitwarden with no tray icon.
 hl.exec_cmd("pypr")
--- Browser autostart: brave-browser (swapped from firefox 2026-08-25).
+-- Browser autostart: brave (swapped from firefox 2026-08-25).
 -- Hardcoded rather than reusing `browser` from variables.lua because THIS
 -- FILE LOADS FIRST (hyprland.lua: autostart is line 5, variables line 8)
 -- so the global isn't defined yet — keep this in sync with variables.lua.
-hl.exec_cmd("brave-browser")
+hl.exec_cmd("brave")
 -- The shell is noctalia v5 (native), managed by systemd (`noctalia.service`).
 -- Legacy quickshell-ii / waybar launch lines removed 2026-07-31.
 hl.exec_cmd("xhost +SI:localuser:root")
