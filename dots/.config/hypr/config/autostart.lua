@@ -16,15 +16,11 @@ hl.exec_cmd("sleep 3 && ~/.config/hypr/scripts/restore-workspaces.sh")
 -- (/etc/xdg/autostart/*.desktop) because uwsm manages the session. Launching
 -- them here too raced the tray host and left Bitwarden with no tray icon.
 hl.exec_cmd("pypr")
--- Browser autostart swapped chrome-beta → firefox 2026-08-18 (Donnie's call:
--- Chrome was sitting at ~9.9 G across 56 processes). Hardcoded rather than
--- reusing `browser` from variables.lua because THIS FILE LOADS FIRST
--- (hyprland.lua: autostart is line 5, variables line 8) so the global isn't
--- defined yet — keep this in sync with variables.lua by hand.
--- Dropped with it: the themed wrapper's `--remote-debugging-port=9222` CDP
--- endpoint (and the ii-lacuna theme extension). Nothing auto-starts a CDP
--- listener now; run `google-chrome-stable-themed` by hand if something needs it.
-hl.exec_cmd("firefox")
+-- Browser autostart: brave-browser (swapped from firefox 2026-08-25).
+-- Hardcoded rather than reusing `browser` from variables.lua because THIS
+-- FILE LOADS FIRST (hyprland.lua: autostart is line 5, variables line 8)
+-- so the global isn't defined yet — keep this in sync with variables.lua.
+hl.exec_cmd("brave-browser")
 -- The shell is noctalia v5 (native), managed by systemd (`noctalia.service`).
 -- Legacy quickshell-ii / waybar launch lines removed 2026-07-31.
 hl.exec_cmd("xhost +SI:localuser:root")
