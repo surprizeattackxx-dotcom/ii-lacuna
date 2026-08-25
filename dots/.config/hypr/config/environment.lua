@@ -23,11 +23,13 @@ hl.env("EDITOR", "kate")
 
 -- ─── Graphics & Display ───────────────────────
 hl.env("QT_AUTO_SCREEN_SCALE_FACTOR", "1")
--- Single-GPU: RTX 4070 (card0) carries the displays — monitors back on the card, 2026-08-24 evening.
--- AQ_DRM_DEVICES splits on ':' so by-path names (which contain colons) shred the list — cardN only.
--- cardN numbering reshuffles between boots: verify with `basename $(readlink -f /sys/class/drm/card*/device)`
--- before trusting it, or run ~/win11-vm-setup/02-gpu-stable-symlinks.sh for stable aliases.
-hl.env("AQ_DRM_DEVICES", "/dev/dri/card0")
+-- Both GPUs listed so any boot numbering resolves: FIRST entry is the render GPU, and cardN
+-- order reshuffles between boots (three different orders on 2026-08-24 alone). On intel-first
+-- boots the desktop renders on the iGPU and mirrors to the 4070's outputs — works, slightly
+-- slower, until a nvidia-first boot. Pin it permanently with:
+--   sudo bash ~/win11-vm-setup/02-gpu-stable-symlinks.sh   (then use /dev/dri/gpu-nvidia here)
+-- NEVER use /dev/dri/by-path names: AQ_DRM_DEVICES splits on ':' and by-path contains colons.
+hl.env("AQ_DRM_DEVICES", "/dev/dri/card0:/dev/dri/card1")
 hl.env("XDG_CURRENT_DESKTOP", "Hyprland")
 hl.env("XDG_SESSION_DESKTOP", "Hyprland")
 hl.env("GBM_BACKEND", "nvidia-drm")
