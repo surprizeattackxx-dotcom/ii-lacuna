@@ -98,9 +98,9 @@ NOT_GAMING_WORKSPACE_CLASS_PATTERN = class_pattern(NOT_GAMING_WS_CLASSES)
 -- workspace rules and the bare F-key binds resolve from one table instead of
 -- two that silently drift — same reasoning as RUNELITE_CLASSES above.
 MONITOR_BLOCKS = {
-    { monitor = "DP-5",     first = 1 },
-    { monitor = "DP-4",     first = 11 },
-    { monitor = "HDMI-A-4", first = 21 },
+    { monitor = "DP-2",     first = 1 },
+    { monitor = "DP-1",     first = 11 },
+    { monitor = "HDMI-A-1", first = 21 },
 }
 
 -- ─── F-key gate ────────────────────────────────
