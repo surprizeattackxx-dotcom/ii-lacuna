@@ -10,7 +10,7 @@ claude = "claude-desktop"
 opencode = "ai.opencode.opencode"
 
 -- Primary monitor, used by windowrules.lua to pin .exe/discord/vesktop windows.
-PRIMARY_MONITOR = "DP-5"
+PRIMARY_MONITOR = "DP-2"
 
 -- ─── Game client classes ───────────────────────
 -- Different launchers stamp different WM_CLASS on the same client (the raw
